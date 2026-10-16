@@ -120,6 +120,8 @@ nonisolated final class PlaybackDiagnostics: Sendable {
         case recoveryProgressValidated
         case recoveryExhausted
         case recoveryInterrupted
+        /// The reset came from an item that never rendered, so no rebuild was attempted.
+        case recoveryDeclinedUnplayedItem
     }
 
     struct NetworkPath: Sendable, Equatable {
@@ -434,6 +436,8 @@ nonisolated final class PlaybackDiagnostics: Sendable {
             "audio-recovery exhausted"
         case .recoveryInterrupted:
             "audio-recovery interrupted"
+        case .recoveryDeclinedUnplayedItem:
+            "audio-recovery declined reason=unplayed-item"
         }
     }
 }

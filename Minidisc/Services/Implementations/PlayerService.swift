@@ -139,6 +139,13 @@ actor PlayerService: PlayerServiceProtocol {
     private var audioSystemRecovery: AudioSystemRecovery?
     private var audioSystemRecoveryTask: Task<Void, Never>?
     private var audioSystemRecoveryGeneration: UInt64 = 0
+    /// The newest load the engine reported as `.playing`. A media-services reset raised by any other
+    /// load came from an item that never rendered.
+    private var lastRenderedPlaybackToken: AudioEnginePlaybackToken?
+    /// When a reset from an unplayed item was declined. The global reset notification for the same
+    /// incident arrives shortly after the item error and must not start a rebuild either.
+    private var declinedMediaResetAt: ContinuousClock.Instant?
+    private nonisolated static let declinedMediaResetWindow: Duration = .seconds(3)
     private var lastKnownAudioOutputs: [AudioRouteOutputSnapshot] = []
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
@@ -3674,6 +3681,9 @@ actor PlayerService: PlayerServiceProtocol {
     ) async {
         guard isCurrentEngineEvent(playbackToken) else { return }
         activeEngineState = newState
+        if newState == .playing {
+            lastRenderedPlaybackToken = playbackToken
+        }
         let diagnosticState: PlaybackDiagnostics.EngineStatus = switch newState {
         case .playing: .playing
         case .buffering: .buffering
@@ -4261,6 +4271,23 @@ extension PlayerService {
         let existingRecovery = audioSystemRecovery
         invalidateAudioRecoveryPlayback()
         playbackDiagnostics.record(.audioSession(.mediaServicesReset))
+
+        // A reset raised by an item that never rendered was most likely caused by opening that
+        // item. Rebuilding reopens the same source and resets the media server again; repeated
+        // resets can leave it hung for every app on the device. Stop here; an explicit Play
+        // starts over. This also ends a recovery whose own rebuilt item reset before rendering.
+        if let failedPlaybackToken, failedPlaybackToken != lastRenderedPlaybackToken {
+            declinedMediaResetAt = .now
+        }
+        if let declinedMediaResetAt, ContinuousClock.now - declinedMediaResetAt < Self.declinedMediaResetWindow {
+            if audioSystemRecovery != nil { cancelAudioSystemRecovery() }
+            pendingRestoreInfo = nil
+            playbackDiagnostics.record(.audioSession(.recoveryDeclinedUnplayedItem))
+            Logger.player.warning("[AUDIO-RECOVERY] media services reset by an item that never played — not rebuilding")
+            await MainActor.run { state.playbackState = .error(.audioSystemUnavailable) }
+            return
+        }
+
         if let existingRecovery, isCurrentAudioRecovery(existingRecovery.id) { return }
 
         let snapshot = await MainActor.run {
