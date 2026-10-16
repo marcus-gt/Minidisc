@@ -103,6 +103,7 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
     private static let watchdogInterval = 500
     private static let endOfFileTolerance: Double = 1.5
     private static let frozenClockGrace: Double = 1.0
+    private static let renderingFrozenClockGrace: Double = 20.0
 
     private var timeControlObservers: [NSKeyValueObservation] = []
     private var statusObserver: NSKeyValueObservation?
@@ -285,7 +286,11 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
         defer { lock.unlock() }
         guard let item = currentItem else { return }
         guard seconds > 0 else {
-            item.forwardPlaybackEndTime = .invalid
+            // Assigning the end time, even the unchanged `.invalid`, makes AVPlayer rebuild the
+            // playing item's timeline. On a stream with estimated timing that is an audible jump.
+            if item.forwardPlaybackEndTime.isValid {
+                item.forwardPlaybackEndTime = .invalid
+            }
             return
         }
         let duration = item.duration.isNumeric ? CMTimeGetSeconds(item.duration) : metadataDuration
@@ -421,7 +426,9 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
         // otherwise the orphaned timer would keep fading the only remaining deck to silence.
         cancelOverlap()
         clearPreloadedDeck()
-        currentItem?.forwardPlaybackEndTime = .invalid
+        if let currentItem, currentItem.forwardPlaybackEndTime.isValid {
+            currentItem.forwardPlaybackEndTime = .invalid
+        }
     }
 
     func pause() {
@@ -811,11 +818,25 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
             lastWatchdogAdvance = Date()
             return
         }
+        // A deck waiting for data is buffering, not finished. Remote streams open without precise
+        // timing, so their clock is an estimate that can read "almost done" seconds early; a stall
+        // there must not advance the queue. A deck that truly hit EOF is paused or frozen, not waiting.
+        if activePlayer.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+            lastWatchdogAdvance = Date()
+            return
+        }
         // `position > 0` keeps a track that never started (still opening the stream, failed to load)
         // out of this path — that is an error for PlayerService to handle, not a finished track.
         let remaining = trackDuration - position
+        // At a real end AVPlayer pauses the item (`actionAtItemEnd = .pause`). A deck still
+        // "playing" on a frozen clock is usually a stream whose estimated clock reached the end
+        // before the audio did; advancing then cuts off real music. It gets a long grace, kept only
+        // as a last resort for a missing end-of-item notification.
+        let grace = activePlayer.timeControlStatus == .paused
+            ? Self.frozenClockGrace
+            : Self.renderingFrozenClockGrace
         guard position > 0,
-              Date().timeIntervalSince(lastWatchdogAdvance) >= Self.frozenClockGrace,
+              Date().timeIntervalSince(lastWatchdogAdvance) >= grace,
               remaining >= -Self.endOfFileTolerance,
               remaining <= Self.endOfFileTolerance else { return }
 
