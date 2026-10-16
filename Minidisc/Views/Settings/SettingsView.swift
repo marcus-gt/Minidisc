@@ -866,6 +866,19 @@ private struct ApplicationSettingsView: View {
             } footer: {
                 Text("System follows your device's light or dark setting.")
             }
+            Section {
+                NavigationLink {
+                    HomeLayoutSettingsView()
+                } label: {
+                    Label("Home Screen", systemImage: "rectangle.grid.1x2")
+                        .foregroundStyle(.primary)
+                }
+                .accessibilityIdentifier("settings.homeLayout")
+            } header: {
+                Text("Home")
+            } footer: {
+                Text("Choose which sections appear on Home, their order and their style.")
+            }
             MoodPlaylistSettingsSection()
             SiriSettingsSection()
             ApplicationDebugSection()

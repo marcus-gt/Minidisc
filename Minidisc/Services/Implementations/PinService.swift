@@ -5,7 +5,6 @@ import OSLog
 @MainActor
 final class PinService: PinServiceProtocol {
     private let modelContext: ModelContext
-    private static let maxPinnedItems = 6
 
     init(modelContainer: ModelContainer) {
         // Keep pin writes out of the main SwiftData observation graph.
@@ -30,6 +29,15 @@ final class PinService: PinServiceProtocol {
         return (try? modelContext.fetchCount(descriptor)) ?? 0
     }
 
+    func pinnedItemIds(itemType: PinnedItemType, serverId: UUID) -> [String] {
+        let type = itemType.rawValue
+        let descriptor = FetchDescriptor<PinnedItem>(
+            predicate: #Predicate<PinnedItem> { $0.itemType == type && $0.serverId == serverId },
+            sortBy: [SortDescriptor(\PinnedItem.sortOrder)]
+        )
+        return ((try? modelContext.fetch(descriptor)) ?? []).map(\.itemId)
+    }
+
     // MARK: - Pin
 
     func pin(
@@ -39,7 +47,7 @@ final class PinService: PinServiceProtocol {
         displaySubtitle: String,
         coverArtId: String?,
         serverId: UUID
-    ) throws {
+    ) {
         let compositeId = "\(itemType.rawValue):\(itemId)"
         var existingDescriptor = FetchDescriptor<PinnedItem>(
             predicate: #Predicate<PinnedItem> { $0.id == compositeId }
@@ -48,7 +56,6 @@ final class PinService: PinServiceProtocol {
         if (try? modelContext.fetchCount(existingDescriptor)) ?? 0 > 0 { return }
 
         let count = currentPinnedCount()
-        guard count < PinService.maxPinnedItems else { throw PinError.limitReached }
 
         let item = PinnedItem(
             itemType: itemType,

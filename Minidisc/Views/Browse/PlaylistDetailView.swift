@@ -42,6 +42,8 @@ struct PlaylistDetailView: View {
         self.zoomNamespace = zoomNamespace
         let pid = playlist.id
         _downloadedPlaylistMatches = Query(filter: #Predicate<DownloadedPlaylist> { $0.playlistId == pid })
+        let pinnedId = "\(PinnedItemType.playlist.rawValue):\(pid)"
+        _pinnedMatches = Query(filter: #Predicate<PinnedItem> { $0.id == pinnedId })
         _dominantColor = State(initialValue: initialDominantColor)
     }
 
@@ -55,6 +57,8 @@ struct PlaylistDetailView: View {
         self.zoomNamespace = zoomNamespace
         let pid = playlist.playlistId
         _downloadedPlaylistMatches = Query(filter: #Predicate<DownloadedPlaylist> { $0.playlistId == pid })
+        let pinnedId = "\(PinnedItemType.playlist.rawValue):\(pid)"
+        _pinnedMatches = Query(filter: #Predicate<PinnedItem> { $0.id == pinnedId })
         _dominantColor = State(initialValue: initialDominantColor)
     }
 
@@ -68,6 +72,8 @@ struct PlaylistDetailView: View {
         self.zoomNamespace = zoomNamespace
         let pid = playlistId
         _downloadedPlaylistMatches = Query(filter: #Predicate<DownloadedPlaylist> { $0.playlistId == pid })
+        let pinnedId = "\(PinnedItemType.playlist.rawValue):\(pid)"
+        _pinnedMatches = Query(filter: #Predicate<PinnedItem> { $0.id == pinnedId })
         _dominantColor = State(initialValue: initialDominantColor)
     }
 
@@ -108,6 +114,8 @@ struct PlaylistDetailView: View {
 
     @Query private var downloadedPlaylistMatches: [DownloadedPlaylist]
     @Query private var allDownloadedTracks: [DownloadedTrack]
+    /// Observed so the menu's Pin / Unpin label follows pins made anywhere in the app.
+    @Query private var pinnedMatches: [PinnedItem]
 
     private var effectiveCoverArtId: String { viewModel?.coverArtId ?? coverArtId ?? playlistId }
     private var displayCoverArtId: String { localCoverId ?? effectiveCoverArtId }
@@ -484,6 +492,8 @@ struct PlaylistDetailView: View {
                         }
                         .disabled(!canEdit)
                         Divider()
+                        pinMenuButton
+                        Divider()
                         Menu {
                             Picker("Sort By", selection: $sortOrder) {
                                 ForEach(PlaylistSortOrder.allCases) { order in
@@ -506,6 +516,32 @@ struct PlaylistDetailView: View {
                     .tint(.primary)
                 }
                 .tint(.primary)
+            }
+        }
+    }
+
+    // MARK: - Pin
+
+    @ViewBuilder
+    private var pinMenuButton: some View {
+        if !pinnedMatches.isEmpty {
+            Button(PinnedItemType.playlist.unpinLabel, systemImage: "pin.slash") {
+                HapticFeedback.light.trigger()
+                container?.pinService.unpin(itemType: .playlist, itemId: playlistId)
+            }
+        } else {
+            Button(PinnedItemType.playlist.pinLabel, systemImage: "pin") {
+                guard let serverId = container?.serverState.activeServer?.id,
+                      let pin = container?.pinService else { return }
+                pin.pin(
+                    itemType: .playlist, itemId: playlistId,
+                    displayName: viewModel?.name ?? initialName,
+                    displaySubtitle: viewModel?.playlistDetail?.owner ?? "",
+                    coverArtId: viewModel?.coverArtId ?? coverArtId,
+                    serverId: serverId
+                )
+                HapticFeedback.success.trigger()
+                container?.toastService.showConfirmation("Pinned to Home")
             }
         }
     }

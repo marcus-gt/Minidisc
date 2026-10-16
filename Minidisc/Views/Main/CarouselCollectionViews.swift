@@ -65,6 +65,8 @@ struct PlaylistCarouselCollectionView: View {
                         PlaylistCarouselGridCell(playlist: playlist)
                     }
                     .buttonStyle(.plain)
+                    .collectionContextMenu(itemType: .playlist, itemId: playlist.id, displayName: playlist.name,
+                                           displaySubtitle: playlist.owner ?? "", coverArtId: playlist.coverArt)
                 }
             }
             .padding(MinidiscSpacing.l)

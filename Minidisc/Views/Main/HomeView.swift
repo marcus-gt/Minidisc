@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import SwiftSonic
 
 struct HomeView: View {
@@ -7,11 +8,23 @@ struct HomeView: View {
     @State private var viewModel: HomeFeedViewModel?
     @State private var showSettings = false
     @State private var loadedServerID: UUID?
+    @AppStorage(HomeLayoutConfiguration.pinnedPlaylistsOnlyKey) private var pinnedPlaylistsOnly = false
+    @AppStorage(HomeShelfLayout.storageKey(for: HomeSection.playlists.shelfIdentifier)) private var playlistShelfLayout: HomeShelfLayout = .carousel
+    @AppStorage(HomeLayoutConfiguration.storageKey) private var homeLayout: HomeLayoutConfiguration = .default
+    @Query(sort: \PinnedItem.sortOrder) private var pinnedItems: [PinnedItem]
 
     private struct LoadIdentity: Hashable { let serverID: UUID?; let online: Bool }
     @Namespace private var homeZoomNamespace
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
+
+    /// Playlists pinned on the active server, in pin order.
+    private var pinnedPlaylistIDs: [String] {
+        let serverID = container?.serverState.activeServer?.id
+        return pinnedItems
+            .filter { $0.itemType == PinnedItemType.playlist.rawValue && $0.serverId == serverID }
+            .map(\.itemId)
+    }
 
     /// `viewModel` is for Previews: a supplied model is loaded instead of one built from the container.
     init(viewModel: HomeFeedViewModel? = nil) {
@@ -44,13 +57,20 @@ struct HomeView: View {
             // means it was injected (Previews) and is kept. A server switch still rebuilds a built model.
             if viewModel == nil || (loadedServerID != nil && loadedServerID != serverID) {
                 loadedServerID = serverID
+                let pinService = c.pinService
                 viewModel = HomeFeedViewModel(libraryService: c.libraryService, cache: HomeFeedCache.shared, serverID: serverID,
-                                              diagnostics: c.playbackDiagnostics)
+                                              diagnostics: c.playbackDiagnostics,
+                                              pinnedPlaylistIDs: { Set(pinService.pinnedItemIds(itemType: .playlist, serverId: serverID)) })
             }
             await viewModel?.load(isOnline: isOnline)
         }
         .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
             Task { await viewModel?.load(isOnline: isOnline, preserveLayout: true) }
+        }
+        .onChange(of: pinnedPlaylistIDs) { _, ids in
+            // A newly pinned playlist can sit past the feed's cap; reload so the shelf can show it.
+            guard let vm = viewModel, !Set(ids).isSubset(of: vm.topPicks.map(\.id)) else { return }
+            Task { await vm.load(isOnline: isOnline, preserveLayout: true) }
         }
     }
 
@@ -101,56 +121,8 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, MinidiscSpacing.l)
                     }
-                    if isOnline, picks.isEmpty, vm.pendingSections.contains(.playlists) {
-                        HomeShelfPlaceholder(title: "Your Playlists", side: 250)
-                    }
-                    if !picks.isEmpty {
-                        MinidiscShelf {
-                            MinidiscCarouselHeaderLink(
-                                "Your Playlists",
-                                itemCount: picks.count
-                            ) {
-                                PlaylistCarouselCollectionView(
-                                    "Your Playlists",
-                                    playlists: picks
-                                )
-                            }
-                        } content: {
-                            ForEach(Array(picks.prefix(MinidiscCarouselMetrics.previewLimit))) { playlist in
-                                TopPickCard(playlist: playlist, namespace: homeZoomNamespace)
-                            }
-                        }
-                        .accessibilityIdentifier("home.playlists")
-                    }
-                    HomeFavoriteSongsSection(songs: favorites.songs)
-                    HomeAlbumSection(title: "Your Favorite Albums", albums: favorites.albums, identifier: "home.favoriteAlbums")
-                    if isOnline, vm.recentlyPlayed.isEmpty, vm.pendingSections.contains(.history) {
-                        HomeShelfPlaceholder(title: "Recently Played", side: 160)
-                    }
-                    HomeAlbumSection(title: "Recently Played", albums: container?.visibleAlbums(vm.recentlyPlayed) ?? [], identifier: "home.recentlyPlayed")
-                    HomeAlbumSection(title: "In Heavy Rotation", albums: container?.visibleAlbums(vm.heavyRotation) ?? [], identifier: "home.heavyRotation")
-                    HomeAlbumSection(title: "Rediscover", albums: container?.visibleAlbums(vm.rediscovery) ?? [], identifier: "home.rediscover")
-                    HomeAlbumSection(title: "Recently Added from Your Artists", albums: container?.visibleAlbums(vm.relevantAdditions) ?? [], identifier: "home.relevantAdditions")
-                    if isOnline, vm.recentlyAdded.isEmpty, vm.pendingSections.contains(.recent) {
-                        HomeShelfPlaceholder(title: "Recently Added", side: 160)
-                    }
-                    HomeAlbumSection(title: "Recently Added", albums: container?.visibleAlbums(vm.otherAdditions) ?? [], identifier: "home.recentlyAdded")
-                    ForEach(genres) { shelf in
-                        MinidiscShelf {
-                            MinidiscCarouselHeaderLink(
-                                verbatim: shelf.name,
-                                itemCount: shelf.albums.count
-                            ) {
-                                AlbumCarouselCollectionView(
-                                    verbatim: shelf.name,
-                                    albums: shelf.albums
-                                )
-                            }
-                        } content: {
-                            ForEach(Array(shelf.albums.prefix(MinidiscCarouselMetrics.previewLimit))) { album in
-                                AlbumShelfCard(album: album)
-                            }
-                        }
+                    ForEach(homeLayout.visibleSections) { section in
+                        feedSection(section, vm: vm, picks: picks, favorites: favorites, genres: genres)
                     }
                 }
                 .padding(.top, MinidiscSpacing.m)
@@ -158,6 +130,104 @@ struct HomeView: View {
             }
             .minidiscSongSwipeContainer()
             .refreshable { await vm.load(isOnline: isOnline, preserveLayout: true) }
+        }
+    }
+
+    /// One section of the feed, in the order and visibility chosen in Settings → Application → Home Screen.
+    @ViewBuilder
+    private func feedSection(
+        _ section: HomeSection,
+        vm: HomeFeedViewModel,
+        picks: [Playlist],
+        favorites: HomeFavorites,
+        genres: [HomeFeedViewModel.GenreShelf]
+    ) -> some View {
+        switch section {
+        case .playlists:
+            if isOnline, picks.isEmpty, vm.pendingSections.contains(.playlists) {
+                HomeShelfPlaceholder(title: section.title, side: 250)
+            }
+            if !picks.isEmpty {
+                playlistShelf(picks)
+            }
+        case .favoriteSongs:
+            HomeFavoriteSongsSection(songs: favorites.songs)
+        case .favoriteAlbums:
+            albumSection(section, albums: favorites.albums)
+        case .recentlyPlayed:
+            if isOnline, vm.recentlyPlayed.isEmpty, vm.pendingSections.contains(.history) {
+                HomeShelfPlaceholder(title: section.title, side: 160)
+            }
+            albumSection(section, albums: container?.visibleAlbums(vm.recentlyPlayed) ?? [])
+        case .heavyRotation:
+            albumSection(section, albums: container?.visibleAlbums(vm.heavyRotation) ?? [])
+        case .rediscover:
+            albumSection(section, albums: container?.visibleAlbums(vm.rediscovery) ?? [])
+        case .relevantAdditions:
+            albumSection(section, albums: container?.visibleAlbums(vm.relevantAdditions) ?? [])
+        case .recentlyAdded:
+            if isOnline, vm.recentlyAdded.isEmpty, vm.pendingSections.contains(.recent) {
+                HomeShelfPlaceholder(title: section.title, side: 160)
+            }
+            albumSection(section, albums: container?.visibleAlbums(vm.otherAdditions) ?? [])
+        case .genres:
+            ForEach(genres) { shelf in
+                HomeAlbumSection(verbatim: shelf.name, albums: shelf.albums, identifier: "home.genre.\(shelf.name)",
+                                 layoutIdentifier: section.shelfIdentifier)
+            }
+        }
+    }
+
+    private func albumSection(_ section: HomeSection, albums: [AlbumID3]) -> some View {
+        HomeAlbumSection(title: section.title, albums: albums, identifier: section.shelfIdentifier)
+    }
+
+    // MARK: - Playlist shelf
+
+    /// Stays visible when "Pinned Only" has nothing to show, with a hint on how to pin.
+    @ViewBuilder
+    private func playlistShelf(_ picks: [Playlist]) -> some View {
+        let shown = HomePersonalization.shelfPlaylists(picks, pinnedIDs: pinnedPlaylistIDs, pinnedOnly: pinnedPlaylistsOnly)
+        let title: LocalizedStringResource = pinnedPlaylistsOnly ? "Pinned Playlists" : "Your Playlists"
+        switch playlistShelfLayout {
+        case .carousel:
+            MinidiscShelf {
+                playlistShelfHeader(title, shown: shown)
+            } content: {
+                if shown.isEmpty {
+                    playlistShelfEmptyHint
+                } else {
+                    ForEach(Array(shown.prefix(MinidiscCarouselMetrics.previewLimit))) { playlist in
+                        TopPickCard(playlist: playlist, namespace: homeZoomNamespace)
+                    }
+                }
+            }
+            .accessibilityIdentifier("home.playlists")
+        case .grid:
+            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                playlistShelfHeader(title, shown: shown)
+                if shown.isEmpty {
+                    playlistShelfEmptyHint
+                        .padding(.horizontal, MinidiscSpacing.l)
+                } else {
+                    HomeShelfGrid(shown.prefix(HomeShelfLayout.gridLimit)) { playlist in
+                        PlaylistGridTile(playlist: playlist, namespace: homeZoomNamespace)
+                    }
+                }
+            }
+            .accessibilityIdentifier("home.playlists")
+        }
+    }
+
+    private var playlistShelfEmptyHint: some View {
+        Text("Pin a playlist from its menu to show it here.")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+    }
+
+    private func playlistShelfHeader(_ title: LocalizedStringResource, shown: [Playlist]) -> some View {
+        MinidiscCarouselHeaderLink(title, itemCount: shown.count, visibleLimit: playlistShelfLayout.visibleLimit) {
+            PlaylistCarouselCollectionView(title, playlists: shown)
         }
     }
 
@@ -215,6 +285,38 @@ struct HomeView: View {
     }
 }
 
+// MARK: - Playlist grid tile (compact, two per row)
+
+private struct PlaylistGridTile: View {
+    let playlist: Playlist
+    let namespace: Namespace.ID
+
+    var body: some View {
+        NavigationLink(value: HomeDestination.playlist(playlist)) {
+            HomeGridTileChrome {
+                PlaylistCoverThumbnail(
+                    playlistId: playlist.id,
+                    serverId: nil,
+                    coverArtId: playlist.coverArt ?? playlist.id,
+                    title: playlist.name,
+                    size: HomeShelfLayout.gridTileCoverSide
+                )
+                .minidiscMatchedTransitionSource(id: playlist.id, in: namespace)
+            } detail: {
+                Text(playlist.name)
+                    .font(.minidiscCellTitle)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .buttonStyle(.plain)
+        .collectionContextMenu(itemType: .playlist, itemId: playlist.id, displayName: playlist.name,
+                               displaySubtitle: playlist.owner ?? "", coverArtId: playlist.coverArt)
+        .accessibilityIdentifier("home.playlist.\(playlist.id)")
+    }
+}
+
 // MARK: - Top pick card (large, Apple-Music style)
 
 private struct TopPickCard: View {
@@ -243,6 +345,8 @@ private struct TopPickCard: View {
             .frame(width: side, alignment: .leading)
         }
         .buttonStyle(.plain)
+        .collectionContextMenu(itemType: .playlist, itemId: playlist.id, displayName: playlist.name,
+                               displaySubtitle: playlist.owner ?? "", coverArtId: playlist.coverArt)
         .accessibilityIdentifier("home.playlist.\(playlist.id)")
     }
 }

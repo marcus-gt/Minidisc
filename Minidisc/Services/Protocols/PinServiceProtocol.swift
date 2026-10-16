@@ -1,15 +1,5 @@
 import Foundation
 
-nonisolated enum PinError: Error, LocalizedError {
-    case limitReached
-
-    var errorDescription: String? {
-        switch self {
-        case .limitReached: String(localized: "Maximum 6 items can be pinned to Home.")
-        }
-    }
-}
-
 @MainActor
 protocol PinServiceProtocol: AnyObject {
     func pin(
@@ -19,10 +9,12 @@ protocol PinServiceProtocol: AnyObject {
         displaySubtitle: String,
         coverArtId: String?,
         serverId: UUID
-    ) throws
+    )
     func unpin(itemType: PinnedItemType, itemId: String)
     func isPinned(itemType: PinnedItemType, itemId: String) -> Bool
     func reorder(items: [PinnedItem])
     func currentPinnedCount() -> Int
+    /// IDs of the items of one type pinned on a server, in pin order.
+    func pinnedItemIds(itemType: PinnedItemType, serverId: UUID) -> [String]
     func updateCoverArtId(itemType: PinnedItemType, itemId: String, newCoverArtId: String?)
 }
