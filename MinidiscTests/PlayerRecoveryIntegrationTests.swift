@@ -382,6 +382,8 @@ struct PlayerRecoveryIntegrationTests {
         _ = await h.engine.seek(to: 37)
         h.state.position = 37
         let failedToken = h.engine.token
+        // The track had been rendering, so the reset is the system's, not this item's.
+        await h.player.handleEngineState(.playing, playbackToken: failedToken)
         h.engine.poisonMediaServices()
         await h.player.handleEngineError(mediaReset, playbackToken: failedToken)
         #expect(h.engine.resetCount == 1)
@@ -550,16 +552,17 @@ struct PlayerRecoveryIntegrationTests {
         await h.player.stop()
     }
 
-    @Test func repeatedResetFailuresExhaustOneBudgetWithoutSkippingOrProbingTheServer() async throws {
+    /// Reopening an item that resets the media server before it renders resets it again; a loop of
+    /// such rebuilds can leave the media server hung for every app on the device.
+    @Test func rebuiltItemThatResetsBeforePlayingEndsTheIncidentWithoutAnotherRebuild() async throws {
         let h = try RecoveryHarness()
         try await h.play()
         await h.player.handleMediaServicesReset()
-        for count in 2...4 {
-            try await h.waitUntil { h.engine.playCount == count }
-            await h.player.handleEngineError(mediaReset, playbackToken: h.engine.token)
-        }
-        try await h.waitUntil { h.report.contains("audio-recovery exhausted") }
-        #expect(h.engine.playCount == 4)
+        try await h.waitUntil { h.engine.playCount == 2 }
+        await h.player.handleEngineError(mediaReset, playbackToken: h.engine.token)
+        try await h.waitUntil { h.report.contains("audio-recovery declined reason=unplayed-item") }
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(h.engine.playCount == 2)
         #expect(h.state.currentTrack?.id == "a")
         #expect(await h.resolver.availabilityCalls == 0)
         #expect(!h.report.contains("retry-budget-exhausted"))
@@ -568,6 +571,30 @@ struct PlayerRecoveryIntegrationTests {
             await h.player.stop()
             return
         }
+        await h.player.stop()
+    }
+
+    @Test func resetFromAStartingItemAndItsSystemNotificationDoNotRebuildIt() async throws {
+        let h = try RecoveryHarness()
+        try await h.play()
+        await h.player.handleEngineError(mediaReset, playbackToken: h.engine.token)
+        // The OS posts its global notification for the same incident shortly after the item error.
+        await h.player.handleMediaServicesReset()
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(h.engine.playCount == 1)
+        #expect(h.report.contains("audio-recovery declined reason=unplayed-item"))
+        #expect(!h.report.contains("audio-recovery attempt-started"))
+        #expect(h.state.currentTrack?.id == "a")
+        #expect(await h.resolver.availabilityCalls == 0)
+        guard case .error(.audioSystemUnavailable) = h.state.playbackState else {
+            Issue.record("A reset from an unplayed item must stop with an audio-system error")
+            await h.player.stop()
+            return
+        }
+
+        // Explicit Play starts over with a fresh item.
+        await h.player.resume()
+        #expect(h.engine.playCount == 2)
         await h.player.stop()
     }
 
