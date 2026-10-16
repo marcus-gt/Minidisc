@@ -8,8 +8,9 @@ struct HomeView: View {
     @State private var viewModel: HomeFeedViewModel?
     @State private var showSettings = false
     @State private var loadedServerID: UUID?
-    @AppStorage("minidisc.homePinnedPlaylistsOnly") private var pinnedPlaylistsOnly = false
-    @AppStorage("minidisc.homePlaylistShelfLayout") private var playlistShelfLayout: HomePlaylistShelfLayout = .carousel
+    @AppStorage(HomeLayoutConfiguration.pinnedPlaylistsOnlyKey) private var pinnedPlaylistsOnly = false
+    @AppStorage(HomeShelfLayout.storageKey(for: HomeSection.playlists.shelfIdentifier)) private var playlistShelfLayout: HomeShelfLayout = .carousel
+    @AppStorage(HomeLayoutConfiguration.storageKey) private var homeLayout: HomeLayoutConfiguration = .default
     @Query(sort: \PinnedItem.sortOrder) private var pinnedItems: [PinnedItem]
 
     private struct LoadIdentity: Hashable { let serverID: UUID?; let online: Bool }
@@ -120,41 +121,8 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, MinidiscSpacing.l)
                     }
-                    if isOnline, picks.isEmpty, vm.pendingSections.contains(.playlists) {
-                        HomeShelfPlaceholder(title: "Your Playlists", side: 250)
-                    }
-                    if !picks.isEmpty {
-                        playlistShelf(picks)
-                    }
-                    HomeFavoriteSongsSection(songs: favorites.songs)
-                    HomeAlbumSection(title: "Your Favorite Albums", albums: favorites.albums, identifier: "home.favoriteAlbums")
-                    if isOnline, vm.recentlyPlayed.isEmpty, vm.pendingSections.contains(.history) {
-                        HomeShelfPlaceholder(title: "Recently Played", side: 160)
-                    }
-                    HomeAlbumSection(title: "Recently Played", albums: container?.visibleAlbums(vm.recentlyPlayed) ?? [], identifier: "home.recentlyPlayed")
-                    HomeAlbumSection(title: "In Heavy Rotation", albums: container?.visibleAlbums(vm.heavyRotation) ?? [], identifier: "home.heavyRotation")
-                    HomeAlbumSection(title: "Rediscover", albums: container?.visibleAlbums(vm.rediscovery) ?? [], identifier: "home.rediscover")
-                    HomeAlbumSection(title: "Recently Added from Your Artists", albums: container?.visibleAlbums(vm.relevantAdditions) ?? [], identifier: "home.relevantAdditions")
-                    if isOnline, vm.recentlyAdded.isEmpty, vm.pendingSections.contains(.recent) {
-                        HomeShelfPlaceholder(title: "Recently Added", side: 160)
-                    }
-                    HomeAlbumSection(title: "Recently Added", albums: container?.visibleAlbums(vm.otherAdditions) ?? [], identifier: "home.recentlyAdded")
-                    ForEach(genres) { shelf in
-                        MinidiscShelf {
-                            MinidiscCarouselHeaderLink(
-                                verbatim: shelf.name,
-                                itemCount: shelf.albums.count
-                            ) {
-                                AlbumCarouselCollectionView(
-                                    verbatim: shelf.name,
-                                    albums: shelf.albums
-                                )
-                            }
-                        } content: {
-                            ForEach(Array(shelf.albums.prefix(MinidiscCarouselMetrics.previewLimit))) { album in
-                                AlbumShelfCard(album: album)
-                            }
-                        }
+                    ForEach(homeLayout.visibleSections) { section in
+                        feedSection(section, vm: vm, picks: picks, favorites: favorites, genres: genres)
                     }
                 }
                 .padding(.top, MinidiscSpacing.m)
@@ -165,9 +133,58 @@ struct HomeView: View {
         }
     }
 
+    /// One section of the feed, in the order and visibility chosen in Settings → Application → Home Screen.
+    @ViewBuilder
+    private func feedSection(
+        _ section: HomeSection,
+        vm: HomeFeedViewModel,
+        picks: [Playlist],
+        favorites: HomeFavorites,
+        genres: [HomeFeedViewModel.GenreShelf]
+    ) -> some View {
+        switch section {
+        case .playlists:
+            if isOnline, picks.isEmpty, vm.pendingSections.contains(.playlists) {
+                HomeShelfPlaceholder(title: section.title, side: 250)
+            }
+            if !picks.isEmpty {
+                playlistShelf(picks)
+            }
+        case .favoriteSongs:
+            HomeFavoriteSongsSection(songs: favorites.songs)
+        case .favoriteAlbums:
+            albumSection(section, albums: favorites.albums)
+        case .recentlyPlayed:
+            if isOnline, vm.recentlyPlayed.isEmpty, vm.pendingSections.contains(.history) {
+                HomeShelfPlaceholder(title: section.title, side: 160)
+            }
+            albumSection(section, albums: container?.visibleAlbums(vm.recentlyPlayed) ?? [])
+        case .heavyRotation:
+            albumSection(section, albums: container?.visibleAlbums(vm.heavyRotation) ?? [])
+        case .rediscover:
+            albumSection(section, albums: container?.visibleAlbums(vm.rediscovery) ?? [])
+        case .relevantAdditions:
+            albumSection(section, albums: container?.visibleAlbums(vm.relevantAdditions) ?? [])
+        case .recentlyAdded:
+            if isOnline, vm.recentlyAdded.isEmpty, vm.pendingSections.contains(.recent) {
+                HomeShelfPlaceholder(title: section.title, side: 160)
+            }
+            albumSection(section, albums: container?.visibleAlbums(vm.otherAdditions) ?? [])
+        case .genres:
+            ForEach(genres) { shelf in
+                HomeAlbumSection(verbatim: shelf.name, albums: shelf.albums, identifier: "home.genre.\(shelf.name)",
+                                 layoutIdentifier: section.shelfIdentifier)
+            }
+        }
+    }
+
+    private func albumSection(_ section: HomeSection, albums: [AlbumID3]) -> some View {
+        HomeAlbumSection(title: section.title, albums: albums, identifier: section.shelfIdentifier)
+    }
+
     // MARK: - Playlist shelf
 
-    /// Stays visible when "Pinned Only" has nothing to show, so its menu can always switch back.
+    /// Stays visible when "Pinned Only" has nothing to show, with a hint on how to pin.
     @ViewBuilder
     private func playlistShelf(_ picks: [Playlist]) -> some View {
         let shown = HomePersonalization.shelfPlaylists(picks, pinnedIDs: pinnedPlaylistIDs, pinnedOnly: pinnedPlaylistsOnly)
@@ -189,29 +206,18 @@ struct HomeView: View {
         case .grid:
             VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
                 playlistShelfHeader(title, shown: shown)
-                Group {
-                    if shown.isEmpty {
-                        playlistShelfEmptyHint
-                    } else {
-                        LazyVGrid(columns: Self.playlistGridColumns, spacing: MinidiscSpacing.s) {
-                            ForEach(Array(shown.prefix(Self.playlistGridLimit))) { playlist in
-                                PlaylistGridTile(playlist: playlist, namespace: homeZoomNamespace)
-                            }
-                        }
+                if shown.isEmpty {
+                    playlistShelfEmptyHint
+                        .padding(.horizontal, MinidiscSpacing.l)
+                } else {
+                    HomeShelfGrid(shown.prefix(HomeShelfLayout.gridLimit)) { playlist in
+                        PlaylistGridTile(playlist: playlist, namespace: homeZoomNamespace)
                     }
                 }
-                .padding(.horizontal, MinidiscSpacing.l)
             }
             .accessibilityIdentifier("home.playlists")
         }
     }
-
-    /// Three rows of two, as in the compact grid; the header link opens the full list.
-    private static let playlistGridLimit = 6
-    private static let playlistGridColumns = [
-        GridItem(.flexible(), spacing: MinidiscSpacing.s),
-        GridItem(.flexible(), spacing: MinidiscSpacing.s)
-    ]
 
     private var playlistShelfEmptyHint: some View {
         Text("Pin a playlist from its menu to show it here.")
@@ -220,30 +226,9 @@ struct HomeView: View {
     }
 
     private func playlistShelfHeader(_ title: LocalizedStringResource, shown: [Playlist]) -> some View {
-        HStack(spacing: MinidiscSpacing.xs) {
-            MinidiscCarouselHeaderLink(title, itemCount: shown.count, horizontalPadding: 0) {
-                PlaylistCarouselCollectionView(title, playlists: shown)
-            }
-            Menu {
-                Picker("Show", selection: $pinnedPlaylistsOnly) {
-                    Label("All Playlists", systemImage: "music.note.list").tag(false)
-                    Label("Pinned Only", systemImage: "pin").tag(true)
-                }
-                Picker("Layout", selection: $playlistShelfLayout) {
-                    Label("Carousel", systemImage: "rectangle.stack").tag(HomePlaylistShelfLayout.carousel)
-                    Label("Grid", systemImage: "square.grid.2x2").tag(HomePlaylistShelfLayout.grid)
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Playlist Shelf Options")
-            .accessibilityIdentifier("home.playlists.options")
+        MinidiscCarouselHeaderLink(title, itemCount: shown.count, visibleLimit: playlistShelfLayout.visibleLimit) {
+            PlaylistCarouselCollectionView(title, playlists: shown)
         }
-        .padding(.horizontal, MinidiscSpacing.l)
     }
 
     // MARK: - Destination resolver
@@ -300,42 +285,30 @@ struct HomeView: View {
     }
 }
 
-/// How the Home playlist shelf lays out its playlists. Persisted by raw value.
-nonisolated enum HomePlaylistShelfLayout: String {
-    case carousel
-    case grid
-}
-
 // MARK: - Playlist grid tile (compact, two per row)
 
 private struct PlaylistGridTile: View {
     let playlist: Playlist
     let namespace: Namespace.ID
 
-    private static let coverSide: CGFloat = 64
-
     var body: some View {
         NavigationLink(value: HomeDestination.playlist(playlist)) {
-            HStack(spacing: MinidiscSpacing.m) {
+            HomeGridTileChrome {
                 PlaylistCoverThumbnail(
                     playlistId: playlist.id,
                     serverId: nil,
                     coverArtId: playlist.coverArt ?? playlist.id,
                     title: playlist.name,
-                    size: Self.coverSide
+                    size: HomeShelfLayout.gridTileCoverSide
                 )
                 .minidiscMatchedTransitionSource(id: playlist.id, in: namespace)
+            } detail: {
                 Text(playlist.name)
                     .font(.minidiscCellTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                Spacer(minLength: 0)
             }
-            .padding(.trailing, MinidiscSpacing.s)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
-            .contentShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
         }
         .buttonStyle(.plain)
         .collectionContextMenu(itemType: .playlist, itemId: playlist.id, displayName: playlist.name,
