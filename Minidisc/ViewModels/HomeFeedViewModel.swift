@@ -64,18 +64,22 @@ final class HomeFeedViewModel {
     private let cache: HomeFeedCache?
     private let serverID: UUID?
     private let diagnostics: PlaybackDiagnostics?
+    /// Playlists kept past the shelf cap, so a pinned playlist that hasn't changed in a while still shows.
+    private let pinnedPlaylistIDs: @MainActor () -> Set<String>
     private var generation: UInt64 = 0
 
     init(
         libraryService: any PlaylistBrowsing & RecentlyAddedAlbumBrowsing & ListeningHistoryBrowsing & GenreBrowsing,
         cache: HomeFeedCache? = nil,
         serverID: UUID? = nil,
-        diagnostics: PlaybackDiagnostics? = nil
+        diagnostics: PlaybackDiagnostics? = nil,
+        pinnedPlaylistIDs: @escaping @MainActor () -> Set<String> = { [] }
     ) {
         self.libraryService = libraryService
         self.cache = cache
         self.serverID = serverID
         self.diagnostics = diagnostics
+        self.pinnedPlaylistIDs = pinnedPlaylistIDs
     }
 
     func load(isOnline: Bool = true, preserveLayout: Bool = false) async {
@@ -147,8 +151,9 @@ final class HomeFeedViewModel {
                 pendingSections.remove(result.section)
                 switch result {
                 case .playlists(let values):
-                    staged.playlists = values.filter { !Self.isGeneratedPlaylist($0) }
-                        .prefix(60).map(IndexedPlaylistPayload.init)
+                    staged.playlists = HomePersonalization.cappedPlaylists(
+                        values.filter { !Self.isGeneratedPlaylist($0) }, limit: 60, keeping: pinnedPlaylistIDs()
+                    ).map(IndexedPlaylistPayload.init)
                 case .history(let values): staged.recentlyPlayed = values
                 case .recent(let values): staged.recentlyAdded = values
                 case .genres(let values): staged.genres = values

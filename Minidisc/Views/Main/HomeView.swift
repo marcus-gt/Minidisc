@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import SwiftSonic
 
 struct HomeView: View {
@@ -7,11 +8,21 @@ struct HomeView: View {
     @State private var viewModel: HomeFeedViewModel?
     @State private var showSettings = false
     @State private var loadedServerID: UUID?
+    @AppStorage("minidisc.homePinnedPlaylistsOnly") private var pinnedPlaylistsOnly = false
+    @Query(sort: \PinnedItem.sortOrder) private var pinnedItems: [PinnedItem]
 
     private struct LoadIdentity: Hashable { let serverID: UUID?; let online: Bool }
     @Namespace private var homeZoomNamespace
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
+
+    /// Playlists pinned on the active server, in pin order.
+    private var pinnedPlaylistIDs: [String] {
+        let serverID = container?.serverState.activeServer?.id
+        return pinnedItems
+            .filter { $0.itemType == PinnedItemType.playlist.rawValue && $0.serverId == serverID }
+            .map(\.itemId)
+    }
 
     /// `viewModel` is for Previews: a supplied model is loaded instead of one built from the container.
     init(viewModel: HomeFeedViewModel? = nil) {
@@ -44,13 +55,20 @@ struct HomeView: View {
             // means it was injected (Previews) and is kept. A server switch still rebuilds a built model.
             if viewModel == nil || (loadedServerID != nil && loadedServerID != serverID) {
                 loadedServerID = serverID
+                let pinService = c.pinService
                 viewModel = HomeFeedViewModel(libraryService: c.libraryService, cache: HomeFeedCache.shared, serverID: serverID,
-                                              diagnostics: c.playbackDiagnostics)
+                                              diagnostics: c.playbackDiagnostics,
+                                              pinnedPlaylistIDs: { Set(pinService.pinnedItemIds(itemType: .playlist, serverId: serverID)) })
             }
             await viewModel?.load(isOnline: isOnline)
         }
         .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
             Task { await viewModel?.load(isOnline: isOnline, preserveLayout: true) }
+        }
+        .onChange(of: pinnedPlaylistIDs) { _, ids in
+            // A newly pinned playlist can sit past the feed's cap; reload so the shelf can show it.
+            guard let vm = viewModel, !Set(ids).isSubset(of: vm.topPicks.map(\.id)) else { return }
+            Task { await vm.load(isOnline: isOnline, preserveLayout: true) }
         }
     }
 
@@ -105,22 +123,7 @@ struct HomeView: View {
                         HomeShelfPlaceholder(title: "Your Playlists", side: 250)
                     }
                     if !picks.isEmpty {
-                        MinidiscShelf {
-                            MinidiscCarouselHeaderLink(
-                                "Your Playlists",
-                                itemCount: picks.count
-                            ) {
-                                PlaylistCarouselCollectionView(
-                                    "Your Playlists",
-                                    playlists: picks
-                                )
-                            }
-                        } content: {
-                            ForEach(Array(picks.prefix(MinidiscCarouselMetrics.previewLimit))) { playlist in
-                                TopPickCard(playlist: playlist, namespace: homeZoomNamespace)
-                            }
-                        }
-                        .accessibilityIdentifier("home.playlists")
+                        playlistShelf(picks)
                     }
                     HomeFavoriteSongsSection(songs: favorites.songs)
                     HomeAlbumSection(title: "Your Favorite Albums", albums: favorites.albums, identifier: "home.favoriteAlbums")
@@ -159,6 +162,47 @@ struct HomeView: View {
             .minidiscSongSwipeContainer()
             .refreshable { await vm.load(isOnline: isOnline, preserveLayout: true) }
         }
+    }
+
+    // MARK: - Playlist shelf
+
+    /// Stays visible when "Pinned Only" has nothing to show, so its menu can always switch back.
+    private func playlistShelf(_ picks: [Playlist]) -> some View {
+        let shown = HomePersonalization.shelfPlaylists(picks, pinnedIDs: pinnedPlaylistIDs, pinnedOnly: pinnedPlaylistsOnly)
+        let title: LocalizedStringResource = pinnedPlaylistsOnly ? "Pinned Playlists" : "Your Playlists"
+        return MinidiscShelf {
+            HStack(spacing: MinidiscSpacing.xs) {
+                MinidiscCarouselHeaderLink(title, itemCount: shown.count, horizontalPadding: 0) {
+                    PlaylistCarouselCollectionView(title, playlists: shown)
+                }
+                Menu {
+                    Picker("Show", selection: $pinnedPlaylistsOnly) {
+                        Label("All Playlists", systemImage: "music.note.list").tag(false)
+                        Label("Pinned Only", systemImage: "pin").tag(true)
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Playlist Shelf Options")
+                .accessibilityIdentifier("home.playlists.options")
+            }
+            .padding(.horizontal, MinidiscSpacing.l)
+        } content: {
+            if shown.isEmpty {
+                Text("Pin a playlist from its menu to show it here.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(Array(shown.prefix(MinidiscCarouselMetrics.previewLimit))) { playlist in
+                    TopPickCard(playlist: playlist, namespace: homeZoomNamespace)
+                }
+            }
+        }
+        .accessibilityIdentifier("home.playlists")
     }
 
     // MARK: - Destination resolver
@@ -243,6 +287,8 @@ private struct TopPickCard: View {
             .frame(width: side, alignment: .leading)
         }
         .buttonStyle(.plain)
+        .collectionContextMenu(itemType: .playlist, itemId: playlist.id, displayName: playlist.name,
+                               displaySubtitle: playlist.owner ?? "", coverArtId: playlist.coverArt)
         .accessibilityIdentifier("home.playlist.\(playlist.id)")
     }
 }
