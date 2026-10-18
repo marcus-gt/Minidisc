@@ -1162,6 +1162,11 @@ actor PlayerService: PlayerServiceProtocol {
         let requestGeneration = queueBuildGeneration
         cancelPendingInstantMix()
 
+        if case .song(let seedID) = seed, let playing = await trackPlayingInPlace(id: seedID) {
+            try await remixAroundPlayingTrack(playing, seed: seed, requestGeneration: requestGeneration)
+            return
+        }
+
         // `??` cannot host an async right-hand side (autoclosures are not concurrency-aware).
         let resolved: DisplayableSong?
         if let seedTrack {
@@ -1219,6 +1224,88 @@ actor PlayerService: PlayerServiceProtocol {
             }
             await self.instantMixDidFinish(generation: generation)
         }
+    }
+
+    /// The seed counts as playing in place only while it is genuinely loaded: not after the queue
+    /// ran out, and not while a restored session waits for its first resume.
+    private func trackPlayingInPlace(id: String) async -> DisplayableSong? {
+        guard !stoppedAtEndOfQueue, pendingRestoreInfo == nil, !isRestoringSession else { return nil }
+        return await MainActor.run {
+            guard state.currentRadio == nil,
+                  let track = state.currentTrack, track.id == id, !track.isLocalFile
+            else { return nil }
+            switch state.playbackState {
+            case .playing, .paused, .loading: return track
+            case .idle, .error: return nil
+            }
+        }
+    }
+
+    /// Instant Mix on the song that is already playing: the song keeps playing and the queue becomes
+    /// [song] + mix once the mix arrives. Until then Up Next is untouched, so a failed or empty mix
+    /// leaves the listener's queue as it was (the caller shows the toast).
+    private func remixAroundPlayingTrack(
+        _ seedTrack: DisplayableSong,
+        seed: InstantMixSeed,
+        requestGeneration: UInt64
+    ) async throws {
+        let generation = playbackGeneration
+        let expectedQueueGeneration = queueGeneration
+        // Holds auto-extend so the old queue is not topped up with a competing mix meanwhile.
+        instantMixPendingPlaybackGeneration = generation
+        defer { clearInstantMixPending(generation: generation) }
+
+        Logger.player.info("[INSTANT-MIX] seed '\(seedTrack.id, privacy: .public)' already playing — building mix in place")
+        let tracks = try await libraryService.instantMix(from: seed, count: 100)
+        try Task.checkCancellation()
+        guard requestGeneration == queueBuildGeneration,
+              generation == playbackGeneration,
+              expectedQueueGeneration == queueGeneration
+        else {
+            Logger.player.info("[INSTANT-MIX] in-place mix discarded — playback moved on during the build")
+            return
+        }
+        let fresh = tracks.filter { $0.id != seedTrack.id }
+        guard !fresh.isEmpty else { throw MinidiscError.instantMixEmpty }
+
+        let previousNextTrackID = await queuedNextTrackID()
+        guard requestGeneration == queueBuildGeneration,
+              generation == playbackGeneration,
+              expectedQueueGeneration == queueGeneration
+        else { return }
+
+        // A refill fetched for the old queue must not land in the new one.
+        autoExtendFetchTask?.cancel()
+        autoExtendFetchTask = nil
+        originalQueueOrder = nil
+        queueGeneration &+= 1
+        let mixQueueGeneration = queueGeneration
+        let didCommit = await MainActor.run {
+            state.queueGeneration = mixQueueGeneration
+            guard state.currentTrack?.id == seedTrack.id else { return false }
+            state.queue = [state.currentTrack ?? seedTrack] + fresh
+            state.currentIndex = 0
+            state.repeatMode = .off
+            state.isShuffled = false
+            state.isAutoExtendEnabled = true
+            state.originalQueueEndIndex = nil
+            state.isSmartShuffleActive = false
+            return true
+        }
+        guard didCommit, generation == playbackGeneration, mixQueueGeneration == queueGeneration else { return }
+
+        instantMixAnchorSongID = seedTrack.id
+        await playbackPreferences.setAutoExtendEnabled(true)
+        await invalidatePrefetchIfNextTrackChanged(
+            from: previousNextTrackID,
+            reason: "Instant Mix replaced Up Next"
+        )
+        await saveSession()
+        Logger.player.info("[INSTANT-MIX] replaced Up Next with \(fresh.count, privacy: .public) tracks; seed kept playing")
+
+        // A short mix may already be under the refill threshold.
+        clearInstantMixPending(generation: generation)
+        await evaluateAutoExtend()
     }
 
     private func starterTrack(for seed: InstantMixSeed) async -> DisplayableSong? {
