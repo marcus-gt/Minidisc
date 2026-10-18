@@ -123,16 +123,20 @@ struct MainTabView: View {
                   let name = note.userInfo?["artistName"] as? String else { return }
             let coverArtId = note.userInfo?["coverArtId"] as? String
             playerPresentation.reset()
-            selectedTab = .home
-            homePath.append(HomeDestination.artistById(id: id, name: name, coverArtId: coverArtId))
+            open(
+                HomeDestination.artistById(id: id, name: name, coverArtId: coverArtId),
+                inCurrentTab: note.userInfo?["inCurrentTab"] as? Bool == true
+            )
         }
         .onReceive(NotificationCenter.default.publisher(for: .minidiscNavigateToAlbum)) { note in
             guard let id   = note.userInfo?["albumId"]   as? String,
                   let name = note.userInfo?["albumName"] as? String else { return }
             let coverArtId = note.userInfo?["coverArtId"] as? String
             playerPresentation.reset()
-            selectedTab = .home
-            homePath.append(HomeDestination.albumById(id: id, name: name, subtitle: "", coverArtId: coverArtId))
+            open(
+                HomeDestination.albumById(id: id, name: name, subtitle: "", coverArtId: coverArtId),
+                inCurrentTab: note.userInfo?["inCurrentTab"] as? Bool == true
+            )
         }
         .onReceive(NotificationCenter.default.publisher(for: .minidiscNavigateToPlaylist)) { note in
             guard let id   = note.userInfo?["playlistId"] as? String,
@@ -141,6 +145,21 @@ struct MainTabView: View {
             playerPresentation.reset()
             selectedTab = .home
             homePath.append(HomeDestination.playlistById(id: id, name: name, coverArtId: coverArtId))
+        }
+    }
+
+    /// Library and Search register `HomeDestination`, so a page opened from a row there stays in
+    /// that tab. Everything else (Discover, Lidarr, the player) goes to Home as before.
+    private func open(_ destination: HomeDestination, inCurrentTab: Bool) {
+        let hasServer = container?.serverState.activeServer != nil
+        switch selectedTab {
+        case .library where inCurrentTab && hasServer:
+            libraryPath.append(destination)
+        case .search where inCurrentTab:
+            searchPath.append(destination)
+        default:
+            selectedTab = .home
+            homePath.append(destination)
         }
     }
 }

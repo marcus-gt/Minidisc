@@ -202,6 +202,7 @@ struct ArtistDetailView: View {
                 skeletonGrid
             }
         }
+        .environment(\.minidiscSongMenuContext, SongMenuContext(artistID: artist.id))
         .navigationTitle("")
         .navigationBarTitleDisplayModeInline()
         .navigationBarBackButtonHidden(true)
@@ -647,6 +648,8 @@ private struct ArtistTopSongsSection: View {
     let titleColor: Color
     let secondaryColor: Color
 
+    @Environment(\.minidiscSongMenuContext) private var menuContext
+
     var body: some View {
         VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
             MinidiscCarouselHeaderLink(
@@ -654,7 +657,9 @@ private struct ArtistTopSongsSection: View {
                 itemCount: songs.count,
                 visibleLimit: 5
             ) {
+                // Passed explicitly: a pushed destination need not inherit the page's environment.
                 ArtistTopSongsCollectionView(artistName: artistName, songs: songs)
+                    .environment(\.minidiscSongMenuContext, menuContext)
             }
             ArtistTopSongsList(
                 artistName: artistName,
