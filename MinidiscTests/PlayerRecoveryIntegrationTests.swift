@@ -988,6 +988,77 @@ struct InstantMixAutoExtendTests {
         #expect(await library.calls[1] == InstantMixCall(seedID: "x", count: 50 + 2))
         await h.player.stop()
     }
+
+    // MARK: Seed already playing (#19)
+
+    @Test func playingSong_mixReplacesUpNextWithoutRestarting() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try mix(20))
+        try await h.play(["a", "b", "c"])
+        let playsBefore = h.engine.playCount
+
+        try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"))
+
+        #expect(h.engine.playCount == playsBefore)
+        #expect(h.state.currentTrack?.id == "a")
+        #expect(h.state.currentIndex == 0)
+        #expect(h.state.queue.map(\.id) == ["a"] + (1...20).map { "m\($0)" })
+        #expect(await library.calls == [InstantMixCall(seedID: "a", count: 100)])
+        await h.player.stop()
+    }
+
+    @Test func playingSong_keepsUpNextUntilTheMixArrives() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try mix(20))
+        await library.holdMixes()
+        try await h.play(["a", "b", "c"])
+
+        let mixTask = Task { try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a")) }
+        try await h.waitUntil { await library.isHoldingMix }
+        #expect(h.state.queue.map(\.id) == ["a", "b", "c"])
+
+        await library.releaseMixes()
+        try await mixTask.value
+        #expect(h.state.queue.first?.id == "a")
+        #expect(h.state.queue.count == 21)
+        await h.player.stop()
+    }
+
+    @Test func playingSong_emptyMixKeepsTheOldQueue() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        try await h.play(["a", "b", "c"])
+        let playsBefore = h.engine.playCount
+
+        let error = await #expect(throws: MinidiscError.self) {
+            try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"))
+        }
+        guard case .instantMixEmpty = error else {
+            Issue.record("Expected instantMixEmpty, got \(String(describing: error))")
+            return
+        }
+
+        #expect(h.engine.playCount == playsBefore)
+        #expect(h.state.queue.map(\.id) == ["a", "b", "c"])
+        await h.player.stop()
+    }
+
+    @Test func otherSong_stillStartsFresh() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try mix(20))
+        try await h.play(["a", "b"])
+        let playsBefore = h.engine.playCount
+
+        try await h.player.playInstantMix(from: .song(id: "x"), startingWith: try track("x"))
+        try await h.waitUntil { h.state.queue.count == 21 }
+
+        #expect(h.engine.playCount == playsBefore + 1)
+        #expect(h.state.currentTrack?.id == "x")
+        await h.player.stop()
+    }
 }
 
 
