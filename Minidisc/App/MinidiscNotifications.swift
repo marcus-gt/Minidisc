@@ -2,7 +2,9 @@ import Foundation
 
 // MARK: - Player navigation helpers
 
-func postNavigateToAlbum(track: DisplayableSong) {
+/// `inCurrentTab` opens the page in the selected tab when it can show it (Library, Search);
+/// otherwise, and by default (the player), it opens in Home.
+func postNavigateToAlbum(track: DisplayableSong, inCurrentTab: Bool = false) {
     guard let albumId = track.albumId else { return }
     NotificationCenter.default.post(
         name: .minidiscNavigateToAlbum,
@@ -10,24 +12,28 @@ func postNavigateToAlbum(track: DisplayableSong) {
         userInfo: [
             "albumId":   albumId,
             "albumName": track.albumName ?? "",
-            "coverArtId": track.coverArtId as Any
+            "coverArtId": track.coverArtId as Any,
+            "inCurrentTab": inCurrentTab
         ]
     )
 }
 
-func postNavigateToArtist(track: DisplayableSong) {
+func postNavigateToArtist(track: DisplayableSong, inCurrentTab: Bool = false) {
     guard let artistId = track.artistId else { return }
-    postNavigateToArtist(artistId: artistId, artistName: track.artist ?? "", coverArtId: track.coverArtId)
+    postNavigateToArtist(
+        artistId: artistId, artistName: track.artist ?? "", coverArtId: track.coverArtId, inCurrentTab: inCurrentTab
+    )
 }
 
-func postNavigateToArtist(artistId: String, artistName: String, coverArtId: String?) {
+func postNavigateToArtist(artistId: String, artistName: String, coverArtId: String?, inCurrentTab: Bool = false) {
     NotificationCenter.default.post(
         name: .minidiscNavigateToArtist,
         object: nil,
         userInfo: [
             "artistId":   artistId,
             "artistName": artistName,
-            "coverArtId": coverArtId as Any
+            "coverArtId": coverArtId as Any,
+            "inCurrentTab": inCurrentTab
         ]
     )
 }

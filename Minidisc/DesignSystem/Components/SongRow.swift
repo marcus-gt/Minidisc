@@ -7,6 +7,24 @@ nonisolated enum SongRowTrailingAccessory: Sendable, Equatable {
     case favorite
 }
 
+/// The album or artist page a song list sits on, so its rows don't offer to open that same page.
+nonisolated struct SongMenuContext: Sendable, Equatable {
+    var albumID: String?
+    var artistID: String?
+}
+
+private struct SongMenuContextKey: EnvironmentKey {
+    static let defaultValue = SongMenuContext()
+}
+
+extension EnvironmentValues {
+    /// Set by album and artist detail pages; rows elsewhere show both "Go to" actions.
+    var minidiscSongMenuContext: SongMenuContext {
+        get { self[SongMenuContextKey.self] }
+        set { self[SongMenuContextKey.self] = newValue }
+    }
+}
+
 /// Standard track cell for album and playlist detail screens.
 ///
 /// - `showCoverArt`: show a 44pt thumbnail (useful in playlist context where tracks
@@ -295,8 +313,27 @@ private struct SongActions: View {
 
     @Environment(\.appContainer) private var container
     @Environment(PlaylistAddition.self) private var playlistAddition: PlaylistAddition?
+    @Environment(\.minidiscSongMenuContext) private var menuContext
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
+
+    /// Hidden for local files (no server album page) and on the song's own album page.
+    private var showsGoToAlbum: Bool {
+        guard !song.isLocalFile,
+              let albumId = song.albumId, !albumId.isEmpty,
+              song.albumName?.isEmpty == false
+        else { return false }
+        return albumId != menuContext.albumID
+    }
+
+    /// Hidden for local files and on the song's own artist page.
+    private var showsGoToArtist: Bool {
+        guard !song.isLocalFile,
+              let artistId = song.artistId, !artistId.isEmpty,
+              song.artist?.isEmpty == false
+        else { return false }
+        return artistId != menuContext.artistID
+    }
 
     var body: some View {
         Group {
@@ -355,13 +392,23 @@ private struct SongActions: View {
                 }
             }
 
-            if onGoToAlbum != nil || onGetInfo != nil {
+            if showsGoToAlbum || showsGoToArtist || onGetInfo != nil {
                 Section {
-                    if let onGoToAlbum,
-                       song.albumId != nil,
-                       song.albumName?.isEmpty == false {
-                        Button(action: onGoToAlbum) {
+                    if showsGoToAlbum {
+                        Button {
+                            if let onGoToAlbum { onGoToAlbum() }
+                            else { postNavigateToAlbum(track: song, inCurrentTab: true) }
+                        } label: {
                             Label("Go to Album", systemImage: "music.note.square.stack")
+                        }
+                        .disabled(!isOnline)
+                    }
+
+                    if showsGoToArtist {
+                        Button {
+                            postNavigateToArtist(track: song, inCurrentTab: true)
+                        } label: {
+                            Label("Go to Artist", systemImage: "music.mic")
                         }
                         .disabled(!isOnline)
                     }
