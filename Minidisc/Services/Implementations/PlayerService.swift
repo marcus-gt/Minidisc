@@ -237,6 +237,14 @@ actor PlayerService: PlayerServiceProtocol {
     private var durationMismatchLoggedTrackID: String?
     private var originalQueueOrder: [DisplayableSong]?
     private var instantMixTask: Task<Void, Never>?
+    /// The song a song-seeded Instant Mix started from. Refills seed on it instead of the current
+    /// track so a long session stays near the original sound. Cleared with every new queue and not
+    /// persisted, so a restored session falls back to current-track seeding.
+    private var instantMixAnchorSongID: String?
+    /// Playback generation whose seed-only queue is still waiting for its Instant Mix. Auto-extend
+    /// would otherwise see a 1-track queue and build a competing mix. Bumped generations make a
+    /// leftover value inert, so it can never block auto-extend for later playback.
+    private var instantMixPendingPlaybackGeneration: UInt64?
     private var autoExtendFetchTask: Task<Void, Never>?
     /// Distinguishes an in-flight fetch from a later replacement. A cancelled server request may
     /// still return, so task cancellation alone is not enough to protect the replacement's handle.
@@ -634,6 +642,7 @@ actor PlayerService: PlayerServiceProtocol {
 
         if isNewQueue {
             originalQueueOrder = nil
+            instantMixAnchorSongID = nil
             queueGeneration &+= 1
         }
         let committedQueueGeneration = queueGeneration
@@ -956,6 +965,7 @@ actor PlayerService: PlayerServiceProtocol {
 
         configureAudioSessionIfNeeded()
 
+        instantMixAnchorSongID = nil
         queueGeneration &+= 1
         let radioQueueGeneration = queueGeneration
         await MainActor.run {
@@ -1170,7 +1180,14 @@ actor PlayerService: PlayerServiceProtocol {
         }
         let expectedPlayGeneration = playbackGeneration &+ 1
         let expectedBuildGeneration = queueBuildGeneration &+ 1
-        try await play(tracks: [starter], startIndex: 0)
+        // Claimed before play(): its track-start auto-extend check runs before instantMixTask exists.
+        instantMixPendingPlaybackGeneration = expectedPlayGeneration
+        do {
+            try await play(tracks: [starter], startIndex: 0)
+        } catch {
+            clearInstantMixPending(generation: expectedPlayGeneration)
+            throw error
+        }
         guard expectedPlayGeneration == playbackGeneration,
               expectedBuildGeneration == queueBuildGeneration
         else { return }
@@ -1180,12 +1197,16 @@ actor PlayerService: PlayerServiceProtocol {
             state.queueGeneration == expectedQueueGeneration
                 && state.queue.map(\.id) == [starter.id]
                 && state.currentTrack?.id == starter.id
-        }) else { return }
+        }) else {
+            clearInstantMixPending(generation: generation)
+            return
+        }
         guard generation == playbackGeneration,
               expectedBuildGeneration == queueBuildGeneration
         else { return }
+        if case .song(let id) = seed { instantMixAnchorSongID = id }
         Logger.player.info("[MIX-TIMING] seed '\(starter.id, privacy: .public)' playing immediately — mix building behind it")
-        // Auto-extend stays off until the mix lands to avoid a competing background fill.
+        // Auto-extend is held off by instantMixPendingPlaybackGeneration until the mix lands.
         instantMixTask = Task { [weak self] in
             guard let self else { return }
             await BackgroundActivity.run("instant-mix") {
@@ -1289,14 +1310,26 @@ actor PlayerService: PlayerServiceProtocol {
         return appendedCount
     }
 
-    private func instantMixDidFinish(generation: UInt64) {
+    private func instantMixDidFinish(generation: UInt64) async {
         guard generation == playbackGeneration else { return }
         instantMixTask = nil
+        clearInstantMixPending(generation: generation)
+        // The seed's own track-start check was held off; run it now so an empty or short mix
+        // still falls through to the endless queue instead of stopping after the seed.
+        await evaluateAutoExtend()
+    }
+
+    private func clearInstantMixPending(generation: UInt64) {
+        if instantMixPendingPlaybackGeneration == generation {
+            instantMixPendingPlaybackGeneration = nil
+        }
     }
 
     private func cancelPendingInstantMix() {
         instantMixTask?.cancel()
         instantMixTask = nil
+        // instantMixPendingPlaybackGeneration is left alone: play() calls this after
+        // playInstantMix has claimed it, and a superseded generation already makes it inert.
     }
 
     private func buildThenPlayInstantMix(
@@ -1335,6 +1368,7 @@ actor PlayerService: PlayerServiceProtocol {
               expectedPlayGeneration == playbackGeneration,
               expectedBuildGeneration == queueBuildGeneration
         else { return }
+        if case .song(let id) = seed { instantMixAnchorSongID = id }
         await playbackPreferences.setAutoExtendEnabled(true)
         Logger.player.info("[MIX-TIMING] end-to-end=\(Int(Date().timeIntervalSince(tStart) * 1000), privacy: .public)ms (build=\(buildMs, privacy: .public)ms, start=\(Int(Date().timeIntervalSince(tPlay) * 1000), privacy: .public)ms)")
         await evaluateAutoExtend()
@@ -1411,7 +1445,7 @@ actor PlayerService: PlayerServiceProtocol {
 
     private func evaluateAutoExtend() async {
         let expectedQueueGeneration = queueGeneration
-        let (isEnabled, repeatMode, currentRadio, remaining, queueIds, seedTrackId) = await MainActor.run {
+        let (isEnabled, repeatMode, currentRadio, remaining, queueIds, currentTrackId) = await MainActor.run {
             let remaining = state.queue.count - state.currentIndex - 1
             return (state.isAutoExtendEnabled, state.repeatMode, state.currentRadio, remaining, Set(state.queue.map(\.id)), state.currentTrack?.id)
         }
@@ -1420,9 +1454,11 @@ actor PlayerService: PlayerServiceProtocol {
         guard repeatMode == .off else { return }
         guard currentRadio == nil else { return }
         guard autoExtendFetchTask == nil else { return }
+        guard instantMixPendingPlaybackGeneration != playbackGeneration else { return }
         guard remaining <= 15 else { return }
+        let seedTrackId = instantMixAnchorSongID ?? currentTrackId
 
-        Logger.player.info("Auto-extend triggered: \(remaining) tracks remaining, fetching 50 seeded on '\(seedTrackId ?? "none", privacy: .public)'")
+        Logger.player.info("Auto-extend triggered: \(remaining) tracks remaining, fetching 50 seeded on '\(seedTrackId ?? "none", privacy: .public)'\(self.instantMixAnchorSongID != nil ? " (Instant Mix anchor)" : "", privacy: .public)")
 
         autoExtendFetchGeneration &+= 1
         let fetchGeneration = autoExtendFetchGeneration
@@ -1822,6 +1858,7 @@ actor PlayerService: PlayerServiceProtocol {
         isRestoringSession = false
         await nowPlayingService?.stop()
         await sessionService.clear()
+        instantMixAnchorSongID = nil
         queueGeneration &+= 1
         let stoppedQueueGeneration = queueGeneration
         await MainActor.run {

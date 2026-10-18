@@ -194,7 +194,8 @@ private struct RecoveryHarness {
         audioStartupGrace: Duration = .milliseconds(800),
         audioRetryDelay: Duration = .milliseconds(40),
         localMusicStore: LocalMusicStore? = nil,
-        configureServer: Bool = true
+        configureServer: Bool = true,
+        library: (any AlbumBrowsing & ArtistBrowsing & PlaybackQueueBuilding & PlaybackReporting)? = nil
     ) throws {
         let container = try ModelContainer.minidisc(inMemory: true)
         let server = MockServerService()
@@ -217,7 +218,7 @@ private struct RecoveryHarness {
                 dataLoader: { _ in throw URLError(.unsupportedURL) },
                 imageDecoder: { _, _ in nil }
             ),
-            libraryService: RecoveryTestLibrary(),
+            libraryService: library ?? RecoveryTestLibrary(),
             audioStreamCache: MockAudioStreamCache(),
             downloadService: download,
             cacheSettings: cacheSettings,
@@ -865,6 +866,128 @@ private actor PlaylistPreparationGate {
     var isWaiting: Bool { continuation != nil }
     func wait() async { await withCheckedContinuation { continuation = $0 } }
     func release() { continuation?.resume(); continuation = nil }
+}
+
+private nonisolated struct InstantMixCall: Equatable, Sendable {
+    let seedID: String
+    let count: Int
+}
+
+/// Records every Instant Mix request. Auto-extend reaches it through the default
+/// `endlessExtension`, so a refill shows up as a call with its seed and pool size.
+private actor InstantMixRecordingLibrary: AlbumBrowsing, ArtistBrowsing, PlaybackQueueBuilding, PlaybackReporting {
+    private(set) var calls: [InstantMixCall] = []
+    private var mixTracks: [DisplayableSong] = []
+    private var holdsMixes = false
+    private var held: [CheckedContinuation<Void, Never>] = []
+    var isHoldingMix: Bool { !held.isEmpty }
+
+    func setMix(_ tracks: [DisplayableSong]) { mixTracks = tracks }
+    /// Holds every request until released, so a competing build is caught and nothing hangs.
+    func holdMixes() { holdsMixes = true }
+    func releaseMixes() {
+        holdsMixes = false
+        held.forEach { $0.resume() }
+        held = []
+    }
+
+    func instantMix(from seed: InstantMixSeed, count: Int) async throws -> [DisplayableSong] {
+        let seedID: String
+        switch seed {
+        case .song(let id), .album(let id), .artist(let id): seedID = id
+        }
+        calls.append(InstantMixCall(seedID: seedID, count: count))
+        if holdsMixes {
+            await withCheckedContinuation { held.append($0) }
+        }
+        return mixTracks
+    }
+
+    func album(id: String) async throws -> AlbumID3 { throw MinidiscError.notImplemented }
+    func allAlbums() async throws -> [AlbumID3] { [] }
+    func artists() async throws -> [ArtistIndex] { [] }
+    func artist(id: String) async throws -> ArtistID3 { throw MinidiscError.notImplemented }
+    func fetchAllTracks(forArtistID artistID: String) async throws -> [DisplayableSong] { [] }
+    func smartShuffleQueue(targetSize: Int) async throws -> [DisplayableSong] { [] }
+    func similarBackfillQueue(targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] { [] }
+    func scrobble(songId: String, submission: Bool) async {}
+}
+
+@Suite("Instant Mix auto-extend", .serialized)
+@MainActor
+struct InstantMixAutoExtendTests {
+    private func track(_ id: String) throws -> DisplayableSong {
+        DisplayableSong(from: try JSONDecoder().decode(Song.self, from: Data(
+            "{\"id\":\"\(id)\",\"title\":\"\(id)\",\"isDir\":false,\"duration\":120}".utf8
+        )))
+    }
+
+    private func mix(_ count: Int) throws -> [DisplayableSong] {
+        try (1...count).map { try track("m\($0)") }
+    }
+
+    @Test func songMix_withAutoExtendOn_doesNotStartACompetingBuild() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try mix(20))
+        await library.holdMixes()
+        h.state.isAutoExtendEnabled = true
+
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+        try await h.waitUntil { await library.isHoldingMix }
+        // A competing auto-extend fetch would run as its own task; give it time to show up.
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(await library.calls == [InstantMixCall(seedID: "seed", count: 100)])
+
+        await library.releaseMixes()
+        try await h.waitUntil { h.state.queue.count == 21 }
+        try await Task.sleep(for: .milliseconds(100))
+        // 20 tracks remain behind the seed, above the refill threshold.
+        #expect(await library.calls.count == 1)
+        await h.player.stop()
+    }
+
+    @Test func songMix_refillSeedsOnTheOriginalSong() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try mix(20))
+
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+        try await h.waitUntil { h.state.queue.count == 21 }
+        await library.setMix([])
+        try await h.player.play(tracks: h.state.queue, startIndex: 10)
+
+        try await h.waitUntil { await library.calls.count == 2 }
+        #expect(h.state.currentTrack?.id == "m10")
+        #expect(await library.calls[1] == InstantMixCall(seedID: "seed", count: 50 + 21))
+        await h.player.stop()
+    }
+
+    @Test func emptySongMix_stillFallsThroughToTheEndlessQueue() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+
+        try await h.waitUntil { await library.calls.count == 2 }
+        #expect(await library.calls[1] == InstantMixCall(seedID: "seed", count: 50 + 1))
+        await h.player.stop()
+    }
+
+    @Test func newQueue_dropsTheAnchor() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try mix(20))
+
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+        try await h.waitUntil { h.state.queue.count == 21 }
+        await library.setMix([])
+        try await h.player.play(tracks: [try track("x"), try track("y")], startIndex: 0)
+
+        try await h.waitUntil { await library.calls.count == 2 }
+        #expect(await library.calls[1] == InstantMixCall(seedID: "x", count: 50 + 2))
+        await h.player.stop()
+    }
 }
 
 

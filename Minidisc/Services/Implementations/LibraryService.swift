@@ -852,10 +852,12 @@ actor LibraryService: LibraryServiceProtocol {
         try Task.checkCancellation()
         let fanMs = Int(Date().timeIntervalSince(tFan) * 1000)
 
-        var seenIds = Set<String>()
-        let merged = (base + expansions).filter { seenIds.insert($0.id).inserted }
-
-        let diversified = Self.diversifyByArtist(merged, maxPerArtist: Self.instantMixMaxPerArtist)
+        let diversified = Self.orderInstantMix(
+            seed: seed,
+            base: base,
+            expansions: expansions,
+            maxPerArtist: Self.instantMixMaxPerArtist
+        )
         let distinctArtists = Set(diversified.prefix(count).compactMap { $0.artistId ?? $0.artist }).count
         let totalMs = Int(Date().timeIntervalSince(tStart) * 1000)
         // fanSum vs fanMs is the decisive comparison: close to fanMs means the calls really ran
@@ -879,6 +881,42 @@ actor LibraryService: LibraryServiceProtocol {
     nonisolated private static let instantMixFanOutArtists = 8
     nonisolated private static let instantMixFanOutCount = 25
     nonisolated private static let instantMixMaxPerArtist = 4
+
+    /// A song seed keeps the server's similarity ranking (AudioMuse sorts by sonic distance), so its
+    /// base list plays first in that order and the artist fan-out follows. Interleaving the two
+    /// would mix artist-radio picks in as soon as the base list runs out of new artists. Album and
+    /// artist seeds have no single sonic anchor and keep the round-robin across artists.
+    nonisolated static func orderInstantMix(
+        seed: InstantMixSeed,
+        base: [Song],
+        expansions: [Song],
+        maxPerArtist: Int
+    ) -> [Song] {
+        var seenIds = Set<String>()
+        guard case .song = seed else {
+            let merged = (base + expansions).filter { seenIds.insert($0.id).inserted }
+            return diversifyByArtist(merged, maxPerArtist: maxPerArtist)
+        }
+        let ranked = base.filter { seenIds.insert($0.id).inserted }
+        let fanOut = diversifyByArtist(
+            expansions.filter { seenIds.insert($0.id).inserted },
+            maxPerArtist: maxPerArtist
+        )
+        // One cap over both parts, so an artist already in the ranked list gets no extra quota.
+        return capPerArtistPreservingOrder(ranked + fanOut, maxPerArtist: maxPerArtist)
+    }
+
+    /// Drops songs past an artist's limit without reordering the rest.
+    nonisolated static func capPerArtistPreservingOrder(_ songs: [Song], maxPerArtist: Int) -> [Song] {
+        var taken: [String: Int] = [:]
+        return songs.filter { song in
+            let key = song.artistId ?? song.artist ?? song.id
+            let n = taken[key] ?? 0
+            guard n < maxPerArtist else { return false }
+            taken[key] = n + 1
+            return true
+        }
+    }
 
     /// Interleaves artists while preserving their first-seen relevance order and per-artist limit.
     nonisolated private static func diversifyByArtist(_ songs: [Song], maxPerArtist: Int) -> [Song] {

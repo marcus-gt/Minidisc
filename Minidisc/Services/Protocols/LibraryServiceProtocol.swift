@@ -200,6 +200,14 @@ extension RecentlyAddedTrackBrowsing where Self: RecentlyAddedAlbumBrowsing, Sel
 }
 
 extension PlaybackQueueBuilding {
+    /// Similarity lists are ranked, so asking the same seed again returns the same head. The request
+    /// grows by the queued songs so a refill anchored on the mix's original seed still reaches
+    /// unplayed neighbours further down the list. 500 bounds the request (AudioMuse clamps `n` too).
+    nonisolated static func endlessExtensionMixCount(targetSize: Int, excludedCount: Int) -> Int {
+        let maxPool = 500
+        return min(targetSize + excludedCount, max(targetSize, maxPool))
+    }
+
     func endlessExtension(seedTrackId: String?, targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] {
         guard let seedTrackId else {
             return try await similarBackfillQueue(targetSize: targetSize, excludedIds: excludedIds)
@@ -208,7 +216,10 @@ extension PlaybackQueueBuilding {
         var seen = excludedIds
         let mix: [DisplayableSong]
         do {
-            mix = try await instantMix(from: .song(id: seedTrackId), count: targetSize)
+            mix = try await instantMix(
+                from: .song(id: seedTrackId),
+                count: Self.endlessExtensionMixCount(targetSize: targetSize, excludedCount: excludedIds.count)
+            )
         } catch is CancellationError {
             throw CancellationError()
         } catch {
@@ -218,6 +229,7 @@ extension PlaybackQueueBuilding {
         for song in mix where !seen.contains(song.id) {
             picked.append(song)
             seen.insert(song.id)
+            if picked.count == targetSize { break }
         }
         if picked.count < targetSize {
             let backfill: [DisplayableSong]
