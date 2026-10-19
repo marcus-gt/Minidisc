@@ -8,6 +8,29 @@ struct HomeLayoutConfigurationTests {
         #expect(HomeLayoutConfiguration.default.visibleSections == HomeSection.allCases)
     }
 
+    @Test func equality_comparesFieldsNotEncodedStrings() {
+        var config = HomeLayoutConfiguration.default
+        config.setVisible(false, for: .rediscover)
+        #expect(HomeLayoutConfiguration.default == HomeLayoutConfiguration.default)
+        #expect(config == config)
+        #expect(config != HomeLayoutConfiguration.default)
+    }
+
+    @Test func rawValue_isStableAcrossEncodes() {
+        var config = HomeLayoutConfiguration.default
+        config.setVisible(false, for: .rediscover)
+        let encodings = Set((0..<50).map { _ in config.rawValue })
+        #expect(encodings.count == 1)
+    }
+
+    @Test func rawValue_decodesValuesStoredWithEitherKeyOrder() throws {
+        // Layouts saved before keys were sorted may have `order` first.
+        let legacy = #"{"order":["genres","playlists"],"hidden":["rediscover"]}"#
+        let decoded = try #require(HomeLayoutConfiguration(rawValue: legacy))
+        #expect(decoded.order.prefix(2) == [.genres, .playlists])
+        #expect(!decoded.isVisible(.rediscover))
+    }
+
     @Test func rawValue_roundTrip_keepsOrderAndHidden() throws {
         var config = HomeLayoutConfiguration.default
         config.setOrder([.genres, .playlists])

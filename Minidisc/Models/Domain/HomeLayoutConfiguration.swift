@@ -63,6 +63,12 @@ nonisolated struct HomeLayoutConfiguration: Equatable, Sendable {
         order = Self.normalized(newOrder)
     }
 
+    /// Explicit because of the `RawRepresentable` conformance below: without it the standard
+    /// library's `==` for raw-representable types wins and compares encoded JSON strings instead.
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.order == rhs.order && lhs.hidden == rhs.hidden
+    }
+
     /// Removes duplicates and appends any section missing from `order` in its default position order.
     private static func normalized(_ order: [HomeSection]) -> [HomeSection] {
         var seen = Set<HomeSection>()
@@ -89,7 +95,10 @@ extension HomeLayoutConfiguration: RawRepresentable {
 
     var rawValue: String {
         let stored = Stored(order: order.map(\.rawValue), hidden: hidden.map(\.rawValue).sorted())
-        guard let data = try? JSONEncoder().encode(stored) else { return "" }
+        // Sorted keys keep the stored string canonical; JSONEncoder's key order is otherwise unstable.
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        guard let data = try? encoder.encode(stored) else { return "" }
         return String(decoding: data, as: UTF8.self)
     }
 
