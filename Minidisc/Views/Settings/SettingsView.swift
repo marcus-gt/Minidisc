@@ -879,6 +879,19 @@ private struct ApplicationSettingsView: View {
             } footer: {
                 Text("Choose which sections appear on Home, their order and their style.")
             }
+            Section {
+                NavigationLink {
+                    DiscoverLayoutSettingsView()
+                } label: {
+                    Label("Discover Screen", systemImage: "square.grid.2x2")
+                        .foregroundStyle(.primary)
+                }
+                .accessibilityIdentifier("settings.discoverLayout")
+            } header: {
+                Text("Discover")
+            } footer: {
+                Text("Choose which sections appear on Discover and their order.")
+            }
             MoodPlaylistSettingsSection()
             SiriSettingsSection()
             ApplicationDebugSection()
