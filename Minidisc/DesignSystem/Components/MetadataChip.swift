@@ -23,9 +23,11 @@ struct MetadataChip: View {
     }
 }
 
-/// Lays chips out in centred rows, wrapping when they don't fit (long genres, large text).
+/// Lays chips out in rows, wrapping when they don't fit (long genres, large text). Rows are centred
+/// unless `centersRows` is false (pickers that line up with leading-aligned headers).
 struct MetadataChipFlow: Layout {
     var spacing: CGFloat = MinidiscSpacing.s
+    var centersRows = true
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = arrange(subviews, width: proposal.width ?? .infinity)
@@ -37,7 +39,7 @@ struct MetadataChipFlow: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var y = bounds.minY
         for row in arrange(subviews, width: bounds.width) {
-            var x = bounds.minX + (bounds.width - row.width) / 2
+            var x = centersRows ? bounds.minX + (bounds.width - row.width) / 2 : bounds.minX
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.init(width: bounds.width, height: nil))
                 subviews[index].place(
