@@ -18,6 +18,8 @@ nonisolated struct QueueBuilderSelection: Hashable, Sendable {
     var tags: Set<String> = []
     /// Decades as their first year (1990 for the 1990s).
     var decades: Set<Int> = []
+    /// Moods rank the matching songs (AudioMuse); they never widen or narrow the genre/decade match.
+    var moods: Set<QueueBuilderMood> = []
 
     var hasGenre: Bool { !mains.isEmpty || !tags.isEmpty }
 }

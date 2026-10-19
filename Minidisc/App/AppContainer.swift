@@ -166,7 +166,11 @@ final class AppContainer {
             )
             await manager.applyGradientCover(spec, playlistId: playlistId, title: title, coverArtId: nil)
         }
-        queueBuilderService = QueueBuilderService(source: catalog, library: library)
+        queueBuilderService = QueueBuilderService(
+            source: catalog,
+            library: library,
+            moodScorer: AudioMuseMoodScorer(serverService: server)
+        )
         moodPlaylistService = MoodPlaylistService(
             serverService: server,
             serverState: serverState,

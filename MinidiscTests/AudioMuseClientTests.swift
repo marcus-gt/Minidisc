@@ -223,3 +223,138 @@ struct AudioMuseClientTests {
         #expect(AudioMuseClient(urlString: "http://muse.local:8000", token: nil) != nil)
     }
 }
+
+// MARK: - Mood scores (Queue Builder)
+
+/// Separate from `StubProtocol`: suites run in parallel, and a shared `reset()` would wipe the other
+/// suite's stubs mid-test.
+private nonisolated final class MoodStubProtocol: URLProtocol, @unchecked Sendable {
+    private struct State: Sendable {
+        var status = 200
+        var body = "{}"
+        var requests = 0
+        var queries: [String] = []
+    }
+    private static let state = Mutex(State())
+
+    static func reset(status: Int = 200, body: String = "{}") {
+        state.withLock { $0 = State(status: status, body: body) }
+    }
+    static var requests: Int { state.withLock { $0.requests } }
+    static var queries: [String] { state.withLock { $0.queries } }
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let (status, body) = Self.state.withLock { state -> (Int, String) in
+            state.requests += 1
+            state.queries.append(request.url?.query ?? "")
+            return (state.status, state.body)
+        }
+        let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+}
+
+@Suite("AudioMuse mood scores", .serialized)
+@MainActor
+struct AudioMuseMoodScoreTests {
+    private func server(audioMuseURL: String?) throws -> MockServerService {
+        let server = MockServerService()
+        let snapshot = ServerSnapshot(from: ServerConfig(
+            displayName: "Fixture", baseURL: "https://example.invalid", username: "alice", audioMuseURL: audioMuseURL
+        ))
+        server.state.activeServer = snapshot
+        server.state.activeConnectionVersion = .init(serverID: snapshot.id, revision: 1)
+        server.connection = try ServerConnection(
+            version: server.state.activeConnectionVersion!, server: snapshot,
+            credentials: ServerCredentials(password: "fixture", customHeaders: [:], audioMuseToken: "secret")
+        )
+        return server
+    }
+
+    private func stubbedSession() -> URLSession {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [MoodStubProtocol.self]
+        return URLSession(configuration: config)
+    }
+
+    private func temporaryDirectory() -> URL {
+        URL.temporaryDirectory.appendingPathComponent("moods-\(UUID().uuidString)", isDirectory: true)
+    }
+
+    @Test func otherFeatures_parseIntoNamedScores() {
+        let scores = AudioMuseMoodScores(otherFeatures: "danceable:0.65,aggressive:0.60, happy:0.6,party:x")
+        #expect(scores.values == ["danceable": 0.65, "aggressive": 0.60, "happy": 0.6])
+    }
+
+    @Test func client_readsScoresFromGetScore() async throws {
+        MoodStubProtocol.reset(body: #"{"item_id":"abc","other_features":"happy:0.7,sad:0.2"}"#)
+        let client = try #require(AudioMuseClient(urlString: "http://muse.local:8000", token: "secret", session: stubbedSession()))
+
+        let scores = try await client.moodScores(itemId: "abc")
+
+        #expect(scores.values == ["happy": 0.7, "sad": 0.2])
+        #expect(MoodStubProtocol.queries.last == "id=abc")
+    }
+
+    @Test func client_notAnalysedTrackIsNotFound() async throws {
+        MoodStubProtocol.reset(status: 404, body: #"{"error":"Score not found"}"#)
+        let client = try #require(AudioMuseClient(urlString: "http://muse.local:8000", token: nil, session: stubbedSession()))
+        await #expect(throws: AudioMuseError.notFound) {
+            _ = try await client.moodScores(itemId: "abc")
+        }
+    }
+
+    @Test func scorer_unavailableWithoutAudioMuseURL() async throws {
+        let scorer = AudioMuseMoodScorer(serverService: try server(audioMuseURL: nil), cacheDirectory: temporaryDirectory())
+        #expect(await scorer.isAvailable() == false)
+        let configured = AudioMuseMoodScorer(serverService: try server(audioMuseURL: "http://muse.local:8000"), cacheDirectory: temporaryDirectory())
+        #expect(await configured.isAvailable())
+    }
+
+    @Test func scorer_fetchesOncePerTrackAndPersistsTheCache() async throws {
+        MoodStubProtocol.reset(body: #"{"other_features":"happy:0.8"}"#)
+        let server = try server(audioMuseURL: "http://muse.local:8000")
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let scorer = AudioMuseMoodScorer(serverService: server, cacheDirectory: directory, session: stubbedSession())
+        let first = try await scorer.scores(for: ["a", "b"])
+        _ = try await scorer.scores(for: ["a", "b"])
+        #expect(first["a"]?.values["happy"] == 0.8)
+        #expect(MoodStubProtocol.requests == 2)
+
+        // A new scorer (next launch) reads the same scores from disk without asking AudioMuse.
+        let relaunched = AudioMuseMoodScorer(serverService: server, cacheDirectory: directory, session: stubbedSession())
+        let cached = try await relaunched.scores(for: ["a"])
+        #expect(cached["a"]?.values["happy"] == 0.8)
+        #expect(MoodStubProtocol.requests == 2)
+    }
+
+    @Test func scorer_unreachableAudioMuseThrows() async throws {
+        MoodStubProtocol.reset(status: 500)
+        let scorer = AudioMuseMoodScorer(
+            serverService: try server(audioMuseURL: "http://muse.local:8000"),
+            cacheDirectory: temporaryDirectory(), session: stubbedSession()
+        )
+        await #expect(throws: AudioMuseError.self) {
+            _ = try await scorer.scores(for: ["a", "b"])
+        }
+    }
+
+    @Test func ranking_ordersByTheAverageOfPickedMoodsAndDropsUnscored() {
+        struct Item: Identifiable { let id: String }
+        let items = ["low", "high", "mid", "unscored"].map(Item.init)
+        let scores: [String: AudioMuseMoodScores] = [
+            "low": .init(values: ["happy": 0.2, "party": 0.3]),
+            "high": .init(values: ["happy": 0.9, "party": 0.7]),
+            "mid": .init(values: ["happy": 0.6, "party": 0.5]),
+        ]
+        let ranked = QueueBuilderMood.rank(items, scores: scores, moods: [.happy, .party], keeping: 2)
+        #expect(ranked.map(\.id) == ["high", "mid"])
+    }
+}

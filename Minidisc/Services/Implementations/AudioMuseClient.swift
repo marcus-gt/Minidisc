@@ -15,6 +15,8 @@ nonisolated enum AudioMuseError: Error, Equatable, Sendable {
     case internalIdsOnly
     case transport(String)
     case decoding(String)
+    /// HTTP 404: the track was never analysed (or is not on this AudioMuse instance).
+    case notFound
 }
 
 // MARK: - Wire types
@@ -40,6 +42,30 @@ nonisolated struct AudioMuseTrack: Decodable, Sendable, Equatable {
         guard let title, !title.isEmpty else { return nil }
         return TrackDescriptor(title: title, artist: author, album: album)
     }
+}
+
+/// A track's AudioMuse mood scores (0–1), keyed by AudioMuse's names:
+/// danceable, aggressive, happy, party, relaxed, sad.
+nonisolated struct AudioMuseMoodScores: Codable, Sendable, Equatable {
+    let values: [String: Double]
+
+    /// Parses AudioMuse's `other_features` text, e.g. `"danceable:0.65,aggressive:0.60"`.
+    init(otherFeatures: String) {
+        var values: [String: Double] = [:]
+        for pair in otherFeatures.split(separator: ",") {
+            let parts = pair.split(separator: ":", maxSplits: 1)
+            guard parts.count == 2, let value = Double(parts[1].trimmingCharacters(in: .whitespaces)) else { continue }
+            values[parts[0].trimmingCharacters(in: .whitespaces).lowercased()] = value
+        }
+        self.values = values
+    }
+
+    init(values: [String: Double]) { self.values = values }
+}
+
+private nonisolated struct ScoreResponse: Decodable {
+    let otherFeatures: String?
+    enum CodingKeys: String, CodingKey { case otherFeatures = "other_features" }
 }
 
 private nonisolated struct ClapSearchResponse: Decodable {
@@ -128,10 +154,25 @@ actor AudioMuseClient {
         return results
     }
 
+    /// The mood scores AudioMuse stored for one track. Throws `.notFound` for tracks never analysed.
+    func moodScores(itemId: String) async throws -> AudioMuseMoodScores {
+        let data = try await send(path: "/external/get_score", query: [URLQueryItem(name: "id", value: itemId)], body: nil, method: "GET")
+        do {
+            let response = try JSONDecoder().decode(ScoreResponse.self, from: data)
+            return AudioMuseMoodScores(otherFeatures: response.otherFeatures ?? "")
+        } catch {
+            throw AudioMuseError.decoding(String(describing: error))
+        }
+    }
+
     // MARK: - Transport
 
-    private func send(path: String, body: Data?, method: String = "POST") async throws -> Data {
-        guard let url = URL(string: path, relativeTo: baseURL) else { throw AudioMuseError.badURL }
+    private func send(path: String, query: [URLQueryItem] = [], body: Data?, method: String = "POST") async throws -> Data {
+        guard let relative = URL(string: path, relativeTo: baseURL),
+              var components = URLComponents(url: relative, resolvingAgainstBaseURL: true)
+        else { throw AudioMuseError.badURL }
+        if !query.isEmpty { components.queryItems = query }
+        guard let url = components.url else { throw AudioMuseError.badURL }
         var request = URLRequest(url: url, timeoutInterval: Self.requestTimeout)
         request.httpMethod = method
         if let body {
@@ -156,6 +197,7 @@ actor AudioMuseClient {
         // HTTP 400 has multiple causes; preserve the server’s message rather than guessing.
         case 400:        throw AudioMuseError.searchDisabled(Self.errorMessage(in: data))
         case 401, 403:   throw AudioMuseError.unauthorized
+        case 404:        throw AudioMuseError.notFound
         case 503:        throw AudioMuseError.notAnalysed
         default:         throw AudioMuseError.transport("HTTP \(http.statusCode)")
         }

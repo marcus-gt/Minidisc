@@ -18,6 +18,8 @@ final class QueueBuilderViewModel {
     private(set) var phase: Phase = .loading
     private(set) var index: QueueBuilderIndex?
     private(set) var isBuilding = false
+    /// AudioMuse is set up for this server, so the mood section shows.
+    private(set) var isMoodAvailable = false
     var selection = QueueBuilderSelection()
     var length: Double = 50
     var searchText = ""
@@ -39,6 +41,8 @@ final class QueueBuilderViewModel {
         do {
             let loaded = try await service.index()
             index = loaded
+            isMoodAvailable = await service.isMoodAvailable()
+            if !isMoodAvailable { selection.moods = [] }
             phase = .ready
         } catch is CancellationError {
             return
@@ -105,6 +109,14 @@ final class QueueBuilderViewModel {
 
     func clearDecades() { selection.decades = [] }
 
+    // MARK: - Moods
+
+    func toggle(mood: QueueBuilderMood) {
+        if selection.moods.remove(mood) == nil { selection.moods.insert(mood) }
+    }
+
+    func clearMoods() { selection.moods = [] }
+
     // MARK: - Building
 
     /// Exact number of matching songs, or `nil` while counts are approximate.
@@ -123,14 +135,17 @@ final class QueueBuilderViewModel {
         let service = service
         let count = Int(length)
         do {
-            let songs = try await service.buildQueue(selection, count: count)
-            guard !songs.isEmpty else {
+            let result = try await service.buildQueue(selection, count: count)
+            guard !result.songs.isEmpty else {
                 toastService.show(String(localized: "No songs match these picks. Try a broader selection."), style: .info)
                 return
             }
-            try await playerService.playBuiltQueue(songs.map { DisplayableSong(from: $0) }) { excluded, refillCount in
+            try await playerService.playBuiltQueue(result.songs.map { DisplayableSong(from: $0) }) { excluded, refillCount in
                 try await service.buildQueue(selection, count: refillCount, excluding: excluded)
-                    .map { DisplayableSong(from: $0) }
+                    .songs.map { DisplayableSong(from: $0) }
+            }
+            if result.ignoredMoods {
+                toastService.show(String(localized: "AudioMuse could not be reached, so moods were left out."), style: .info)
             }
         } catch is CancellationError {
             return

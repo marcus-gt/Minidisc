@@ -61,6 +61,7 @@ struct QueueBuilderView: View {
                 VStack(alignment: .leading, spacing: MinidiscSpacing.xxl) {
                     genreSection(vm)
                     decadeSection(vm)
+                    if vm.isMoodAvailable { moodSection(vm) }
                     lengthSection(vm)
                     buildSection(vm)
                 }
@@ -115,6 +116,30 @@ struct QueueBuilderView: View {
             hint(vm.selection.decades.isEmpty
                  ? "No decade picked: every year is included. Uses each album's original release year when known."
                  : "Songs from any picked decade are included, by each album's original release year when known.")
+        }
+    }
+
+    // MARK: - Moods
+
+    /// Only shown when AudioMuse is set up for this server; the builder works without it.
+    private func moodSection(_ vm: QueueBuilderViewModel) -> some View {
+        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            header("Mood", isClearable: !vm.selection.moods.isEmpty) { vm.clearMoods() }
+            MetadataChipFlow(spacing: MinidiscSpacing.s, centersRows: false) {
+                ForEach(QueueBuilderMood.allCases) { mood in
+                    SelectablePill(
+                        title: String(localized: mood.title),
+                        count: nil,
+                        isSelected: vm.selection.moods.contains(mood)
+                    ) {
+                        vm.toggle(mood: mood)
+                    }
+                }
+            }
+            .padding(.horizontal, MinidiscSpacing.l)
+            hint(vm.selection.moods.isEmpty
+                 ? "No mood picked: no mood ranking. Moods come from AudioMuse's analysis of each song."
+                 : "The songs that match your genres and decades best for every picked mood are kept. Songs AudioMuse hasn't analysed are left out.")
         }
     }
 
@@ -322,6 +347,11 @@ private nonisolated struct PreviewQueueBuilderSource: QueueBuilderLibrarySource 
     }
 }
 
+private nonisolated struct PreviewMoodScorer: MoodScoring {
+    func isAvailable() async -> Bool { true }
+    func scores(for songIDs: [String]) async throws -> [String: AudioMuseMoodScores] { [:] }
+}
+
 #Preview("Queue Builder") {
     let container = AppContainer.preview()
     let model = QueueBuilderViewModel(
@@ -337,14 +367,19 @@ private nonisolated struct PreviewQueueBuilderSource: QueueBuilderLibrarySource 
 #Preview("Queue Builder · picked") {
     let container = AppContainer.preview()
     let model = QueueBuilderViewModel(
-        service: QueueBuilderService(source: PreviewQueueBuilderSource(), library: container.libraryService),
+        service: QueueBuilderService(
+            source: PreviewQueueBuilderSource(),
+            library: container.libraryService,
+            moodScorer: PreviewMoodScorer()
+        ),
         playerService: container.playerService,
         toastService: container.toastService
     )
     model.selection = QueueBuilderSelection(
         mains: ["Jazz"],
         tags: [GenreTaxonomy.discogs.resolve("Techno").key, GenreTaxonomy.discogs.resolve("IDM").key],
-        decades: [1990, 2000]
+        decades: [1990, 2000],
+        moods: [.relaxed]
     )
     return MinidiscPreview(container: container) {
         NavigationStack { QueueBuilderView(previewModel: model) }
