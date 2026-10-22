@@ -173,7 +173,9 @@ struct HomeView: View {
             if isOnline, vm.recentlyAdded.isEmpty, vm.pendingSections.contains(.recent) {
                 HomeShelfPlaceholder(title: section.title, side: 160)
             }
-            albumSection(section, albums: container?.visibleAlbums(vm.otherAdditions) ?? [])
+            // The full newest list, even albums also shown under "Recently Added from Your Artists".
+            HomeAlbumSection(title: section.title, albums: container?.visibleAlbums(vm.recentlyAdded) ?? [],
+                             identifier: section.shelfIdentifier, continuesRecentlyAdded: true)
         case .genres:
             ForEach(genres) { shelf in
                 HomeAlbumSection(verbatim: shelf.name, albums: shelf.albums, identifier: "home.genre.\(shelf.name)",

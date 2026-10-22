@@ -30,10 +30,10 @@ private actor RALibraryStub:
 
     func failAlbumList() { listFails = true }
 
-    func recentlyAddedAlbums(size: Int) async throws -> [AlbumID3] {
+    func recentlyAddedAlbums(size: Int, offset: Int) async throws -> [AlbumID3] {
         _listSizes.append(size)
         if listFails { throw URLError(.notConnectedToInternet) }
-        return Array(newestAlbums.prefix(size))
+        return Array(newestAlbums.dropFirst(offset).prefix(size))
     }
 
     func album(id: String) async throws -> AlbumID3 {

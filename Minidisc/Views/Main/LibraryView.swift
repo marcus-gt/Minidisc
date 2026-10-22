@@ -309,7 +309,14 @@ struct LibraryView: View {
                                     HomeAlbumCell(album: album, namespace: recentlyAddedZoomNamespace)
                                 }
                                 .buttonStyle(.plain)
+                                // Not `.task`: the page load must survive this cell scrolling away.
+                                .onAppear { Task { await vm.recentPager.loadMoreIfNeeded(after: album) } }
                             }
+                        }
+                        if vm.recentPager.isLoadingMore {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, MinidiscSpacing.m)
                         }
                     }
                 }

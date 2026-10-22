@@ -64,7 +64,14 @@ nonisolated protocol FavoriteEditing: StarredBrowsing {
 }
 
 nonisolated protocol RecentlyAddedAlbumBrowsing: AnyObject, Sendable {
-    func recentlyAddedAlbums(size: Int) async throws -> [AlbumID3]
+    /// Newest albums first; `offset` pages further back for infinite scrolling.
+    func recentlyAddedAlbums(size: Int, offset: Int) async throws -> [AlbumID3]
+}
+
+extension RecentlyAddedAlbumBrowsing {
+    func recentlyAddedAlbums(size: Int) async throws -> [AlbumID3] {
+        try await recentlyAddedAlbums(size: size, offset: 0)
+    }
 }
 
 nonisolated protocol ListeningHistoryBrowsing: AnyObject, Sendable {

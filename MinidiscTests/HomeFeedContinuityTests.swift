@@ -19,7 +19,7 @@ private actor HomeFeedSource: PlaylistBrowsing, RecentlyAddedAlbumBrowsing, List
         return [Playlist(id: "p", name: "Saved", songCount: 1, duration: 100)]
     }
     func playlist(id: String) async throws -> PlaylistWithSongs { throw URLError(.unsupportedURL) }
-    func recentlyAddedAlbums(size: Int) async throws -> [AlbumID3] {
+    func recentlyAddedAlbums(size: Int, offset: Int) async throws -> [AlbumID3] {
         calls += 1
         return [try JSONDecoder().decode(AlbumID3.self, from: Data(#"{"id":"a","name":"Album","songCount":1,"duration":100}"#.utf8))]
     }

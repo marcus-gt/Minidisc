@@ -314,8 +314,8 @@ nonisolated final class PreviewLibraryService: AlbumBrowsing, ArtistBrowsing, St
         return playlist
     }
 
-    func recentlyAddedAlbums(size: Int) async throws -> [AlbumID3] {
-        Array(PreviewFixtures.recentlyAdded.prefix(size)).map(PreviewFixtures.withoutSongs)
+    func recentlyAddedAlbums(size: Int, offset: Int) async throws -> [AlbumID3] {
+        Array(PreviewFixtures.recentlyAdded.dropFirst(offset).prefix(size)).map(PreviewFixtures.withoutSongs)
     }
 
     func recentlyPlayedAlbums(size: Int) async throws -> [AlbumID3] {

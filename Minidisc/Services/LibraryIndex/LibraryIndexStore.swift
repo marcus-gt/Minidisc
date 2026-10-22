@@ -792,13 +792,14 @@ actor LibraryIndexStore {
         return try context.fetch(descriptor).compactMap(decodeAlbum)
     }
 
-    func recentlyAddedAlbums(serverID: UUID, limit: Int) throws -> [AlbumID3] {
+    func recentlyAddedAlbums(serverID: UUID, offset: Int = 0, limit: Int) throws -> [AlbumID3] {
         let context = ModelContext(modelContainer)
         let sid = serverID
         var descriptor = FetchDescriptor<IndexedAlbum>(
             predicate: #Predicate { $0.serverId == sid },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse), SortDescriptor(\.sortName)]
         )
+        descriptor.fetchOffset = offset
         descriptor.fetchLimit = limit
         return try context.fetch(descriptor).compactMap(decodeAlbum)
     }

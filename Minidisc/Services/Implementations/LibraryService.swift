@@ -162,8 +162,8 @@ actor LibraryService: LibraryServiceProtocol {
         return mapped == .noNetwork || mapped == .serverUnreachable || mapped == .contentUnavailableOffline
     }
 
-    func recentlyAddedAlbums(size: Int) async throws -> [AlbumID3] {
-        try await catalog.recentlyAddedAlbums(size: size)
+    func recentlyAddedAlbums(size: Int, offset: Int) async throws -> [AlbumID3] {
+        try await catalog.recentlyAddedAlbums(size: size, offset: offset)
     }
 
     func allAlbums() async throws -> [AlbumID3] {
