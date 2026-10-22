@@ -42,6 +42,9 @@ protocol PlayerServiceProtocol: AnyObject, Sendable {
     /// A supplied seedTrack starts immediately while similarity queries build the queue.
     /// Without it, waits for the mix and throws instantMixEmpty if none is available.
     func playInstantMix(from seed: InstantMixSeed, startingWith seedTrack: DisplayableSong?) async throws
+    /// Plays a ready-made queue (Queue Builder) and keeps auto-extend refilling it from `refill`,
+    /// which receives the queued song IDs to skip and how many songs to add.
+    func playBuiltQueue(_ tracks: [DisplayableSong], refill: @escaping QueueRefill) async throws
     /// Toggles the auto-extend preference and persists it to UserDefaults.
     /// When enabled and ≤15 tracks remain, the player appends a fresh smart shuffle batch automatically.
     func setAutoExtendEnabled(_ enabled: Bool) async
@@ -65,7 +68,14 @@ nonisolated struct PreparedPlaybackQueue: Sendable {
     var repeatMode: RepeatMode? = nil
 }
 
+/// More songs for a built queue: `excluded` are already queued, `count` is how many to return.
+typealias QueueRefill = @Sendable (_ excluded: Set<String>, _ count: Int) async throws -> [DisplayableSong]
+
 extension PlayerServiceProtocol {
+    nonisolated func playBuiltQueue(_ tracks: [DisplayableSong], refill: @escaping QueueRefill) async throws {
+        try await play(tracks: tracks, startIndex: 0)
+    }
+
     nonisolated func play(preparingQueue: @escaping @Sendable () async throws -> PreparedPlaybackQueue) async throws {
         let queue = try await preparingQueue()
         if let repeatMode = queue.repeatMode { await setRepeatMode(repeatMode) }

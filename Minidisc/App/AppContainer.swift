@@ -42,6 +42,7 @@ final class AppContainer {
     private let _player: PlayerService
     let wrappedPlaylistService: WrappedPlaylistService
     let moodPlaylistService: MoodPlaylistService
+    let queueBuilderService: QueueBuilderService
     let lyricsSettings: LyricsSettings
     let lyricsService: LyricsService
     let trackSharingService: TrackSharingService
@@ -165,6 +166,7 @@ final class AppContainer {
             )
             await manager.applyGradientCover(spec, playlistId: playlistId, title: title, coverArtId: nil)
         }
+        queueBuilderService = QueueBuilderService(source: catalog, library: library)
         moodPlaylistService = MoodPlaylistService(
             serverService: server,
             serverState: serverState,

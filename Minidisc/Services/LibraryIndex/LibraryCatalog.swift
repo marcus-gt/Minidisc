@@ -435,6 +435,44 @@ actor LibraryCatalog {
         }
     }
 
+    /// Identifies the indexed library the Queue Builder last read; changes with a new sync or server.
+    /// `nil` while tracks or albums are not fully indexed.
+    func queueBuilderStamp() async throws -> String? {
+        let serverID = try await source.activeServerID()
+        let status = try await store.status(for: serverID)
+        guard let tracks = status.tracksSyncedAt, let albums = status.albumsSyncedAt else { return nil }
+        return "\(serverID.uuidString)|\(tracks.timeIntervalSince1970)|\(albums.timeIntervalSince1970)"
+    }
+
+    /// Every indexed song with all its genre tags and its album's original release year (reissues
+    /// carry a later tagged year). `nil` while tracks or albums are not fully indexed.
+    func queueBuilderTracks() async throws -> [QueueBuilderTrack]? {
+        let serverID = try await source.activeServerID()
+        let status = try await store.status(for: serverID)
+        guard status.tracks, status.albums else { return nil }
+        let originalYears = Dictionary(
+            try await store.albums(serverID: serverID).compactMap { album in
+                album.originalReleaseDate?.year.map { (album.id, $0) }
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+        var tracks: [QueueBuilderTrack] = []
+        let pageSize = 2_000
+        var offset = 0
+        while true {
+            try Task.checkCancellation()
+            let page = try await store.songs(serverID: serverID, offset: offset, count: pageSize)
+            for song in page {
+                let genres = song.genres?.map(\.name) ?? song.genre.map { [$0] } ?? []
+                let original = song.albumId.flatMap { originalYears[$0] }
+                tracks.append(QueueBuilderTrack(song: song, genres: genres, year: original ?? song.year))
+            }
+            guard page.count == pageSize else { break }
+            offset += pageSize
+        }
+        return tracks
+    }
+
     /// Indexed album headers for the given IDs, in no particular order.
     func indexedAlbums(ids: [String]) async throws -> [AlbumID3] {
         let serverID = try await source.activeServerID()

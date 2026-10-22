@@ -1087,3 +1087,78 @@ struct LocalMusicPlaybackTests {
         await harness.player.stop()
     }
 }
+
+private nonisolated final class RecordingRefill: Sendable {
+    private struct Call: Sendable { let excluded: Set<String>; let count: Int }
+    private let calls = Mutex<[Call]>([])
+    private let songs: [DisplayableSong]
+
+    init(songs: [DisplayableSong]) { self.songs = songs }
+
+    var callCount: Int { calls.withLock { $0.count } }
+    var lastExcluded: Set<String> { calls.withLock { $0.last?.excluded ?? [] } }
+
+    var refill: QueueRefill {
+        { [self] excluded, count in
+            calls.withLock { $0.append(Call(excluded: excluded, count: count)) }
+            return Array(songs.filter { !excluded.contains($0.id) }.prefix(count))
+        }
+    }
+}
+
+@Suite("Queue Builder playback", .serialized)
+@MainActor
+struct QueueBuilderPlaybackTests {
+    private func tracks(_ prefix: String, _ count: Int) throws -> [DisplayableSong] {
+        try (1...count).map { index in
+            DisplayableSong(from: try JSONDecoder().decode(Song.self, from: Data(
+                "{\"id\":\"\(prefix)\(index)\",\"title\":\"t\",\"isDir\":false,\"duration\":120}".utf8
+            )))
+        }
+    }
+
+    @Test func builtQueue_refillsFromItsOwnPicksWithoutRepeats() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        let refill = RecordingRefill(songs: try tracks("b", 5) + tracks("r", 30))
+
+        try await h.player.playBuiltQueue(try tracks("b", 5), refill: refill.refill)
+
+        try await h.waitUntil { h.state.queue.count > 5 }
+        #expect(h.state.isAutoExtendEnabled)
+        #expect(refill.callCount == 1)
+        #expect(refill.lastExcluded == Set((1...5).map { "b\($0)" }))
+        #expect(h.state.queue.prefix(5).map(\.id) == (1...5).map { "b\($0)" })
+        #expect(Set(h.state.queue.map(\.id)).count == h.state.queue.count)
+        // The picks supplied enough songs, so the endless queue was never asked.
+        #expect(await library.calls.isEmpty)
+        await h.player.stop()
+    }
+
+    @Test func emptyRefill_fallsBackToTheEndlessQueue() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        let refill = RecordingRefill(songs: [])
+
+        try await h.player.playBuiltQueue(try tracks("b", 3), refill: refill.refill)
+
+        try await h.waitUntil { await library.calls.count == 1 }
+        #expect(refill.callCount == 1)
+        #expect(await library.calls.first?.seedID == "b1")
+        await h.player.stop()
+    }
+
+    @Test func newQueue_dropsTheRefill() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        let refill = RecordingRefill(songs: try tracks("r", 60))
+
+        try await h.player.playBuiltQueue(try tracks("b", 30), refill: refill.refill)
+        try await h.player.play(tracks: try tracks("x", 2), startIndex: 0)
+
+        try await h.waitUntil { await library.calls.count == 1 }
+        #expect(refill.callCount == 0)
+        #expect(await library.calls.first?.seedID == "x1")
+        await h.player.stop()
+    }
+}

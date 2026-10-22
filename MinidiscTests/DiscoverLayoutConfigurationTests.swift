@@ -6,7 +6,7 @@ import Testing
 struct DiscoverLayoutConfigurationTests {
     @Test func default_keepsDiscoversOriginalOrder() {
         #expect(DiscoverLayoutConfiguration.default.visibleSections == [
-            .freshReleases, .stations, .smartShuffle, .moods, .wrapped, .internetRadio,
+            .freshReleases, .stations, .smartShuffle, .queueBuilder, .moods, .wrapped, .internetRadio,
         ])
     }
 

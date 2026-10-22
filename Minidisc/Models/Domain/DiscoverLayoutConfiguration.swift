@@ -6,6 +6,7 @@ nonisolated enum DiscoverSection: String, LayoutSection {
     case freshReleases
     case stations
     case smartShuffle
+    case queueBuilder
     case moods
     case wrapped
     case internetRadio
@@ -17,6 +18,7 @@ nonisolated enum DiscoverSection: String, LayoutSection {
         case .freshReleases: "Fresh Releases"
         case .stations: "Stations for You"
         case .smartShuffle: "Smart Shuffle"
+        case .queueBuilder: "Queue Builder"
         case .moods: "Moods"
         case .wrapped: "Wrapped"
         case .internetRadio: "Internet Radio"
