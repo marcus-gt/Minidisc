@@ -29,7 +29,10 @@ actor QueueBuilderService {
     private let library: any GenreBrowsing & MoodTrackSourcing
     private let taxonomy: GenreTaxonomy
     private let moodScorer: (any MoodScoring)?
-    private var cached: (stamp: String, index: QueueBuilderIndex)?
+    /// The index for one library sync. `genreFallbackDone` is set once AudioMuse has given untagged
+    /// tracks a main genre (or there was nothing to fill).
+    private var cached: (stamp: String, index: QueueBuilderIndex, tracks: [QueueBuilderTrack], genreFallbackDone: Bool)?
+    private var genreFallbackTask: Task<Bool, Never>?
 
     init(
         source: any QueueBuilderLibrarySource,
@@ -60,7 +63,7 @@ actor QueueBuilderService {
             if let tracks = try await source.queueBuilderTracks() {
                 try Task.checkCancellation()
                 let index = QueueBuilderIndex(tracks: tracks, taxonomy: taxonomy)
-                cached = (stamp, index)
+                cached = (stamp, index, tracks, false)
                 Logger.library.info("[QUEUE-BUILDER] indexed \(tracks.count, privacy: .public) tracks into \(index.columns.count, privacy: .public) genres")
                 return index
             }
@@ -69,6 +72,62 @@ actor QueueBuilderService {
         try Task.checkCancellation()
         Logger.library.info("[QUEUE-BUILDER] library index incomplete — approximate genres from the server")
         return QueueBuilderIndex(genreCounts: genres.map { ($0.value, $0.songCount) }, taxonomy: taxonomy)
+    }
+
+    // MARK: - AudioMuse genre fallback
+
+    /// Gives tracks without a usable genre tag (none, or only tags that land in "Other") a main genre
+    /// from AudioMuse's style labels, so they can be picked by main genre. Library tags always win:
+    /// tagged tracks are never touched, and no sub-genre is invented. Runs once per library sync,
+    /// in the background; returns whether the index changed. Only with AudioMuse set up.
+    func fillUntaggedGenres() async -> Bool {
+        if let genreFallbackTask { return await genreFallbackTask.value }
+        let task = Task { await performGenreFallback() }
+        genreFallbackTask = task
+        let changed = await task.value
+        genreFallbackTask = nil
+        return changed
+    }
+
+    private func performGenreFallback() async -> Bool {
+        guard let moodScorer, await moodScorer.isAvailable(),
+              let current = cached, !current.genreFallbackDone
+        else { return false }
+        let untagged = current.tracks.indices.filter { needsGenreFallback(current.tracks[$0]) }
+        guard !untagged.isEmpty else {
+            cached?.genreFallbackDone = true
+            return false
+        }
+        let scores: [String: AudioMuseMoodScores]
+        do {
+            scores = try await moodScorer.scores(for: untagged.map { current.tracks[$0].song.id })
+        } catch {
+            // Not marked done: the next load tries again (AudioMuse may only be briefly unreachable).
+            Logger.library.warning("[QUEUE-BUILDER] AudioMuse genre fallback skipped: \(error, privacy: .public)")
+            return false
+        }
+        // A new sync while AudioMuse answered replaces the library; its own fallback runs next time.
+        guard cached?.stamp == current.stamp else { return false }
+
+        var tracks = current.tracks
+        var filled = 0
+        for index in untagged {
+            let track = tracks[index]
+            guard let styles = scores[track.song.id]?.styles,
+                  let main = taxonomy.mainGenre(fromAudioMuseStyles: styles.map(\.label))
+            else { continue }
+            tracks[index] = QueueBuilderTrack(song: track.song, genres: track.genres + [main], year: track.year)
+            filled += 1
+        }
+        let index = filled > 0 ? QueueBuilderIndex(tracks: tracks, taxonomy: taxonomy) : current.index
+        cached = (current.stamp, index, tracks, true)
+        Logger.library.info("[QUEUE-BUILDER] AudioMuse gave \(filled, privacy: .public) of \(untagged.count, privacy: .public) untagged tracks a main genre")
+        return filled > 0
+    }
+
+    /// No tag that maps to a main genre: untagged, or every tag lands in "Other".
+    private func needsGenreFallback(_ track: QueueBuilderTrack) -> Bool {
+        track.genres.allSatisfy { taxonomy.resolve($0).mains == [GenreTaxonomy.otherGenre] }
     }
 
     /// Up to `count` shuffled songs matching `selection`, skipping `excludedIDs`. With moods picked,

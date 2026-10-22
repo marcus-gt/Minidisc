@@ -8,7 +8,8 @@ where RawValue == String, AllCases == [Self] {}
 /// Which sections of a screen are shown, and in what order. Persisted as JSON through `@AppStorage`.
 ///
 /// Decoding is forgiving so the stored value survives app updates: unknown sections are dropped and
-/// sections added in a later release are appended, visible, at the end.
+/// sections added in a later release appear, visible, in their default place (right after the
+/// section that precedes them by default), so a new section lands where it was designed to go.
 nonisolated struct SectionLayoutConfiguration<Section: LayoutSection>: Equatable, Sendable {
     private(set) var order: [Section]
     private(set) var hidden: Set<Section>
@@ -38,11 +39,18 @@ nonisolated struct SectionLayoutConfiguration<Section: LayoutSection>: Equatable
         lhs.order == rhs.order && lhs.hidden == rhs.hidden
     }
 
-    /// Removes duplicates and appends any section missing from `order` in its default position order.
+    /// Removes duplicates and inserts any section missing from `order` right after the nearest
+    /// section that precedes it in `allCases` (first when none does), keeping the user's own order.
     private static func normalized(_ order: [Section]) -> [Section] {
         var seen = Set<Section>()
-        let unique = order.filter { seen.insert($0).inserted }
-        return unique + Section.allCases.filter { !seen.contains($0) }
+        var result = order.filter { seen.insert($0).inserted }
+        for (position, section) in Section.allCases.enumerated() where !seen.contains(section) {
+            let predecessor = Section.allCases[..<position].last { seen.contains($0) }
+            let index = predecessor.flatMap { result.firstIndex(of: $0) }.map { $0 + 1 } ?? 0
+            result.insert(section, at: index)
+            seen.insert(section)
+        }
+        return result
     }
 }
 

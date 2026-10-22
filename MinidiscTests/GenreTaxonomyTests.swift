@@ -58,4 +58,16 @@ struct GenreTaxonomyTests {
     @Test func unknownTag_goesToOther() {
         #expect(taxonomy.resolve("Norway").mains == [GenreTaxonomy.otherGenre])
     }
+
+    @Test func audioMuseStyles_firstGenreLabelWins() {
+        #expect(taxonomy.mainGenre(fromAudioMuseStyles: ["female vocalists", "jazz", "soul"]) == "Jazz")
+        #expect(taxonomy.mainGenre(fromAudioMuseStyles: ["60s", "oldies", "rock"]) == "Rock")
+        #expect(taxonomy.mainGenre(fromAudioMuseStyles: ["Hip-Hop", "electronic"]) == "Hip Hop")
+        #expect(taxonomy.mainGenre(fromAudioMuseStyles: ["electronica", "ambient"]) == "Electronic")
+    }
+
+    @Test func audioMuseStyles_withoutAGenreLabelGiveNothing() {
+        #expect(taxonomy.mainGenre(fromAudioMuseStyles: ["instrumental", "chillout", "80s"]) == nil)
+        #expect(taxonomy.mainGenre(fromAudioMuseStyles: []) == nil)
+    }
 }

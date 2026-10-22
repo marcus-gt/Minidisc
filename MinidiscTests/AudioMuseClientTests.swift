@@ -291,6 +291,12 @@ struct AudioMuseMoodScoreTests {
         #expect(scores.values == ["danceable": 0.65, "aggressive": 0.60, "happy": 0.6])
     }
 
+    @Test func moodVector_parsesStyleLabelsBestFirst() {
+        let scores = AudioMuseMoodScores(otherFeatures: "happy:0.6", moodVector: "pop:0.544,electronic:0.587,indie:0.539")
+        #expect(scores.styles.map(\.label) == ["electronic", "pop", "indie"])
+        #expect(scores.values == ["happy": 0.6])
+    }
+
     @Test func client_readsScoresFromGetScore() async throws {
         MoodStubProtocol.reset(body: #"{"item_id":"abc","other_features":"happy:0.7,sad:0.2"}"#)
         let client = try #require(AudioMuseClient(urlString: "http://muse.local:8000", token: "secret", session: stubbedSession()))

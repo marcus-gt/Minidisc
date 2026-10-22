@@ -11,7 +11,7 @@ nonisolated struct QueueBuilderTrack: Sendable {
 }
 
 /// What the listener picked. Several genres or decades match any of them; nothing picked matches everything.
-nonisolated struct QueueBuilderSelection: Hashable, Sendable {
+nonisolated struct QueueBuilderSelection: Hashable, Codable, Sendable {
     /// Whole main-genre columns.
     var mains: Set<String> = []
     /// Individual pills, by `ResolvedGenreTag.key`.
@@ -22,6 +22,7 @@ nonisolated struct QueueBuilderSelection: Hashable, Sendable {
     var moods: Set<QueueBuilderMood> = []
 
     var hasGenre: Bool { !mains.isEmpty || !tags.isEmpty }
+    var isEmpty: Bool { !hasGenre && decades.isEmpty && moods.isEmpty }
 }
 
 /// Genre columns with distinct song counts, and matching for a selection.

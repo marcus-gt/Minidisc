@@ -103,7 +103,9 @@ struct DiscoverView: View {
                 }
             }
         case .queueBuilder:
-            if isOnline { QueueBuilderCard() }
+            if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
+                QueueBuilderCard(viewModel: queueBuilder)
+            }
         case .moods:
             moodsSection
         case .wrapped:

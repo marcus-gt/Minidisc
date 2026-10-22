@@ -118,7 +118,8 @@ actor AudioMuseMoodScorer: MoodScoring {
     // MARK: - Disk cache
 
     private func cacheFile(serverID: UUID) -> URL {
-        cacheDirectory.appendingPathComponent("\(serverID.uuidString).json")
+        // v2 adds the style labels; older files lack them and are simply refetched.
+        cacheDirectory.appendingPathComponent("v2-\(serverID.uuidString).json")
     }
 
     private func loadCacheIfNeeded(serverID: UUID) {

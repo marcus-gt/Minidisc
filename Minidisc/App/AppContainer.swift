@@ -43,6 +43,9 @@ final class AppContainer {
     let wrappedPlaylistService: WrappedPlaylistService
     let moodPlaylistService: MoodPlaylistService
     let queueBuilderService: QueueBuilderService
+    /// One Queue Builder state per server, shared by the Home and Discover cards and the full page,
+    /// so a pick made in one place shows in the others.
+    private var queueBuilderModels: [UUID: QueueBuilderViewModel] = [:]
     let lyricsSettings: LyricsSettings
     let lyricsService: LyricsService
     let trackSharingService: TrackSharingService
@@ -561,6 +564,24 @@ extension AppContainer {
         case "audio/aiff", "audio/x-aiff":     return "aiff"
         default:                                return "mpeg"
         }
+    }
+}
+
+// MARK: - Queue Builder
+
+extension AppContainer {
+    /// The active server's Queue Builder state; `nil` without a server.
+    func queueBuilderViewModel() -> QueueBuilderViewModel? {
+        guard let serverID = serverState.activeServer?.id else { return nil }
+        if let model = queueBuilderModels[serverID] { return model }
+        let model = QueueBuilderViewModel(
+            service: queueBuilderService,
+            playerService: playerService,
+            toastService: toastService,
+            storageScope: serverID.uuidString
+        )
+        queueBuilderModels[serverID] = model
+        return model
     }
 }
 

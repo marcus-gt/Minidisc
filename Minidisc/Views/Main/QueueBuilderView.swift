@@ -6,42 +6,27 @@ private enum QueueBuilderMetrics {
     static let columnWidth: CGFloat = 188
     /// About six pills before the column scrolls.
     static let columnListHeight: CGFloat = 268
+    /// Keeps the Discover card from jumping while its genres load.
+    static let cardLoadingHeight: CGFloat = 96
 }
 
 /// Pick genres (main genres or their sub-genres) and decades, choose a length, and build a queue (#17).
 struct QueueBuilderView: View {
-    @Environment(\.appContainer) private var container
-    @State private var viewModel: QueueBuilderViewModel?
-
-    init() {}
-
-    #if DEBUG
-    /// Previews pass a view model fed by sample data instead of the container's service.
-    init(previewModel: QueueBuilderViewModel) {
-        _viewModel = State(initialValue: previewModel)
-    }
-    #endif
+    /// Shared with the Discover card, so picks made in either place show in both.
+    let viewModel: QueueBuilderViewModel
 
     var body: some View {
-        Group {
-            if let viewModel {
-                content(viewModel)
-            } else {
-                LoadingStateView()
+        content(viewModel)
+            .navigationTitle("Queue Builder")
+            .navigationBarTitleDisplayModeInline()
+            .toolbar {
+                if !viewModel.selection.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Reset") { viewModel.reset() }
+                    }
+                }
             }
-        }
-        .navigationTitle("Queue Builder")
-        .navigationBarTitleDisplayModeInline()
-        .task {
-            if viewModel == nil, let container {
-                viewModel = QueueBuilderViewModel(
-                    service: container.queueBuilderService,
-                    playerService: container.playerService,
-                    toastService: container.toastService
-                )
-            }
-            await viewModel?.load()
-        }
+            .task { await viewModel.load() }
     }
 
     @ViewBuilder
@@ -217,13 +202,16 @@ private struct GenreColumn: View {
     let column: QueueBuilderIndex.Column
     let viewModel: QueueBuilderViewModel
 
+    private var tint: Color? { GenreTint.color(for: column.id) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
             SelectablePill(
                 title: column.name,
                 count: column.songCount,
                 isSelected: viewModel.isSelected(main: column.id),
-                isProminent: true
+                isProminent: true,
+                tint: tint
             ) {
                 viewModel.toggle(main: column.id)
             }
@@ -233,7 +221,8 @@ private struct GenreColumn: View {
                         SelectablePill(
                             title: pill.name,
                             count: pill.songCount,
-                            isSelected: viewModel.isSelected(pill: pill.id, in: column.id)
+                            isSelected: viewModel.isSelected(pill: pill.id, in: column.id),
+                            tint: tint
                         ) {
                             viewModel.toggle(pill: pill.id, in: column.id)
                         }
@@ -244,7 +233,7 @@ private struct GenreColumn: View {
         }
         .padding(MinidiscSpacing.s)
         .frame(width: QueueBuilderMetrics.columnWidth, alignment: .leading)
-        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large))
+        .background((tint ?? Color.secondary).opacity(0.08), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large))
     }
 }
 
@@ -254,9 +243,13 @@ private struct SelectablePill: View {
     let count: Int?
     let isSelected: Bool
     var isProminent = false
+    /// The main genre's colour; nil for decades, moods and "Other".
+    var tint: Color? = nil
     let action: () -> Void
 
     var body: some View {
+        let appearance = PillAppearance(tint: tint, isSelected: isSelected)
+        let shape = RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
         Button {
             HapticFeedback.light.trigger()
             action()
@@ -276,75 +269,215 @@ private struct SelectablePill: View {
             .padding(.horizontal, MinidiscSpacing.m)
             .padding(.vertical, MinidiscSpacing.s)
             .frame(maxWidth: isProminent ? .infinity : nil, alignment: .leading)
-            .foregroundStyle(isSelected ? Color.minidiscAccentText : .primary)
-            .background(
-                isSelected ? Color.minidiscAccent : Color.secondary.opacity(0.14),
-                in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
-            )
+            .foregroundStyle(appearance.foreground)
+            .background(appearance.fill, in: shape)
+            .overlay(shape.strokeBorder(appearance.stroke, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
-/// Discover entry point for the Queue Builder.
+/// The Queue Builder on Discover: pick and play without opening the full page (#17).
+/// Rows: main genres, the focused genre's sub-genres, decades, moods (with AudioMuse).
 struct QueueBuilderCard: View {
+    let viewModel: QueueBuilderViewModel
+
     var body: some View {
-        NavigationLink {
-            QueueBuilderView()
-        } label: {
-            HStack(spacing: MinidiscSpacing.m) {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-                    Label("Queue Builder", systemImage: "slider.horizontal.3")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.85))
-                    Text("Build Your Own Mix")
-                        .font(.title2.bold())
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("Pick genres and decades")
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.85))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
-                    .font(.headline)
-                    .foregroundStyle(.white.opacity(0.85))
-                    .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            header
+            switch viewModel.phase {
+            case .loading:
+                ProgressView()
+                    .frame(maxWidth: .infinity, minHeight: QueueBuilderMetrics.cardLoadingHeight)
+            case .failed:
+                Button("Couldn't load genres. Try again") { Task { await viewModel.load() } }
+                    .font(.minidiscCellSubtitle)
+                    .padding(.horizontal, MinidiscSpacing.l)
+            case .ready:
+                rows
             }
-            .foregroundStyle(.white)
-            .padding(MinidiscSpacing.l)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(LinearGradient(colors: [Color(red: 0.05, green: 0.20, blue: 0.40),
-                                                 Color(red: 0.05, green: 0.50, blue: 0.55)],
-                                       startPoint: .leading, endPoint: .trailing))
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+        }
+        .task { await viewModel.load() }
+        .accessibilityIdentifier("discover.queueBuilder")
+    }
+
+    private var header: some View {
+        HStack(spacing: MinidiscSpacing.s) {
+            NavigationLink {
+                QueueBuilderView(viewModel: viewModel)
+            } label: {
+                MinidiscCarouselHeader("Queue Builder", showsChevron: true, horizontalPadding: 0)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens the full Queue Builder")
+            Spacer(minLength: 0)
+            if !viewModel.selection.isEmpty {
+                Button("Reset", systemImage: "arrow.counterclockwise") {
+                    HapticFeedback.light.trigger()
+                    viewModel.reset()
+                }
+                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.compact))
+            }
+            Button {
+                HapticFeedback.medium.trigger()
+                Task { await viewModel.build() }
+            } label: {
+                if viewModel.isBuilding {
+                    ProgressView()
+                } else {
+                    Label("Play", systemImage: "play.fill")
+                }
+            }
+            .buttonStyle(.minidiscCircle(isProminent: true))
+            .disabled(!viewModel.canBuild)
+            .accessibilityLabel("Play queue")
+        }
+        .padding(.horizontal, MinidiscSpacing.l)
+    }
+
+    @ViewBuilder
+    private var rows: some View {
+        pillRow {
+            ForEach(viewModel.index?.columns ?? []) { column in
+                CardPill(
+                    title: column.name,
+                    isSelected: viewModel.isPicked(main: column.id),
+                    isExpanded: viewModel.focusedMain == column.id,
+                    tint: GenreTint.color(for: column.id)
+                ) {
+                    withAnimation(.snappy) { viewModel.tapMainInCard(column.id) }
+                }
+            }
+        }
+        if let column = viewModel.focusedColumn, !column.pills.isEmpty {
+            pillRow {
+                ForEach(column.pills) { pill in
+                    CardPill(
+                        title: pill.name,
+                        isSelected: viewModel.isSelected(pill: pill.id, in: column.id),
+                        tint: GenreTint.color(for: column.id)
+                    ) {
+                        viewModel.toggle(pill: pill.id, in: column.id)
+                    }
+                }
+            }
+            // A new identity per genre: each one's sub-genres start scrolled to the left instead of
+            // inheriting the previous genre's scroll position.
+            .id(column.id)
+            .transition(.opacity.combined(with: .move(edge: .top)))
+        }
+        pillRow {
+            ForEach(viewModel.decades, id: \.self) { decade in
+                CardPill(title: "\(String(decade))s", isSelected: viewModel.selection.decades.contains(decade)) {
+                    viewModel.toggle(decade: decade)
+                }
+            }
+        }
+        if viewModel.isMoodAvailable {
+            pillRow {
+                ForEach(QueueBuilderMood.allCases) { mood in
+                    CardPill(title: String(localized: mood.title), isSelected: viewModel.selection.moods.contains(mood)) {
+                        viewModel.toggle(mood: mood)
+                    }
+                }
+            }
+        }
+        summary
+    }
+
+    private var summary: some View {
+        Text(verbatim: viewModel.summary)
+        .font(.minidiscCaption)
+        .foregroundStyle(.secondary)
+        .lineLimit(2)
+        .padding(.horizontal, MinidiscSpacing.l)
+    }
+
+    private func pillRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: MinidiscSpacing.s) {
+                content()
+            }
+            .padding(.horizontal, MinidiscSpacing.l)
+        }
+    }
+}
+
+/// A compact capsule pill for the Discover card. A picked main genre whose sub-genres are showing
+/// gets a chevron, so the second row reads as belonging to it.
+private struct CardPill: View {
+    let title: String
+    let isSelected: Bool
+    var isExpanded = false
+    /// The main genre's colour; nil for decades, moods and "Other".
+    var tint: Color? = nil
+    let action: () -> Void
+
+    var body: some View {
+        let appearance = PillAppearance(tint: tint, isSelected: isSelected)
+        Button {
+            HapticFeedback.light.trigger()
+            action()
+        } label: {
+            HStack(spacing: MinidiscSpacing.xs) {
+                Text(verbatim: title)
+                    .font(.minidiscCellSubtitle.weight(isSelected ? .semibold : .regular))
+                    .lineLimit(1)
+                if isExpanded {
+                    Image(systemName: "chevron.down")
+                        .font(.minidiscCaption2.weight(.bold))
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(.horizontal, MinidiscSpacing.m)
+            .padding(.vertical, MinidiscSpacing.s)
+            .foregroundStyle(appearance.foreground)
+            .background(appearance.fill, in: Capsule())
+            .overlay(Capsule().strokeBorder(appearance.stroke, lineWidth: 1))
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, MinidiscSpacing.l)
-        .accessibilityIdentifier("discover.queueBuilder")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(isExpanded ? Text("Showing its sub-genres below") : Text(""))
     }
 }
 
 #if DEBUG
 private nonisolated struct PreviewQueueBuilderSource: QueueBuilderLibrarySource {
     func queueBuilderStamp() async throws -> String? { "preview" }
-    func queueBuilderTracks() async throws -> [QueueBuilderTrack]? {
+    func queueBuilderTracks() async throws -> [QueueBuilderTrack]? { Self.tracks }
+
+    static let tracks: [QueueBuilderTrack] = {
         let shapes: [([String], Int, Int)] = [
             (["Modal"], 1959, 40), (["Fusion", "Contemporary Jazz"], 1976, 55), (["Contemporary Jazz"], 2004, 80),
             (["Hard Bop"], 1962, 35), (["Techno"], 1994, 120), (["House", "Deep House"], 2001, 70),
             (["IDM", "Ambient"], 1997, 45), (["Hip-Hop", "Conscious"], 1993, 60), (["Trip Hop"], 1995, 30),
             (["Alternative Rock"], 1991, 65), (["Punk Rock"], 1978, 25), (["Soul"], 1968, 40), (["Norway"], 2015, 5),
+            (["Folk"], 1971, 20), (["Dub"], 1979, 15), (["Bossa Nova"], 1964, 12),
         ]
         var tracks: [QueueBuilderTrack] = []
         for (genres, year, count) in shapes {
             for index in 0..<count {
                 let id = "\(genres[0])-\(index)"
-                let song = try JSONDecoder().decode(Song.self, from: Data("{\"id\":\"\(id)\",\"title\":\"\(id)\",\"isDir\":false}".utf8))
+                guard let song = try? JSONDecoder().decode(Song.self, from: Data("{\"id\":\"\(id)\",\"title\":\"\(id)\",\"isDir\":false}".utf8)) else { continue }
                 tracks.append(QueueBuilderTrack(song: song, genres: genres, year: year + index % 8))
             }
         }
         return tracks
-    }
+    }()
+}
+
+@MainActor
+private func previewModel(_ container: AppContainer, picked: QueueBuilderSelection = QueueBuilderSelection()) -> QueueBuilderViewModel {
+    let model = QueueBuilderViewModel(
+        service: QueueBuilderService(source: PreviewQueueBuilderSource(), library: container.libraryService, moodScorer: PreviewMoodScorer()),
+        playerService: container.playerService,
+        toastService: container.toastService,
+        defaults: UserDefaults(suiteName: "preview.queueBuilder.\(UUID().uuidString)") ?? .standard
+    )
+    model.loadForPreview(QueueBuilderIndex(tracks: PreviewQueueBuilderSource.tracks, taxonomy: .discogs), moodAvailable: true)
+    model.selection = picked
+    return model
 }
 
 private nonisolated struct PreviewMoodScorer: MoodScoring {
@@ -354,39 +487,34 @@ private nonisolated struct PreviewMoodScorer: MoodScoring {
 
 #Preview("Queue Builder") {
     let container = AppContainer.preview()
-    let model = QueueBuilderViewModel(
-        service: QueueBuilderService(source: PreviewQueueBuilderSource(), library: container.libraryService),
-        playerService: container.playerService,
-        toastService: container.toastService
-    )
     return MinidiscPreview(container: container) {
-        NavigationStack { QueueBuilderView(previewModel: model) }
+        NavigationStack { QueueBuilderView(viewModel: previewModel(container)) }
     }
 }
 
 #Preview("Queue Builder · picked") {
     let container = AppContainer.preview()
-    let model = QueueBuilderViewModel(
-        service: QueueBuilderService(
-            source: PreviewQueueBuilderSource(),
-            library: container.libraryService,
-            moodScorer: PreviewMoodScorer()
-        ),
-        playerService: container.playerService,
-        toastService: container.toastService
-    )
-    model.selection = QueueBuilderSelection(
+    let picked = QueueBuilderSelection(
         mains: ["Jazz"],
         tags: [GenreTaxonomy.discogs.resolve("Techno").key, GenreTaxonomy.discogs.resolve("IDM").key],
         decades: [1990, 2000],
         moods: [.relaxed]
     )
     return MinidiscPreview(container: container) {
-        NavigationStack { QueueBuilderView(previewModel: model) }
+        NavigationStack { QueueBuilderView(viewModel: previewModel(container, picked: picked)) }
     }
 }
 
 #Preview("Discover card") {
-    NavigationStack { QueueBuilderCard() }
+    let container = AppContainer.preview()
+    let model = previewModel(container, picked: QueueBuilderSelection(
+        mains: ["Hip Hop"], tags: [GenreTaxonomy.discogs.resolve("Modal").key], decades: [1990], moods: [.relaxed]
+    ))
+    model.tapMainInCard("Jazz")
+    return MinidiscPreview(container: container) {
+        NavigationStack {
+            ScrollView { QueueBuilderCard(viewModel: model) }
+        }
+    }
 }
 #endif
