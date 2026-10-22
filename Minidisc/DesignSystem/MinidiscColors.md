@@ -47,3 +47,28 @@ neutral background, contrast is about 11.7:1 for white and 6:1 for the 65% secon
 
 The original cover remains unmodified in the cache; a view gradient handles the transition into the
 page. Manual theme overrides provide the source hue and receive the same dark treatment.
+
+## Queue Builder genre tints
+
+`GenreTint` gives each Discogs main genre a fixed colour so genres read apart at a glance on the
+Discover card and the full Queue Builder page. Sub-genre pills use their main genre's tint.
+"Other", decades and moods stay neutral (accent when picked), so colour always means genre.
+
+- Unpicked pill: tint at 16% fill with a 55% outline; text stays `.primary`.
+- Picked pill: solid tint with white text. Every tint keeps white at WCAG AA for normal text
+  (4.8:1 for Jazz `#A6611C` up to 7.2:1 for Stage & Screen `#455A64`).
+- The full page's genre columns use the tint at 8% as their background.
+
+| Genre | Tint | Genre | Tint |
+|-------|------|-------|------|
+| Electronic | `#4B5BD6` | Rock | `#C0392B` |
+| Jazz | `#A6611C` | Hip Hop | `#7D3C98` |
+| Funk / Soul | `#B03A70` | Pop | `#C2185B` |
+| Folk, World, & Country | `#5E6E22` | Blues | `#1F5FA8` |
+| Reggae | `#2E7D32` | Classical | `#566573` |
+| Latin | `#00796B` | Stage & Screen | `#455A64` |
+| Non-Music | `#6B6B6B` | Brass & Military | `#7B5E52` |
+| Children's | `#00737E` | | |
+
+These are not asset colours: they only ever fill pills, never text or screen backgrounds, and are
+the same in light and dark mode (the white-on-tint contrast holds in both).

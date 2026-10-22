@@ -8,6 +8,26 @@ struct HomeLayoutConfigurationTests {
         #expect(HomeLayoutConfiguration.default.visibleSections == HomeSection.allCases)
     }
 
+    @Test func queueBuilder_isShownByDefaultWithoutAStyleChoice() {
+        #expect(HomeLayoutConfiguration.default.isVisible(.queueBuilder))
+        #expect(HomeLayoutConfiguration.default.order.prefix(2) == [.playlists, .queueBuilder])
+        #expect(!HomeSection.queueBuilder.supportsLayoutChoice)
+    }
+
+    @Test func layoutSavedBeforeTheQueueBuilder_getsItAppendedVisible() throws {
+        let saved = #"{"hidden":["rediscover"],"order":["playlists","favoriteSongs","favoriteAlbums","recentlyPlayed","heavyRotation","rediscover","relevantAdditions","recentlyAdded","genres"]}"#
+        let decoded = try #require(HomeLayoutConfiguration(rawValue: saved))
+        #expect(decoded.order.prefix(3) == [.playlists, .queueBuilder, .favoriteSongs])
+        #expect(decoded.isVisible(.queueBuilder))
+        #expect(!decoded.isVisible(.rediscover))
+    }
+
+    @Test func newSection_followsPlaylistsWhereverTheUserMovedThem() throws {
+        let saved = #"{"hidden":[],"order":["recentlyPlayed","genres","playlists","favoriteSongs","favoriteAlbums","heavyRotation","rediscover","relevantAdditions","recentlyAdded"]}"#
+        let decoded = try #require(HomeLayoutConfiguration(rawValue: saved))
+        #expect(decoded.order.prefix(4) == [.recentlyPlayed, .genres, .playlists, .queueBuilder])
+    }
+
     @Test func equality_comparesFieldsNotEncodedStrings() {
         var config = HomeLayoutConfiguration.default
         config.setVisible(false, for: .rediscover)
@@ -44,7 +64,9 @@ struct HomeLayoutConfigurationTests {
     }
 
     @Test func decode_unknownSections_areDropped() throws {
-        let raw = #"{"order":["recentlyPlayed","removedInFuture"],"hidden":["alsoGone"]}"#
+        // A full saved order with recentlyPlayed moved first, plus a section this version doesn't know.
+        let others = HomeSection.allCases.filter { $0 != .recentlyPlayed }.map { "\"\($0.rawValue)\"" }
+        let raw = #"{"order":["recentlyPlayed","removedInFuture","# + others.joined(separator: ",") + #"],"hidden":["alsoGone"]}"#
 
         let decoded = try #require(HomeLayoutConfiguration(rawValue: raw))
 
@@ -53,12 +75,13 @@ struct HomeLayoutConfigurationTests {
         #expect(decoded.hidden.isEmpty)
     }
 
-    @Test func decode_missingSections_areAppendedVisible() throws {
+    @Test func decode_missingSections_landInTheirDefaultPlaceVisible() throws {
         let raw = #"{"order":["genres"],"hidden":[]}"#
 
         let decoded = try #require(HomeLayoutConfiguration(rawValue: raw))
 
-        #expect(decoded.order == [.genres] + HomeSection.allCases.filter { $0 != .genres })
+        // Every missing section goes after its default predecessor, which rebuilds the default order.
+        #expect(decoded.order == HomeSection.allCases)
         #expect(decoded.visibleSections.count == HomeSection.allCases.count)
     }
 

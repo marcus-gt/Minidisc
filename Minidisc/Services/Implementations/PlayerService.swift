@@ -241,6 +241,8 @@ actor PlayerService: PlayerServiceProtocol {
     /// track so a long session stays near the original sound. Cleared with every new queue and not
     /// persisted, so a restored session falls back to current-track seeding.
     private var instantMixAnchorSongID: String?
+    /// Refills a Queue Builder queue from the same picks. Cleared with every new queue, like the anchor.
+    private var queueRefill: QueueRefill?
     /// Playback generation whose seed-only queue is still waiting for its Instant Mix. Auto-extend
     /// would otherwise see a 1-track queue and build a competing mix. Bumped generations make a
     /// leftover value inert, so it can never block auto-extend for later playback.
@@ -643,6 +645,7 @@ actor PlayerService: PlayerServiceProtocol {
         if isNewQueue {
             originalQueueOrder = nil
             instantMixAnchorSongID = nil
+            queueRefill = nil
             queueGeneration &+= 1
         }
         let committedQueueGeneration = queueGeneration
@@ -966,6 +969,7 @@ actor PlayerService: PlayerServiceProtocol {
         configureAudioSessionIfNeeded()
 
         instantMixAnchorSongID = nil
+        queueRefill = nil
         queueGeneration &+= 1
         let radioQueueGeneration = queueGeneration
         await MainActor.run {
@@ -1151,6 +1155,39 @@ actor PlayerService: PlayerServiceProtocol {
         else { return }
 
         Logger.player.info("Started Smart Shuffle session with \(tracks.count) tracks")
+    }
+
+    // MARK: - Queue Builder
+
+    func playBuiltQueue(_ tracks: [DisplayableSong], refill: @escaping QueueRefill) async throws {
+        guard !tracks.isEmpty else { throw MinidiscError.smartShuffleEmpty }
+        cancelPendingInstantMix()
+        let expectedPlayGeneration = playbackGeneration &+ 1
+        let expectedBuildGeneration = queueBuildGeneration &+ 1
+        try await play(tracks: tracks, startIndex: 0)
+        guard expectedPlayGeneration == playbackGeneration,
+              expectedBuildGeneration == queueBuildGeneration
+        else { return }
+        let expectedQueueGeneration = queueGeneration
+        let expectedTrackIDs = tracks.map(\.id)
+        let didCommit = await MainActor.run {
+            guard state.queueGeneration == expectedQueueGeneration,
+                  state.queue.map(\.id) == expectedTrackIDs
+            else { return false }
+            state.repeatMode = .off
+            state.isShuffled = false
+            state.isAutoExtendEnabled = true
+            return true
+        }
+        guard didCommit,
+              expectedPlayGeneration == playbackGeneration,
+              expectedQueueGeneration == queueGeneration
+        else { return }
+        // Set after play(): its new-queue reset clears any previous refill.
+        queueRefill = refill
+        await playbackPreferences.setAutoExtendEnabled(true)
+        Logger.player.info("[QUEUE-BUILDER] playing \(tracks.count, privacy: .public) built tracks (auto-extend from the same picks)")
+        await evaluateAutoExtend()
     }
 
     // MARK: - Instant Mix
@@ -1544,6 +1581,7 @@ actor PlayerService: PlayerServiceProtocol {
         guard instantMixPendingPlaybackGeneration != playbackGeneration else { return }
         guard remaining <= 15 else { return }
         let seedTrackId = instantMixAnchorSongID ?? currentTrackId
+        let refill = queueRefill
 
         Logger.player.info("Auto-extend triggered: \(remaining) tracks remaining, fetching 50 seeded on '\(seedTrackId ?? "none", privacy: .public)'\(self.instantMixAnchorSongID != nil ? " (Instant Mix anchor)" : "", privacy: .public)")
 
@@ -1552,6 +1590,7 @@ actor PlayerService: PlayerServiceProtocol {
         autoExtendFetchTask = Task { [weak self] in
             await self?.performAutoExtendFetch(
                 seedTrackId: seedTrackId,
+                refill: refill,
                 excludedIds: queueIds,
                 queueGeneration: expectedQueueGeneration,
                 fetchGeneration: fetchGeneration
@@ -1561,6 +1600,7 @@ actor PlayerService: PlayerServiceProtocol {
 
     private func performAutoExtendFetch(
         seedTrackId: String?,
+        refill: QueueRefill?,
         excludedIds: Set<String>,
         queueGeneration: UInt64,
         fetchGeneration: UInt64
@@ -1569,11 +1609,25 @@ actor PlayerService: PlayerServiceProtocol {
 
         do {
             try Task.checkCancellation()
-            let tracks = try await libraryService.endlessExtension(
-                seedTrackId: seedTrackId,
-                targetSize: 50,
-                excludedIds: excludedIds
-            )
+            var tracks: [DisplayableSong] = []
+            if let refill {
+                // A built queue continues with its own picks; once they run out, the endless queue takes over.
+                do {
+                    tracks = try await refill(excludedIds, 50)
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch {
+                    Logger.player.debug("Built-queue refill failed, using the endless queue: \(error, privacy: .public)")
+                }
+                try Task.checkCancellation()
+            }
+            if tracks.isEmpty {
+                tracks = try await libraryService.endlessExtension(
+                    seedTrackId: seedTrackId,
+                    targetSize: 50,
+                    excludedIds: excludedIds
+                )
+            }
             try Task.checkCancellation()
             guard !tracks.isEmpty else {
                 Logger.player.debug("Auto-extend fetch returned empty — library exhausted or offline without downloads")
@@ -1946,6 +2000,7 @@ actor PlayerService: PlayerServiceProtocol {
         await nowPlayingService?.stop()
         await sessionService.clear()
         instantMixAnchorSongID = nil
+        queueRefill = nil
         queueGeneration &+= 1
         let stoppedQueueGeneration = queueGeneration
         await MainActor.run {

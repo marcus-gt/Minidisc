@@ -102,6 +102,10 @@ struct DiscoverView: View {
                     Task { await triggerSmartShuffle() }
                 }
             }
+        case .queueBuilder:
+            if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
+                QueueBuilderCard(viewModel: queueBuilder)
+            }
         case .moods:
             moodsSection
         case .wrapped:
