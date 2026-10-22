@@ -15,6 +15,7 @@ struct DiscoverView: View {
     @State private var isListenBrainzConnected: Bool = false
     @State private var availableMoods: [MoodPlaylist] = []
     @State private var moodReloadID = 0
+    @AppStorage(DiscoverLayoutConfiguration.storageKey) private var discoverLayout: DiscoverLayoutConfiguration = .default
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
     private var visibleMoods: [MoodPlaylist] {
@@ -29,18 +30,9 @@ struct DiscoverView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: MinidiscSpacing.section) {
                 if let vm {
-                    if isOnline {
-                        freshReleasesSection(vm: vm)
-                        stationsSection(vm)
+                    ForEach(discoverLayout.visibleSections) { section in
+                        discoverSection(section, vm: vm)
                     }
-                    if isOnline || container?.offlineLibrary.snapshot.songs.isEmpty == false {
-                        SmartShuffleCard(coverIDs: shuffleCoverIDs(vm), isStarting: isStartingShuffle) {
-                            Task { await triggerSmartShuffle() }
-                        }
-                    }
-                    moodsSection
-                    wrappedSection
-                    if isOnline { internetRadioSection }
                 }
             }
             .padding(.top, MinidiscSpacing.m)
@@ -90,6 +82,32 @@ struct DiscoverView: View {
             if let allReleasesVM {
                 AllFreshReleasesView(vm: allReleasesVM)
             }
+        }
+    }
+
+    // MARK: - Sections
+
+    /// One Discover section, shown in the order chosen in Settings. Each keeps its own availability
+    /// rules: hiding a section in Settings never forces one that is unavailable offline to appear.
+    @ViewBuilder
+    private func discoverSection(_ section: DiscoverSection, vm: DiscoverViewModel) -> some View {
+        switch section {
+        case .freshReleases:
+            if isOnline { freshReleasesSection(vm: vm) }
+        case .stations:
+            if isOnline { stationsSection(vm) }
+        case .smartShuffle:
+            if isOnline || container?.offlineLibrary.snapshot.songs.isEmpty == false {
+                SmartShuffleCard(coverIDs: shuffleCoverIDs(vm), isStarting: isStartingShuffle) {
+                    Task { await triggerSmartShuffle() }
+                }
+            }
+        case .moods:
+            moodsSection
+        case .wrapped:
+            wrappedSection
+        case .internetRadio:
+            if isOnline { internetRadioSection }
         }
     }
 
