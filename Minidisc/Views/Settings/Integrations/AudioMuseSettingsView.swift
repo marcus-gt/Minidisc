@@ -211,6 +211,8 @@ struct AudioMuseSettingsView: View {
             return String(localized: "AudioMuse found tracks, but none of them exist in your music library. Is it analysing the same collection?")
         case .badURL:
             return String(localized: "That does not look like a valid address.")
+        case .notFound:
+            return String(localized: "AudioMuse has no analysis for that track.")
         case .transport(let detail), .decoding(let detail):
             return detail
         }
