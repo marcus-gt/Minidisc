@@ -80,6 +80,30 @@ nonisolated struct GenreTaxonomy: Sendable {
         return ResolvedGenreTag(key: key, mains: [Self.otherGenre], styleName: nil, isMainTag: false)
     }
 
+    /// A main genre for a track with no usable tags, from AudioMuse's style labels (best first): the
+    /// first label that names a genre. Decades, voices and feel ("60s", "female vocalists",
+    /// "chillout") are skipped, as are labels that only map to "Other".
+    func mainGenre(fromAudioMuseStyles labels: [String]) -> String? {
+        for label in labels {
+            let key = Self.normalized(label)
+            guard !Self.audioMuseNonGenreLabels.contains(key), !Self.isDecadeLabel(key) else { continue }
+            if let main = resolve(label).mains.first, main != Self.otherGenre { return main }
+        }
+        return nil
+    }
+
+    /// "60s", "00s".
+    private static func isDecadeLabel(_ key: String) -> Bool {
+        key.hasSuffix("s") && key.count > 1 && key.dropLast().allSatisfy(\.isNumber)
+    }
+
+    /// AudioMuse labels (Last.fm top tags) that describe voice, feel or era rather than a genre.
+    private static let audioMuseNonGenreLabels: Set<String> = [
+        "femalevocalists", "femalevocalist", "malevocalists", "instrumental", "chillout", "chill",
+        "easylistening", "beautiful", "mellow", "sexy", "catchy", "happy", "sad", "party", "guitar",
+        "acoustic", "oldies",
+    ]
+
     /// "Modal Jazz" / "Jazz Fusion" → the Modal / Fusion style when that style sits under Jazz.
     private func styleWithMainWord(_ key: String) -> ResolvedGenreTag? {
         for (word, main) in Self.mainWords {

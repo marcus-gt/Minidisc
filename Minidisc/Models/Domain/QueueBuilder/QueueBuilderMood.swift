@@ -2,7 +2,7 @@ import Foundation
 
 /// A mood the Queue Builder can rank by, backed by AudioMuse's per-track scores (`other_features`).
 /// Raw values are AudioMuse's own keys.
-nonisolated enum QueueBuilderMood: String, CaseIterable, Identifiable, Hashable, Sendable {
+nonisolated enum QueueBuilderMood: String, CaseIterable, Codable, Identifiable, Hashable, Sendable {
     case happy
     case sad
     case relaxed

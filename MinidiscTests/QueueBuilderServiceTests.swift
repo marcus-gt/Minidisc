@@ -187,9 +187,206 @@ struct QueueBuilderServiceTests {
         #expect(scorer.askedCount == 0)
     }
 
+    // MARK: AudioMuse genre fallback
+
+    private func styles(_ labels: String...) -> AudioMuseMoodScores {
+        AudioMuseMoodScores(values: [:], styles: labels.enumerated().map { .init(label: $1, score: 1 - Double($0) / 10) })
+    }
+
+    @Test func genreFallback_givesUntaggedTracksAMainGenreAndLeavesTaggedOnesAlone() async throws {
+        let source = FakeQueueBuilderSource()
+        source.set(stamp: "v1", tracks: [
+            QueueBuilderTrack(song: song("joni"), genres: [], year: 1977),
+            QueueBuilderTrack(song: song("odd"), genres: ["Norway"], year: 2015),
+            QueueBuilderTrack(song: song("bbng"), genres: ["Jazz"], year: 2016),
+        ])
+        let scorer = FakeMoodScorer(scores: [
+            "joni": styles("female vocalists", "jazz", "soul"),
+            "odd": styles("60s", "rock"),
+            "bbng": styles("electronic"),
+        ])
+        let service = QueueBuilderService(source: source, library: FakeGenreLibrary(), moodScorer: scorer)
+        _ = try await service.index()
+
+        #expect(await service.fillUntaggedGenres())
+        let filled = try await service.index()
+
+        // Only the two untagged/"Other" tracks were scored; BADBADNOTGOOD keeps its Jazz tag.
+        #expect(scorer.askedCount == 2)
+        #expect(filled.columns.first { $0.id == "Jazz" }?.songCount == 2)
+        #expect(filled.columns.first { $0.id == "Rock" }?.songCount == 1)
+        #expect(filled.columns.first { $0.id == "Electronic" } == nil)
+        // No sub-genre is invented for the filled tracks.
+        #expect(filled.columns.first { $0.id == "Jazz" }?.pills.isEmpty == true)
+        let jazz = try await service.buildQueue(QueueBuilderSelection(mains: ["Jazz"]), count: 10).songs
+        #expect(Set(jazz.map(\.id)) == ["joni", "bbng"])
+    }
+
+    @Test func genreFallback_runsOncePerSync() async throws {
+        let source = FakeQueueBuilderSource()
+        source.set(stamp: "v1", tracks: [QueueBuilderTrack(song: song("u"), genres: [], year: nil)])
+        let scorer = FakeMoodScorer(scores: ["u": styles("jazz")])
+        let service = QueueBuilderService(source: source, library: FakeGenreLibrary(), moodScorer: scorer)
+        _ = try await service.index()
+
+        #expect(await service.fillUntaggedGenres())
+        #expect(await service.fillUntaggedGenres() == false)
+        #expect(scorer.askedCount == 1)
+    }
+
+    @Test func genreFallback_withoutAudioMuseChangesNothing() async throws {
+        let source = FakeQueueBuilderSource()
+        source.set(stamp: "v1", tracks: [QueueBuilderTrack(song: song("u"), genres: [], year: nil)])
+        let service = QueueBuilderService(source: source, library: FakeGenreLibrary())
+        _ = try await service.index()
+        #expect(await service.fillUntaggedGenres() == false)
+        let unavailable = QueueBuilderService(
+            source: source, library: FakeGenreLibrary(), moodScorer: FakeMoodScorer(available: false, scores: ["u": styles("jazz")])
+        )
+        _ = try await unavailable.index()
+        #expect(await unavailable.fillUntaggedGenres() == false)
+    }
+
     @Test func moodPool_scalesWithLengthWithinBounds() {
         #expect(QueueBuilderService.moodPoolSize(for: 15) == 120)
         #expect(QueueBuilderService.moodPoolSize(for: 50) == 200)
         #expect(QueueBuilderService.moodPoolSize(for: 120) == 400)
+    }
+}
+
+// MARK: - Discover card and shared picks
+
+@Suite("QueueBuilderViewModel", .serialized)
+@MainActor
+struct QueueBuilderViewModelTests {
+    private func defaults() -> UserDefaults {
+        UserDefaults(suiteName: "QueueBuilderViewModelTests.\(UUID())")!
+    }
+
+    private func model(defaults: UserDefaults, scope: String = "server-a") async -> QueueBuilderViewModel {
+        let source = FakeQueueBuilderSource()
+        source.set(stamp: "v1", tracks: [
+            QueueBuilderTrack(song: song("m1"), genres: ["Modal"], year: 1959),
+            QueueBuilderTrack(song: song("f1"), genres: ["Fusion"], year: 1975),
+            QueueBuilderTrack(song: song("t1"), genres: ["Techno"], year: 1994),
+            QueueBuilderTrack(song: song("h1"), genres: ["House"], year: 2001),
+        ])
+        let vm = QueueBuilderViewModel(
+            service: QueueBuilderService(source: source, library: FakeGenreLibrary()),
+            playerService: MockPlayerService(),
+            toastService: ToastService(),
+            defaults: defaults,
+            storageScope: scope
+        )
+        await vm.load()
+        return vm
+    }
+
+    private var modal: String { GenreTaxonomy.discogs.resolve("Modal").key }
+    private var fusion: String { GenreTaxonomy.discogs.resolve("Fusion").key }
+
+    @Test func cardMainTap_picksFocusesAndUnpicks() async {
+        let vm = await model(defaults: defaults())
+
+        vm.tapMainInCard("Jazz")
+        #expect(vm.isSelected(main: "Jazz"))
+        #expect(vm.focusedMain == "Jazz")
+
+        // A second genre takes the sub-genre row; Jazz stays picked.
+        vm.tapMainInCard("Electronic")
+        #expect(vm.focusedMain == "Electronic")
+        #expect(vm.isPicked(main: "Jazz"))
+
+        // Tapping picked-but-unfocused Jazz only brings its row back.
+        vm.tapMainInCard("Jazz")
+        #expect(vm.focusedMain == "Jazz")
+        #expect(vm.isPicked(main: "Jazz"))
+
+        // Tapping focused Jazz unpicks it and closes the row.
+        vm.tapMainInCard("Jazz")
+        #expect(!vm.isPicked(main: "Jazz"))
+        #expect(vm.focusedMain == nil)
+        #expect(vm.isPicked(main: "Electronic"))
+    }
+
+    @Test func subGenreTap_narrowsAWholeGenreToThatSubGenre() async {
+        let vm = await model(defaults: defaults())
+        vm.tapMainInCard("Jazz")
+
+        vm.toggle(pill: modal, in: "Jazz")
+        #expect(vm.selection.mains.isEmpty)
+        #expect(vm.selection.tags == [modal])
+        #expect(vm.isPicked(main: "Jazz"))
+        #expect(vm.matchCount == 1)
+
+        vm.toggle(pill: fusion, in: "Jazz")
+        #expect(vm.selection.tags == [modal, fusion])
+
+        // Unpicking the focused genre clears its sub-genres too.
+        vm.tapMainInCard("Jazz")
+        #expect(vm.selection.tags.isEmpty)
+    }
+
+    @Test func reset_clearsPicksButKeepsTheLength() async {
+        let vm = await model(defaults: defaults())
+        vm.tapMainInCard("Jazz")
+        vm.toggle(decade: 1950)
+        vm.length = 80
+
+        vm.reset()
+
+        #expect(vm.selection.isEmpty)
+        #expect(vm.focusedMain == nil)
+        #expect(vm.length == 80)
+        #expect(vm.summary == "Anything in your library")
+    }
+
+    @Test func picks_areRememberedPerServer() async {
+        let store = defaults()
+        let first = await model(defaults: store)
+        first.tapMainInCard("Jazz")
+        first.toggle(decade: 1970)
+        first.length = 30
+
+        let relaunched = await model(defaults: store)
+        #expect(relaunched.selection.mains == ["Jazz"])
+        #expect(relaunched.selection.decades == [1970])
+        #expect(relaunched.length == 30)
+
+        let otherServer = await model(defaults: store, scope: "server-b")
+        #expect(otherServer.selection.isEmpty)
+    }
+
+    @Test func savedPicksThatNoLongerExist_areDropped() async throws {
+        let store = defaults()
+        let stale = QueueBuilderSelection(mains: ["Jazz", "Polka"], tags: ["nolongerthere"], decades: [1880, 1950], moods: [.happy])
+        store.set(try JSONEncoder().encode(stale), forKey: "minidisc.queueBuilder.selection.server-a")
+
+        let vm = await model(defaults: store)
+
+        #expect(vm.selection.mains == ["Jazz"])
+        #expect(vm.selection.tags.isEmpty)
+        #expect(vm.selection.decades == [1950])
+        // No AudioMuse configured here, so a saved mood is dropped too.
+        #expect(vm.selection.moods.isEmpty)
+    }
+
+    @Test func decades_newestFirst() async {
+        let vm = await model(defaults: defaults())
+        #expect(vm.decades == [2000, 1990, 1970, 1950])
+        vm.toggle(decade: 1950)
+        vm.toggle(decade: 2000)
+        #expect(vm.summary == "2000s and 1950s")
+    }
+
+    @Test func summary_listsPicksInColumnOrder() async {
+        let vm = await model(defaults: defaults())
+        vm.tapMainInCard("Electronic")
+        vm.tapMainInCard("Jazz")
+        vm.toggle(pill: modal, in: "Jazz")
+        vm.toggle(decade: 1950)
+        #expect(vm.summary.contains("Electronic"))
+        #expect(vm.summary.contains("Modal"))
+        #expect(vm.summary.contains("1950s"))
     }
 }

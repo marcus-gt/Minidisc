@@ -3,7 +3,8 @@ import Observation
 import OSLog
 import SwiftSonic
 
-/// State for the Queue Builder screen (#17): pick genres and decades, choose a length, build and play.
+/// State for the Queue Builder (#17), shared by the Discover card and the full page: pick genres,
+/// decades and moods, choose a length, build and play. Picks and length are remembered per server.
 @Observable @MainActor
 final class QueueBuilderViewModel {
     enum Phase: Equatable {
@@ -14,24 +15,52 @@ final class QueueBuilderViewModel {
 
     static let lengthRange: ClosedRange<Double> = 15...120
     static let lengthStep: Double = 5
+    static let defaultLength: Double = 50
 
     private(set) var phase: Phase = .loading
     private(set) var index: QueueBuilderIndex?
     private(set) var isBuilding = false
     /// AudioMuse is set up for this server, so the mood section shows.
     private(set) var isMoodAvailable = false
-    var selection = QueueBuilderSelection()
-    var length: Double = 50
+    /// The main genre whose sub-genres the Discover card shows in its second row.
+    private(set) var focusedMain: String?
+    var selection = QueueBuilderSelection() {
+        didSet { if selection != oldValue { savePicks() } }
+    }
+    var length: Double = QueueBuilderViewModel.defaultLength {
+        didSet { if length != oldValue { defaults.set(length, forKey: lengthKey) } }
+    }
     var searchText = ""
 
     private let service: QueueBuilderService
     private let playerService: any PlayerServiceProtocol
     private let toastService: ToastService
+    private let defaults: UserDefaults
+    private let selectionKey: String
+    private let lengthKey: String
+    private var genreFallbackTask: Task<Void, Never>?
 
-    init(service: QueueBuilderService, playerService: any PlayerServiceProtocol, toastService: ToastService) {
+    /// `storageScope` keeps picks apart per server: genre keys come from that server's library.
+    init(
+        service: QueueBuilderService,
+        playerService: any PlayerServiceProtocol,
+        toastService: ToastService,
+        defaults: UserDefaults = .standard,
+        storageScope: String = "default"
+    ) {
         self.service = service
         self.playerService = playerService
         self.toastService = toastService
+        self.defaults = defaults
+        selectionKey = "minidisc.queueBuilder.selection.\(storageScope)"
+        lengthKey = "minidisc.queueBuilder.length.\(storageScope)"
+        if let data = defaults.data(forKey: selectionKey),
+           let saved = try? JSONDecoder().decode(QueueBuilderSelection.self, from: data) {
+            selection = saved
+        }
+        if let saved = defaults.object(forKey: lengthKey) as? Double, Self.lengthRange.contains(saved) {
+            length = saved
+        }
     }
 
     // MARK: - Loading
@@ -42,14 +71,44 @@ final class QueueBuilderViewModel {
             let loaded = try await service.index()
             index = loaded
             isMoodAvailable = await service.isMoodAvailable()
-            if !isMoodAvailable { selection.moods = [] }
+            dropUnavailablePicks()
             phase = .ready
+            if isMoodAvailable { fillGenresFromAudioMuse() }
         } catch is CancellationError {
             return
         } catch {
             Logger.library.error("[QUEUE-BUILDER] loading genres failed: \(error, privacy: .public)")
             if index == nil { phase = .failed(UserFacingError.from(error).displayMessage) }
         }
+    }
+
+    /// Untagged tracks get a main genre from AudioMuse in the background; the card shows the tag-only
+    /// index meanwhile and picks up the filled one when it is ready.
+    private func fillGenresFromAudioMuse() {
+        guard genreFallbackTask == nil else { return }
+        let service = service
+        genreFallbackTask = Task { [weak self] in
+            let changed = await service.fillUntaggedGenres()
+            if changed, let filled = try? await service.index() {
+                self?.index = filled
+            }
+            self?.genreFallbackTask = nil
+        }
+    }
+
+    /// Saved picks can outlive the library (a genre retagged away) or AudioMuse (disconnected).
+    /// Picks that can no longer be shown are removed so they never silently narrow a build.
+    private func dropUnavailablePicks() {
+        guard let index else { return }
+        var cleaned = selection
+        let mains = Set(index.columns.map(\.id))
+        let tags = Set(index.columns.flatMap { $0.pills.map(\.id) })
+        cleaned.mains.formIntersection(mains)
+        cleaned.tags.formIntersection(tags)
+        if !index.decadeCounts.isEmpty { cleaned.decades.formIntersection(index.decadeCounts.keys) }
+        if !isMoodAvailable { cleaned.moods = [] }
+        if cleaned != selection { selection = cleaned }
+        if let focusedMain, !mains.contains(focusedMain) { self.focusedMain = nil }
     }
 
     // MARK: - Genres
@@ -66,23 +125,57 @@ final class QueueBuilderViewModel {
         }
     }
 
+    var focusedColumn: QueueBuilderIndex.Column? {
+        guard let focusedMain else { return nil }
+        return index?.columns.first { $0.id == focusedMain }
+    }
+
+    /// The whole genre is picked (full page column title).
     func isSelected(main: String) -> Bool { selection.mains.contains(main) }
+
+    /// The genre is picked in whole or through some of its sub-genres (Discover card).
+    func isPicked(main: String) -> Bool {
+        if selection.mains.contains(main) { return true }
+        guard let column = index?.columns.first(where: { $0.id == main }) else { return false }
+        return column.pills.contains { selection.tags.contains($0.id) }
+    }
 
     /// A pill counts as picked when picked itself or when its whole column is.
     func isSelected(pill: String, in main: String) -> Bool {
         selection.tags.contains(pill) || selection.mains.contains(main)
     }
 
+    /// Full page column title: picks the whole genre, or unpicks it when it already is.
     func toggle(main: String) {
-        if selection.mains.remove(main) == nil { selection.mains.insert(main) }
+        if selection.mains.contains(main) {
+            selection.mains.remove(main)
+        } else {
+            removeTags(of: main)
+            selection.mains.insert(main)
+        }
     }
 
+    /// Discover card main-genre pill. Unpicked: picks the whole genre and shows its sub-genres.
+    /// Picked while another genre's sub-genres show: shows this one's. Picked and showing: unpicks it.
+    func tapMainInCard(_ main: String) {
+        if !isPicked(main: main) {
+            selection.mains.insert(main)
+            focusedMain = main
+        } else if focusedMain != main {
+            focusedMain = main
+        } else {
+            selection.mains.remove(main)
+            removeTags(of: main)
+            focusedMain = nil
+        }
+    }
+
+    /// A sub-genre pill, in the card or the full page. On a fully picked genre it narrows the genre
+    /// to just this sub-genre; otherwise it toggles the sub-genre.
     func toggle(pill: String, in main: String) {
         if selection.mains.contains(main) {
-            // Unpicking one pill of a picked column keeps the column's other pills picked.
             selection.mains.remove(main)
-            let siblings = index?.columns.first { $0.id == main }?.pills.map(\.id) ?? []
-            selection.tags.formUnion(siblings.filter { $0 != pill })
+            selection.tags.insert(pill)
             return
         }
         if selection.tags.remove(pill) == nil { selection.tags.insert(pill) }
@@ -91,14 +184,20 @@ final class QueueBuilderViewModel {
     func clearGenres() {
         selection.mains = []
         selection.tags = []
+        focusedMain = nil
+    }
+
+    private func removeTags(of main: String) {
+        guard let column = index?.columns.first(where: { $0.id == main }) else { return }
+        selection.tags.subtract(column.pills.map(\.id))
     }
 
     // MARK: - Decades
 
-    /// Decades present in the library, oldest first; the standard 1920s–2020s while counts are unknown.
+    /// Decades present in the library, newest first; the standard 2020s–1920s while counts are unknown.
     var decades: [Int] {
-        guard let index, !index.decadeCounts.isEmpty else { return Array(stride(from: 1920, through: 2020, by: 10)) }
-        return index.decadeCounts.keys.sorted()
+        guard let index, !index.decadeCounts.isEmpty else { return Array(stride(from: 2020, through: 1920, by: -10)) }
+        return index.decadeCounts.keys.sorted(by: >)
     }
 
     func decadeCount(_ decade: Int) -> Int? { index?.decadeCounts[decade] }
@@ -116,6 +215,47 @@ final class QueueBuilderViewModel {
     }
 
     func clearMoods() { selection.moods = [] }
+
+    /// Clears every pick (genres, decades, moods); the length stays.
+    func reset() {
+        selection = QueueBuilderSelection()
+        focusedMain = nil
+        searchText = ""
+    }
+
+    // MARK: - Summary
+
+    /// One line for the Discover card, e.g. "Jazz, Techno · 1960s · Relaxed".
+    var summary: String {
+        var parts: [String] = []
+        let genres = pickedGenreNames
+        if !genres.isEmpty { parts.append(ListFormatter.localizedString(byJoining: genres)) }
+        if !selection.decades.isEmpty {
+            parts.append(ListFormatter.localizedString(byJoining: selection.decades.sorted(by: >).map { "\($0)s" }))
+        }
+        if !selection.moods.isEmpty {
+            let moods = QueueBuilderMood.allCases.filter(selection.moods.contains).map { String(localized: $0.title) }
+            parts.append(ListFormatter.localizedString(byJoining: moods))
+        }
+        return parts.isEmpty ? String(localized: "Anything in your library") : parts.joined(separator: " · ")
+    }
+
+    /// Picked genres in column order: whole genres by name, otherwise their picked sub-genres.
+    private var pickedGenreNames: [String] {
+        guard let index else { return [] }
+        var names: [String] = []
+        var seen = Set<String>()
+        for column in index.columns {
+            if selection.mains.contains(column.id) {
+                names.append(column.name)
+                continue
+            }
+            for pill in column.pills where selection.tags.contains(pill.id) && seen.insert(pill.id).inserted {
+                names.append(pill.name)
+            }
+        }
+        return names
+    }
 
     // MARK: - Building
 
@@ -153,5 +293,21 @@ final class QueueBuilderViewModel {
             Logger.library.error("[QUEUE-BUILDER] build failed: \(error, privacy: .public)")
             toastService.showError(UserFacingError.from(error).displayMessage)
         }
+    }
+
+    #if DEBUG
+    /// Previews render loaded straight away instead of capturing the loading state.
+    func loadForPreview(_ index: QueueBuilderIndex, moodAvailable: Bool) {
+        self.index = index
+        isMoodAvailable = moodAvailable
+        phase = .ready
+    }
+    #endif
+
+    // MARK: - Persistence
+
+    private func savePicks() {
+        guard let data = try? JSONEncoder().encode(selection) else { return }
+        defaults.set(data, forKey: selectionKey)
     }
 }

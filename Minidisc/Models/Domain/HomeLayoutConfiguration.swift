@@ -4,6 +4,7 @@ import Foundation
 /// Raw values are persisted: never rename an existing case.
 nonisolated enum HomeSection: String, LayoutSection {
     case playlists
+    case queueBuilder
     case favoriteSongs
     case favoriteAlbums
     case recentlyPlayed
@@ -18,6 +19,7 @@ nonisolated enum HomeSection: String, LayoutSection {
     var title: LocalizedStringResource {
         switch self {
         case .playlists: "Your Playlists"
+        case .queueBuilder: "Queue Builder"
         case .favoriteSongs: "Your Favorite Songs"
         case .favoriteAlbums: "Your Favorite Albums"
         case .recentlyPlayed: "Recently Played"
@@ -32,8 +34,9 @@ nonisolated enum HomeSection: String, LayoutSection {
     /// Identifier the section's shelf uses for accessibility and its stored layout. Genre shelves share one.
     var shelfIdentifier: String { "home.\(rawValue)" }
 
-    /// Favorite Songs is a short vertical list, so it has no carousel / grid choice.
-    var supportsLayoutChoice: Bool { self != .favoriteSongs }
+    /// Favorite Songs is a short vertical list and the Queue Builder a set of pickers, so neither has
+    /// a carousel / grid choice.
+    var supportsLayoutChoice: Bool { self != .favoriteSongs && self != .queueBuilder }
 }
 
 /// Which Home sections are shown, and in what order.

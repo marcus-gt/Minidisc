@@ -48,24 +48,45 @@ nonisolated struct AudioMuseTrack: Decodable, Sendable, Equatable {
 /// danceable, aggressive, happy, party, relaxed, sad.
 nonisolated struct AudioMuseMoodScores: Codable, Sendable, Equatable {
     let values: [String: Double]
+    /// AudioMuse's audio-based style labels (`mood_vector`), best first, e.g. electronic, jazz,
+    /// Hip-Hop, but also non-genres such as 60s or female vocalists. Used to give untagged tracks a
+    /// main genre in the Queue Builder.
+    let styles: [Style]
 
-    /// Parses AudioMuse's `other_features` text, e.g. `"danceable:0.65,aggressive:0.60"`.
-    init(otherFeatures: String) {
-        var values: [String: Double] = [:]
-        for pair in otherFeatures.split(separator: ",") {
-            let parts = pair.split(separator: ":", maxSplits: 1)
-            guard parts.count == 2, let value = Double(parts[1].trimmingCharacters(in: .whitespaces)) else { continue }
-            values[parts[0].trimmingCharacters(in: .whitespaces).lowercased()] = value
-        }
-        self.values = values
+    nonisolated struct Style: Codable, Sendable, Equatable {
+        let label: String
+        let score: Double
     }
 
-    init(values: [String: Double]) { self.values = values }
+    /// Parses AudioMuse's `other_features` text (`"danceable:0.65,aggressive:0.60"`) and, when given,
+    /// its `mood_vector` text (`"electronic:0.587,pop:0.544"`).
+    init(otherFeatures: String, moodVector: String = "") {
+        var values: [String: Double] = [:]
+        for (key, value) in Self.pairs(otherFeatures) { values[key.lowercased()] = value }
+        self.values = values
+        styles = Self.pairs(moodVector)
+            .map { Style(label: $0.key, score: $0.value) }
+            .sorted { $0.score > $1.score }
+    }
+
+    init(values: [String: Double], styles: [Style] = []) {
+        self.values = values
+        self.styles = styles
+    }
+
+    private static func pairs(_ text: String) -> [(key: String, value: Double)] {
+        text.split(separator: ",").compactMap { pair in
+            let parts = pair.split(separator: ":", maxSplits: 1)
+            guard parts.count == 2, let value = Double(parts[1].trimmingCharacters(in: .whitespaces)) else { return nil }
+            return (parts[0].trimmingCharacters(in: .whitespaces), value)
+        }
+    }
 }
 
 private nonisolated struct ScoreResponse: Decodable {
     let otherFeatures: String?
-    enum CodingKeys: String, CodingKey { case otherFeatures = "other_features" }
+    let moodVector: String?
+    enum CodingKeys: String, CodingKey { case otherFeatures = "other_features", moodVector = "mood_vector" }
 }
 
 private nonisolated struct ClapSearchResponse: Decodable {
@@ -159,7 +180,7 @@ actor AudioMuseClient {
         let data = try await send(path: "/external/get_score", query: [URLQueryItem(name: "id", value: itemId)], body: nil, method: "GET")
         do {
             let response = try JSONDecoder().decode(ScoreResponse.self, from: data)
-            return AudioMuseMoodScores(otherFeatures: response.otherFeatures ?? "")
+            return AudioMuseMoodScores(otherFeatures: response.otherFeatures ?? "", moodVector: response.moodVector ?? "")
         } catch {
             throw AudioMuseError.decoding(String(describing: error))
         }

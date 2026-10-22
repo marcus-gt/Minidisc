@@ -150,6 +150,10 @@ struct HomeView: View {
             if !picks.isEmpty {
                 playlistShelf(picks)
             }
+        case .queueBuilder:
+            if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
+                QueueBuilderCard(viewModel: queueBuilder)
+            }
         case .favoriteSongs:
             HomeFavoriteSongsSection(songs: favorites.songs)
         case .favoriteAlbums:
