@@ -43,10 +43,7 @@ struct OnboardingWelcomeView: View {
         VStack(spacing: 0) {
             Spacer(minLength: MinidiscSpacing.xl)
 
-            AnimatedMinidiscHero()
-                .opacity(appeared ? 1 : 0)
-                .scaleEffect(appeared ? 1 : 0.7)
-                .animation(.spring(duration: 0.6, bounce: 0.4), value: appeared)
+            BrandMarkHero(appeared: appeared)
 
             Spacer().frame(height: MinidiscSpacing.xxxxl)
 
@@ -111,113 +108,35 @@ struct OnboardingWelcomeView: View {
     }
 }
 
-// MARK: - Animated Minidisc Hero
+// MARK: - Brand Mark Hero
 
-private struct AnimatedMinidiscHero: View {
+/// The maekster mark over a soft accent glow. It fades in with a slight scale on first appearance;
+/// under Reduce Motion it is shown still, without the entrance.
+private struct BrandMarkHero: View {
+    let appeared: Bool
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var discAngle: Double = 0
 
-    private let side: CGFloat = 180
-    private var w: CGFloat { side }
-    private var h: CGFloat { side }
-
-    private var rect: CGRect { CGRect(x: 0, y: 0, width: w, height: h) }
-    private var discR: CGFloat { MinidiscCartridgeIcon.windowRadius(in: rect) }
-
-    private var shutterSize: CGSize { CGSize(width: w * 0.42, height: h * 0.27) }
-    private var shutterOffset: CGSize {
-        CGSize(width: w - shutterSize.width / 2 - w / 2, height: 0)
-    }
+    private let markWidth: CGFloat = 220
+    private let glowDiameter: CGFloat = 300
+    private let glowBlur: CGFloat = 60
 
     var body: some View {
         ZStack {
             Circle()
                 .fill(MinidiscColors.accent.opacity(0.08))
-                .frame(width: 290, height: 290)
-                .blur(radius: 60)
+                .frame(width: glowDiameter, height: glowDiameter)
+                .blur(radius: glowBlur)
+                .accessibilityHidden(true)
 
-            disc
-                .rotationEffect(.degrees(discAngle))
-                .animation(reduceMotion ? nil : .linear(duration: 3.5).repeatForever(autoreverses: false), value: discAngle)
-                .frame(width: w, height: h)
-
-            MinidiscCartridgeIcon()
-                .fill(MinidiscColors.backgroundTertiary, style: FillStyle(eoFill: true))
-                .frame(width: w, height: h)
-
-            // The window rim goes under the shutter — stroking the whole icon here would run this
-            // circle straight across the band.
-            Circle()
-                .stroke(MinidiscColors.accent.opacity(0.65), lineWidth: 1.5)
-                .frame(width: discR * 2, height: discR * 2)
-
-            shutter
-                .offset(shutterOffset)
-
-            // Drawn last so the shell's own border runs over the shutter: the band is flush with the
-            // trailing edge, and its fill would otherwise eat the inner half of that stroke.
-            MinidiscCartridgeShell()
-                .stroke(MinidiscColors.accent.opacity(0.65), lineWidth: 1.5)
-                .frame(width: w, height: h)
+            Image("BrandMark")
+                .resizable()
+                .scaledToFit()
+                .frame(width: markWidth)
+                .accessibilityLabel(Text(verbatim: "maekster"))
         }
-        .onChange(of: reduceMotion, initial: true) {
-            discAngle = reduceMotion ? 0 : 360
-        }
-    }
-
-    private var disc: some View {
-        ZStack {
-            Circle()
-                .fill(MinidiscColors.backgroundPrimary)
-                .frame(width: discR * 2, height: discR * 2)
-
-            ForEach(0..<3, id: \.self) { i in
-                Circle()
-                    .trim(from: 0, to: 0.18)
-                    .stroke(MinidiscColors.accent.opacity(0.5), lineWidth: 1)
-                    .frame(width: discR * 1.3, height: discR * 1.3)
-                    .rotationEffect(.degrees(Double(i) * 120))
-            }
-
-            Circle()
-                .fill(MinidiscColors.accentBackground)
-                .frame(width: discR * 0.5, height: discR * 0.5)
-            Circle()
-                .stroke(MinidiscColors.accent.opacity(0.6), lineWidth: 1)
-                .frame(width: discR * 0.5, height: discR * 0.5)
-        }
-    }
-
-    private var shutter: some View {
-        UnevenRoundedRectangle(topLeadingRadius: 2, bottomLeadingRadius: 2)
-            .fill(MinidiscColors.backgroundTertiary)
-            .frame(width: shutterSize.width, height: shutterSize.height)
-            .overlay {
-                ShutterOutline(radius: 2)
-                    .stroke(MinidiscColors.accent.opacity(0.5), lineWidth: 1.5)
-            }
-    }
-}
-
-/// Three-sided outline for the shutter. The trailing side is left open: the band sits flush against
-/// the shell, whose own border already draws that edge — closing it here would double the line.
-private struct ShutterOutline: Shape {
-    let radius: CGFloat
-
-    nonisolated func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.minX + radius, y: rect.minY))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.minX, y: rect.minY + radius),
-            control: CGPoint(x: rect.minX, y: rect.minY)
-        )
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - radius))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.minX + radius, y: rect.maxY),
-            control: CGPoint(x: rect.minX, y: rect.maxY)
-        )
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        return path
+        .opacity(reduceMotion || appeared ? 1 : 0)
+        .scaleEffect(reduceMotion || appeared ? 1 : 0.94)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.8), value: appeared)
     }
 }
