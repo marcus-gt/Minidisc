@@ -893,7 +893,9 @@ private struct ApplicationSettingsView: View {
                 Text("Choose which sections appear on Discover and their order.")
             }
             MoodPlaylistSettingsSection()
-            SiriSettingsSection()
+            if SiriSettingsSection.isAvailable {
+                SiriSettingsSection()
+            }
             ApplicationDebugSection()
         }
         .formStyle(.grouped)

@@ -2,6 +2,10 @@ import Intents
 import SwiftUI
 
 struct SiriSettingsSection: View {
+    /// SiriKit needs the com.apple.developer.siri entitlement, which free developer accounts can't sign.
+    /// INPreferences throws without it, so the row stays hidden until the entitlement is restored.
+    static let isAvailable = false
+
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @State private var authorization = INPreferences.siriAuthorizationStatus()
