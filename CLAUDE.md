@@ -1,8 +1,27 @@
 # CLAUDE.md
 
-Minidisc is an iPhone music player for Subsonic / OpenSubsonic servers (Navidrome first). It also plays
+maekster is an iPhone music player for Subsonic / OpenSubsonic servers (Navidrome first). It also plays
 local folders the user references through Files, and integrates with ListenBrainz, Lidarr, AudioMuse-AI,
 LRCLIB lyrics, Siri / App Intents and a yearly "Wrapped" recap.
+
+## Naming
+
+The app is **maekster**, a fork of Minidisc (NO HIT Dev), which is a fork of Cassette (Mathieu Dubart).
+The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as read-only.
+
+- Write **maekster** in all lowercase, also at the start of a sentence: UI text, strings in every language,
+  README, docs, metadata, commit messages. Swift type names use `Maekster…` (e.g. `MaeksterBrand`);
+  identifiers, keys and bundle-ID segments use `maekster`.
+- **mækster** (with æ) exists only inside the logo files. Never type it as text.
+- In the app, use the mark (`Image("BrandMark")`) and plain text. Never use the wordmark.
+- Names sent to external services come from `MaeksterBrand` (`Utilities/MaeksterBrand.swift`).
+- The Xcode project, targets, schemes, Swift module and the internal `Minidisc*` / `minidisc*` type,
+  token and modifier names are still `Minidisc`. So are storage keys and paths that hold user data
+  (`minidisc.*` defaults, `app.minidisc.*`, `Documents/app.minidisc/…`, SwiftData store names).
+  Renaming those is a separate pass; don't change them piecemeal.
+- Server playlists created before the rebrand are named `Minidisc Wrapped <year>` and `Minidisc · <Mood>`.
+  `WrappedPlaylistService.year(fromPlaylistName:)` and `Mood.isPlaylistName(_:)` recognise both
+  names; match playlists through them, not by comparing strings.
 
 ## Toolchain facts that shape the code
 
@@ -225,7 +244,7 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
 - **Artwork**: `ArtworkImageCache` (thumb/hero tiers, `@thumb` / `@hero` filename suffixes). The cache
   version in `AppContainer.currentCoverArtCacheVersion` must be bumped when the tiering changes.
 - **Background**: `BackgroundSyncCoordinator` deduplicates Wrapped and mood playlist sync between cold
-  start and the BGProcessing task `app.minidisc.wrapped.monthly-update`.
+  start and the BGProcessing task `io.github.marcus-gt.maekster.wrapped.monthly-update`.
 - **Migrations** are one-shot, keyed by UserDefaults flags (`minidisc.*_vN`) in `AppContainer`
   extensions. Add a new flag; don't reuse an old one.
 

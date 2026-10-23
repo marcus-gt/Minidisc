@@ -1,4 +1,4 @@
-# Minidisc Design System
+# maekster Design System
 
 A lightweight, token-based design system for SwiftUI. The goal is visual consistency across all screens with no magic numbers in view code.
 

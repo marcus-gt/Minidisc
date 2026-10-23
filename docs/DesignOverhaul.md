@@ -1,6 +1,6 @@
 # Design overhaul (Narjo / Navibeat direction)
 
-The first design pass moves Minidisc's player, album and artist screens closer to Narjo, with some
+The first design pass moves maekster's player, album and artist screens closer to Narjo, with some
 Navibeat details, while keeping the rest of the app visually coherent.
 
 ## Decisions

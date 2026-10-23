@@ -1,11 +1,13 @@
 <p align="center">
-  <img src="docs/app-icon.png" alt="Minidisc app icon" width="128" height="128">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="Branding/logo/svg/maekster-lockup-on-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="Branding/logo/svg/maekster-lockup-on-light.svg">
+    <img src="Branding/logo/svg/maekster-lockup-on-light.svg" alt="maekster" width="360">
+  </picture>
 </p>
 
-<h1 align="center">Minidisc</h1>
-
 <p align="center">
-  Minidisc is an opinionated music player for iOS that plays the music from your own server, and it gives you an experience that is close to Apple Music.
+  maekster is an opinionated music player for iOS that plays the music from your own server, and it gives you an experience that is close to Apple Music.
 </p>
 
 <p align="center">
@@ -20,22 +22,15 @@
 | :------------------------------------------------: | :----------------------------------------------------: | :--------------------------------------------------: | :-------------------------------------------------: | :--------------------------------------------------------: |
 | <img src="docs/screenshots/home.jpeg" width="150"> | <img src="docs/screenshots/discover.jpeg" width="150"> | <img src="docs/screenshots/player.jpeg" width="150"> | <img src="docs/screenshots/album.jpeg" width="150"> | <img src="docs/screenshots/lidarr-album.jpeg" width="150"> |
 
-## What is Minidisc?
+## What is maekster?
 
-Minidisc is a music player for iOS, written in Swift and SwiftUI, that plays the music from your own server. It uses the Subsonic and OpenSubsonic API, so it works with [Navidrome](https://www.navidrome.org) and with other servers that follow these standards.
+maekster is a music player for iOS, written in Swift and SwiftUI, that plays the music from your own server. It uses the Subsonic and OpenSubsonic API, so it works with [Navidrome](https://www.navidrome.org) and with other servers that follow these standards.
 
-Minidisc does not use accounts or subscriptions, and it does not track you, so your music stays between your device and your server. It gives you the same smooth experience as Apple Music, but it plays the music that you own.
+maekster does not use accounts or subscriptions, and it does not track you, so your music stays between your device and your server. It gives you the same smooth experience as Apple Music, but it plays the music that you own.
 
-## An opinionated fork
+## Lineage
 
-Minidisc is a fork of [Cassette](https://github.com/CassetteLab/cassette), which Mathieu Dubart wrote as a good client for iOS and macOS. Minidisc takes a different, narrower path, and it follows four rules:
-
-- **iOS only.** Minidisc does not support macOS, because each screen is made for the phone.
-- **Opinionated.** Minidisc has few settings and good defaults, because it makes the decisions for you and keeps the interface simple.
-- **Smooth first.** Minidisc adds a function only when the function feels as good as Apple Music.
-- **Familiar.** The tab bar, the mini-player, the player screen, and the Home shelves use the usual iOS patterns, so you do not have to learn them.
-
-If you want the largest set of functions on Mac and iPhone, use Cassette. If you want the simplest iOS player for your own library, use Minidisc.
+maekster is a fork of [Minidisc](https://github.com/Loriage/Minidisc) by NO HIT Dev, which is itself a fork of [Cassette](https://github.com/CassetteLab/cassette) by Mathieu Dubart. It keeps Minidisc's approach: iOS only, few settings with good defaults, and the usual iOS patterns. If you want a client for both Mac and iPhone, use Cassette.
 
 ## Features
 
@@ -67,10 +62,10 @@ If you want the largest set of functions on Mac and iPhone, use Cassette. If you
 
 **Privacy**
 
-- Minidisc does not track you. Library and playback traffic goes directly to your configured server.
-- If you select LRCLIB as the lyrics source, or use it as the automatic fallback, Minidisc sends the track title, artist, album, and duration to LRCLIB over HTTPS. Server credentials, custom headers, and server identifiers are never included.
-- Minidisc keeps your credentials only in the iOS Keychain.
-- Minidisc can send custom HTTP headers for a server behind a reverse proxy, for example Cloudflare Access or Authelia.
+- maekster does not track you. Library and playback traffic goes directly to your configured server.
+- If you select LRCLIB as the lyrics source, or use it as the automatic fallback, maekster sends the track title, artist, album, and duration to LRCLIB over HTTPS. Server credentials, custom headers, and server identifiers are never included.
+- maekster keeps your credentials only in the iOS Keychain.
+- maekster can send custom HTTP headers for a server behind a reverse proxy, for example Cloudflare Access or Authelia.
 
 ## Installation
 
@@ -91,7 +86,7 @@ Do these steps:
 
 1. Clone the repository and open the project.
     ```bash
-    git clone https://github.com/Loriage/Minidisc.git
+    git clone https://github.com/marcus-gt/Minidisc.git
     cd Minidisc
     open Minidisc.xcodeproj
     ```
@@ -99,7 +94,7 @@ Do these steps:
 2. Select your team in **Signing & Capabilities**.
 3. Select an iOS 26 device or simulator.
 4. Build and run the app when you press Command-R.
-5. At the first start, Minidisc asks for your server address, your username, and your password. Enter them and tap **Connect**. If your server is behind a reverse proxy that needs custom headers, open **Advanced** and add the headers.
+5. At the first start, maekster asks for your server address, your username, and your password. Enter them and tap **Connect**. If your server is behind a reverse proxy that needs custom headers, open **Advanced** and add the headers.
 
 ## Requirements
 
@@ -108,7 +103,7 @@ Do these steps:
 
 ## Server compatibility
 
-Minidisc works with each server that has the Subsonic or OpenSubsonic API. Navidrome is the recommended server, and the team tests Minidisc primarily with Navidrome. If your server has the Subsonic API but a function does not work, [open an issue](https://github.com/Loriage/Minidisc/issues).
+maekster works with each server that has the Subsonic or OpenSubsonic API. Navidrome is the recommended server, and maekster is tested primarily with Navidrome. If your server has the Subsonic API but a function does not work, [open an issue](https://github.com/marcus-gt/Minidisc/issues).
 
 ## Architecture
 
@@ -125,7 +120,7 @@ This information is for developers:
 
 ## License
 
-Minidisc uses the [MPL-2.0](LICENSE) license.
+maekster uses the [MPL-2.0](LICENSE) license.
 
 - You can use, study, change, and share the source.
 - Changed files stay under MPL-2.0, but you can combine them with proprietary code in a larger work.
@@ -136,6 +131,7 @@ Dependencies: [SwiftSonic](https://github.com/CassetteLab/swiftsonic) (MIT), whi
 
 ## Acknowledgments
 
+- [Minidisc](https://github.com/Loriage/Minidisc) by NO HIT Dev, because maekster is a fork of Minidisc.
 - [Cassette](https://github.com/CassetteLab/cassette) by Mathieu Dubart, because Minidisc is a fork of Cassette.
 - The [Navidrome](https://www.navidrome.org) team, because Navidrome is an excellent self-hosted music server.
 - The [OpenSubsonic](https://opensubsonic.netlify.app) community, because they modernized the Subsonic API.
