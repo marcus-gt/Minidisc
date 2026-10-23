@@ -5074,60 +5074,60 @@
         }
       }
     },
-    "Allow Siri to search your Minidisc library and control music playback." : {
+    "Allow Siri to search your maekster library and control music playback." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erlaube Siri, deine Minidisc-Mediathek zu durchsuchen und die Musikwiedergabe zu steuern."
+            "value" : "Erlaube Siri, deine maekster-Mediathek zu durchsuchen und die Musikwiedergabe zu steuern."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Επιτρέψτε στο Siri να κάνει αναζήτηση στη βιβλιοθήκη σας στο Minidisc και να ελέγχει την αναπαραγωγή μουσικής."
+            "value" : "Επιτρέψτε στο Siri να κάνει αναζήτηση στη βιβλιοθήκη σας στο maekster και να ελέγχει την αναπαραγωγή μουσικής."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow Siri to search your Minidisc library and control music playback."
+            "value" : "Allow Siri to search your maekster library and control music playback."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Permite que Siri busque en tu biblioteca de Minidisc y controle la reproducción de música."
+            "value" : "Permite que Siri busque en tu biblioteca de maekster y controle la reproducción de música."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autorisez Siri à rechercher dans votre bibliothèque Minidisc et à contrôler la lecture musicale."
+            "value" : "Autorisez Siri à rechercher dans votre bibliothèque maekster et à contrôler la lecture musicale."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Consenti a Siri di cercare nella tua libreria Minidisc e controllare la riproduzione musicale."
+            "value" : "Consenti a Siri di cercare nella tua libreria maekster e controllare la riproduzione musicale."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SiriによるMinidiscライブラリの検索と音楽再生の操作を許可します。"
+            "value" : "Siriによるmaeksterライブラリの検索と音楽再生の操作を許可します。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许 Siri 搜索你的 Minidisc 音乐库并控制音乐播放。"
+            "value" : "允许 Siri 搜索你的 maekster 音乐库并控制音乐播放。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允許 Siri 搜尋你的 Minidisc 音樂資料庫並控制音樂播放。"
+            "value" : "允許 Siri 搜尋你的 maekster 音樂資料庫並控制音樂播放。"
           }
         }
       }
@@ -6247,36 +6247,36 @@
         }
       }
     },
-    "AudioMuse-AI analyses how your music actually sounds, which lets Minidisc build a playlist for a mood rather than for a tag." : {
+    "AudioMuse-AI analyses how your music actually sounds, which lets maekster build a playlist for a mood rather than for a tag." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AudioMuse-AI analysiert, wie deine Musik tatsächlich klingt. So kann Minidisc eine Playlist für eine Stimmung erstellen statt für ein Tag."
+            "value" : "AudioMuse-AI analysiert, wie deine Musik tatsächlich klingt. So kann maekster eine Playlist für eine Stimmung erstellen statt für ein Tag."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Το AudioMuse-AI αναλύει πώς ακούγεται πραγματικά η μουσική σου, ώστε το Minidisc να φτιάχνει λίστα για μια διάθεση αντί για μια ετικέτα."
+            "value" : "Το AudioMuse-AI αναλύει πώς ακούγεται πραγματικά η μουσική σου, ώστε το maekster να φτιάχνει λίστα για μια διάθεση αντί για μια ετικέτα."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AudioMuse-AI analiza cómo suena realmente tu música, lo que permite a Minidisc crear una lista para un estado de ánimo en vez de para una etiqueta."
+            "value" : "AudioMuse-AI analiza cómo suena realmente tu música, lo que permite a maekster crear una lista para un estado de ánimo en vez de para una etiqueta."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AudioMuse-AI analyse la sonorité réelle de ta musique, ce qui permet à Minidisc de construire une playlist pour une ambiance plutôt que pour un tag."
+            "value" : "AudioMuse-AI analyse la sonorité réelle de ta musique, ce qui permet à maekster de construire une playlist pour une ambiance plutôt que pour un tag."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AudioMuse-AI analizza come suona davvero la tua musica, così Minidisc può creare una playlist per un'atmosfera anziché per un tag."
+            "value" : "AudioMuse-AI analizza come suona davvero la tua musica, così maekster può creare una playlist per un'atmosfera anziché per un tag."
           }
         },
         "ja" : {
@@ -6288,13 +6288,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AudioMuse-AI 分析音乐的实际听感，让 Minidisc 能按心情而非标签生成播放列表。"
+            "value" : "AudioMuse-AI 分析音乐的实际听感，让 maekster 能按心情而非标签生成播放列表。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AudioMuse-AI 分析音樂的實際聽感，讓 Minidisc 能依心情而非標籤產生播放列表。"
+            "value" : "AudioMuse-AI 分析音樂的實際聽感，讓 maekster 能依心情而非標籤產生播放列表。"
           }
         }
       }
@@ -6985,6 +6985,58 @@
         }
       }
     },
+    "Based On" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basiert auf"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Βασίζεται σε"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basado en"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basé sur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basato su"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ベースとなったプロジェクト"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基于"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基於"
+          }
+        }
+      }
+    },
     "Blocklist Release" : {
       "localizations" : {
         "de" : {
@@ -7630,6 +7682,7 @@
 
     },
     "Cassette" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18998,13 +19051,13 @@
         }
       }
     },
-    "Label pages appear once Minidisc has indexed every album. Try again shortly." : {
+    "Label pages appear once maekster has indexed every album. Try again shortly." : {
 
     },
     "Labels" : {
 
     },
-    "Labels appear once Minidisc has indexed every album. Try again shortly." : {
+    "Labels appear once maekster has indexed every album. Try again shortly." : {
 
     },
     "Lagoon" : {
@@ -19321,7 +19374,8 @@
       }
     },
     "Leave a Review" : {
-      "comment" : "Opens the App Store review page for Minidisc.",
+      "comment" : "Opens the App Store review page for maekster.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19896,54 +19950,54 @@
         }
       }
     },
-    "Lidarr manages your music collection and downloads new releases for you. Connect it to check its status from Minidisc." : {
+    "Lidarr manages your music collection and downloads new releases for you. Connect it to check its status from maekster." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lidarr verwaltet deine Musiksammlung und lädt neue Releases für dich herunter. Verbinde es, um seinen Status in Minidisc zu prüfen."
+            "value" : "Lidarr verwaltet deine Musiksammlung und lädt neue Releases für dich herunter. Verbinde es, um seinen Status in maekster zu prüfen."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Το Lidarr διαχειρίζεται τη μουσική σας συλλογή και κατεβάζει νέες κυκλοφορίες για εσάς. Συνδέστε το για να ελέγχετε την κατάστασή του από το Minidisc."
+            "value" : "Το Lidarr διαχειρίζεται τη μουσική σας συλλογή και κατεβάζει νέες κυκλοφορίες για εσάς. Συνδέστε το για να ελέγχετε την κατάστασή του από το maekster."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lidarr gestiona tu colección de música y descarga los nuevos lanzamientos por ti. Conéctalo para comprobar su estado desde Minidisc."
+            "value" : "Lidarr gestiona tu colección de música y descarga los nuevos lanzamientos por ti. Conéctalo para comprobar su estado desde maekster."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lidarr gère votre collection musicale et télécharge les nouvelles sorties pour vous. Connectez-le pour consulter son état depuis Minidisc."
+            "value" : "Lidarr gère votre collection musicale et télécharge les nouvelles sorties pour vous. Connectez-le pour consulter son état depuis maekster."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lidarr gestisce la tua collezione musicale e scarica le nuove release per te. Collegalo per controllarne lo stato da Minidisc."
+            "value" : "Lidarr gestisce la tua collezione musicale e scarica le nuove release per te. Collegalo per controllarne lo stato da maekster."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lidarrは音楽コレクションを管理し、新しいリリースを自動でダウンロードします。接続すると、Minidiscからその状態を確認できます。"
+            "value" : "Lidarrは音楽コレクションを管理し、新しいリリースを自動でダウンロードします。接続すると、maeksterからその状態を確認できます。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lidarr 管理你的音乐收藏并为你下载新发行版。连接后即可从 Minidisc 查看其状态。"
+            "value" : "Lidarr 管理你的音乐收藏并为你下载新发行版。连接后即可从 maekster 查看其状态。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lidarr 管理你的音樂收藏並為你下載新發行版。連接後即可從 Minidisc 查看其狀態。"
+            "value" : "Lidarr 管理你的音樂收藏並為你下載新發行版。連接後即可從 maekster 查看其狀態。"
           }
         }
       }
@@ -20416,54 +20470,54 @@
         }
       }
     },
-    "ListenBrainz is an open-source music scrobbling and recommendation service by the MetaBrainz Foundation. Minidisc can submit your listening history and surface personalized fresh releases and similar artists." : {
+    "ListenBrainz is an open-source music scrobbling and recommendation service by the MetaBrainz Foundation. maekster can submit your listening history and surface personalized fresh releases and similar artists." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ListenBrainz ist ein quelloffener Musik-Scrobbling- und Empfehlungsdienst der MetaBrainz Foundation. Minidisc kann deinen Hörverlauf übermitteln und personalisierte neue Veröffentlichungen sowie ähnliche Künstler anzeigen."
+            "value" : "ListenBrainz ist ein quelloffener Musik-Scrobbling- und Empfehlungsdienst der MetaBrainz Foundation. maekster kann deinen Hörverlauf übermitteln und personalisierte neue Veröffentlichungen sowie ähnliche Künstler anzeigen."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Το ListenBrainz είναι μια υπηρεσία ανοιχτού κώδικα για scrobbling και προτάσεις μουσικής από το MetaBrainz Foundation. Το Minidisc μπορεί να υποβάλλει το ιστορικό ακρόασής σας και να αναδεικνύει εξατομικευμένες νέες κυκλοφορίες και παρόμοιους καλλιτέχνες."
+            "value" : "Το ListenBrainz είναι μια υπηρεσία ανοιχτού κώδικα για scrobbling και προτάσεις μουσικής από το MetaBrainz Foundation. Το maekster μπορεί να υποβάλλει το ιστορικό ακρόασής σας και να αναδεικνύει εξατομικευμένες νέες κυκλοφορίες και παρόμοιους καλλιτέχνες."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ListenBrainz es un servicio de código abierto de scrobbling y recomendaciones de música de la MetaBrainz Foundation. Minidisc puede enviar tu historial de escucha y mostrarte novedades personalizadas y artistas similares."
+            "value" : "ListenBrainz es un servicio de código abierto de scrobbling y recomendaciones de música de la MetaBrainz Foundation. maekster puede enviar tu historial de escucha y mostrarte novedades personalizadas y artistas similares."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ListenBrainz est un service open source de scrobbling et de recommandations musicales de la MetaBrainz Foundation. Minidisc peut envoyer votre historique d'écoute et proposer des nouveautés et des artistes similaires personnalisés."
+            "value" : "ListenBrainz est un service open source de scrobbling et de recommandations musicales de la MetaBrainz Foundation. maekster peut envoyer votre historique d'écoute et proposer des nouveautés et des artistes similaires personnalisés."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ListenBrainz è un servizio open-source di scrobbling e consigli musicali della MetaBrainz Foundation. Minidisc può inviare la tua cronologia di ascolto e mostrare uscite recenti e artisti simili personalizzati."
+            "value" : "ListenBrainz è un servizio open-source di scrobbling e consigli musicali della MetaBrainz Foundation. maekster può inviare la tua cronologia di ascolto e mostrare uscite recenti e artisti simili personalizzati."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ListenBrainzは、MetaBrainz Foundationによるオープンソースの音楽スクロブルおよびおすすめサービスです。Minidiscは再生履歴を送信し、パーソナライズされた新着リリースや類似アーティストを表示できます。"
+            "value" : "ListenBrainzは、MetaBrainz Foundationによるオープンソースの音楽スクロブルおよびおすすめサービスです。maeksterは再生履歴を送信し、パーソナライズされた新着リリースや類似アーティストを表示できます。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ListenBrainz 是由 MetaBrainz Foundation 提供的开源音乐 scrobbling 和推荐服务。Minidisc 可以提交你的收听历史，并呈现个性化的最新发行和相似艺人。"
+            "value" : "ListenBrainz 是由 MetaBrainz Foundation 提供的开源音乐 scrobbling 和推荐服务。maekster 可以提交你的收听历史，并呈现个性化的最新发行和相似艺人。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ListenBrainz 是由 MetaBrainz Foundation 提供的開源音樂播放記錄與推薦服務。Minidisc 可以提交你的聆聽記錄，並呈現個人化的最新發行和相似藝人。"
+            "value" : "ListenBrainz 是由 MetaBrainz Foundation 提供的開源音樂播放記錄與推薦服務。maekster 可以提交你的聆聽記錄，並呈現個人化的最新發行和相似藝人。"
           }
         }
       }
@@ -21168,6 +21222,266 @@
         }
       }
     },
+    "maekster couldn't open its local data. You can try again without restarting the app." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster konnte seine lokalen Daten nicht öffnen. Du kannst es erneut versuchen, ohne die App neu zu starten."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το maekster δεν μπόρεσε να ανοίξει τα τοπικά δεδομένα του. Μπορείτε να δοκιμάσετε ξανά χωρίς επανεκκίνηση της εφαρμογής."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster no ha podido abrir sus datos locales. Puedes volver a intentarlo sin reiniciar la app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster n’a pas pu ouvrir ses données locales. Vous pouvez réessayer sans redémarrer l’app."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster non è riuscito ad aprire i dati locali. Puoi riprovare senza riavviare l’app."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maeksterはローカルデータを開けませんでした。アプリを再起動せずに再試行できます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster 无法打开本地数据。你可以直接重试，无需重新启动 App。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster 無法開啟本機資料。你可以直接重試，無需重新啟動 App。"
+          }
+        }
+      }
+    },
+    "maekster forgets the address and the API key. Your Lidarr instance is not changed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster vergisst die Adresse und den API-Schlüssel. Deine Lidarr-Instanz wird nicht verändert."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το maekster ξεχνά τη διεύθυνση και το κλειδί API. Η παρουσία Lidarr σας δεν αλλάζει."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster olvida la dirección y la clave API. Tu instancia de Lidarr no se modifica."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster oublie l'adresse et la clé API. Votre instance Lidarr n'est pas modifiée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster dimentica l'indirizzo e la chiave API. La tua istanza Lidarr non viene modificata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maeksterはアドレスとAPIキーを破棄します。Lidarrインスタンス自体は変更されません。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster 会忘记地址和 API 密钥。你的 Lidarr 实例不会更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster 會忘記位址和 API 金鑰。你的 Lidarr 執行個體不會變更。"
+          }
+        }
+      }
+    },
+    "maekster is a fork of Minidisc by NO HIT Dev, which is itself a fork of Cassette by Mathieu Dubart." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster ist ein Fork von Minidisc von NO HIT Dev, das selbst ein Fork von Cassette von Mathieu Dubart ist."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το maekster είναι fork του Minidisc από τη NO HIT Dev, το οποίο είναι με τη σειρά του fork του Cassette από τον Mathieu Dubart."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster es un fork de Minidisc, de NO HIT Dev, que a su vez es un fork de Cassette, de Mathieu Dubart."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster est un fork de Minidisc par NO HIT Dev, lui-même un fork de Cassette par Mathieu Dubart."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster è un fork di Minidisc di NO HIT Dev, a sua volta un fork di Cassette di Mathieu Dubart."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maeksterは、NO HIT DevによるMinidiscのフォークです。Minidisc自体は、Mathieu DubartによるCassetteのフォークです。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster 是 NO HIT Dev 开发的 Minidisc 的分支，而 Minidisc 本身是 Mathieu Dubart 开发的 Cassette 的分支。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster 是 NO HIT Dev 開發的 Minidisc 的分支，而 Minidisc 本身是 Mathieu Dubart 開發的 Cassette 的分支。"
+          }
+        }
+      }
+    },
+    "maekster Wrapped" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped"
+          }
+        }
+      }
+    },
+    "maekster Wrapped %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maekster Wrapped %@"
+          }
+        }
+      }
+    },
     "Make sure your server is running and reachable." : {
       "localizations" : {
         "de" : {
@@ -21587,266 +21901,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "中繼資料設定檔"
-          }
-        }
-      }
-    },
-    "Minidisc" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc"
-          }
-        }
-      }
-    },
-    "Minidisc couldn't open its local data. You can try again without restarting the app." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc konnte seine lokalen Daten nicht öffnen. Du kannst es erneut versuchen, ohne die App neu zu starten."
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Το Minidisc δεν μπόρεσε να ανοίξει τα τοπικά δεδομένα του. Μπορείτε να δοκιμάσετε ξανά χωρίς επανεκκίνηση της εφαρμογής."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc no ha podido abrir sus datos locales. Puedes volver a intentarlo sin reiniciar la app."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc n’a pas pu ouvrir ses données locales. Vous pouvez réessayer sans redémarrer l’app."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc non è riuscito ad aprire i dati locali. Puoi riprovare senza riavviare l’app."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidiscはローカルデータを開けませんでした。アプリを再起動せずに再試行できます。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc 无法打开本地数据。你可以直接重试，无需重新启动 App。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc 無法開啟本機資料。你可以直接重試，無需重新啟動 App。"
-          }
-        }
-      }
-    },
-    "Minidisc forgets the address and the API key. Your Lidarr instance is not changed." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc vergisst die Adresse und den API-Schlüssel. Deine Lidarr-Instanz wird nicht verändert."
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Το Minidisc ξεχνά τη διεύθυνση και το κλειδί API. Η παρουσία Lidarr σας δεν αλλάζει."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc olvida la dirección y la clave API. Tu instancia de Lidarr no se modifica."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc oublie l'adresse et la clé API. Votre instance Lidarr n'est pas modifiée."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc dimentica l'indirizzo e la chiave API. La tua istanza Lidarr non viene modificata."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MinidiscはアドレスとAPIキーを破棄します。Lidarrインスタンス自体は変更されません。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc 会忘记地址和 API 密钥。你的 Lidarr 实例不会更改。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc 會忘記位址和 API 金鑰。你的 Lidarr 執行個體不會變更。"
-          }
-        }
-      }
-    },
-    "Minidisc Wrapped" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped"
-          }
-        }
-      }
-    },
-    "Minidisc Wrapped %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minidisc Wrapped %@"
           }
         }
       }
@@ -26677,55 +26731,55 @@
         }
       }
     },
-    "Open Minidisc and connect to your music server first." : {
+    "Open maekster and connect to your music server first." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öffne Minidisc und verbinde dich zuerst mit deinem Musikserver."
+            "value" : "Öffne maekster und verbinde dich zuerst mit deinem Musikserver."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ανοίξτε το Minidisc και συνδεθείτε πρώτα στον διακομιστή μουσικής σας."
+            "value" : "Ανοίξτε το maekster και συνδεθείτε πρώτα στον διακομιστή μουσικής σας."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre Minidisc y conéctate primero a tu servidor de música."
+            "value" : "Abre maekster y conéctate primero a tu servidor de música."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrez Minidisc et connectez-vous d’abord à votre serveur musical."
+            "value" : "Ouvrez maekster et connectez-vous d’abord à votre serveur musical."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apri Minidisc e connettiti prima al tuo server musicale."
+            "value" : "Apri maekster e connettiti prima al tuo server musicale."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "まずMinidiscを開き、音楽サーバーに接続してください。"
+            "value" : "まずmaeksterを開き、音楽サーバーに接続してください。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请先打开 Minidisc 并连接到音乐服务器。"
+            "value" : "请先打开 maekster 并连接到音乐服务器。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "請先開啟 Minidisc 並連線至音樂伺服器。"
+            "value" : "請先開啟 maekster 並連線至音樂伺服器。"
           }
         }
       }
@@ -28179,55 +28233,55 @@
         }
       }
     },
-    "Play a song, album, artist or playlist from your Minidisc library." : {
+    "Play a song, album, artist or playlist from your maekster library." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Einen Titel, ein Album, einen Künstler oder eine Playlist aus deiner Minidisc-Mediathek abspielen."
+            "value" : "Einen Titel, ein Album, einen Künstler oder eine Playlist aus deiner maekster-Mediathek abspielen."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Αναπαραγωγή κομματιού, άλμπουμ, καλλιτέχνη ή λίστας από τη βιβλιοθήκη Minidisc."
+            "value" : "Αναπαραγωγή κομματιού, άλμπουμ, καλλιτέχνη ή λίστας από τη βιβλιοθήκη maekster."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reproduce una canción, un álbum, un artista o una playlist de tu biblioteca de Minidisc."
+            "value" : "Reproduce una canción, un álbum, un artista o una playlist de tu biblioteca de maekster."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lire un morceau, un album, un artiste ou une playlist de votre bibliothèque Minidisc."
+            "value" : "Lire un morceau, un album, un artiste ou une playlist de votre bibliothèque maekster."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Riproduci un brano, un album, un artista o una playlist dalla libreria Minidisc."
+            "value" : "Riproduci un brano, un album, un artista o una playlist dalla libreria maekster."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Minidiscライブラリの曲、アルバム、アーティスト、プレイリストを再生します。"
+            "value" : "maeksterライブラリの曲、アルバム、アーティスト、プレイリストを再生します。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "播放 Minidisc 音乐库中的歌曲、专辑、艺人或歌单。"
+            "value" : "播放 maekster 音乐库中的歌曲、专辑、艺人或歌单。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "播放 Minidisc 音樂庫中的歌曲、專輯、藝人或播放清單。"
+            "value" : "播放 maekster 音樂庫中的歌曲、專輯、藝人或播放清單。"
           }
         }
       }
@@ -30558,54 +30612,54 @@
         }
       }
     },
-    "Reconnect to browse Lidarr and manage your music library. Your offline music is still available in Minidisc." : {
+    "Reconnect to browse Lidarr and manage your music library. Your offline music is still available in maekster." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stelle die Verbindung wieder her, um Lidarr zu durchsuchen und deine Musikbibliothek zu verwalten. Deine Offline-Musik bleibt in Minidisc verfügbar."
+            "value" : "Stelle die Verbindung wieder her, um Lidarr zu durchsuchen und deine Musikbibliothek zu verwalten. Deine Offline-Musik bleibt in maekster verfügbar."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Συνδέσου ξανά για περιήγηση στο Lidarr και διαχείριση της μουσικής βιβλιοθήκης σου. Η μουσική σου εκτός σύνδεσης παραμένει διαθέσιμη στο Minidisc."
+            "value" : "Συνδέσου ξανά για περιήγηση στο Lidarr και διαχείριση της μουσικής βιβλιοθήκης σου. Η μουσική σου εκτός σύνδεσης παραμένει διαθέσιμη στο maekster."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vuelve a conectarte para explorar Lidarr y gestionar tu biblioteca musical. Tu música sin conexión sigue disponible en Minidisc."
+            "value" : "Vuelve a conectarte para explorar Lidarr y gestionar tu biblioteca musical. Tu música sin conexión sigue disponible en maekster."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reconnectez-vous pour consulter Lidarr et gérer votre bibliothèque musicale. Votre musique hors ligne reste disponible dans Minidisc."
+            "value" : "Reconnectez-vous pour consulter Lidarr et gérer votre bibliothèque musicale. Votre musique hors ligne reste disponible dans maekster."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Riconnettiti per esplorare Lidarr e gestire la tua libreria musicale. La musica offline resta disponibile in Minidisc."
+            "value" : "Riconnettiti per esplorare Lidarr e gestire la tua libreria musicale. La musica offline resta disponibile in maekster."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "再接続すると、Lidarrの閲覧や音楽ライブラリの管理ができます。オフラインの音楽は引き続きMinidiscで再生できます。"
+            "value" : "再接続すると、Lidarrの閲覧や音楽ライブラリの管理ができます。オフラインの音楽は引き続きmaeksterで再生できます。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新连接后即可浏览 Lidarr 并管理音乐库。你仍可在 Minidisc 中收听离线音乐。"
+            "value" : "重新连接后即可浏览 Lidarr 并管理音乐库。你仍可在 maekster 中收听离线音乐。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新連線即可瀏覽 Lidarr 並管理音樂資料庫。你仍可在 Minidisc 中收聽離線音樂。"
+            "value" : "重新連線即可瀏覽 Lidarr 並管理音樂資料庫。你仍可在 maekster 中收聽離線音樂。"
           }
         }
       }
@@ -33579,55 +33633,55 @@
         }
       }
     },
-    "Select the server used by this shortcut in Minidisc, then try again." : {
+    "Select the server used by this shortcut in maekster, then try again." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wähle in Minidisc den Server dieses Kurzbefehls aus und versuche es erneut."
+            "value" : "Wähle in maekster den Server dieses Kurzbefehls aus und versuche es erneut."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Επιλέξτε στο Minidisc τον διακομιστή αυτής της συντόμευσης και δοκιμάστε ξανά."
+            "value" : "Επιλέξτε στο maekster τον διακομιστή αυτής της συντόμευσης και δοκιμάστε ξανά."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selecciona en Minidisc el servidor de este atajo e inténtalo de nuevo."
+            "value" : "Selecciona en maekster el servidor de este atajo e inténtalo de nuevo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sélectionnez le serveur associé à ce raccourci dans Minidisc, puis réessayez."
+            "value" : "Sélectionnez le serveur associé à ce raccourci dans maekster, puis réessayez."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seleziona in Minidisc il server usato da questo comando rapido e riprova."
+            "value" : "Seleziona in maekster il server usato da questo comando rapido e riprova."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Minidiscでこのショートカットのサーバーを選択し、もう一度お試しください。"
+            "value" : "maeksterでこのショートカットのサーバーを選択し、もう一度お試しください。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请在 Minidisc 中选择此快捷指令使用的服务器，然后重试。"
+            "value" : "请在 maekster 中选择此快捷指令使用的服务器，然后重试。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "請在 Minidisc 中選取此捷徑使用的伺服器，然後再試一次。"
+            "value" : "請在 maekster 中選取此捷徑使用的伺服器，然後再試一次。"
           }
         }
       }
@@ -34154,6 +34208,7 @@
       }
     },
     "Share the App" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -37148,6 +37203,58 @@
         }
       }
     },
+    "Thanks to the Navidrome team for an excellent self-hosted music server, and to the OpenSubsonic community for modernizing the Subsonic API." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dank an das Navidrome-Team für einen hervorragenden selbst gehosteten Musikserver und an die OpenSubsonic-Community für die Modernisierung der Subsonic-API."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ευχαριστούμε την ομάδα του Navidrome για έναν εξαιρετικό αυτοφιλοξενούμενο διακομιστή μουσικής και την κοινότητα του OpenSubsonic για τον εκσυγχρονισμό του API Subsonic."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gracias al equipo de Navidrome por un excelente servidor de música autoalojado y a la comunidad de OpenSubsonic por modernizar la API de Subsonic."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merci à l'équipe Navidrome pour un excellent serveur de musique auto-hébergé, et à la communauté OpenSubsonic pour la modernisation de l'API Subsonic."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grazie al team di Navidrome per un eccellente server musicale self-hosted e alla community di OpenSubsonic per aver modernizzato l'API Subsonic."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優れたセルフホスト型音楽サーバーを提供するNavidromeチームと、Subsonic APIを近代化したOpenSubsonicコミュニティに感謝します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感谢 Navidrome 团队提供出色的自托管音乐服务器，也感谢 OpenSubsonic 社区对 Subsonic API 的现代化改进。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感謝 Navidrome 團隊提供出色的自架音樂伺服器，也感謝 OpenSubsonic 社群對 Subsonic API 的現代化改進。"
+          }
+        }
+      }
+    },
     "That does not look like a valid address." : {
       "localizations" : {
         "de" : {
@@ -38741,55 +38848,55 @@
         }
       }
     },
-    "There is no music to resume. Choose music in Minidisc first." : {
+    "There is no music to resume. Choose music in maekster first." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Es gibt keine Wiedergabe zum Fortsetzen. Wähle zuerst Musik in Minidisc."
+            "value" : "Es gibt keine Wiedergabe zum Fortsetzen. Wähle zuerst Musik in maekster."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Δεν υπάρχει μουσική για συνέχιση. Επιλέξτε πρώτα μουσική στο Minidisc."
+            "value" : "Δεν υπάρχει μουσική για συνέχιση. Επιλέξτε πρώτα μουσική στο maekster."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No hay música que reanudar. Elige primero música en Minidisc."
+            "value" : "No hay música que reanudar. Elige primero música en maekster."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucune lecture à reprendre. Choisissez d’abord de la musique dans Minidisc."
+            "value" : "Aucune lecture à reprendre. Choisissez d’abord de la musique dans maekster."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Non c’è musica da riprendere. Scegli prima della musica in Minidisc."
+            "value" : "Non c’è musica da riprendere. Scegli prima della musica in maekster."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "再開する音楽がありません。まずMinidiscで音楽を選んでください。"
+            "value" : "再開する音楽がありません。まずmaeksterで音楽を選んでください。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有可继续播放的音乐。请先在 Minidisc 中选择音乐。"
+            "value" : "没有可继续播放的音乐。请先在 maekster 中选择音乐。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "沒有可繼續播放的音樂。請先在 Minidisc 中選取音樂。"
+            "value" : "沒有可繼續播放的音樂。請先在 maekster 中選取音樂。"
           }
         }
       }
@@ -39055,58 +39162,6 @@
         }
       }
     },
-    "This app is a fork of Cassette, originally built by Mathieu Dubart. Thanks to the Navidrome team for an excellent self-hosted music server, and to the OpenSubsonic community for modernizing the Subsonic API." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diese App ist ein Fork von Cassette, ursprünglich entwickelt von Mathieu Dubart. Dank an das Navidrome-Team für einen hervorragenden selbst gehosteten Musikserver und an die OpenSubsonic-Community für die Modernisierung der Subsonic-API."
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Αυτή η εφαρμογή είναι fork του Cassette, που αρχικά δημιουργήθηκε από τον Mathieu Dubart. Ευχαριστούμε την ομάδα του Navidrome για έναν εξαιρετικό αυτοφιλοξενούμενο διακομιστή μουσικής και την κοινότητα του OpenSubsonic για τον εκσυγχρονισμό του API Subsonic."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta app es un fork de Cassette, creada originalmente por Mathieu Dubart. Gracias al equipo de Navidrome por un excelente servidor de música autoalojado y a la comunidad de OpenSubsonic por modernizar la API de Subsonic."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cette app est un fork de Cassette, créé à l'origine par Mathieu Dubart. Merci à l'équipe Navidrome pour un excellent serveur de musique auto-hébergé, et à la communauté OpenSubsonic pour la modernisation de l'API Subsonic."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Questa app è un fork di Cassette, creata originariamente da Mathieu Dubart. Grazie al team di Navidrome per un eccellente server musicale self-hosted e alla community di OpenSubsonic per aver modernizzato l'API Subsonic."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このアプリは、Mathieu Dubartが最初に開発したCassetteのフォークです。優れたセルフホスト型音楽サーバーを提供するNavidromeチームと、Subsonic APIを近代化したOpenSubsonicコミュニティに感謝します。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本应用是 Cassette 的分支，最初由 Mathieu Dubart 开发。感谢 Navidrome 团队提供出色的自托管音乐服务器，也感谢 OpenSubsonic 社区对 Subsonic API 的现代化改进。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本應用是 Cassette 的分支，最初由 Mathieu Dubart 開發。感謝 Navidrome 團隊提供出色的自架音樂伺服器，也感謝 OpenSubsonic 社群對 Subsonic API 的現代化改進。"
-          }
-        }
-      }
-    },
     "This artist has no albums in Lidarr." : {
       "localizations" : {
         "de" : {
@@ -39322,54 +39377,54 @@
         }
       }
     },
-    "This deletes your Minidisc mood playlists from the current server and disables automatic generation. Other playlists and downloaded music are kept." : {
+    "This deletes your maekster mood playlists from the current server and disables automatic generation. Other playlists and downloaded music are kept." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine Minidisc-Stimmungsplaylists werden vom aktuellen Server gelöscht und die automatische Erstellung wird deaktiviert. Andere Playlists und heruntergeladene Musik bleiben erhalten."
+            "value" : "Deine maekster-Stimmungsplaylists werden vom aktuellen Server gelöscht und die automatische Erstellung wird deaktiviert. Andere Playlists und heruntergeladene Musik bleiben erhalten."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Οι λίστες διάθεσης Minidisc θα διαγραφούν από τον τρέχοντα διακομιστή και η αυτόματη δημιουργία θα απενεργοποιηθεί. Οι άλλες λίστες και η ληφθείσα μουσική διατηρούνται."
+            "value" : "Οι λίστες διάθεσης maekster θα διαγραφούν από τον τρέχοντα διακομιστή και η αυτόματη δημιουργία θα απενεργοποιηθεί. Οι άλλες λίστες και η ληφθείσα μουσική διατηρούνται."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se eliminarán tus playlists por estado de ánimo de Minidisc del servidor actual y se desactivará la generación automática. Se conservarán las demás playlists y la música descargada."
+            "value" : "Se eliminarán tus playlists por estado de ánimo de maekster del servidor actual y se desactivará la generación automática. Se conservarán las demás playlists y la música descargada."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vos playlists d’ambiance Minidisc seront supprimées du serveur actuel et la génération automatique sera désactivée. Les autres playlists et la musique téléchargée seront conservées."
+            "value" : "Vos playlists d’ambiance maekster seront supprimées du serveur actuel et la génération automatique sera désactivée. Les autres playlists et la musique téléchargée seront conservées."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le tue playlist per umore di Minidisc verranno eliminate dal server attuale e la generazione automatica verrà disattivata. Le altre playlist e la musica scaricata verranno mantenute."
+            "value" : "Le tue playlist per umore di maekster verranno eliminate dal server attuale e la generazione automatica verrà disattivata. Le altre playlist e la musica scaricata verranno mantenute."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "現在のサーバーから自分のMinidiscムードプレイリストを削除し、自動生成をオフにします。他のプレイリストとダウンロード済みの音楽は保持されます。"
+            "value" : "現在のサーバーから自分のmaeksterムードプレイリストを削除し、自動生成をオフにします。他のプレイリストとダウンロード済みの音楽は保持されます。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这将从当前服务器删除你的 Minidisc 心情歌单，并关闭自动生成。其他歌单和已下载的音乐将保留。"
+            "value" : "这将从当前服务器删除你的 maekster 心情歌单，并关闭自动生成。其他歌单和已下载的音乐将保留。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這會從目前的伺服器刪除你的 Minidisc 心情播放清單，並關閉自動產生功能。其他播放清單和已下載的音樂將保留。"
+            "value" : "這會從目前的伺服器刪除你的 maekster 心情播放清單，並關閉自動產生功能。其他播放清單和已下載的音樂將保留。"
           }
         }
       }
@@ -39426,108 +39481,108 @@
         }
       }
     },
-    "This Mood playlist is unavailable. Open Discover in Minidisc to check your Moods." : {
+    "This Mood playlist is unavailable. Open Discover in maekster to check your Moods." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Mood-Playlist ist nicht verfügbar. Prüfe deine Moods unter Discover in Minidisc."
+            "value" : "Diese Mood-Playlist ist nicht verfügbar. Prüfe deine Moods unter Discover in maekster."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Αυτή η λίστα Mood δεν είναι διαθέσιμη. Ανοίξτε το Discover στο Minidisc για να ελέγξετε τα Moods."
+            "value" : "Αυτή η λίστα Mood δεν είναι διαθέσιμη. Ανοίξτε το Discover στο maekster για να ελέγξετε τα Moods."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esta playlist Mood no está disponible. Abre Discover en Minidisc para comprobar tus Moods."
+            "value" : "Esta playlist Mood no está disponible. Abre Discover en maekster para comprobar tus Moods."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cette playlist Mood est indisponible. Ouvrez Discover dans Minidisc pour vérifier vos Moods."
+            "value" : "Cette playlist Mood est indisponible. Ouvrez Discover dans maekster pour vérifier vos Moods."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Questa playlist Mood non è disponibile. Apri Discover in Minidisc per controllare i tuoi Moods."
+            "value" : "Questa playlist Mood non è disponibile. Apri Discover in maekster per controllare i tuoi Moods."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このMoodプレイリストは利用できません。MinidiscのDiscoverでMoodsを確認してください。"
+            "value" : "このMoodプレイリストは利用できません。maeksterのDiscoverでMoodsを確認してください。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此心情歌单不可用。请打开 Minidisc 的 Discover 查看 Moods。"
+            "value" : "此心情歌单不可用。请打开 maekster 的 Discover 查看 Moods。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此心情播放清單無法使用。請開啟 Minidisc 的 Discover 查看 Moods。"
+            "value" : "此心情播放清單無法使用。請開啟 maekster 的 Discover 查看 Moods。"
           }
         }
       }
     },
-    "This music is unavailable. Check your connection or downloads in Minidisc." : {
+    "This music is unavailable. Check your connection or downloads in maekster." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Musik ist nicht verfügbar. Prüfe deine Verbindung oder Downloads in Minidisc."
+            "value" : "Diese Musik ist nicht verfügbar. Prüfe deine Verbindung oder Downloads in maekster."
           }
         },
         "el" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Αυτή η μουσική δεν είναι διαθέσιμη. Ελέγξτε τη σύνδεση ή τις λήψεις σας στο Minidisc."
+            "value" : "Αυτή η μουσική δεν είναι διαθέσιμη. Ελέγξτε τη σύνδεση ή τις λήψεις σας στο maekster."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esta música no está disponible. Comprueba la conexión o las descargas en Minidisc."
+            "value" : "Esta música no está disponible. Comprueba la conexión o las descargas en maekster."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cette musique est indisponible. Vérifiez votre connexion ou vos téléchargements dans Minidisc."
+            "value" : "Cette musique est indisponible. Vérifiez votre connexion ou vos téléchargements dans maekster."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Questa musica non è disponibile. Controlla la connessione o i download in Minidisc."
+            "value" : "Questa musica non è disponibile. Controlla la connessione o i download in maekster."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "この音楽は利用できません。Minidiscで接続やダウンロードを確認してください。"
+            "value" : "この音楽は利用できません。maeksterで接続やダウンロードを確認してください。"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此音乐不可用。请在 Minidisc 中检查连接或下载内容。"
+            "value" : "此音乐不可用。请在 maekster 中检查连接或下载内容。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此音樂無法使用。請在 Minidisc 中檢查連線或下載內容。"
+            "value" : "此音樂無法使用。請在 maekster 中檢查連線或下載內容。"
           }
         }
       }

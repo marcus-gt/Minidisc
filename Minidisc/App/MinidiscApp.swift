@@ -315,7 +315,7 @@ private struct AppLaunchFailureView: View {
         ContentUnavailableView {
             Label("Unable to Load", systemImage: "externaldrive.badge.exclamationmark")
         } description: {
-            Text("Minidisc couldn't open its local data. You can try again without restarting the app.")
+            Text("maekster couldn't open its local data. You can try again without restarting the app.")
         } actions: {
             ShareLink(item: diagnosticReport) {
                 Label("Share Diagnostics", systemImage: "square.and.arrow.up")

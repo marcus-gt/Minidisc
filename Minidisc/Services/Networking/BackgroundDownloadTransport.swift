@@ -58,7 +58,7 @@ actor BackgroundDownloadTransport: DownloadTransport {
         }
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
-        queue.name = "Minidisc downloads"
+        queue.name = "maekster downloads"
         session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: queue)
     }
 

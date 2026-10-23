@@ -94,7 +94,7 @@ struct MoodPlaylistSettingsSection: View {
             Button("Delete", role: .destructive) { start(.delete) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This deletes your Minidisc mood playlists from the current server and disables automatic generation. Other playlists and downloaded music are kept.")
+            Text("This deletes your maekster mood playlists from the current server and disables automatic generation. Other playlists and downloaded music are kept.")
         }
     }
 

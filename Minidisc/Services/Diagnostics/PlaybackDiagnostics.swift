@@ -281,7 +281,7 @@ nonisolated final class PlaybackDiagnostics: Sendable {
             return "Continuity (this launch): home-data-ready samples=\(times.count) p50=\(median) cache-loads=\(value.homeCacheLoads); download-attempts completed=\(value.completedDownloads) failed=\(value.failedDownloads). Home timing excludes rendering."
         }
         var lines = [
-            "Minidisc Playback Diagnostics",
+            "maekster Playback Diagnostics",
             "Generated: \(Date().formatted(.iso8601))",
             "App: \(context.appVersion) (\(context.appBuild))",
             "OS: \(context.operatingSystem)",

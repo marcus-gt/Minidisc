@@ -49,7 +49,7 @@ struct AlbumCollectionView: View {
             EmptyStateView(
                 systemImage: "hourglass",
                 title: "Still Indexing Your Library",
-                subtitle: "Label pages appear once Minidisc has indexed every album. Try again shortly."
+                subtitle: "Label pages appear once maekster has indexed every album. Try again shortly."
             )
         case .failed(let error):
             EmptyStateView(

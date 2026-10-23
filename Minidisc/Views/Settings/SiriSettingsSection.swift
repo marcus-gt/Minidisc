@@ -26,7 +26,7 @@ struct SiriSettingsSection: View {
         } header: {
             Text("Siri")
         } footer: {
-            Text("Allow Siri to search your Minidisc library and control music playback.")
+            Text("Allow Siri to search your maekster library and control music playback.")
             Text("You can revoke Siri access in iOS Settings.")
         }
         .onAppear { refresh() }

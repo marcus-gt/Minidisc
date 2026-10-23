@@ -48,7 +48,7 @@ struct AudioMuseSettingsView: View {
 
     private var aboutSection: some View {
         Section {
-            Text("AudioMuse-AI analyses how your music actually sounds, which lets Minidisc build a playlist for a mood rather than for a tag.")
+            Text("AudioMuse-AI analyses how your music actually sounds, which lets maekster build a playlist for a mood rather than for a tag.")
                 .font(.minidiscCaption)
                 .foregroundStyle(.secondary)
             Text("Without it, mood playlists still work, built from your library's genre, BPM and mood tags. The match is rougher.")
