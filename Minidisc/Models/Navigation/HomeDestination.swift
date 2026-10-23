@@ -9,6 +9,7 @@ nonisolated enum HomeDestination: Hashable {
     case libraryPlaylists
     case libraryFavorites
     case libraryDownloads
+    case libraryRecordLabels
 
     // MARK: - Content destinations
     case album(AlbumID3)
@@ -16,8 +17,8 @@ nonisolated enum HomeDestination: Hashable {
     case playlist(Playlist)
     case downloadedAlbum(DownloadedAlbumDisplay)
 
-    // MARK: - ID-only destinations (for PinnedItem @Model and DownloadedItem)
-    /// Used when only IDs are available (PinnedItem @Model, HomeDownloadedItemCard)
+    // MARK: - ID-only destinations
+    /// Used when only IDs are available (downloads, cross-screen navigation notifications)
     case albumById(id: String, name: String, subtitle: String, coverArtId: String?)
     case playlistById(id: String, name: String, coverArtId: String?)
     case artistById(id: String, name: String, coverArtId: String?)

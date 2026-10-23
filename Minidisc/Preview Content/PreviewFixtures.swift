@@ -237,6 +237,10 @@ nonisolated final class PreviewLibraryService: AlbumBrowsing, ArtistBrowsing, St
             .map(PreviewFixtures.withoutSongs)
     }
 
+    func recordLabels() async throws -> [RecordLabelSummary]? {
+        RecordLabelSummary.summaries(from: PreviewFixtures.albums)
+    }
+
     func album(id: String) async throws -> AlbumID3 {
         guard let album = PreviewFixtures.album(id: id) else { throw URLError(.fileDoesNotExist) }
         return album

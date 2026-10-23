@@ -93,10 +93,13 @@ nonisolated protocol GenreBrowsing: AnyObject, Sendable {
 nonisolated protocol RecordLabelBrowsing: AnyObject, Sendable {
     /// `nil` until the library index has every album; labels can only be read from indexed albums.
     func albums(recordLabel: String) async throws -> [AlbumID3]?
+    /// Every label on an indexed album, by name. `nil` until the library index has every album.
+    func recordLabels() async throws -> [RecordLabelSummary]?
 }
 
 extension RecordLabelBrowsing {
     nonisolated func albums(recordLabel: String) async throws -> [AlbumID3]? { nil }
+    nonisolated func recordLabels() async throws -> [RecordLabelSummary]? { nil }
 }
 
 nonisolated protocol MoodTrackSourcing: AnyObject, Sendable {

@@ -6,6 +6,7 @@ struct FavoritesView: View {
     @Environment(\.appContainer) private var container
     @Environment(PlaylistAddition.self) private var playlistAddition
     @State private var viewModel: FavoritesViewModel?
+    @State private var filterText = ""
 
     var body: some View {
         Group {
@@ -18,6 +19,7 @@ struct FavoritesView: View {
         .minidiscContentWidth()
         .navigationTitle("Favorites")
         .toolbarTitleDisplayMode(.inline)
+        .minidiscFilterable(text: $filterText, prompt: "Filter favorites")
         .task(id: container?.serverState.accessSnapshot) {
             guard let svc = container?.libraryService else { return }
             if viewModel == nil { viewModel = FavoritesViewModel(libraryService: svc) }
@@ -49,24 +51,35 @@ struct FavoritesView: View {
                 subtitle: "Songs, albums, and artists you favorite will appear here."
             )
         } else {
-            let displayableSongs = favorites.songs.map { DisplayableSong(from: $0) }
-                .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-            let albums = AlbumSort.name.sorted(favorites.albums)
-            let artists = ArtistSort.name.sorted(favorites.artists)
-            let index = displayableSongs.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.title) }
-                + albums.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.sortName ?? $0.name) }
-                + artists.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.sortName ?? $0.name) }
-            AlphabetIndexedContent(entries: index) {
-                List {
-                    songsSection(displayableSongs)
-                    albumsSection(albums)
-                    artistsSection(artists)
-                }
-                .listStyle(.plain)
-                .refreshable {
-                    if offline { await container?.offlineLibrary.refresh() }
-                    else { await vm.load() }
-                }
+            let displayableSongs = LibraryFilter.filter(favorites.songs.map { DisplayableSong(from: $0) }, by: filterText) {
+                [$0.title, $0.artist, $0.albumName]
+            }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+            let albums = AlbumSort.name.sorted(LibraryFilter.filter(favorites.albums, by: filterText) { [$0.name, $0.artist] })
+            let artists = ArtistSort.name.sorted(LibraryFilter.filter(favorites.artists, by: filterText) { [$0.name] })
+            if displayableSongs.isEmpty && albums.isEmpty && artists.isEmpty {
+                FilterNoResultsView(query: filterText)
+            } else {
+                favoritesList(songs: displayableSongs, albums: albums, artists: artists, viewModel: vm, offline: offline)
+            }
+        }
+    }
+
+    private func favoritesList(songs displayableSongs: [DisplayableSong], albums: [AlbumID3], artists: [ArtistID3],
+                               viewModel vm: FavoritesViewModel, offline: Bool) -> some View {
+        let index = displayableSongs.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.title) }
+            + albums.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.sortName ?? $0.name) }
+            + artists.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.sortName ?? $0.name) }
+        return AlphabetIndexedContent(entries: index) {
+            List {
+                songsSection(displayableSongs)
+                albumsSection(albums)
+                artistsSection(artists)
+            }
+            .listStyle(.plain)
+            .refreshable {
+                if offline { await container?.offlineLibrary.refresh() }
+                else { await vm.load() }
             }
         }
     }

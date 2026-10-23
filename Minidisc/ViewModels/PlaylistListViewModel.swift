@@ -8,29 +8,10 @@ final class PlaylistListViewModel {
     var isLoading = false
     var error: UserFacingError?
 
-    private let libraryService: any PlaylistBrowsing & RecentlyAddedAlbumBrowsing & StarredBrowsing
+    private let libraryService: any PlaylistBrowsing
 
-    init(libraryService: any PlaylistBrowsing & RecentlyAddedAlbumBrowsing & StarredBrowsing) {
+    init(libraryService: any PlaylistBrowsing) {
         self.libraryService = libraryService
-    }
-
-    var bestOfPlaylists: [ArtistBestOf] = []
-
-    /// The newest album supplies the virtual playlist cover without fetching all its tracks.
-    var newestAlbum: AlbumID3?
-
-    /// Failure hides only Recently Added, leaving the main playlist list available.
-    func loadRecentlyAdded() async {
-        newestAlbum = (try? await libraryService.recentlyAddedAlbums(size: 1))?.first
-    }
-
-    /// Failure hides only derived best-of playlists, leaving the server playlist list available.
-    func loadBestOf() async {
-        guard let starred = try? await libraryService.getStarred2() else {
-            bestOfPlaylists = []
-            return
-        }
-        bestOfPlaylists = ArtistBestOf.all(in: starred.song ?? [])
     }
 
     func load() async {

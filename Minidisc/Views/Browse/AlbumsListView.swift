@@ -8,9 +8,13 @@ struct AlbumsListView: View {
     @State private var viewModel: AlbumListViewModel?
     @AppStorage("minidisc.albumSort") private var albumSort: AlbumSort = .recentlyAdded
     @AppStorage("minidisc.albumListGrid") private var gridLayout = false
+    @State private var filterText = ""
 
-    private func displayedAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] {
+    private func allAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] {
         container?.serverState.isOnline == false ? container?.offlineLibrary.snapshot.albums ?? [] : vm.albums
+    }
+    private func displayedAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] {
+        LibraryFilter.filter(allAlbums(vm), by: filterText) { [$0.name, $0.artist] }
     }
     private func sortedAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] { albumSort.sorted(displayedAlbums(vm)) }
 
@@ -25,6 +29,7 @@ struct AlbumsListView: View {
         .minidiscContentWidth()
         .navigationTitle("Albums")
         .toolbarTitleDisplayMode(.inline)
+        .minidiscFilterable(text: $filterText, prompt: "Filter albums")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 AlbumSortMenu(sort: $albumSort)
@@ -54,23 +59,25 @@ struct AlbumsListView: View {
 
     @ViewBuilder
     private func content(_ vm: AlbumListViewModel) -> some View {
-        if container?.serverState.isOnline != false && vm.isLoading && displayedAlbums(vm).isEmpty {
+        if container?.serverState.isOnline != false && vm.isLoading && allAlbums(vm).isEmpty {
             LoadingStateView()
-        } else if container?.serverState.isOnline == false && displayedAlbums(vm).isEmpty {
+        } else if container?.serverState.isOnline == false && allAlbums(vm).isEmpty {
             OfflineBrowsingEmptyView()
-        } else if let error = vm.error, displayedAlbums(vm).isEmpty {
+        } else if let error = vm.error, allAlbums(vm).isEmpty {
             EmptyStateView(
                 systemImage: "exclamationmark.triangle",
                 title: "Unable to Load Albums",
                 subtitle: LocalizedStringKey(error.displayMessage),
                 action: .init(label: "Retry") { Task { await vm.load() } }
             )
-        } else if displayedAlbums(vm).isEmpty {
+        } else if allAlbums(vm).isEmpty {
             EmptyStateView(
                 systemImage: "square.stack",
                 title: "No Albums",
                 subtitle: "Your library appears to be empty."
             )
+        } else if displayedAlbums(vm).isEmpty {
+            FilterNoResultsView(query: filterText)
         } else if gridLayout {
             albumsGrid(vm)
         } else {

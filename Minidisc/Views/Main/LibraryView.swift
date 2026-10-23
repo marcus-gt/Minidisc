@@ -1,108 +1,23 @@
 import SwiftUI
-import SwiftData
 import SwiftSonic
 
 struct LibraryView: View {
     @Environment(\.appContainer) private var container
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \PinnedItem.sortOrder) private var allPinnedItems: [PinnedItem]
-    @Query private var recentDownloadedAlbums: [DownloadedAlbum]
-    @Query private var recentDownloadedPlaylists: [DownloadedPlaylist]
-    init() {
-        var albumDescriptor = FetchDescriptor<DownloadedAlbum>(
-            sortBy: [SortDescriptor(\DownloadedAlbum.downloadedAt, order: .reverse)]
-        )
-        albumDescriptor.fetchLimit = 24
-        _recentDownloadedAlbums = Query(albumDescriptor)
-
-        var playlistDescriptor = FetchDescriptor<DownloadedPlaylist>(
-            sortBy: [SortDescriptor(\DownloadedPlaylist.downloadedAt, order: .reverse)]
-        )
-        playlistDescriptor.fetchLimit = 24
-        _recentDownloadedPlaylists = Query(playlistDescriptor)
-    }
-
-    @Namespace private var pinnedZoomNamespace
-    @Namespace private var recentlyAddedZoomNamespace
     @Namespace private var playlistZoomNamespace
+    @Namespace private var detailZoomNamespace
     @Environment(DominantColorExtractor.self) private var colorExtractor
     @Environment(ArtworkImageCache.self) private var artworkImageCache
-    @State private var viewModel: HomeViewModel?
-    // Local mutable copy for smooth drag-to-reorder; synced from @Query on count changes.
-    @State private var localPinnedItems: [PinnedItem] = []
-    @State private var dropTargetId: String?
-    @State private var showCreatePlaylistSheet = false
-    private let recentColumns = [
-        GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MinidiscSpacing.m)
-    ]
-    private let pinnedColumns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
-
-    private var recentDownloadedItems: [DownloadedItem] {
-        let albumItems = recentDownloadedAlbums.map {
-            DownloadedItem(
-                id: "album:\($0.albumId)",
-                itemId: $0.albumId,
-                type: .album,
-                name: $0.name,
-                subtitle: $0.artist ?? "",
-                coverArtId: $0.coverArtId,
-                downloadedAt: $0.downloadedAt
-            )
-        }
-        let playlistItems = recentDownloadedPlaylists.map {
-            DownloadedItem(
-                id: "playlist:\($0.playlistId)",
-                itemId: $0.playlistId,
-                type: .playlist,
-                name: $0.name,
-                subtitle: "",
-                coverArtId: $0.coverArtId,
-                downloadedAt: $0.downloadedAt
-            )
-        }
-        return (albumItems + playlistItems)
-            .filter { item in
-                guard !isOnline else { return true }
-                let local = container?.offlineLibrary.snapshot
-                return item.type == .album ? local?.albumIDs.contains(item.itemId) == true : local?.playlistIDs.contains(item.itemId) == true
-            }
-            .sorted { $0.downloadedAt > $1.downloadedAt }
-            .prefix(24)
-            .map { $0 }
-    }
-
-    private var visiblePinnedItems: [PinnedItem] {
-        guard container?.serverState.isOnline != true else { return localPinnedItems }
-        return localPinnedItems.filter { isAvailableOffline($0) }
-    }
-
-    private func isAvailableOffline(_ item: PinnedItem) -> Bool {
-        guard let snapshot = container?.offlineLibrary.snapshot else { return false }
-        switch PinnedItemType(rawValue: item.itemType) {
-        case .album: return snapshot.albumIDs.contains(item.itemId)
-        case .playlist: return snapshot.playlistIDs.contains(item.itemId)
-        case .none: return false
-        }
-    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: MinidiscSpacing.xl) {
-                if !visiblePinnedItems.isEmpty {
-                    pinnedSection
-                }
                 if !isOnline && container?.offlineLibrary.snapshot.songs.isEmpty != false
                     && container?.localMusic.snapshot.tracks.contains(where: \.isAvailable) != true {
                     OfflineBrowsingEmptyView()
                 }
                 librarySection
-                recentlySection
             }
             .padding(.horizontal, MinidiscSpacing.l)
             .padding(.top, MinidiscSpacing.m)
@@ -110,18 +25,6 @@ struct LibraryView: View {
         }
         .navigationTitle("Library")
         .toolbarTitleDisplayMode(.inlineLarge)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("New Playlist", systemImage: "text.badge.plus") {
-                    showCreatePlaylistSheet = true
-                }
-                .tint(.primary)
-                .disabled(!isOnline)
-            }
-        }
-        .fullScreenCover(isPresented: $showCreatePlaylistSheet) {
-            CreatePlaylistSheet()
-        }
         .navigationDestination(for: HomeDestination.self) { destination in
             switch destination {
             case .libraryAlbums:
@@ -136,11 +39,13 @@ struct LibraryView: View {
                 FavoritesView()
             case .libraryDownloads:
                 DownloadedView()
+            case .libraryRecordLabels:
+                RecordLabelListView()
             case .album(let album):
                 AlbumDetailView(
                     album: album,
                     zoomSourceId: album.id,
-                    zoomNamespace: recentlyAddedZoomNamespace,
+                    zoomNamespace: detailZoomNamespace,
                     coverArtId: album.coverArt,
                     initialDominantColor: colorExtractor.dominantColor(for: album.coverArt ?? album.id, image: nil),
                     initialCoverImage: artworkImageCache.cachedImage(for: album.coverArt ?? album.id)
@@ -162,7 +67,7 @@ struct LibraryView: View {
                     albumId: id,
                     albumName: name,
                     zoomSourceId: id,
-                    zoomNamespace: pinnedZoomNamespace,
+                    zoomNamespace: detailZoomNamespace,
                     coverArtId: coverArtId,
                     initialCoverImage: artworkImageCache.cachedImage(for: coverArtId ?? id)
                 )
@@ -173,7 +78,7 @@ struct LibraryView: View {
                     coverArtId: coverArtId,
                     initialCoverImage: artworkImageCache.cachedImage(for: coverArtId ?? id),
                     zoomSourceId: id,
-                    zoomNamespace: pinnedZoomNamespace
+                    zoomNamespace: detailZoomNamespace
                 )
             case .artistById(let id, let name, let coverArtId):
                 ArtistDetailView(artist: ArtistID3(id: id, name: name, coverArt: coverArtId))
@@ -185,48 +90,6 @@ struct LibraryView: View {
                 OfflineArtistAlbumsView(artist: artist)
             case .offlineAlbum(let album):
                 AlbumDetailView(albumId: album.albumId, albumName: album.albumName, coverArtId: album.coverArtId)
-            }
-        }
-        .onAppear { localPinnedItems = allPinnedItems }
-        .onChange(of: allPinnedItems.count) { _, _ in localPinnedItems = allPinnedItems }
-        .task(id: container?.serverState.isOnline) {
-            guard let svc = container?.libraryService else { return }
-            if viewModel == nil { viewModel = HomeViewModel(libraryService: svc) }
-            guard container?.serverState.isOnline == true else { return }
-            await viewModel?.load()
-        }
-    }
-
-    // MARK: - Pinned section
-
-    private var pinnedSection: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            Text("Pinned")
-                .font(.minidiscShelfTitle)
-            LazyVGrid(columns: pinnedColumns, spacing: MinidiscSpacing.m) {
-                ForEach(visiblePinnedItems) { item in
-                    HomePinnedCard(item: item, namespace: pinnedZoomNamespace)
-                        .scaleEffect(dropTargetId == item.id ? 1.05 : 1.0)
-                        .animation(.spring(response: 0.2, dampingFraction: 0.7), value: dropTargetId)
-                        .draggable(item.id)
-                        .dropDestination(for: String.self) { droppedIds, _ in
-                            guard let sourceId = droppedIds.first,
-                                  sourceId != item.id,
-                                  let sourceIdx = localPinnedItems.firstIndex(where: { $0.id == sourceId }),
-                                  let destIdx = localPinnedItems.firstIndex(where: { $0.id == item.id })
-                            else { return false }
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                localPinnedItems.move(
-                                    fromOffsets: IndexSet(integer: sourceIdx),
-                                    toOffset: destIdx > sourceIdx ? destIdx + 1 : destIdx
-                                )
-                            }
-                            container?.pinService.reorder(items: localPinnedItems)
-                            return true
-                        } isTargeted: { targeted in
-                            dropTargetId = targeted ? item.id : nil
-                        }
-                }
             }
         }
     }
@@ -272,6 +135,14 @@ struct LibraryView: View {
                     .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
                 }
+                // Labels come from the indexed albums, which offline browsing does not filter to downloads.
+                if isOnline {
+                    NavigationLink(value: HomeDestination.libraryRecordLabels) {
+                        HomeLibraryRowLabel(title: "Labels", systemImage: "building.2")
+                    }
+                    .buttonStyle(.plain)
+                    Divider().padding(.leading, 52)
+                }
                 if isOnline || (!local.favorites.songs.isEmpty || !local.favorites.albums.isEmpty || !local.favorites.artists.isEmpty) {
                     NavigationLink(value: HomeDestination.libraryFavorites) {
                         HomeLibraryRowLabel(title: "Favorites", systemImage: "heart.fill")
@@ -285,164 +156,6 @@ struct LibraryView: View {
                     }
                     .buttonStyle(.plain)
                 }
-            }
-        }
-    }
-
-    // MARK: - Recently section (online = Recently Added, offline = Recently Downloaded)
-
-    @ViewBuilder
-    private var recentlySection: some View {
-        if isOnline {
-            if let vm = viewModel, !vm.recentAlbums.isEmpty || vm.isLoading {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-                    Text("Recently Added")
-                        .font(.minidiscShelfTitle)
-                    if vm.isLoading && vm.recentAlbums.isEmpty {
-                        LazyVGrid(columns: recentColumns, spacing: MinidiscSpacing.m) {
-                            ForEach(0..<6, id: \.self) { _ in SkeletonAlbumCard() }
-                        }
-                    } else {
-                        LazyVGrid(columns: recentColumns, spacing: MinidiscSpacing.m) {
-                            ForEach(vm.recentAlbums) { album in
-                                NavigationLink(value: HomeDestination.album(album)) {
-                                    HomeAlbumCell(album: album, namespace: recentlyAddedZoomNamespace)
-                                }
-                                .buttonStyle(.plain)
-                                // Not `.task`: the page load must survive this cell scrolling away.
-                                .onAppear { Task { await vm.recentPager.loadMoreIfNeeded(after: album) } }
-                            }
-                        }
-                        if vm.recentPager.isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, MinidiscSpacing.m)
-                        }
-                    }
-                }
-            }
-        } else if !recentDownloadedItems.isEmpty {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-                Text("Recently Downloaded")
-                    .font(.minidiscShelfTitle)
-                if recentDownloadedItems.isEmpty {
-                    EmptyStateView(
-                        systemImage: "arrow.down.circle",
-                        title: "No downloads yet",
-                        subtitle: "Albums and playlists you download will appear here"
-                    )
-                } else {
-                    LazyVGrid(columns: recentColumns, spacing: MinidiscSpacing.m) {
-                        ForEach(recentDownloadedItems) { item in
-                            let dest: HomeDestination = item.type == .album
-                                ? .albumById(id: item.itemId, name: item.name, subtitle: item.subtitle, coverArtId: item.coverArtId)
-                                : .playlistById(id: item.itemId, name: item.name, coverArtId: item.coverArtId)
-                            HomeDownloadedItemCard(item: item, destination: dest)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - HomePinnedCard
-
-private struct HomePinnedCard: View {
-    let item: PinnedItem
-    let namespace: Namespace.ID
-    @Environment(\.appContainer) private var container
-    @Environment(\.modelContext) private var modelContext
-    @Environment(ArtworkImageCache.self) private var artworkImageCache
-    @Environment(DominantColorExtractor.self) private var colorExtractor
-    @State private var coverImage: PlatformImage?
-
-    private var homeNavDestination: HomeDestination {
-        switch PinnedItemType(rawValue: item.itemType) {
-        case .album:
-            .albumById(id: item.itemId, name: item.displayName, subtitle: item.displaySubtitle, coverArtId: item.coverArtId)
-        case .playlist:
-            .playlistById(id: item.itemId, name: item.displayName, coverArtId: item.coverArtId)
-        case .none:
-            .albumById(id: item.itemId, name: item.displayName, subtitle: item.displaySubtitle, coverArtId: item.coverArtId)
-        }
-    }
-
-    var body: some View {
-        NavigationLink(value: homeNavDestination) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-                GeometryReader { geo in
-                    if PinnedItemType(rawValue: item.itemType) == .playlist {
-                        PlaylistCoverThumbnail(playlistId: item.itemId, serverId: item.serverId, coverArtId: item.coverArtId ?? item.itemId, title: item.displayName, size: geo.size.width)
-                    } else {
-                        CoverArtView(id: item.coverArtId ?? item.itemId, size: Int(geo.size.width * 2))
-                            .frame(width: geo.size.width, height: geo.size.width)
-                            .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
-                    }
-                }
-                .aspectRatio(1, contentMode: .fit)
-                .minidiscMatchedTransitionSource(id: item.itemId, in: namespace)
-                CoverCardMetadata(
-                    title: item.displayName,
-                    subtitle: item.displaySubtitle.isEmpty ? nil : item.displaySubtitle
-                )
-            }
-        }
-        .buttonStyle(.plain)
-        .onAppear {
-            Task { coverImage = await artworkImageCache.load(coverArtId: item.coverArtId ?? item.itemId) }
-        }
-        .lazyCollectionContextMenu(
-            itemType: PinnedItemType(rawValue: item.itemType) ?? .album,
-            itemId: item.itemId,
-            displayName: item.displayName,
-            displaySubtitle: item.displaySubtitle,
-            coverArtId: item.coverArtId,
-            coverImage: coverImage,
-            favoriteType: item.itemType == PinnedItemType.album.rawValue ? .album : nil
-        ) {
-            let itemId = item.itemId
-            if let container, !container.serverState.isOnline {
-                let local = container.offlineLibrary.snapshot
-                switch PinnedItemType(rawValue: item.itemType) {
-                case .album: return local.albumSongs(itemId)
-                case .playlist: return local.playlistSongs[itemId] ?? []
-                case .none: return []
-                }
-            }
-            switch PinnedItemType(rawValue: item.itemType) {
-            case .album:
-                if container?.serverState.isOnline == true,
-                   let detail = try? await container?.libraryService.album(id: itemId) {
-                    return detail.song?.map { DisplayableSong(from: $0) } ?? []
-                }
-                let tracks = (try? modelContext.fetch(
-                    FetchDescriptor<DownloadedTrack>(
-                        predicate: #Predicate { $0.albumId == itemId }
-                    )
-                )) ?? []
-                return tracks
-                    .sorted { ($0.trackNumber ?? Int.max) < ($1.trackNumber ?? Int.max) }
-                    .map { DisplayableSong(from: $0) }
-            case .playlist:
-                if container?.serverState.isOnline == true,
-                   let detail = try? await container?.libraryService.playlist(id: itemId) {
-                    return (detail.entry ?? []).map { DisplayableSong(from: $0) }
-                }
-                let playlists = (try? modelContext.fetch(
-                    FetchDescriptor<DownloadedPlaylist>(
-                        predicate: #Predicate { $0.playlistId == itemId }
-                    )
-                )) ?? []
-                let songIds = playlists.first?.songIds ?? []
-                let allTracks = (try? modelContext.fetch(FetchDescriptor<DownloadedTrack>())) ?? []
-                let trackBySongId = Dictionary(
-                    allTracks.map { ($0.songId, $0) },
-                    uniquingKeysWith: { first, _ in first }
-                )
-                return songIds.compactMap { trackBySongId[$0] }.map { DisplayableSong(from: $0) }
-            case .none:
-                return []
             }
         }
     }
@@ -478,131 +191,5 @@ private struct HomeLibraryRowLabel: View {
         .padding(.horizontal, MinidiscSpacing.m)
         .padding(.vertical, MinidiscSpacing.m)
         .contentShape(Rectangle())
-    }
-}
-
-// MARK: - HomeDownloadedItemCard
-
-private struct HomeDownloadedItemCard: View {
-    let item: DownloadedItem
-    let destination: HomeDestination
-    @Environment(\.modelContext) private var modelContext
-    @Environment(ArtworkImageCache.self) private var artworkImageCache
-    @State private var coverImage: PlatformImage?
-
-    var body: some View {
-        NavigationLink(value: destination) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-                GeometryReader { geo in
-                    if item.type == .playlist {
-                        PlaylistCoverThumbnail(playlistId: item.itemId, serverId: nil, coverArtId: item.coverArtId ?? item.itemId, title: item.name, size: geo.size.width)
-                    } else {
-                        CoverArtView(id: item.coverArtId ?? item.itemId, size: Int(geo.size.width * 2))
-                            .frame(width: geo.size.width, height: geo.size.width)
-                            .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
-                    }
-                }
-                .aspectRatio(1, contentMode: .fit)
-                CoverCardMetadata(
-                    title: item.name,
-                    subtitle: item.subtitle.isEmpty ? nil : item.subtitle
-                )
-            }
-        }
-        .buttonStyle(.plain)
-        .onAppear {
-            Task { coverImage = await artworkImageCache.load(coverArtId: item.coverArtId ?? item.itemId) }
-        }
-        .lazyCollectionContextMenu(
-            itemType: item.type == .album ? .album : .playlist,
-            itemId: item.itemId,
-            displayName: item.name,
-            displaySubtitle: item.subtitle,
-            coverArtId: item.coverArtId,
-            coverImage: coverImage,
-            favoriteType: item.type == .album ? .album : nil
-        ) {
-            switch item.type {
-            case .album:
-                let aid = item.itemId
-                let tracks = (try? modelContext.fetch(
-                    FetchDescriptor<DownloadedTrack>(
-                        predicate: #Predicate { $0.albumId == aid }
-                    )
-                )) ?? []
-                return tracks
-                    .sorted { ($0.trackNumber ?? Int.max) < ($1.trackNumber ?? Int.max) }
-                    .map { DisplayableSong(from: $0) }
-            case .playlist:
-                let pid = item.itemId
-                let playlists = (try? modelContext.fetch(
-                    FetchDescriptor<DownloadedPlaylist>(
-                        predicate: #Predicate { $0.playlistId == pid }
-                    )
-                )) ?? []
-                let songIds = playlists.first?.songIds ?? []
-                let allTracks = (try? modelContext.fetch(FetchDescriptor<DownloadedTrack>())) ?? []
-                let trackBySongId = Dictionary(
-                    allTracks.map { ($0.songId, $0) },
-                    uniquingKeysWith: { first, _ in first }
-                )
-                return songIds.compactMap { trackBySongId[$0] }.map { DisplayableSong(from: $0) }
-            }
-        }
-    }
-}
-
-// MARK: - DownloadedItem
-
-private nonisolated struct DownloadedItem: Identifiable, Sendable {
-    nonisolated enum ItemType: Sendable {
-        case album
-        case playlist
-    }
-    let id: String
-    let itemId: String
-    let type: ItemType
-    let name: String
-    let subtitle: String
-    let coverArtId: String?
-    let downloadedAt: Date
-}
-
-// MARK: - HomeAlbumCell
-
-private struct HomeAlbumCell: View {
-    let album: AlbumID3
-    let namespace: Namespace.ID
-
-    @Environment(\.appContainer) private var container
-    @Environment(ArtworkImageCache.self) private var artworkImageCache
-    @State private var coverImage: PlatformImage?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-            GeometryReader { geo in
-                CoverArtView(id: album.coverArt ?? album.id, size: Int(geo.size.width * 2))
-                    .frame(width: geo.size.width, height: geo.size.width)
-                    .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .minidiscMatchedTransitionSource(id: album.id, in: namespace)
-            CoverCardMetadata(title: album.name, subtitle: album.artist)
-        }
-        .task(id: album.id) {
-            coverImage = await artworkImageCache.load(coverArtId: album.coverArt ?? album.id)
-        }
-        .lazyCollectionContextMenu(
-            itemType: .album,
-            itemId: album.id,
-            displayName: album.name,
-            displaySubtitle: album.artist ?? "",
-            coverArtId: album.coverArt,
-            coverImage: coverImage,
-            favoriteType: .album
-        ) {
-            let detail = try await container?.libraryService.album(id: album.id)
-            return (detail?.song ?? []).map { DisplayableSong(from: $0) }
-        }
     }
 }

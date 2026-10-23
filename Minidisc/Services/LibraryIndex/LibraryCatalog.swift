@@ -435,6 +435,13 @@ actor LibraryCatalog {
         }
     }
 
+    /// Every record label on an indexed album, with album counts. `nil` while the album index is incomplete.
+    func recordLabels() async throws -> [RecordLabelSummary]? {
+        let serverID = try await source.activeServerID()
+        guard try await store.status(for: serverID).albums else { return nil }
+        return RecordLabelSummary.summaries(from: try await store.albums(serverID: serverID))
+    }
+
     /// Identifies the indexed library the Queue Builder last read; changes with a new sync or server.
     /// `nil` while tracks or albums are not fully indexed.
     func queueBuilderStamp() async throws -> String? {

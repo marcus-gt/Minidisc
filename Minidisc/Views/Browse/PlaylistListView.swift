@@ -8,6 +8,9 @@ struct PlaylistListView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: PlaylistListViewModel?
     @State private var showCreateSheet = false
+    @State private var filterText = ""
+    /// Set once a playlist is created, to open it so songs and a cover can be added.
+    @State private var createdPlaylist: PlaylistWithSongs?
 
     var body: some View {
         Group {
@@ -20,29 +23,30 @@ struct PlaylistListView: View {
         .minidiscContentWidth()
         .navigationTitle("Playlists")
         .toolbarTitleDisplayMode(.inline)
+        .minidiscFilterable(text: $filterText, prompt: "Filter playlists")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button {
+                Button("New Playlist", systemImage: "plus") {
                     showCreateSheet = true
-                } label: {
-                    Image(systemName: "plus")
                 }
                 .tint(.primary)
                 .disabled(container?.serverState.isOnline != true)
             }
         }
         .sheet(isPresented: $showCreateSheet) {
-            CreatePlaylistSheet { _ in
+            CreatePlaylistSheet { created in
+                createdPlaylist = created
                 Task { await viewModel?.load() }
             }
+        }
+        .navigationDestination(item: $createdPlaylist) { playlist in
+            PlaylistDetailView(playlistId: playlist.id, name: playlist.name, coverArtId: playlist.coverArt)
         }
         .task(id: container?.serverState.isOnline) {
             guard let svc = container?.libraryService else { return }
             if viewModel == nil { viewModel = PlaylistListViewModel(libraryService: svc) }
             guard container?.serverState.isOnline == true else { return }
             await viewModel?.load()
-            await viewModel?.loadBestOf()
-            await viewModel?.loadRecentlyAdded()
         }
         // Reload after confirmed deletion without refetching on every navigation.
         .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistDeleted)) { _ in
@@ -50,70 +54,42 @@ struct PlaylistListView: View {
         }
     }
 
-    private func displayedPlaylists(_ vm: PlaylistListViewModel) -> [Playlist] {
+    private func allPlaylists(_ vm: PlaylistListViewModel) -> [Playlist] {
         container?.serverState.isOnline == false ? container?.offlineLibrary.snapshot.playlists ?? [] : vm.playlists
+    }
+
+    private func displayedPlaylists(_ vm: PlaylistListViewModel) -> [Playlist] {
+        LibraryFilter.filter(allPlaylists(vm), by: filterText) { [$0.name] }
     }
 
     @ViewBuilder
     private func content(_ vm: PlaylistListViewModel) -> some View {
-        if container?.serverState.isOnline != false && vm.isLoading && displayedPlaylists(vm).isEmpty {
+        if container?.serverState.isOnline != false && vm.isLoading && allPlaylists(vm).isEmpty {
             LoadingStateView()
-        } else if container?.serverState.isOnline == false && displayedPlaylists(vm).isEmpty {
+        } else if container?.serverState.isOnline == false && allPlaylists(vm).isEmpty {
             OfflineBrowsingEmptyView()
-        } else if let error = vm.error, displayedPlaylists(vm).isEmpty {
+        } else if let error = vm.error, allPlaylists(vm).isEmpty {
             EmptyStateView(
                 systemImage: "exclamationmark.triangle",
                 title: "Unable to Load Playlists",
                 subtitle: LocalizedStringKey(error.displayMessage),
                 action: .init(label: "Retry") { Task { await vm.load() } }
             )
-        } else if displayedPlaylists(vm).isEmpty && !hasDerivedPlaylists(vm) {
+        } else if allPlaylists(vm).isEmpty {
             EmptyStateView(
                 systemImage: "list.bullet",
                 title: "No Playlists",
-                subtitle: "Create playlists on your server to see them here."
+                subtitle: "Tap + to create your first playlist."
             )
+        } else if displayedPlaylists(vm).isEmpty {
+            FilterNoResultsView(query: filterText)
         } else {
             List {
-                if hasDerivedPlaylists(vm) {
-                    Section("Made For You") {
-                        if let newest = vm.newestAlbum {
-                            NavigationLink(value: HomeDestination.recentlyAdded(
-                                coverArtId: newest.coverArt ?? newest.id
-                            )) {
-                                RecentlyAddedPlaylistRow(coverArtId: newest.coverArt ?? newest.id)
-                            }
-                        }
-                        ForEach(vm.bestOfPlaylists) { bestOf in
-                            NavigationLink(value: HomeDestination.artistBestOf(
-                                artistId: bestOf.artistId,
-                                artistName: bestOf.artistName,
-                                coverArtId: bestOf.coverArtId
-                            )) {
-                                BestOfPlaylistRow(bestOf: bestOf)
-                            }
-                        }
-                    }
-                }
-                // Label the server playlists only when there's a derived section above to tell them apart
-                // from — on its own the header would just repeat the screen title.
-                if !hasDerivedPlaylists(vm) {
-                    serverPlaylistRows(vm)
-                } else if !displayedPlaylists(vm).isEmpty {
-                    Section("Playlists") { serverPlaylistRows(vm) }
-                }
+                serverPlaylistRows(vm)
             }
             .listStyle(.plain)
-            .refreshable {
-                await vm.load()
-                await vm.loadBestOf()
-                await vm.loadRecentlyAdded()
-            }
+            .refreshable { await vm.load() }
         }
-    }
-
-    private func hasDerivedPlaylists(_ vm: PlaylistListViewModel) -> Bool {
-        container?.serverState.isOnline != false && (vm.newestAlbum != nil || !vm.bestOfPlaylists.isEmpty)
     }
 
     @ViewBuilder
@@ -197,58 +173,6 @@ private struct OnlinePlaylistRow: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Derived "Recently Added" row
-
-/// Derived playlist: there is no server entity for context-menu mutations.
-private struct RecentlyAddedPlaylistRow: View {
-    let coverArtId: String
-
-    var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
-            CoverArtView(id: coverArtId, size: 112)
-                .frame(width: 56, height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Recently Added")
-                    .font(.minidiscCellTitle)
-                    .lineLimit(1)
-                // No track count: knowing it would mean fetching every album's tracks just to draw a row.
-                Text("The newest tracks in your library")
-                    .font(.minidiscCaption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, MinidiscSpacing.xs)
-    }
-}
-
-// MARK: - Derived "best of" row
-
-/// Derived playlist: there is no server entity for context-menu mutations.
-private struct BestOfPlaylistRow: View {
-    let bestOf: ArtistBestOf
-
-    var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
-            CoverArtView(id: bestOf.coverArtId ?? bestOf.artistId, size: 112)
-                .frame(width: 56, height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
-            VStack(alignment: .leading, spacing: 2) {
-                Text("The best of \(bestOf.artistName)")
-                    .font(.minidiscCellTitle)
-                    .lineLimit(1)
-                Text("\(bestOf.songs.count) tracks")
-                    .font(.minidiscCaption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, MinidiscSpacing.xs)
     }
 }
 

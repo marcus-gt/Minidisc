@@ -7,6 +7,18 @@ struct SongsListView: View {
     @State private var songSelection: SongSelectionRequest?
     @State private var viewModel: SongsListViewModel?
     @AppStorage("minidisc.songSort") private var songSort: SongSort = .title
+    @State private var filterText = ""
+    /// Songs matching `filterText`, or `nil` with no filter. Computed off the main actor: a library
+    /// can hold hundreds of thousands of songs.
+    @State private var filteredSongs: [DisplayableSong]?
+
+    /// Everything the filter result depends on; a change re-runs it.
+    private struct FilterKey: Equatable {
+        let query: String
+        let sort: SongSort
+        let songCount: Int
+        let isOnline: Bool
+    }
 
     var body: some View {
         Group {
@@ -19,13 +31,15 @@ struct SongsListView: View {
         .minidiscContentWidth()
         .navigationTitle("Songs")
         .toolbarTitleDisplayMode(.inline)
+        .minidiscFilterable(text: $filterText, prompt: "Filter songs")
         .sheet(item: $songSelection) { SongSelectionSheet(request: $0) }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Select Songs", systemImage: "checkmark.circle") {
-                    songSelection = SongSelectionRequest(songs: viewModel?.displaySongs ?? [])
+                    songSelection = SongSelectionRequest(songs: filteredSongs ?? viewModel?.displaySongs ?? [])
                 }
-                .disabled(container?.serverState.isOnline != true || viewModel?.displaySongs.isEmpty != false)
+                .disabled(container?.serverState.isOnline != true
+                          || (filteredSongs ?? viewModel?.displaySongs ?? []).isEmpty)
             }
             ToolbarItem(placement: .primaryAction) {
                 SongSortMenu(sort: $songSort)
@@ -40,9 +54,38 @@ struct SongsListView: View {
         .onChange(of: songSort) { _, newSort in
             Task { await viewModel?.changeSort(newSort) }
         }
+        .task(id: filterKey) { await applyFilter() }
+    }
+
+    private var filterKey: FilterKey? {
+        guard let viewModel else { return nil }
+        return FilterKey(query: filterText, sort: songSort, songCount: allSongs(viewModel).count,
+                         isOnline: container?.serverState.isOnline == true)
+    }
+
+    private func applyFilter() async {
+        guard let viewModel, let query = LibraryFilter.query(filterText) else {
+            filteredSongs = nil
+            return
+        }
+        // Debounce typing; a newer key cancels this task.
+        do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+        let matches = await Self.songs(allSongs(viewModel), matching: query)
+        guard !Task.isCancelled else { return }
+        filteredSongs = matches
+    }
+
+    @concurrent
+    private static func songs(_ songs: [DisplayableSong], matching query: String) async -> [DisplayableSong] {
+        LibraryFilter.filter(songs, by: query) { [$0.title, $0.artist, $0.albumName] }
     }
 
     private func displayedSongs(_ vm: SongsListViewModel) -> [DisplayableSong] {
+        guard LibraryFilter.query(filterText) != nil, let filteredSongs else { return allSongs(vm) }
+        return filteredSongs
+    }
+
+    private func allSongs(_ vm: SongsListViewModel) -> [DisplayableSong] {
         guard container?.serverState.isOnline == false else { return vm.displaySongs }
         let songs = container?.offlineLibrary.snapshot.songs ?? []
         let byID = Dictionary(songs.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -51,23 +94,25 @@ struct SongsListView: View {
 
     @ViewBuilder
     private func content(_ vm: SongsListViewModel) -> some View {
-        if container?.serverState.isOnline != false && vm.isLoading && displayedSongs(vm).isEmpty {
+        if container?.serverState.isOnline != false && vm.isLoading && allSongs(vm).isEmpty {
             loadingProgress(vm)
-        } else if container?.serverState.isOnline == false && displayedSongs(vm).isEmpty {
+        } else if container?.serverState.isOnline == false && allSongs(vm).isEmpty {
             OfflineBrowsingEmptyView()
-        } else if let error = vm.error, displayedSongs(vm).isEmpty {
+        } else if let error = vm.error, allSongs(vm).isEmpty {
             EmptyStateView(
                 systemImage: "exclamationmark.triangle",
                 title: "Unable to Load Songs",
                 subtitle: LocalizedStringKey(error.displayMessage),
                 action: .init(label: "Retry") { Task { await vm.load(sort: songSort) } }
             )
-        } else if displayedSongs(vm).isEmpty {
+        } else if allSongs(vm).isEmpty {
             EmptyStateView(
                 systemImage: "music.note",
                 title: "No Songs",
                 subtitle: "Your library appears to be empty."
             )
+        } else if displayedSongs(vm).isEmpty {
+            FilterNoResultsView(query: filterText)
         } else {
             songList(vm)
         }
@@ -90,7 +135,7 @@ struct SongsListView: View {
         return ScrollViewReader { proxy in
             List {
                 if container?.serverState.isOnline != false && vm.didTruncate {
-                    Text("Showing the first \(songs.count.formatted()) songs.")
+                    Text("Showing the first \(allSongs(vm).count.formatted()) songs.")
                         .font(.minidiscCaption)
                         .foregroundStyle(.secondary)
                         .listRowSeparator(.hidden)
