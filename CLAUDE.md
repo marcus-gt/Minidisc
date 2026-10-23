@@ -12,7 +12,12 @@ The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as r
 - Write **maekster** in all lowercase, also at the start of a sentence: UI text, strings in every language,
   README, docs, metadata, commit messages. Swift type names use `Maekster…` (e.g. `MaeksterBrand`);
   identifiers, keys and bundle-ID segments use `maekster`.
-- The spelling with "æ" exists only inside the logo files. Never type it as text.
+- **Exception: the system app name is mækster** (with æ), decided after `Branding/README.md` was written,
+  and it overrides the guide there. It applies to `INFOPLIST_KEY_CFBundleDisplayName`, `CFBundleName` /
+  `CFBundleDisplayName` in `InfoPlist.xcstrings`, and the permission texts (`NS*UsageDescription` in the
+  build settings, `Info.plist` and `InfoPlist.xcstrings`, every language), so permission dialogs match
+  their title. Everything else, including in-app sentences, stays **maekster**. The Siri synonym
+  `INAlternativeAppNames` stays "Mackster".
 - In the app, use the mark (`Image("BrandMark")`) and plain text. Never use the wordmark.
 - Names sent to external services come from `MaeksterBrand` (`Utilities/MaeksterBrand.swift`).
 - The Xcode project, targets, schemes, Swift module and the internal `Minidisc*` / `minidisc*` type,
