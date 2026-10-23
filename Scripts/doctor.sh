@@ -93,7 +93,7 @@ app_setting() {
             sub(";[[:space:]]*$", "", line)
             value = line
         }
-        in_settings && /PRODUCT_BUNDLE_IDENTIFIER = com\.nohitdev\.minidisc;/ {
+        in_settings && /PRODUCT_BUNDLE_IDENTIFIER = "?io\.github\.marcus-gt\.maekster"?;/ {
             is_app = 1
         }
         in_settings && /^[[:space:]]*};[[:space:]]*$/ {
@@ -106,7 +106,7 @@ app_setting() {
     ' "$project_file"
 }
 
-printf 'Minidisc Doctor\n\n'
+printf 'maekster doctor\n\n'
 
 for command_name in git plutil xcodebuild; do
     if command -v "$command_name" >/dev/null 2>&1; then
@@ -217,7 +217,7 @@ else
 fi
 
 if [ "$run_build" = true ]; then
-    doctor_temp=$(mktemp -d "${TMPDIR:-/tmp}/minidisc-doctor.XXXXXX") || exit 1
+    doctor_temp=$(mktemp -d "${TMPDIR:-/tmp}/maekster-doctor.XXXXXX") || exit 1
     build_log="$doctor_temp/build.log"
     if xcodebuild \
         -project "$project" \

@@ -36,7 +36,7 @@ nonisolated protocol DownloadTransport: Sendable {
 /// One system-owned session. Completed payloads and receipts are durable before the delegate
 /// returns, so relaunch does not depend on a SwiftUI scene or an in-memory continuation.
 actor BackgroundDownloadTransport: DownloadTransport {
-    static let identifier = "com.nohitdev.minidisc.audio-downloads"
+    static let identifier = "io.github.marcus-gt.maekster.audio-downloads"
     static let shared = BackgroundDownloadTransport(identifier: identifier)
     nonisolated let events: AsyncStream<DownloadTransportEvent>
     private let session: URLSession

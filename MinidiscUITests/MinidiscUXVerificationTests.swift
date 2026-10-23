@@ -20,7 +20,7 @@ final class MinidiscUXVerificationTests: XCTestCase {
     @available(iOS 27.0, *)
     func testFixtureMusicShortcutsColdStart() async throws {
         try await launchFixtureApp()
-        let definitions = IntentDefinitions(bundleIdentifier: "com.nohitdev.minidisc")
+        let definitions = IntentDefinitions(bundleIdentifier: "io.github.marcus-gt.maekster")
         app.terminate()
 
         let songs = try await definitions.entities["MinidiscMusicEntity"].entities(matching: firstTitle)
@@ -54,7 +54,7 @@ final class MinidiscUXVerificationTests: XCTestCase {
         _ = try await fixturePlaylistMutation("createPlaylist", parameters: [
             URLQueryItem(name: "name", value: "Discover Weekly"), URLQueryItem(name: "songId", value: "ux-song-1")
         ])
-        let definitions = IntentDefinitions(bundleIdentifier: "com.nohitdev.minidisc")
+        let definitions = IntentDefinitions(bundleIdentifier: "io.github.marcus-gt.maekster")
         let playlists = try await definitions.entities["SiriPlaylistEntity"].entities(matching: "Discover Weekly")
         XCTAssertEqual(playlists.count, 1)
         XCTAssertEqual(try playlists[0].title, "Discover Weekly")

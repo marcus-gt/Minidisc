@@ -20,7 +20,7 @@ struct MinidiscApp: App {
         let intentRuntime = MinidiscRuntime.shared
         AppDependencyManager.shared.add(dependency: intentRuntime)
         BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "app.minidisc.wrapped.monthly-update",
+            forTaskWithIdentifier: "io.github.marcus-gt.maekster.wrapped.monthly-update",
             using: nil,
             launchHandler: Self.handleWrappedUpdateBackgroundTask
         )
@@ -54,7 +54,7 @@ struct MinidiscApp: App {
     }
 
     nonisolated static func scheduleWrappedUpdate() {
-        let request = BGProcessingTaskRequest(identifier: "app.minidisc.wrapped.monthly-update")
+        let request = BGProcessingTaskRequest(identifier: "io.github.marcus-gt.maekster.wrapped.monthly-update")
         request.requiresNetworkConnectivity = true
         request.earliestBeginDate = Date().addingTimeInterval(24 * 3600)
         try? BGTaskScheduler.shared.submit(request)

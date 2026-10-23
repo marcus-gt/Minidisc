@@ -11,11 +11,18 @@
 	<array>
 		<string>INMediaCategoryMusic</string>
 	</array>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>Mackster</string>
+		</dict>
+	</array>
 	<key>NSSiriUsageDescription</key>
 	<string>Allow Siri to search your Minidisc library and control music playback.</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>app.minidisc.wrapped.monthly-update</string>
+		<string>io.github.marcus-gt.maekster.wrapped.monthly-update</string>
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -23,10 +30,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.nohitdev.minidisc.url-scheme</string>
+			<string>io.github.marcus-gt.maekster.url-scheme</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>minidisc</string>
+				<string>maekster</string>
 			</array>
 		</dict>
 	</array>
