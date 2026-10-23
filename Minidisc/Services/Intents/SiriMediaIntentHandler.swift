@@ -94,7 +94,7 @@ final class SiriMediaIntentHandler: NSObject, INPlayMediaIntentHandling, INSearc
         let service = MusicIntentService(container: container)
         let identifiers = Self.identifiers(for: intent)
         if !identifiers.isEmpty {
-            // Never reinterpret a stale Minidisc selection against another account.
+            // Never reinterpret a stale maekster selection against another account.
             return try await service.resolve(identifiers)
         }
         if (intent.mediaItems ?? []).contains(where: { $0.identifier != nil }) ||

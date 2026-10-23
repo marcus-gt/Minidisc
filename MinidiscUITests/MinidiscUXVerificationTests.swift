@@ -146,7 +146,7 @@ final class MinidiscUXVerificationTests: XCTestCase {
         try require(authorization)
         XCTAssertTrue(authorization.isEnabled)
         XCTAssertTrue(authorization.label.contains("Activer Siri") || authorization.label.contains("Gérer l’accès à Siri") || authorization.label.contains("Ouvrir les réglages"))
-        try require(app.staticTexts["Autorisez Siri à rechercher dans votre bibliothèque Minidisc et à contrôler la lecture musicale."])
+        try require(app.staticTexts["Autorisez Siri à rechercher dans votre bibliothèque maekster et à contrôler la lecture musicale."])
         captureHierarchy("siri-authorization-settings")
     }
 
@@ -161,11 +161,11 @@ final class MinidiscUXVerificationTests: XCTestCase {
         try tap(app.buttons["Fermer"], named: "mood-settings-close")
 
         let oldResponse = try await fixturePlaylistMutation("createPlaylist", parameters: [
-            URLQueryItem(name: "name", value: "Minidisc · Night"), URLQueryItem(name: "songId", value: "ux-song-1")
+            URLQueryItem(name: "name", value: "maekster · Night"), URLQueryItem(name: "songId", value: "ux-song-1")
         ])
         let oldID = try XCTUnwrap(oldResponse)
         let wrappedResponse = try await fixturePlaylistMutation("createPlaylist", parameters: [
-            URLQueryItem(name: "name", value: "Minidisc Wrapped 2025"), URLQueryItem(name: "songId", value: "ux-song-2")
+            URLQueryItem(name: "name", value: "maekster Wrapped 2025"), URLQueryItem(name: "songId", value: "ux-song-2")
         ])
         let wrappedID = try XCTUnwrap(wrappedResponse)
         try tapTab("Découvrir")
@@ -180,7 +180,7 @@ final class MinidiscUXVerificationTests: XCTestCase {
 
         _ = try await fixturePlaylistMutation("deletePlaylist", parameters: [URLQueryItem(name: "id", value: oldID)])
         let replacementResponse = try await fixturePlaylistMutation("createPlaylist", parameters: [
-            URLQueryItem(name: "name", value: "Minidisc · Night"), URLQueryItem(name: "songId", value: "ux-song-2")
+            URLQueryItem(name: "name", value: "maekster · Night"), URLQueryItem(name: "songId", value: "ux-song-2")
         ])
         let replacementID = try XCTUnwrap(replacementResponse)
         try tapTab("Découvrir")
