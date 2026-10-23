@@ -260,10 +260,10 @@ actor LibraryCatalog {
         }
     }
 
-    func recentlyAddedAlbums(size: Int) async throws -> [AlbumID3] {
+    func recentlyAddedAlbums(size: Int, offset: Int = 0) async throws -> [AlbumID3] {
         let serverID = try await source.activeServerID()
         let completion = try await store.status(for: serverID)
-        let local = try await store.recentlyAddedAlbums(serverID: serverID, limit: size)
+        let local = try await store.recentlyAddedAlbums(serverID: serverID, offset: offset, limit: size)
         let hasLocalSnapshot = completion.albums || !local.isEmpty
         if !(await source.isOnline()) {
             if hasLocalSnapshot { return local }
@@ -272,7 +272,7 @@ actor LibraryCatalog {
         do {
             // A complete index can still describe the previous scan. Home needs this small,
             // current page even while the rest of the catalogue is refreshing in the background.
-            return try await source.recentlyAddedAlbums(size: size, serverID: serverID)
+            return try await source.recentlyAddedAlbums(size: size, offset: offset, serverID: serverID)
         } catch is CancellationError {
             throw CancellationError()
         } catch {

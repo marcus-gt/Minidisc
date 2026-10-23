@@ -40,9 +40,9 @@ private nonisolated struct StaticLibrarySource: LibraryRemoteSource {
         }
         return album
     }
-    func recentlyAddedAlbums(size: Int, serverID: UUID) async throws -> [AlbumID3] {
+    func recentlyAddedAlbums(size: Int, offset: Int, serverID: UUID) async throws -> [AlbumID3] {
         if let recentAlbumsFailure { throw recentAlbumsFailure }
-        return Array(albumPages.values.flatMap { $0 }.prefix(size))
+        return Array(albumPages.values.flatMap { $0 }.dropFirst(offset).prefix(size))
     }
     func albumsPage(offset: Int, count: Int, serverID: UUID) async throws -> [AlbumID3] {
         if failingAlbumOffset == offset { throw LibrarySourceStubError.scheduledFailure }
@@ -77,7 +77,7 @@ private actor CountingLibrarySource: LibraryRemoteSource {
     func artists(serverID: UUID) async throws -> [ArtistIndex] { throw LibrarySourceStubError.unavailable }
     func artist(id: String, serverID: UUID) async throws -> ArtistID3 { throw LibrarySourceStubError.unavailable }
     func album(id: String, serverID: UUID) async throws -> AlbumID3 { throw LibrarySourceStubError.unavailable }
-    func recentlyAddedAlbums(size: Int, serverID: UUID) async throws -> [AlbumID3] {
+    func recentlyAddedAlbums(size: Int, offset: Int, serverID: UUID) async throws -> [AlbumID3] {
         throw LibrarySourceStubError.unavailable
     }
     func albumsPage(offset: Int, count: Int, serverID: UUID) async throws -> [AlbumID3] {
@@ -119,7 +119,7 @@ private actor PreparationLibrarySource: LibraryRemoteSource {
     func album(id: String, serverID: UUID) async throws -> AlbumID3 {
         throw LibrarySourceStubError.unavailable
     }
-    func recentlyAddedAlbums(size: Int, serverID: UUID) async throws -> [AlbumID3] {
+    func recentlyAddedAlbums(size: Int, offset: Int, serverID: UUID) async throws -> [AlbumID3] {
         throw LibrarySourceStubError.unavailable
     }
     func albumsPage(offset: Int, count: Int, serverID: UUID) async throws -> [AlbumID3] {
@@ -174,7 +174,7 @@ private actor FreshnessLibrarySource: LibraryRemoteSource {
     func album(id: String, serverID: UUID) async throws -> AlbumID3 {
         throw LibrarySourceStubError.unavailable
     }
-    func recentlyAddedAlbums(size: Int, serverID: UUID) async throws -> [AlbumID3] { [] }
+    func recentlyAddedAlbums(size: Int, offset: Int, serverID: UUID) async throws -> [AlbumID3] { [] }
     func albumsPage(offset: Int, count: Int, serverID: UUID) async throws -> [AlbumID3] {
         albumCalls += 1
         return []

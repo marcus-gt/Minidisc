@@ -51,9 +51,6 @@ final class HomeFeedViewModel {
     var relevantAdditions: [AlbumID3] {
         HomePersonalization.relevantAdditions(recentlyAdded, favorites: favorites, frequent: mostPlayed)
     }
-    var otherAdditions: [AlbumID3] {
-        HomePersonalization.unique(recentlyAdded, excluding: Set(relevantAdditions.map(\.id)))
-    }
     private(set) var pendingSections: Set<Section> = []
     private(set) var hasPartialFailure = false
     var isLoading = false
@@ -118,7 +115,7 @@ final class HomeFeedViewModel {
                     })
                 }
             }
-            group.addTask { await Self.fetch(.recent) { .recent(try await service.recentlyAddedAlbums(size: 60)) } }
+            group.addTask { await Self.fetch(.recent) { .recent(try await service.recentlyAddedAlbums(size: RecentlyAddedAlbumPager.pageSize)) } }
             if isOnline {
                 group.addTask { await Self.fetch(.habits) { .habits(try await service.mostPlayedAlbums(size: 40)) } }
                 if let starredService {

@@ -47,11 +47,14 @@ struct HomeAlbumSection: View {
     private let title: Title
     let albums: [AlbumID3]
     let identifier: String
+    /// "See all" keeps loading older albums from the server instead of stopping at `albums`.
+    private let continuesRecentlyAdded: Bool
     @AppStorage private var layout: HomeShelfLayout
 
     /// The layout is stored per shelf, keyed on `identifier`.
-    init(title: LocalizedStringResource, albums: [AlbumID3], identifier: String) {
-        self.init(title: .localized(title), albums: albums, identifier: identifier)
+    init(title: LocalizedStringResource, albums: [AlbumID3], identifier: String, continuesRecentlyAdded: Bool = false) {
+        self.init(title: .localized(title), albums: albums, identifier: identifier,
+                  continuesRecentlyAdded: continuesRecentlyAdded)
     }
 
     /// For server-provided titles such as genre names, which must not go through the String Catalog.
@@ -60,10 +63,12 @@ struct HomeAlbumSection: View {
         self.init(title: .verbatim(title), albums: albums, identifier: identifier, layoutIdentifier: layoutIdentifier)
     }
 
-    private init(title: Title, albums: [AlbumID3], identifier: String, layoutIdentifier: String? = nil) {
+    private init(title: Title, albums: [AlbumID3], identifier: String, layoutIdentifier: String? = nil,
+                 continuesRecentlyAdded: Bool = false) {
         self.title = title
         self.albums = albums
         self.identifier = identifier
+        self.continuesRecentlyAdded = continuesRecentlyAdded
         _layout = AppStorage(wrappedValue: .carousel, HomeShelfLayout.storageKey(for: layoutIdentifier ?? identifier))
     }
 
@@ -96,7 +101,7 @@ struct HomeAlbumSection: View {
         switch title {
         case .localized(let title):
             MinidiscCarouselHeaderLink(title, itemCount: albums.count, visibleLimit: layout.visibleLimit) {
-                AlbumCarouselCollectionView(title, albums: albums)
+                AlbumCarouselCollectionView(title, albums: albums, continuesRecentlyAdded: continuesRecentlyAdded)
             }
         case .verbatim(let title):
             MinidiscCarouselHeaderLink(verbatim: title, itemCount: albums.count, visibleLimit: layout.visibleLimit) {
