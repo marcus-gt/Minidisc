@@ -389,6 +389,10 @@ actor LibraryService: LibraryServiceProtocol {
         try await catalog.albums(recordLabel: recordLabel)
     }
 
+    func recordLabels() async throws -> [RecordLabelSummary]? {
+        try await catalog.recordLabels()
+    }
+
     func albumsByGenre(_ genre: String, size: Int) async throws -> [AlbumID3] {
         try await client().getAlbumList2(type: .byGenre, size: size, genre: genre)
     }

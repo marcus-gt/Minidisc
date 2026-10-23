@@ -254,6 +254,8 @@ struct HomeView: View {
             FavoritesView()
         case .libraryDownloads:
             DownloadedView()
+        case .libraryRecordLabels:
+            RecordLabelListView()
         case .album(let album):
             AlbumDetailView(album: album)
         case .artist(let artist):

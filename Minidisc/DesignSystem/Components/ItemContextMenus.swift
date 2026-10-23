@@ -251,6 +251,8 @@ struct CollectionContextMenuModifier: ViewModifier {
                     Divider()
                 }
 
+                // Only playlists can be pinned: they feed Home's playlist shelf. Pinned albums had
+                // their own Library grid, which is gone.
                 if isPinned {
                     Button {
                         HapticFeedback.light.trigger()
@@ -258,7 +260,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     } label: {
                         Label(itemType.unpinLabel, systemImage: "pin.slash")
                     }
-                } else {
+                } else if itemType == .playlist {
                     Button {
                         guard let serverId = container?.serverState.activeServer?.id,
                               let pin = container?.pinService else { return }
@@ -413,6 +415,8 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     Divider()
                 }
 
+                // Only playlists can be pinned: they feed Home's playlist shelf. Pinned albums had
+                // their own Library grid, which is gone.
                 if isPinned {
                     Button {
                         HapticFeedback.light.trigger()
@@ -420,7 +424,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     } label: {
                         Label(itemType.unpinLabel, systemImage: "pin.slash")
                     }
-                } else {
+                } else if itemType == .playlist {
                     Button {
                         guard let serverId = container?.serverState.activeServer?.id,
                               let pin = container?.pinService else { return }

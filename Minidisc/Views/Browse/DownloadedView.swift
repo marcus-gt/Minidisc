@@ -3,11 +3,12 @@ import SwiftData
 
 struct DownloadedView: View {
     @Environment(\.appContainer) private var container
+    @State private var filterText = ""
 
     var body: some View {
         Group {
             if let serverId = container?.serverState.activeServer?.id {
-                DownloadedContent(serverId: serverId)
+                DownloadedContent(serverId: serverId, filterText: filterText)
             } else {
                 EmptyStateView(
                     systemImage: "arrow.down.circle",
@@ -19,6 +20,7 @@ struct DownloadedView: View {
         .minidiscContentWidth()
         .navigationTitle("Downloads")
         .toolbarTitleDisplayMode(.inline)
+        .minidiscFilterable(text: $filterText, prompt: "Filter downloads")
     }
 }
 
@@ -27,12 +29,14 @@ struct DownloadedView: View {
 private struct DownloadedContent: View {
     @Environment(\.appContainer) private var container
     let serverId: UUID
+    let filterText: String
     @Query private var albums: [DownloadedAlbum]
     @Query private var playlists: [DownloadedPlaylist]
     @Query private var tracks: [DownloadedTrack]
 
-    init(serverId: UUID) {
+    init(serverId: UUID, filterText: String) {
         self.serverId = serverId
+        self.filterText = filterText
         let sid = serverId
         _albums = Query(
             filter: #Predicate<DownloadedAlbum> { album in album.serverId == sid },
@@ -63,14 +67,20 @@ private struct DownloadedContent: View {
                 subtitle: "Albums and playlists you download will be available here, even offline."
             )
         } else {
-            downloadedListiOS
+            let songs = LibraryFilter.filter(standaloneSongs, by: filterText) { [$0.title, $0.artist, $0.albumName] }
+            let albums = LibraryFilter.filter(displayAlbums, by: filterText) { [$0.name, $0.artist] }
+            let orderedPlaylists = LibraryFilter.filter(playlists, by: filterText) { [$0.name] }
+                .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            if LibraryFilter.query(filterText) != nil && songs.isEmpty && albums.isEmpty && orderedPlaylists.isEmpty {
+                FilterNoResultsView(query: filterText)
+            } else {
+                downloadedList(songs: songs, albums: albums, orderedPlaylists: orderedPlaylists)
+            }
         }
     }
 
-    private var downloadedListiOS: some View {
-        let songs = standaloneSongs
-        let albums = displayAlbums
-        let orderedPlaylists = playlists.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    private func downloadedList(songs: [DisplayableSong], albums: [DownloadedAlbumDisplay],
+                                orderedPlaylists: [DownloadedPlaylist]) -> some View {
         let index = songs.map { AlphabetScrollEntry(id: $0.downloadScrollID, name: $0.title) }
             + albums.map { AlphabetScrollEntry(id: $0.downloadScrollID, name: $0.name) }
             + orderedPlaylists.map { AlphabetScrollEntry(id: $0.downloadScrollID, name: $0.name) }

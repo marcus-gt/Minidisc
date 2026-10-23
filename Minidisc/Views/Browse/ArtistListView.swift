@@ -7,6 +7,7 @@ struct ArtistListView: View {
     @State private var viewModel: ArtistListViewModel?
     @AppStorage("minidisc.artistSort") private var artistSort: ArtistSort = .name
     @AppStorage("minidisc.artistListGrid") private var gridLayout = false
+    @State private var filterText = ""
 
     private let gridColumns = [GridItem(.adaptive(minimum: 110, maximum: 180), spacing: MinidiscSpacing.l)]
 
@@ -21,6 +22,7 @@ struct ArtistListView: View {
         .minidiscContentWidth()
         .navigationTitle("Artists")
         .toolbarTitleDisplayMode(.inline)
+        .minidiscFilterable(text: $filterText, prompt: "Filter artists")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 ArtistSortMenu(sort: $artistSort)
@@ -44,29 +46,35 @@ struct ArtistListView: View {
         }
     }
 
-    private func displayedArtists(_ vm: ArtistListViewModel) -> [ArtistID3] {
+    private func allArtists(_ vm: ArtistListViewModel) -> [ArtistID3] {
         container?.serverState.isOnline == false ? container?.offlineLibrary.snapshot.artists ?? [] : vm.indexes.flatMap(\.artist)
+    }
+
+    private func displayedArtists(_ vm: ArtistListViewModel) -> [ArtistID3] {
+        LibraryFilter.filter(allArtists(vm), by: filterText) { [$0.name] }
     }
 
     @ViewBuilder
     private func browseContent(_ vm: ArtistListViewModel) -> some View {
-        if container?.serverState.isOnline != false && vm.isLoading && displayedArtists(vm).isEmpty {
+        if container?.serverState.isOnline != false && vm.isLoading && allArtists(vm).isEmpty {
             LoadingStateView()
-        } else if container?.serverState.isOnline == false && displayedArtists(vm).isEmpty {
+        } else if container?.serverState.isOnline == false && allArtists(vm).isEmpty {
             OfflineBrowsingEmptyView()
-        } else if let error = vm.error, displayedArtists(vm).isEmpty {
+        } else if let error = vm.error, allArtists(vm).isEmpty {
             EmptyStateView(
                 systemImage: "exclamationmark.triangle",
                 title: "Unable to Load Artists",
                 subtitle: LocalizedStringKey(error.displayMessage),
                 action: .init(label: "Retry") { Task { await vm.load() } }
             )
-        } else if displayedArtists(vm).isEmpty {
+        } else if allArtists(vm).isEmpty {
             EmptyStateView(
                 systemImage: "music.mic",
                 title: "No Artists",
                 subtitle: "Your library appears to be empty."
             )
+        } else if displayedArtists(vm).isEmpty {
+            FilterNoResultsView(query: filterText)
         } else if gridLayout {
             artistsGrid(vm)
         } else {

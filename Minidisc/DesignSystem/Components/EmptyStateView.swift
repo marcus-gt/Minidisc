@@ -54,3 +54,16 @@ struct EmptyStateView: View {
     EmptyStateView(systemImage: "arrow.down.circle", title: "No Downloads")
         .preferredColorScheme(.dark)
 }
+
+/// Shown in place of a Library list when its filter matches nothing.
+struct FilterNoResultsView: View {
+    let query: String
+
+    var body: some View {
+        EmptyStateView(
+            systemImage: "magnifyingglass",
+            title: "No Results",
+            subtitle: "Nothing matches “\(query)”."
+        )
+    }
+}
