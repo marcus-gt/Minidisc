@@ -54,7 +54,7 @@ actor LRCLIBClient: LRCLIBLyricsFetching {
     init(
         transport: any LRCLIBTransport = URLSessionLRCLIBTransport(),
         endpoint: URL = LRCLIBClient.defaultEndpoint,
-        clientIdentifier: String = LRCLIBClient.defaultClientIdentifier(),
+        clientIdentifier: String = MaeksterBrand.userAgent,
         now: @escaping @Sendable () -> Date = Date.init
     ) {
         self.transport = transport
@@ -178,11 +178,5 @@ actor LRCLIBClient: LRCLIBLyricsFetching {
         } catch {
             throw LyricsError.networkError(underlying: error.localizedDescription)
         }
-    }
-
-    nonisolated private static func defaultClientIdentifier() -> String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-            ?? "development"
-        return "Minidisc/\(version) (https://github.com/Loriage/Minidisc)"
     }
 }
