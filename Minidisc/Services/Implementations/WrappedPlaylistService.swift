@@ -7,9 +7,15 @@ import OSLog
 nonisolated protocol PlaylistSyncClient: Sendable {
     func getPlaylists(username: String?) async throws -> [Playlist]
     func createPlaylist(name: String?, playlistId: String?, songIds: [String]) async throws -> PlaylistWithSongs
+    /// Changes only the name; the id and the tracks stay as they are.
+    func renamePlaylist(id: String, to name: String) async throws
 }
 
-extension SwiftSonicClient: PlaylistSyncClient {}
+extension SwiftSonicClient: PlaylistSyncClient {
+    func renamePlaylist(id: String, to name: String) async throws {
+        try await updatePlaylist(id: id, name: name)
+    }
+}
 
 // MARK: - WrappedYearlyPlaylist
 
@@ -34,12 +40,30 @@ nonisolated enum SyncResult: Sendable, Equatable {
 
 /// Refreshes the annual top-100 playlist monthly using createPlaylist replacement.
 actor WrappedPlaylistService {
-    nonisolated static let wrappedPlaylistNamePrefix = "Minidisc Wrapped "
+    nonisolated static let wrappedPlaylistNamePrefix = "maekster Wrapped "
+
+    /// Prefix used before the rebrand. Playlists named with it stay recognised and are renamed
+    /// to the current prefix by the monthly sync.
+    nonisolated static let legacyWrappedPlaylistNamePrefix = "Minidisc Wrapped "
+
+    nonisolated static func playlistName(year: Int) -> String {
+        "\(wrappedPlaylistNamePrefix)\(year)"
+    }
+
+    /// The year of a Wrapped playlist under the current or the legacy name; nil for any other playlist.
+    nonisolated static func year(fromPlaylistName name: String) -> Int? {
+        for prefix in [wrappedPlaylistNamePrefix, legacyWrappedPlaylistNamePrefix] where name.hasPrefix(prefix) {
+            return Int(name.dropFirst(prefix.count))
+        }
+        return nil
+    }
 
     private let statsService: StatsService
     private let preferences: WrappedPreferences
     private let makeClient: @Sendable () async throws -> any PlaylistSyncClient
     private let serverService: (any ServerServiceProtocol)?
+    /// Username of the active account, so only the user's own legacy playlists are renamed.
+    private let currentOwner: @Sendable () async -> String?
 
     init(
         serverService: any ServerServiceProtocol,
@@ -50,22 +74,25 @@ actor WrappedPlaylistService {
         self.preferences = preferences
         self.serverService = serverService
         self.makeClient = { try await serverService.activeConnection().makeSwiftSonicClient() }
+        self.currentOwner = { await MainActor.run { serverService.state.activeServer?.username } }
     }
 
     init(
         clientFactory: @escaping @Sendable () async throws -> any PlaylistSyncClient,
         statsService: StatsService,
-        preferences: WrappedPreferences
+        preferences: WrappedPreferences,
+        owner: String? = nil
     ) {
         self.statsService = statsService
         self.preferences = preferences
         self.serverService = nil
         self.makeClient = clientFactory
+        self.currentOwner = { owner }
     }
 
     // MARK: - Public API
 
-    /// Replaces the annual "Minidisc Wrapped <year>" playlist with the top 100
+    /// Replaces the annual "maekster Wrapped <year>" playlist with the top 100
     /// tracks listened to so far this year. Idempotent within a calendar month:
     /// a second call in the same month returns `.upToDate` without a server round-trip.
     func runYearlyPlaylistSyncIfNeeded(
@@ -126,9 +153,13 @@ actor WrappedPlaylistService {
         }
         try Task.checkCancellation()
 
+        let owner = await currentOwner()
+        try Task.checkCancellation()
+
         let pid: String
+        let livePlaylists: [Playlist]
         do {
-            pid = try await getOrCreatePlaylist(for: year, serverId: serverId, client: client)
+            (pid, livePlaylists) = try await getOrCreatePlaylist(for: year, serverId: serverId, owner: owner, client: client)
         } catch {
             if error is CancellationError { throw CancellationError() }
             try Task.checkCancellation()
@@ -149,6 +180,7 @@ actor WrappedPlaylistService {
         try Task.checkCancellation()
 
         try await uploadWrappedCover(year: year, playlistId: pid)
+        try await renameLegacyPastYearPlaylists(livePlaylists, currentYear: year, owner: owner, client: client)
 
         try Task.checkCancellation()
         preferences.setLastUpdatedMonth(currentYearMonth, serverId: serverId)
@@ -206,13 +238,14 @@ actor WrappedPlaylistService {
             let all = try await client.getPlaylists(username: nil)
             // Clear stale identity and cadence markers so a deleted playlist can be recreated.
             reconcileCurrentYearPlaylist(serverId: serverId, livePlaylists: all, calendar: calendar, currentDate: currentDate)
-            return all.compactMap { playlist -> WrappedYearlyPlaylist? in
-                guard playlist.name.hasPrefix(WrappedPlaylistService.wrappedPlaylistNamePrefix),
-                      let year = Int(playlist.name.dropFirst(WrappedPlaylistService.wrappedPlaylistNamePrefix.count))
-                else { return nil }
-                return WrappedYearlyPlaylist(id: playlist.id, year: year, name: playlist.name, coverArtId: playlist.coverArt)
+            var byYear: [Int: WrappedYearlyPlaylist] = [:]
+            for playlist in all {
+                guard let year = Self.year(fromPlaylistName: playlist.name) else { continue }
+                // If a legacy and a current playlist exist for one year, show the current one.
+                if let shown = byYear[year], shown.name == Self.playlistName(year: year) { continue }
+                byYear[year] = WrappedYearlyPlaylist(id: playlist.id, year: year, name: playlist.name, coverArtId: playlist.coverArt)
             }
-            .sorted { $0.year > $1.year }
+            return byYear.values.sorted { $0.year > $1.year }
         } catch {
             Logger.wrapped.error("[WRAPPED] fetchYearlyPlaylists failed: \(error, privacy: .public)")
             return []
@@ -291,28 +324,85 @@ actor WrappedPlaylistService {
 
     // MARK: - Get-or-create annual playlist
 
-    private func getOrCreatePlaylist(for year: Int, serverId: String, client: any PlaylistSyncClient) async throws -> String {
+    /// Returns the playlist id for `year` together with the live playlist list it was resolved from.
+    /// A playlist that still has the legacy name is reused and renamed in place, never duplicated.
+    private func getOrCreatePlaylist(
+        for year: Int,
+        serverId: String,
+        owner: String?,
+        client: any PlaylistSyncClient
+    ) async throws -> (id: String, playlists: [Playlist]) {
         try Task.checkCancellation()
-        let name = "Minidisc Wrapped \(year)"
+        let name = Self.playlistName(year: year)
         // Validate cached IDs against the live list before replacing playlist contents.
         let playlists = try await client.getPlaylists(username: nil)
         try Task.checkCancellation()
 
         if let cached = preferences.playlistId(year: year, serverId: serverId),
-           playlists.contains(where: { $0.id == cached }) {
-            return cached
+           let existing = playlists.first(where: { $0.id == cached }) {
+            try await renameIfLegacy(existing, year: year, owner: owner, client: client)
+            return (cached, playlists)
         }
 
-        if let existing = playlists.first(where: { $0.name == name }) {
+        let sameYear = playlists.filter { Self.year(fromPlaylistName: $0.name) == year }
+        if let existing = sameYear.first(where: { $0.name == name }) ?? sameYear.first {
             preferences.setPlaylistId(existing.id, year: year, serverId: serverId)
-            Logger.wrapped.info("Found '\(name, privacy: .public)' id=\(existing.id, privacy: .public)")
-            return existing.id
+            Logger.wrapped.info("Found '\(existing.name, privacy: .public)' id=\(existing.id, privacy: .public)")
+            try await renameIfLegacy(existing, year: year, owner: owner, client: client)
+            return (existing.id, playlists)
         }
 
         let created = try await client.createPlaylist(name: name, playlistId: nil, songIds: [])
         try Task.checkCancellation()
         preferences.setPlaylistId(created.id, year: year, serverId: serverId)
         Logger.wrapped.info("Created '\(name, privacy: .public)' id=\(created.id, privacy: .public) (serverId=\(serverId, privacy: .public))")
-        return created.id
+        return (created.id, playlists)
+    }
+
+    // MARK: - Legacy names
+
+    /// Earlier years are never synced again, so their legacy playlists are renamed here and get a
+    /// cover with the current name.
+    private func renameLegacyPastYearPlaylists(
+        _ playlists: [Playlist],
+        currentYear: Int,
+        owner: String?,
+        client: any PlaylistSyncClient
+    ) async throws {
+        for playlist in playlists where playlist.name.hasPrefix(Self.legacyWrappedPlaylistNamePrefix) {
+            guard let year = Self.year(fromPlaylistName: playlist.name), year != currentYear,
+                  // Leave a legacy duplicate alone when the year already has a current-name playlist.
+                  !playlists.contains(where: { $0.name == Self.playlistName(year: year) })
+            else { continue }
+            try Task.checkCancellation()
+            if try await renameIfLegacy(playlist, year: year, owner: owner, client: client) {
+                try await uploadWrappedCover(year: year, playlistId: playlist.id)
+            }
+        }
+    }
+
+    /// Renames a playlist that still has the legacy name, if it belongs to the user. Returns whether it
+    /// was renamed. A failure is logged and ignored: the legacy name stays recognised.
+    @discardableResult
+    private func renameIfLegacy(
+        _ playlist: Playlist,
+        year: Int,
+        owner: String?,
+        client: any PlaylistSyncClient
+    ) async throws -> Bool {
+        guard playlist.name.hasPrefix(Self.legacyWrappedPlaylistNamePrefix),
+              owner == nil || playlist.owner == nil || playlist.owner == owner
+        else { return false }
+        do {
+            try await client.renamePlaylist(id: playlist.id, to: Self.playlistName(year: year))
+            try Task.checkCancellation()
+            Logger.wrapped.info("[WRAPPED-SYNC] renamed legacy \(year, privacy: .public) playlist id=\(playlist.id, privacy: .public)")
+            return true
+        } catch {
+            if error is CancellationError { throw CancellationError() }
+            try Task.checkCancellation()
+            Logger.wrapped.warning("[WRAPPED-SYNC] rename of legacy \(year, privacy: .public) playlist failed: \(error, privacy: .public)")
+            return false
+        }
     }
 }

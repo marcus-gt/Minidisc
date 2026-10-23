@@ -155,7 +155,7 @@ struct SiriPlaylistEntity {
     init(record: MusicIntentRecord) {
         id = record.id
         title = record.title
-        curatedForMe = Mood.allCases.contains { $0.playlistName == record.title } ? true : nil
+        curatedForMe = Mood.forPlaylistName(record.title) != nil ? true : nil
     }
 }
 

@@ -71,7 +71,9 @@ private final class PlaylistStub: MoodPlaylistClient, @unchecked Sendable {
     var failWrites = false
     var failReads = false
     var failDeletes: Set<String> = []
+    var failRenames = false
     private(set) var deleted: [String] = []
+    private(set) var renamed: [(id: String, name: String)] = []
     /// Emulates a server that accepts the call but stores none of the ids — the failure mode a
     /// foreign id format produces.
     var storesNothing = false
@@ -88,6 +90,14 @@ private final class PlaylistStub: MoodPlaylistClient, @unchecked Sendable {
         if failDeletes.contains(id) { throw URLError(.cannotConnectToHost) }
         deleted.append(id)
         existing.removeAll { $0.id == id }
+    }
+
+    func renamePlaylist(id: String, to name: String) async throws {
+        if failRenames { throw URLError(.cannotConnectToHost) }
+        renamed.append((id, name))
+        existing = existing.map {
+            $0.id == id ? Playlist(id: $0.id, name: name, songCount: $0.songCount, duration: $0.duration, owner: $0.owner, coverArt: $0.coverArt) : $0
+        }
     }
 
     func createPlaylist(name: String?, playlistId: String?, songIds: [String]) async throws -> PlaylistWithSongs {
@@ -596,5 +606,103 @@ struct MoodPlaylistServiceTests {
         let queries = Mood.allCases.map(\.query)
         #expect(Set(queries).count == queries.count)
         #expect(queries.allSatisfy { $0.allSatisfy(\.isASCII) })
+    }
+}
+
+// MARK: - Legacy names
+
+@Suite("Mood playlists — legacy Minidisc names")
+struct MoodLegacyPlaylistNameTests {
+
+    @Test func names_currentAndLegacy_areRecognised() {
+        #expect(Mood.night.playlistName == "maekster · Night")
+        #expect(Mood.night.legacyPlaylistName == "Minidisc · Night")
+        #expect(Mood.forPlaylistName("maekster · Night") == .night)
+        #expect(Mood.forPlaylistName("Minidisc · Night") == .night)
+        #expect(Mood.forPlaylistName("Minidisc · My favourites") == nil)
+        #expect(Mood.forPlaylistName("Night") == nil)
+        #expect(MusicIntentService.matchesPlaylist("Minidisc · Night", term: "night"))
+    }
+
+    @Test func sync_legacyPlaylist_isRenamedInPlaceAndGetsANewCover() async {
+        let h = Harness()
+        h.playlists.existing = [Playlist(id: "legacy-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100)]
+        h.preferences.setPlaylistId("legacy-night", mood: .night, serverId: h.serverId)
+        h.preferences.setHasCover(mood: .night, serverId: h.serverId)
+
+        _ = await h.service.rebuildNow(serverId: h.serverId)
+
+        #expect(h.playlists.renamed.map(\.id) == ["legacy-night"])
+        #expect(h.playlists.renamed.map(\.name) == [Mood.night.playlistName])
+        #expect(h.playlists.replacements.contains { $0.playlistId == "legacy-night" })
+        #expect(!h.playlists.created.contains(Mood.night.playlistName))
+        #expect(h.playlists.existing.filter { Mood.forPlaylistName($0.name) == .night }.map(\.id) == ["legacy-night"])
+        #expect(h.covers.applied.contains { $0.playlistId == "legacy-night" })
+        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == "legacy-night")
+    }
+
+    @Test func sync_renameFails_stillReusesTheLegacyPlaylist() async {
+        let h = Harness()
+        h.playlists.failRenames = true
+        h.playlists.existing = [Playlist(id: "legacy-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100)]
+
+        let outcome = await h.service.rebuildNow(serverId: h.serverId)
+
+        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
+        #expect(h.playlists.replacements.contains { $0.playlistId == "legacy-night" })
+        #expect(!h.playlists.created.contains(Mood.night.playlistName))
+    }
+
+    @Test func sync_currentAndLegacyBothPresent_prefersCurrentAndRenamesNothing() async {
+        let h = Harness()
+        h.playlists.existing = [
+            Playlist(id: "a-legacy-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100),
+            Playlist(id: "b-current-night", name: Mood.night.playlistName, songCount: 5, duration: 100)
+        ]
+
+        _ = await h.service.rebuildNow(serverId: h.serverId)
+
+        #expect(h.playlists.replacements.contains { $0.playlistId == "b-current-night" })
+        #expect(!h.playlists.replacements.contains { $0.playlistId == "a-legacy-night" })
+        #expect(h.playlists.renamed.isEmpty)
+    }
+
+    @Test func sync_otherUsersLegacyPlaylist_isNotRenamedOrReused() async {
+        let h = Harness()
+        let playlists = h.playlists
+        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me", providerFactory: { ProviderStub() }, preferences: h.preferences)
+        playlists.existing = [Playlist(id: "shared-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100, owner: "someone-else")]
+
+        _ = await service.rebuildNow(serverId: h.serverId)
+
+        #expect(playlists.renamed.isEmpty)
+        #expect(!playlists.replacements.contains { $0.playlistId == "shared-night" })
+        #expect(playlists.created.contains(Mood.night.playlistName))
+    }
+
+    @Test func discovery_findsLegacyPlaylistWithoutWritingToTheServer() async throws {
+        let h = Harness()
+        h.preferences.automaticGenerationEnabled = false
+        h.playlists.existing = [Playlist(id: "legacy-focus", name: Mood.focus.legacyPlaylistName, songCount: 5, duration: 100, coverArt: "cover")]
+
+        let found = try await h.service.fetchPlaylists(serverId: h.serverId)
+
+        #expect(found == [MoodPlaylist(mood: .focus, id: "legacy-focus", coverArtId: "cover")])
+        #expect(h.playlists.renamed.isEmpty)
+        #expect(h.playlists.replacements.isEmpty)
+    }
+
+    @Test func deletion_removesOwnedLegacyPlaylistsToo() async {
+        let h = Harness()
+        let playlists = h.playlists
+        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me", providerFactory: { nil }, preferences: h.preferences)
+        playlists.existing = [
+            Playlist(id: "current-night", name: Mood.night.playlistName, songCount: 4, duration: 100, owner: "me"),
+            Playlist(id: "legacy-chill", name: Mood.chill.legacyPlaylistName, songCount: 4, duration: 100, owner: "me"),
+            Playlist(id: "shared-legacy", name: Mood.chill.legacyPlaylistName, songCount: 4, duration: 100, owner: "someone-else")
+        ]
+
+        #expect(await service.deletePlaylists(serverId: h.serverId) == .finished(deleted: 2, failed: 0))
+        #expect(Set(playlists.deleted) == ["current-night", "legacy-chill"])
     }
 }

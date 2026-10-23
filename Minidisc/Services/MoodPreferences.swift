@@ -88,6 +88,11 @@ nonisolated final class MoodPreferences: Sendable {
         userDefaults.set(true, forKey: Self.coverKey(mood, serverId))
     }
 
+    /// Makes the next sync render the generated cover again, e.g. after the baked-in title changed.
+    func clearHasCover(mood: Mood, serverId: String) {
+        userDefaults.removeObject(forKey: Self.coverKey(mood, serverId))
+    }
+
     func lastSource(serverId: String) -> MoodSourceKind? {
         userDefaults.string(forKey: Self.lastSourceKey(serverId))
             .flatMap(MoodSourceKind.init(rawValue:))

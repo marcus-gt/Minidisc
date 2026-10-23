@@ -13,9 +13,11 @@ final actor MockPlaylistSyncClient: PlaylistSyncClient {
 
     var getPlaylistsError: Error?
     var createPlaylistError: Error?
+    var renamePlaylistError: Error?
 
     private(set) var getPlaylistsCalls: Int = 0
     private(set) var createPlaylistCalls: [(name: String?, playlistId: String?, songIds: [String])] = []
+    private(set) var renameCalls: [(id: String, name: String)] = []
 
     private var createCount = 0
 
@@ -39,6 +41,14 @@ final actor MockPlaylistSyncClient: PlaylistSyncClient {
             playlists.append(Playlist(id: returnId, name: name ?? "", songCount: songIds.count, duration: 0))
         }
         return PlaylistWithSongs(id: returnId, name: name ?? "", songCount: songIds.count, duration: 0)
+    }
+
+    func renamePlaylist(id: String, to name: String) async throws {
+        if let err = renamePlaylistError { throw err }
+        renameCalls.append((id: id, name: name))
+        playlists = playlists.map {
+            $0.id == id ? Playlist(id: $0.id, name: name, songCount: $0.songCount, duration: $0.duration, owner: $0.owner, coverArt: $0.coverArt) : $0
+        }
     }
 }
 
@@ -69,9 +79,10 @@ private func makePrefs() -> WrappedPreferences {
 private func makeService(
     mock: MockPlaylistSyncClient,
     stats: StatsService,
-    prefs: WrappedPreferences
+    prefs: WrappedPreferences,
+    owner: String? = nil
 ) -> WrappedPlaylistService {
-    WrappedPlaylistService(clientFactory: { mock }, statsService: stats, preferences: prefs)
+    WrappedPlaylistService(clientFactory: { mock }, statsService: stats, preferences: prefs, owner: owner)
 }
 
 private func makeEvent(
@@ -126,7 +137,7 @@ struct WrappedPlaylistServiceTests {
         let creates = await mock.createPlaylistCalls
         // 2 calls: first creates the empty playlist, second replaces it
         #expect(creates.count == 2)
-        #expect(creates[0].name == "Minidisc Wrapped 2026")
+        #expect(creates[0].name == "maekster Wrapped 2026")
         #expect(creates[0].playlistId == nil)
         #expect(creates[0].songIds.isEmpty)
         #expect(creates[1].name == nil)
@@ -320,7 +331,7 @@ struct WrappedPlaylistServiceTests {
 
     @Test func cachedId_stillOnServer_isReused() async throws {
         let mock = MockPlaylistSyncClient()
-        await mock.seedPlaylists([Playlist(id: "pl-live", name: "Minidisc Wrapped 2026", songCount: 0, duration: 0)])
+        await mock.seedPlaylists([Playlist(id: "pl-live", name: "maekster Wrapped 2026", songCount: 0, duration: 0)])
         let stats = try makeStats()
         let prefs = makePrefs()
         let service = makeService(mock: mock, stats: stats, prefs: prefs)
@@ -353,7 +364,7 @@ struct WrappedPlaylistServiceTests {
 
     @Test func fetchYearlyPlaylists_currentYearPlaylistPresent_leavesMarkersIntact() async throws {
         let mock = MockPlaylistSyncClient()
-        await mock.seedPlaylists([Playlist(id: "pl-live", name: "Minidisc Wrapped 2026", songCount: 0, duration: 0)])
+        await mock.seedPlaylists([Playlist(id: "pl-live", name: "maekster Wrapped 2026", songCount: 0, duration: 0)])
         let stats = try makeStats()
         let prefs = makePrefs()
         let service = makeService(mock: mock, stats: stats, prefs: prefs)
@@ -368,10 +379,140 @@ struct WrappedPlaylistServiceTests {
     }
 }
 
+// MARK: - Legacy names
+
+@Suite("WrappedPlaylistService legacy Minidisc names")
+struct WrappedLegacyPlaylistNameTests {
+
+    @Test func year_parsesCurrentAndLegacyNamesOnly() {
+        #expect(WrappedPlaylistService.playlistName(year: 2026) == "maekster Wrapped 2026")
+        #expect(WrappedPlaylistService.year(fromPlaylistName: "maekster Wrapped 2026") == 2026)
+        #expect(WrappedPlaylistService.year(fromPlaylistName: "Minidisc Wrapped 2024") == 2024)
+        #expect(WrappedPlaylistService.year(fromPlaylistName: "Minidisc Wrapped best of") == nil)
+        #expect(WrappedPlaylistService.year(fromPlaylistName: "Wrapped 2026") == nil)
+    }
+
+    @Test func sync_currentYearLegacyPlaylist_isRenamedAndReused() async throws {
+        let mock = MockPlaylistSyncClient()
+        await mock.seedPlaylists([Playlist(id: "pl-legacy", name: "Minidisc Wrapped 2026", songCount: 0, duration: 0)])
+        let stats = try makeStats()
+        let prefs = makePrefs()
+        let service = makeService(mock: mock, stats: stats, prefs: prefs)
+        await stats.recordPlayback(makeEvent(trackId: "t1", timestamp: wDate(year: 2026, month: 3, day: 1)))
+
+        let result = await service.runYearlyPlaylistSyncIfNeeded(serverId: "srv", calendar: wrappedCal, currentDate: testNow)
+
+        #expect(result == .updated(tracksCount: 1))
+        let renames = await mock.renameCalls
+        #expect(renames.map(\.id) == ["pl-legacy"])
+        #expect(renames.map(\.name) == ["maekster Wrapped 2026"])
+        let creates = await mock.createPlaylistCalls
+        #expect(creates.allSatisfy { $0.playlistId == "pl-legacy" })
+        #expect(await mock.playlists.map(\.name) == ["maekster Wrapped 2026"])
+        #expect(prefs.playlistId(year: 2026, serverId: "srv") == "pl-legacy")
+    }
+
+    @Test func sync_cachedLegacyPlaylist_isRenamed() async throws {
+        let mock = MockPlaylistSyncClient()
+        await mock.seedPlaylists([Playlist(id: "pl-legacy", name: "Minidisc Wrapped 2026", songCount: 0, duration: 0)])
+        let stats = try makeStats()
+        let prefs = makePrefs()
+        prefs.setPlaylistId("pl-legacy", year: 2026, serverId: "srv")
+        let service = makeService(mock: mock, stats: stats, prefs: prefs)
+        await stats.recordPlayback(makeEvent(trackId: "t1", timestamp: wDate(year: 2026, month: 3, day: 1)))
+
+        _ = await service.runYearlyPlaylistSyncIfNeeded(serverId: "srv", calendar: wrappedCal, currentDate: testNow)
+
+        #expect(await mock.renameCalls.map(\.id) == ["pl-legacy"])
+        #expect(await mock.createPlaylistCalls.allSatisfy { $0.playlistId == "pl-legacy" })
+    }
+
+    @Test func sync_pastYearLegacyPlaylists_areRenamed() async throws {
+        let mock = MockPlaylistSyncClient()
+        await mock.seedPlaylists([
+            Playlist(id: "pl-2024", name: "Minidisc Wrapped 2024", songCount: 100, duration: 0),
+            Playlist(id: "pl-2025", name: "Minidisc Wrapped 2025", songCount: 100, duration: 0),
+            Playlist(id: "pl-mix", name: "Minidisc · My favourites", songCount: 10, duration: 0)
+        ])
+        let stats = try makeStats()
+        let service = makeService(mock: mock, stats: stats, prefs: makePrefs())
+        await stats.recordPlayback(makeEvent(trackId: "t1", timestamp: wDate(year: 2026, month: 3, day: 1)))
+
+        _ = await service.runYearlyPlaylistSyncIfNeeded(serverId: "srv", calendar: wrappedCal, currentDate: testNow)
+
+        let renamed = Dictionary(uniqueKeysWithValues: await mock.renameCalls.map { ($0.id, $0.name) })
+        #expect(renamed == ["pl-2024": "maekster Wrapped 2024", "pl-2025": "maekster Wrapped 2025"])
+    }
+
+    @Test func sync_pastYearLegacyDuplicateOfCurrentName_isLeftAlone() async throws {
+        let mock = MockPlaylistSyncClient()
+        await mock.seedPlaylists([
+            Playlist(id: "pl-2025-new", name: "maekster Wrapped 2025", songCount: 100, duration: 0),
+            Playlist(id: "pl-2025-old", name: "Minidisc Wrapped 2025", songCount: 100, duration: 0)
+        ])
+        let stats = try makeStats()
+        let service = makeService(mock: mock, stats: stats, prefs: makePrefs())
+        await stats.recordPlayback(makeEvent(trackId: "t1", timestamp: wDate(year: 2026, month: 3, day: 1)))
+
+        _ = await service.runYearlyPlaylistSyncIfNeeded(serverId: "srv", calendar: wrappedCal, currentDate: testNow)
+
+        #expect(await mock.renameCalls.isEmpty)
+    }
+
+    @Test func sync_otherUsersLegacyPlaylists_areNotRenamed() async throws {
+        let mock = MockPlaylistSyncClient()
+        await mock.seedPlaylists([
+            Playlist(id: "pl-theirs", name: "Minidisc Wrapped 2025", songCount: 100, duration: 0, owner: "someone-else"),
+            Playlist(id: "pl-mine", name: "Minidisc Wrapped 2024", songCount: 100, duration: 0, owner: "me")
+        ])
+        let stats = try makeStats()
+        let service = makeService(mock: mock, stats: stats, prefs: makePrefs(), owner: "me")
+        await stats.recordPlayback(makeEvent(trackId: "t1", timestamp: wDate(year: 2026, month: 3, day: 1)))
+
+        _ = await service.runYearlyPlaylistSyncIfNeeded(serverId: "srv", calendar: wrappedCal, currentDate: testNow)
+
+        #expect(await mock.renameCalls.map(\.id) == ["pl-mine"])
+    }
+
+    @Test func sync_renameFails_stillUpdatesWithoutADuplicate() async throws {
+        let mock = MockPlaylistSyncClient()
+        await mock.seedPlaylists([Playlist(id: "pl-legacy", name: "Minidisc Wrapped 2026", songCount: 0, duration: 0)])
+        await mock.setRenamePlaylistError(WrappedTestError.generic)
+        let stats = try makeStats()
+        let prefs = makePrefs()
+        let service = makeService(mock: mock, stats: stats, prefs: prefs)
+        await stats.recordPlayback(makeEvent(trackId: "t1", timestamp: wDate(year: 2026, month: 3, day: 1)))
+
+        let result = await service.runYearlyPlaylistSyncIfNeeded(serverId: "srv", calendar: wrappedCal, currentDate: testNow)
+
+        #expect(result == .updated(tracksCount: 1))
+        #expect(await mock.createPlaylistCalls.allSatisfy { $0.playlistId == "pl-legacy" })
+        #expect(prefs.playlistId(year: 2026, serverId: "srv") == "pl-legacy")
+    }
+
+    @Test func fetchYearlyPlaylists_includesLegacyAndPrefersCurrentPerYear() async throws {
+        let mock = MockPlaylistSyncClient()
+        await mock.seedPlaylists([
+            Playlist(id: "pl-2024", name: "Minidisc Wrapped 2024", songCount: 100, duration: 0),
+            Playlist(id: "pl-2025-new", name: "maekster Wrapped 2025", songCount: 100, duration: 0),
+            Playlist(id: "pl-2025-old", name: "Minidisc Wrapped 2025", songCount: 100, duration: 0),
+            Playlist(id: "pl-other", name: "Road trip", songCount: 10, duration: 0)
+        ])
+        let service = makeService(mock: mock, stats: try makeStats(), prefs: makePrefs())
+
+        let yearly = await service.fetchYearlyPlaylists(serverId: "srv", calendar: wrappedCal, currentDate: testNow)
+
+        #expect(yearly.map(\.year) == [2025, 2024])
+        #expect(yearly.map(\.id) == ["pl-2025-new", "pl-2024"])
+        #expect(await mock.renameCalls.isEmpty)
+    }
+}
+
 // MARK: - MockPlaylistSyncClient mutation helpers
 
 extension MockPlaylistSyncClient {
     func setGetPlaylistsError(_ error: Error?) { getPlaylistsError = error }
     func setCreatePlaylistError(_ error: Error?) { createPlaylistError = error }
+    func setRenamePlaylistError(_ error: Error?) { renamePlaylistError = error }
     func seedPlaylists(_ list: [Playlist]) { playlists = list }
 }

@@ -145,8 +145,8 @@ struct WrappedYearTransitionTests {
         #expect(creates.count == 4)
         let createCalls = creates.filter { $0.playlistId == nil }
         #expect(createCalls.count == 2)
-        #expect(createCalls[0].name == "Minidisc Wrapped 2025")
-        #expect(createCalls[1].name == "Minidisc Wrapped 2026")
+        #expect(createCalls[0].name == "maekster Wrapped 2025")
+        #expect(createCalls[1].name == "maekster Wrapped 2026")
 
         let replaceCalls = creates.filter { $0.playlistId != nil }
         #expect(replaceCalls.count == 2)

@@ -89,7 +89,7 @@ struct MusicIntentService {
     nonisolated static func matchesPlaylist(_ name: String, term: String) -> Bool {
         if name.localizedStandardContains(term) { return true }
         return Mood.allCases.contains {
-            $0.playlistName == name && String(localized: $0.title).localizedStandardContains(term)
+            $0.isPlaylistName(name) && String(localized: $0.title).localizedStandardContains(term)
         }
     }
 

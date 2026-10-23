@@ -21,7 +21,7 @@ struct DiscoverView: View {
     private var visibleMoods: [MoodPlaylist] {
         guard !isOnline else { return availableMoods }
         return (container?.offlineLibrary.snapshot.playlists ?? []).compactMap { playlist in
-            guard let mood = Mood.allCases.first(where: { $0.playlistName == playlist.name }) else { return nil }
+            guard let mood = Mood.forPlaylistName(playlist.name) else { return nil }
             return MoodPlaylist(mood: mood, id: playlist.id, coverArtId: playlist.coverArt)
         }
     }
@@ -292,8 +292,7 @@ struct DiscoverView: View {
 
     private var wrappedItems: [WrappedCarouselItem] {
         let playlists = isOnline ? yearlyPlaylists : (container?.offlineLibrary.snapshot.playlists ?? []).compactMap { playlist -> WrappedYearlyPlaylist? in
-            let prefix = WrappedPlaylistService.wrappedPlaylistNamePrefix
-            guard playlist.name.hasPrefix(prefix), let year = Int(playlist.name.dropFirst(prefix.count)) else { return nil }
+            guard let year = WrappedPlaylistService.year(fromPlaylistName: playlist.name) else { return nil }
             return WrappedYearlyPlaylist(id: playlist.id, year: year, name: playlist.name, coverArtId: playlist.coverArt)
         }
         var items = playlists.map(WrappedCarouselItem.yearly)
