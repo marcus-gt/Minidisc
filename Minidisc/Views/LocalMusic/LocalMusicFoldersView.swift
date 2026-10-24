@@ -35,7 +35,7 @@ struct LocalMusicFoldersView: View {
                     .disabled(library.isRefreshing)
                 } footer: {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Your files stay in place. Removing a folder from Minidisc does not delete them.", tableName: "LocalMusic")
+                        Text("Your files stay in place. Removing a folder from maekster does not delete them.", tableName: "LocalMusic")
                         Text("Download cloud files in Files before playing them.", tableName: "LocalMusic")
                     }
                 }

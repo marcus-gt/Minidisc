@@ -9,8 +9,7 @@ struct WrappedYearlyListView: View {
     private var visiblePlaylists: [WrappedYearlyPlaylist] {
         guard container?.serverState.isOnline == false else { return playlists }
         return (container?.offlineLibrary.snapshot.playlists ?? []).compactMap { playlist in
-            let prefix = WrappedPlaylistService.wrappedPlaylistNamePrefix
-            guard playlist.name.hasPrefix(prefix), let year = Int(playlist.name.dropFirst(prefix.count)) else { return nil }
+            guard let year = WrappedPlaylistService.year(fromPlaylistName: playlist.name) else { return nil }
             return WrappedYearlyPlaylist(id: playlist.id, year: year, name: playlist.name, coverArtId: playlist.coverArt)
         }
     }

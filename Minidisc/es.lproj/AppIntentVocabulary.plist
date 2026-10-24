@@ -9,8 +9,8 @@
 			<string>INSearchForMediaIntent</string>
 			<key>IntentExamples</key>
 			<array>
-				<string>Busca Daft Punk en Minidisc</string>
-				<string>Busca la lista de reproducción Discover Weekly en Minidisc</string>
+				<string>Busca Daft Punk en maekster</string>
+				<string>Busca la lista de reproducción Discover Weekly en maekster</string>
 			</array>
 		</dict>
 		<dict>
@@ -18,8 +18,8 @@
 			<string>INPlayMediaIntent</string>
 			<key>IntentExamples</key>
 			<array>
-				<string>Reproduce música en Minidisc</string>
-				<string>Reproduce la lista de reproducción Discover Weekly en Minidisc</string>
+				<string>Reproduce música en maekster</string>
+				<string>Reproduce la lista de reproducción Discover Weekly en maekster</string>
 			</array>
 		</dict>
 	</array>

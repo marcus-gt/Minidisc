@@ -71,7 +71,7 @@ struct MusicIntentTests {
 
     @Test func exactTitlesPrecedePrefixMatches() {
         #expect(MusicIntentService.matchRank("Été", term: "ete") < MusicIntentService.matchRank("Été indien", term: "ete"))
-        #expect(MusicIntentService.matchesPlaylist("Minidisc · Night", term: "night"))
+        #expect(MusicIntentService.matchesPlaylist("maekster · Night", term: "night"))
         #expect(!MusicIntentService.matchesPlaylist("My Favorites", term: "night"))
     }
 

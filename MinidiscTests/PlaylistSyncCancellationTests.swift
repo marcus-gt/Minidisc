@@ -7,7 +7,7 @@ import Testing
 private actor CancellationBlockingPlaylistClient: PlaylistSyncClient {
     private let livePlaylist = Playlist(
         id: "pl-existing",
-        name: "Minidisc Wrapped 2026",
+        name: "maekster Wrapped 2026",
         songCount: 0,
         duration: 0
     )
@@ -34,10 +34,15 @@ private actor CancellationBlockingPlaylistClient: PlaylistSyncClient {
         try await Task.sleep(for: .seconds(60))
         return PlaylistWithSongs(
             id: "pl-existing",
-            name: "Minidisc Wrapped 2026",
+            name: "maekster Wrapped 2026",
             songCount: songIds.count,
             duration: 0
         )
+    }
+
+    func renamePlaylist(id: String, to name: String) async throws {
+        _ = id
+        _ = name
     }
 
     func waitUntilWriteStarted() async {
@@ -94,6 +99,11 @@ private actor RecordingPlaylistClient: MoodPlaylistClient {
     }
 
     func deletePlaylist(id: String) async throws {}
+
+    func renamePlaylist(id: String, to name: String) async throws {
+        _ = id
+        _ = name
+    }
 
     func writes() -> Int {
         writeCount

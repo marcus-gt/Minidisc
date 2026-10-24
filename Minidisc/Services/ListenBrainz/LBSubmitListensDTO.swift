@@ -48,7 +48,7 @@ nonisolated struct LBListenPayload: Encodable {
 }
 
 /// Constant additional_info fields sent with every submission.
-/// duration_ms is included when known; submission_client and media_player are always "Minidisc".
+/// duration_ms is included when known; submission_client and media_player are always `MaeksterBrand.name`.
 nonisolated struct LBAdditionalInfo: Encodable {
     enum CodingKeys: String, CodingKey {
         case durationMs = "duration_ms"
@@ -60,8 +60,8 @@ nonisolated struct LBAdditionalInfo: Encodable {
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         if let d = durationMs { try container.encode(d, forKey: .durationMs) }
-        try container.encode("Minidisc", forKey: .submissionClient)
-        try container.encode("Minidisc", forKey: .mediaPlayer)
+        try container.encode(MaeksterBrand.name, forKey: .submissionClient)
+        try container.encode(MaeksterBrand.name, forKey: .mediaPlayer)
     }
 }
 

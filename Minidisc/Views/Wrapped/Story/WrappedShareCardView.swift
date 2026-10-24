@@ -53,7 +53,7 @@ struct WrappedShareCardView: View {
 
                 Spacer()
 
-                Text("Minidisc")
+                Text(verbatim: "maekster")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.55))
             }

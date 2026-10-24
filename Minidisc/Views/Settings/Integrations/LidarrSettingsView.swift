@@ -49,7 +49,7 @@ struct LidarrSettingsView: View {
 
     private var aboutSection: some View {
         Section {
-            Text("Lidarr manages your music collection and downloads new releases for you. Connect it to check its status from Minidisc.")
+            Text("Lidarr manages your music collection and downloads new releases for you. Connect it to check its status from maekster.")
                 .font(.minidiscCaption)
                 .foregroundStyle(.secondary)
             Link("Learn about Lidarr →", destination: URL(string: "https://lidarr.audio")!)
@@ -144,7 +144,7 @@ struct LidarrSettingsView: View {
             Button("Disconnect", role: .destructive) { Task { await disconnect() } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Minidisc forgets the address and the API key. Your Lidarr instance is not changed.")
+            Text("maekster forgets the address and the API key. Your Lidarr instance is not changed.")
         }
     }
 

@@ -2,7 +2,7 @@ import AppIntents
 
 struct PlayMinidiscMusicIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Play Music"
-    static let description = IntentDescription("Play a song, album, artist or playlist from your Minidisc library.")
+    static let description = IntentDescription("Play a song, album, artist or playlist from your maekster library.")
     static var supportedModes: IntentModes { .background }
     @Parameter(title: "Music") var music: MinidiscMusicEntity
     @Parameter(title: "Shuffle", default: false) var shuffle: Bool

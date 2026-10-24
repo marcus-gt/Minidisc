@@ -26,7 +26,7 @@ struct LidarrLibraryView: View {
                 ContentUnavailableView {
                     Label("You're Offline", systemImage: "wifi.slash")
                 } description: {
-                    Text("Reconnect to browse Lidarr and manage your music library. Your offline music is still available in Minidisc.")
+                    Text("Reconnect to browse Lidarr and manage your music library. Your offline music is still available in maekster.")
                 } actions: {
                     Button("Retry") { Task { await load() } }
                         .buttonStyle(.bordered)

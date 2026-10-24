@@ -313,7 +313,7 @@ actor ExternalArtistImageResolver {
         guard let url = components.url else { return nil }
 
         var req = URLRequest(url: url)
-        req.setValue("Minidisc/1.0 (https://github.com/Loriage/Minidisc)", forHTTPHeaderField: "User-Agent")
+        req.setValue(MaeksterBrand.userAgent, forHTTPHeaderField: "User-Agent")
         req.timeoutInterval = 10
 
         do {
@@ -354,7 +354,7 @@ actor ExternalArtistImageResolver {
             return nil
         }
         var req = URLRequest(url: reqURL)
-        req.setValue("Minidisc/1.0 (https://github.com/Loriage/Minidisc)", forHTTPHeaderField: "User-Agent")
+        req.setValue(MaeksterBrand.userAgent, forHTTPHeaderField: "User-Agent")
         req.timeoutInterval = 10
 
         do {

@@ -18,7 +18,7 @@ nonisolated enum WrappedYearPalette {
                 Color(red: 0.925, green: 0.251, blue: 0.478), // #EC407A hot pink
                 Color(red: 0.157, green: 0.208, blue: 0.576), // #283593 deep indigo
             ]
-        case 2: // 2026 — Minidisc identity (Orange-Red brand)
+        case 2: // 2026 — maekster identity (Orange-Red brand)
             return [
                 Color(red: 0.910, green: 0.259, blue: 0.055), // #E8420E orange-red base
                 Color(red: 0.718, green: 0.184, blue: 0.039), // #B72F0A deep orange-red

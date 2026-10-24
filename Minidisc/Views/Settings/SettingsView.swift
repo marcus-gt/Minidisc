@@ -125,15 +125,7 @@ struct SettingsView: View {
 
     private func aboutSection() -> some View {
         Section {
-            Link(destination: MinidiscURLs.appStoreReview) {
-                Label("Leave a Review", systemImage: "star.fill")
-            }
-            .foregroundStyle(.primary)
-            .accessibilityIdentifier("settings-leave-review")
-            ShareLink(item: MinidiscURLs.appStore) {
-                Label("Share the App", systemImage: "square.and.arrow.up")
-            }
-            .foregroundStyle(.primary)
+            // "Leave a Review" and "Share the App" return once maekster has its own App Store listing.
             Link(destination: MinidiscURLs.repoIssues) {
                 Label("Report an Issue", systemImage: "exclamationmark.bubble")
             }
@@ -493,8 +485,8 @@ private struct LibraryIndexStorageSection: View {
             "The album count will be determined after metadata synchronization."
         }
         let warning = activeServerAlbumCount >= LibraryIndexMaintenanceService.largeLibraryAlbumThreshold
-            ? " This is a large library; keep Minidisc open and connected to Wi-Fi. You can cancel and resume later."
-            : " Keep Minidisc open until it finishes. You can cancel and resume later."
+            ? " This is a large library; keep maekster open and connected to Wi-Fi. You can cancel and resume later."
+            : " Keep maekster open until it finishes. You can cancel and resume later."
         return "\(scope) All metadata will be synchronized, then album recommendations will be precomputed one at a time.\(warning)"
     }
 
@@ -893,7 +885,9 @@ private struct ApplicationSettingsView: View {
                 Text("Choose which sections appear on Discover and their order.")
             }
             MoodPlaylistSettingsSection()
-            SiriSettingsSection()
+            if SiriSettingsSection.isAvailable {
+                SiriSettingsSection()
+            }
             ApplicationDebugSection()
         }
         .formStyle(.grouped)

@@ -697,60 +697,60 @@
         }
       }
     },
-    "This file is unavailable. Download or restore it in Files, then refresh Minidisc.": {
+    "This file is unavailable. Download or restore it in Files, then refresh maekster.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Datei ist nicht verfügbar. Lade sie in Dateien herunter oder stelle sie wieder her und aktualisiere dann Minidisc."
+            "value": "Diese Datei ist nicht verfügbar. Lade sie in Dateien herunter oder stelle sie wieder her und aktualisiere dann maekster."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Αυτό το αρχείο δεν είναι διαθέσιμο. Κατεβάστε το ή επαναφέρετέ το στα Αρχεία και ανανεώστε το Minidisc."
+            "value": "Αυτό το αρχείο δεν είναι διαθέσιμο. Κατεβάστε το ή επαναφέρετέ το στα Αρχεία και ανανεώστε το maekster."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This file is unavailable. Download or restore it in Files, then refresh Minidisc."
+            "value": "This file is unavailable. Download or restore it in Files, then refresh maekster."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este archivo no está disponible. Descárgalo o restáuralo en Archivos y actualiza Minidisc."
+            "value": "Este archivo no está disponible. Descárgalo o restáuralo en Archivos y actualiza maekster."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce fichier est indisponible. Téléchargez-le ou restaurez-le dans Fichiers, puis actualisez Minidisc."
+            "value": "Ce fichier est indisponible. Téléchargez-le ou restaurez-le dans Fichiers, puis actualisez maekster."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questo file non è disponibile. Scaricalo o ripristinalo in File, poi aggiorna Minidisc."
+            "value": "Questo file non è disponibile. Scaricalo o ripristinalo in File, poi aggiorna maekster."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このファイルを利用できません。「ファイル」でダウンロードまたは復元してから、Minidiscを更新してください。"
+            "value": "このファイルを利用できません。「ファイル」でダウンロードまたは復元してから、maeksterを更新してください。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "此文件不可用。请在“文件”中下载或恢复它，然后刷新 Minidisc。"
+            "value": "此文件不可用。请在“文件”中下载或恢复它，然后刷新 maekster。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "此檔案無法使用。請在「檔案」中下載或回復它，然後重新整理 Minidisc。"
+            "value": "此檔案無法使用。請在「檔案」中下載或回復它，然後重新整理 maekster。"
           }
         }
       }
@@ -871,60 +871,60 @@
         }
       }
     },
-    "Your files stay in place. Removing a folder from Minidisc does not delete them.": {
+    "Your files stay in place. Removing a folder from maekster does not delete them.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your files stay in place. Removing a folder from Minidisc does not delete them."
+            "value": "Your files stay in place. Removing a folder from maekster does not delete them."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vos fichiers restent à leur emplacement. Retirer un dossier de Minidisc ne les supprime pas."
+            "value": "Vos fichiers restent à leur emplacement. Retirer un dossier de maekster ne les supprime pas."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Dateien bleiben an ihrem Speicherort. Wenn du einen Ordner aus Minidisc entfernst, werden seine Dateien nicht gelöscht."
+            "value": "Deine Dateien bleiben an ihrem Speicherort. Wenn du einen Ordner aus maekster entfernst, werden seine Dateien nicht gelöscht."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Τα αρχεία σας παραμένουν στη θέση τους. Η αφαίρεση ενός φακέλου από το Minidisc δεν τα διαγράφει."
+            "value": "Τα αρχεία σας παραμένουν στη θέση τους. Η αφαίρεση ενός φακέλου από το maekster δεν τα διαγράφει."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tus archivos permanecen en su ubicación. Quitar una carpeta de Minidisc no los elimina."
+            "value": "Tus archivos permanecen en su ubicación. Quitar una carpeta de maekster no los elimina."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I tuoi file restano nella loro posizione. Rimuovere una cartella da Minidisc non li elimina."
+            "value": "I tuoi file restano nella loro posizione. Rimuovere una cartella da maekster non li elimina."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ファイルは元の場所に保存されたままです。Minidiscからフォルダを削除しても、ファイルは削除されません。"
+            "value": "ファイルは元の場所に保存されたままです。maeksterからフォルダを削除しても、ファイルは削除されません。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "文件会保留在原位置。从 Minidisc 移除文件夹不会删除其中的文件。"
+            "value": "文件会保留在原位置。从 maekster 移除文件夹不会删除其中的文件。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "檔案會保留在原位置。從 Minidisc 移除檔案夾不會刪除其中的檔案。"
+            "value": "檔案會保留在原位置。從 maekster 移除檔案夾不會刪除其中的檔案。"
           }
         }
       }

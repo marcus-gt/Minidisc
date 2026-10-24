@@ -20,7 +20,7 @@ struct MinidiscApp: App {
         let intentRuntime = MinidiscRuntime.shared
         AppDependencyManager.shared.add(dependency: intentRuntime)
         BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "app.minidisc.wrapped.monthly-update",
+            forTaskWithIdentifier: "io.github.marcus-gt.maekster.wrapped.monthly-update",
             using: nil,
             launchHandler: Self.handleWrappedUpdateBackgroundTask
         )
@@ -54,7 +54,7 @@ struct MinidiscApp: App {
     }
 
     nonisolated static func scheduleWrappedUpdate() {
-        let request = BGProcessingTaskRequest(identifier: "app.minidisc.wrapped.monthly-update")
+        let request = BGProcessingTaskRequest(identifier: "io.github.marcus-gt.maekster.wrapped.monthly-update")
         request.requiresNetworkConnectivity = true
         request.earliestBeginDate = Date().addingTimeInterval(24 * 3600)
         try? BGTaskScheduler.shared.submit(request)
@@ -315,7 +315,7 @@ private struct AppLaunchFailureView: View {
         ContentUnavailableView {
             Label("Unable to Load", systemImage: "externaldrive.badge.exclamationmark")
         } description: {
-            Text("Minidisc couldn't open its local data. You can try again without restarting the app.")
+            Text("maekster couldn't open its local data. You can try again without restarting the app.")
         } actions: {
             ShareLink(item: diagnosticReport) {
                 Label("Share Diagnostics", systemImage: "square.and.arrow.up")

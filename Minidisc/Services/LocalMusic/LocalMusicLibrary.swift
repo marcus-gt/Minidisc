@@ -35,7 +35,7 @@ nonisolated enum LocalMusicError: Error, LocalizedError, Codable, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .unavailable: String(localized: "This file is unavailable. Download or restore it in Files, then refresh Minidisc.", table: "LocalMusic")
+        case .unavailable: String(localized: "This file is unavailable. Download or restore it in Files, then refresh maekster.", table: "LocalMusic")
         case .folderAccess: String(localized: "This folder is unavailable. Check its location and permissions in Files, or add it again.", table: "LocalMusic")
         case .unsupported: String(localized: "This audio file cannot be played on this device.", table: "LocalMusic")
         }

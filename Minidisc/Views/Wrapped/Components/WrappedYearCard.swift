@@ -17,7 +17,7 @@ struct WrappedYearCard: View {
                 NavigationLink {
                     PlaylistDetailView(
                         playlistId: pid,
-                        name: "Minidisc Wrapped \(yearString)"
+                        name: "maekster Wrapped \(yearString)"
                     )
                 } label: {
                     cardContent
@@ -48,7 +48,7 @@ struct WrappedYearCard: View {
     private var overlayContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Minidisc Wrapped")
+                Text("maekster Wrapped")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                 Spacer()
@@ -87,12 +87,12 @@ struct WrappedYearCard: View {
         } else if let first = firstTrack {
             Text("Your year started with \(first.title)")
         } else {
-            Text("Minidisc Wrapped \(yearString)")
+            Text("maekster Wrapped \(yearString)")
         }
     }
 
     private var accessibilityLabel: String {
-        var label = "Minidisc Wrapped \(yearString)"
+        var label = "maekster Wrapped \(yearString)"
         if let first = firstTrack, let last = lastTrack, first.trackId != last.trackId {
             label += ". Started with \(first.title), ended with \(last.title)"
         } else if let first = firstTrack {

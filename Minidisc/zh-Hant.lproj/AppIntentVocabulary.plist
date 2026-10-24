@@ -9,8 +9,8 @@
 			<string>INSearchForMediaIntent</string>
 			<key>IntentExamples</key>
 			<array>
-				<string>在Minidisc中搜尋Daft Punk</string>
-				<string>在Minidisc中搜尋Discover Weekly播放列表</string>
+				<string>在maekster中搜尋Daft Punk</string>
+				<string>在maekster中搜尋Discover Weekly播放列表</string>
 			</array>
 		</dict>
 		<dict>
@@ -18,8 +18,8 @@
 			<string>INPlayMediaIntent</string>
 			<key>IntentExamples</key>
 			<array>
-				<string>用Minidisc播放音樂</string>
-				<string>用Minidisc播放Discover Weekly播放列表</string>
+				<string>用maekster播放音樂</string>
+				<string>用maekster播放Discover Weekly播放列表</string>
 			</array>
 		</dict>
 	</array>

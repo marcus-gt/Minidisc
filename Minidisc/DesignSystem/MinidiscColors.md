@@ -1,4 +1,4 @@
-# Minidisc Color System
+# maekster Color System
 
 ## Palette overview
 

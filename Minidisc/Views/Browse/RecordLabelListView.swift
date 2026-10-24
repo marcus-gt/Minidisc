@@ -44,7 +44,7 @@ struct RecordLabelListView: View {
             EmptyStateView(
                 systemImage: "hourglass",
                 title: "Still Indexing Your Library",
-                subtitle: "Labels appear once Minidisc has indexed every album. Try again shortly."
+                subtitle: "Labels appear once maekster has indexed every album. Try again shortly."
             )
         case .failed(let error):
             EmptyStateView(

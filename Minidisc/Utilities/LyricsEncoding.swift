@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSonic
 
-// SwiftSonic types are Decodable-only. These retroactive Encodable conformances let Minidisc
+// SwiftSonic types are Decodable-only. These retroactive Encodable conformances let maekster
 // round-trip a LyricsList through JSONEncoder for SwiftData cache persistence.
 // Auto-synthesis is blocked cross-module, so encode(to:) is implemented explicitly
 // using the same key names as SwiftSonic's own CodingKeys.

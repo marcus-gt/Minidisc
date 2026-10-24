@@ -44,7 +44,23 @@ nonisolated enum Mood: String, CaseIterable, Sendable, Identifiable {
     /// among the user's own playlists, and so `fetchMoodPlaylists` can find them again by name.
     var playlistName: String { "\(Self.playlistPrefix)\(rawValue.capitalized)" }
 
-    static let playlistPrefix = "Minidisc · "
+    static let playlistPrefix = "maekster · "
+
+    /// Name used before the rebrand. Servers still hold playlists under it; they stay recognised
+    /// everywhere and are renamed to `playlistName` on the next sync.
+    var legacyPlaylistName: String { "\(Self.legacyPlaylistPrefix)\(rawValue.capitalized)" }
+
+    static let legacyPlaylistPrefix = "Minidisc · "
+
+    /// Whether `name` is this mood's playlist, under the current or the legacy name.
+    func isPlaylistName(_ name: String) -> Bool {
+        name == playlistName || name == legacyPlaylistName
+    }
+
+    /// The mood whose playlist has this name (current or legacy), if any.
+    static func forPlaylistName(_ name: String) -> Mood? {
+        allCases.first { $0.isPlaylistName(name) }
+    }
 
     static let trackCount = 75
 }

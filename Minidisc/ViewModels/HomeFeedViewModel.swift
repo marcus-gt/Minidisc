@@ -199,8 +199,7 @@ final class HomeFeedViewModel {
     }
 
     private nonisolated static func isGeneratedPlaylist(_ playlist: Playlist) -> Bool {
-        if Mood.allCases.contains(where: { $0.playlistName == playlist.name }) { return true }
-        let prefix = WrappedPlaylistService.wrappedPlaylistNamePrefix
-        return playlist.name.hasPrefix(prefix) && Int(playlist.name.dropFirst(prefix.count)) != nil
+        Mood.forPlaylistName(playlist.name) != nil
+            || WrappedPlaylistService.year(fromPlaylistName: playlist.name) != nil
     }
 }

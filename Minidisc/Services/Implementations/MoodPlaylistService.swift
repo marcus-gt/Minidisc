@@ -309,6 +309,7 @@ actor MoodPlaylistService {
         try checkCanContinue(automatic: automatic)
         if let existing = matchingPlaylist(mood, in: playlists, serverId: serverId, owner: owner) {
             preferences.setPlaylistId(existing.id, mood: mood, serverId: serverId)
+            try await renameIfLegacy(existing, mood: mood, serverId: serverId, client: client, automatic: automatic)
             return existing.id
         }
         let created = try await client.createPlaylist(name: mood.playlistName, playlistId: nil, songIds: [])
@@ -317,12 +318,32 @@ actor MoodPlaylistService {
         return created.id
     }
 
+    /// Matches the current and the legacy name, preferring the cached id, then the current name.
     private func matchingPlaylist(_ mood: Mood, in playlists: [Playlist], serverId: String, owner: String?) -> Playlist? {
         let candidates = playlists.filter {
-            $0.name == mood.playlistName && (owner == nil || $0.owner == nil || $0.owner == owner)
+            mood.isPlaylistName($0.name) && (owner == nil || $0.owner == nil || $0.owner == owner)
         }
         let cached = preferences.playlistId(mood: mood, serverId: serverId)
-        return candidates.first(where: { $0.id == cached }) ?? candidates.sorted { $0.id < $1.id }.first
+        return candidates.first(where: { $0.id == cached })
+            ?? candidates.filter { $0.name == mood.playlistName }.sorted { $0.id < $1.id }.first
+            ?? candidates.sorted { $0.id < $1.id }.first
+    }
+
+    /// Renames a playlist that still has the legacy name in place, and lets the next cover step
+    /// redraw the generated cover, which has the name baked in. A failure is logged and ignored:
+    /// the legacy name stays recognised, so nothing is duplicated.
+    private func renameIfLegacy(_ playlist: Playlist, mood: Mood, serverId: String, client: any PlaylistSyncClient, automatic: Bool) async throws {
+        guard playlist.name == mood.legacyPlaylistName else { return }
+        do {
+            try await client.renamePlaylist(id: playlist.id, to: mood.playlistName)
+            try checkCanContinue(automatic: automatic)
+            preferences.clearHasCover(mood: mood, serverId: serverId)
+            Logger.moodPlaylists.info("[MOOD-SYNC] \(mood.rawValue, privacy: .public): renamed legacy playlist id=\(playlist.id, privacy: .public)")
+        } catch {
+            if error is CancellationError { throw CancellationError() }
+            try checkCanContinue(automatic: automatic)
+            Logger.moodPlaylists.warning("[MOOD-SYNC] \(mood.rawValue, privacy: .public): rename of legacy playlist failed: \(error, privacy: .public)")
+        }
     }
 
     /// Discovery is independent of generation: even with automation off, recover playlists
@@ -369,11 +390,10 @@ actor MoodPlaylistService {
             let playlists = try await client.getPlaylists(username: nil)
             try Task.checkCancellation()
             _ = reconcile(playlists, serverId: serverId, owner: owner)
-            let names = Set(Mood.allCases.map(\.playlistName))
             var remaining = playlists
             var deleted = 0
             var failed = 0
-            for playlist in playlists where names.contains(playlist.name)
+            for playlist in playlists where Mood.forPlaylistName(playlist.name) != nil
                 && (owner == nil || playlist.owner == nil || playlist.owner == owner) {
                 try Task.checkCancellation()
                 do {
