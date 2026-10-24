@@ -15,6 +15,8 @@ actor LibraryService: LibraryServiceProtocol {
     private var cachedClient: SwiftSonicClient?
     private var cachedConnectionVersion: ServerConnection.Version?
     private var artistInfoCache: [String: ArtistInfo] = [:]
+    /// What Instant Mix learned about artist fan-out per connection this session (issue #8).
+    private var fanOutMemory: [ServerConnection.Version: InstantMixFanOutMemory] = [:]
 
     init(
         serverService: any ServerServiceProtocol,
@@ -792,6 +794,7 @@ actor LibraryService: LibraryServiceProtocol {
         try Task.checkCancellation()
         let tStart = Date()
         let c = try await client()
+        let connectionVersion = await serverService.activeConnectionVersion()
         try Task.checkCancellation()
 
         // 1) Base similar songs from the seed. AudioMuse clusters tightly, so this alone tends to
@@ -821,36 +824,32 @@ actor LibraryService: LibraryServiceProtocol {
             fanArtists.append(aid)
         }
         fanArtists = Array(fanArtists.prefix(Self.instantMixFanOutArtists))
+        if let connectionVersion {
+            fanArtists = fanOutMemory[connectionVersion, default: InstantMixFanOutMemory()].candidates(fanArtists)
+        }
 
         let tFan = Date()
-        var expansions: [Song] = []
-        var callMs: [Int] = []
-        try await withThrowingTaskGroup(of: (Int, [Song]).self) { group in
-            defer { group.cancelAll() }
-            for aid in fanArtists {
-                try Task.checkCancellation()
-                group.addTask {
-                    try Task.checkCancellation()
-                    let t = Date()
-                    do {
-                        let songs = try await c.getSimilarSongs2(
-                            id: aid,
-                            count: Self.instantMixFanOutCount
-                        )
-                        try Task.checkCancellation()
-                        return (Int(Date().timeIntervalSince(t) * 1000), songs)
-                    } catch let cancellation as CancellationError {
-                        throw cancellation
-                    } catch {
-                        try Task.checkCancellation()
-                        return (Int(Date().timeIntervalSince(t) * 1000), [])
-                    }
-                }
-            }
-            for try await (ms, songs) in group {
-                try Task.checkCancellation()
-                callMs.append(ms)
-                expansions.append(contentsOf: songs)
+        let fanOut = try await Self.runInstantMixFanOut(
+            artists: fanArtists,
+            maxInFlight: Self.instantMixFanOutMaxInFlight,
+            probeCount: Self.instantMixFanOutProbeCount
+        ) { aid in
+            try await c.getSimilarSongs2(id: aid, count: Self.instantMixFanOutCount)
+        }
+        let expansions = fanOut.songs
+        let callMs = fanOut.callMs
+        if !fanArtists.isEmpty, let connectionVersion,
+           await serverService.activeConnectionVersion() == connectionVersion {
+            var memory = fanOutMemory[connectionVersion, default: InstantMixFanOutMemory()]
+            let wasDisabled = memory.isDisabled
+            memory.record(
+                emptyArtists: fanOut.emptyArtists,
+                probeFoundNothing: fanOut.probeFoundNothing,
+                productive: !fanOut.songs.isEmpty
+            )
+            fanOutMemory[connectionVersion] = memory
+            if memory.isDisabled, !wasDisabled {
+                Logger.library.info("[MIX] artist similarity returned nothing twice in a row; skipping the fan-out for this server")
             }
         }
         try Task.checkCancellation()
@@ -883,6 +882,68 @@ actor LibraryService: LibraryServiceProtocol {
 
     // Bound Instant Mix fan-out to limit server load.
     nonisolated private static let instantMixFanOutArtists = 8
+    nonisolated static let instantMixFanOutMaxInFlight = 3
+    nonisolated static let instantMixFanOutProbeCount = 3
+
+    /// Fetches similar songs for each fan-out artist, at most `maxInFlight` at a time. The first
+    /// `probeCount` artists go first: if none of them returns songs, the rest are skipped, because
+    /// each request can cost the server many failing lookups. `probeFoundNothing` is true only when
+    /// every probe succeeded and was empty; a failed probe proves nothing about the server.
+    nonisolated static func runInstantMixFanOut(
+        artists: [String],
+        maxInFlight: Int,
+        probeCount: Int,
+        fetch: @escaping @Sendable (String) async throws -> [Song]
+    ) async throws -> (songs: [Song], callMs: [Int], emptyArtists: [String], probeFoundNothing: Bool) {
+        guard !artists.isEmpty else { return ([], [], [], false) }
+        let width = max(1, maxInFlight)
+        var songs: [Song] = []
+        var callMs: [Int] = []
+        var emptyArtists: [String] = []
+        var failures = 0
+
+        func run(_ batch: ArraySlice<String>) async throws {
+            try await withThrowingTaskGroup(of: (String, Int, [Song]?).self) { group in
+                defer { group.cancelAll() }
+                var pending = batch.makeIterator()
+                func addNext() -> Bool {
+                    guard let aid = pending.next() else { return false }
+                    group.addTask {
+                        try Task.checkCancellation()
+                        let start = Date()
+                        do {
+                            let result = try await fetch(aid)
+                            try Task.checkCancellation()
+                            return (aid, Int(Date().timeIntervalSince(start) * 1000), result)
+                        } catch let cancellation as CancellationError {
+                            throw cancellation
+                        } catch {
+                            try Task.checkCancellation()
+                            return (aid, Int(Date().timeIntervalSince(start) * 1000), nil)
+                        }
+                    }
+                    return true
+                }
+                for _ in 0..<width where addNext() {}
+                for try await (aid, ms, result) in group {
+                    try Task.checkCancellation()
+                    callMs.append(ms)
+                    switch result {
+                    case .some(let found) where found.isEmpty: emptyArtists.append(aid)
+                    case .some(let found): songs.append(contentsOf: found)
+                    case .none: failures += 1
+                    }
+                    _ = addNext()
+                }
+            }
+        }
+
+        let probe = artists.prefix(max(1, probeCount))
+        try await run(probe)
+        guard !songs.isEmpty else { return ([], callMs, emptyArtists, failures == 0) }
+        try await run(artists.dropFirst(probe.count))
+        return (songs, callMs, emptyArtists, false)
+    }
     nonisolated private static let instantMixFanOutCount = 25
     nonisolated private static let instantMixMaxPerArtist = 4
 
@@ -1009,5 +1070,32 @@ actor LibraryService: LibraryServiceProtocol {
         }
 
         return songs
+    }
+}
+
+/// Session memory for Instant Mix's artist fan-out on one connection (issue #8). An artist whose
+/// similar-songs request came back empty is skipped later: on Navidrome that request runs a
+/// fallback with up to 16 failing top-songs lookups. The whole fan-out is turned off only after
+/// several mixes in a row found nothing, so one mix of obscure artists doesn't disable it.
+nonisolated struct InstantMixFanOutMemory: Sendable, Equatable {
+    static let disableAfterEmptyProbes = 2
+
+    private(set) var emptyArtists: Set<String> = []
+    private(set) var consecutiveEmptyProbes = 0
+
+    var isDisabled: Bool { consecutiveEmptyProbes >= Self.disableAfterEmptyProbes }
+
+    func candidates(_ artists: [String]) -> [String] {
+        isDisabled ? [] : artists.filter { !emptyArtists.contains($0) }
+    }
+
+    /// A failed probe (neither productive nor empty) leaves the counter unchanged.
+    mutating func record(emptyArtists newlyEmpty: [String], probeFoundNothing: Bool, productive: Bool) {
+        emptyArtists.formUnion(newlyEmpty)
+        if productive {
+            consecutiveEmptyProbes = 0
+        } else if probeFoundNothing {
+            consecutiveEmptyProbes += 1
+        }
     }
 }

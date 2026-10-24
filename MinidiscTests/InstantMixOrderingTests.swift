@@ -53,3 +53,146 @@ struct InstantMixOrderingTests {
         #expect(LibraryService.endlessExtensionMixCount(targetSize: 50, excludedCount: 2_000) == 500)
     }
 }
+
+/// Records which artists were fetched and the peak number of requests in flight.
+private actor FanOutRecorder {
+    private(set) var fetched: [String] = []
+    private(set) var peakInFlight = 0
+    private var inFlight = 0
+
+    func begin(_ artist: String) {
+        fetched.append(artist)
+        inFlight += 1
+        peakInFlight = max(peakInFlight, inFlight)
+    }
+
+    func end() { inFlight -= 1 }
+}
+
+private enum FanOutTestError: Error { case unreachable }
+
+@Suite("Instant Mix fan-out (#8)")
+struct InstantMixFanOutTests {
+    private func song(_ id: String, artist: String) throws -> Song {
+        try JSONDecoder().decode(Song.self, from: Data(
+            "{\"id\":\"\(id)\",\"title\":\"\(id)\",\"isDir\":false,\"artist\":\"\(artist)\",\"artistId\":\"\(artist)\"}".utf8
+        ))
+    }
+
+    private let artists = ["a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8"]
+
+    @Test func emptyProbe_skipsTheRemainingArtistsAndReportsNothingFound() async throws {
+        let recorder = FanOutRecorder()
+        let result = try await LibraryService.runInstantMixFanOut(artists: artists, maxInFlight: 3, probeCount: 3) { artist in
+            await recorder.begin(artist)
+            await recorder.end()
+            return []
+        }
+
+        #expect(result.probeFoundNothing)
+        #expect(result.songs.isEmpty)
+        #expect(Set(await recorder.fetched) == ["a1", "a2", "a3"])
+    }
+
+    @Test func productiveProbe_fetchesEveryArtist() async throws {
+        let recorder = FanOutRecorder()
+        let hit = try song("s1", artist: "a2")
+        let result = try await LibraryService.runInstantMixFanOut(artists: artists, maxInFlight: 3, probeCount: 3) { artist in
+            await recorder.begin(artist)
+            await recorder.end()
+            return artist == "a2" ? [hit] : []
+        }
+
+        #expect(!result.probeFoundNothing)
+        #expect(result.songs.map(\.id) == ["s1"])
+        #expect(Set(await recorder.fetched) == Set(artists))
+        #expect(result.callMs.count == artists.count)
+        #expect(Set(result.emptyArtists) == Set(artists).subtracting(["a2"]))
+    }
+
+    @Test func failedProbe_stopsButDoesNotReportTheServerAsEmpty() async throws {
+        let recorder = FanOutRecorder()
+        let result = try await LibraryService.runInstantMixFanOut(artists: artists, maxInFlight: 3, probeCount: 3) { artist in
+            await recorder.begin(artist)
+            await recorder.end()
+            if artist == "a1" { throw FanOutTestError.unreachable }
+            return []
+        }
+
+        #expect(!result.probeFoundNothing)
+        #expect(result.songs.isEmpty)
+        #expect(await recorder.fetched.count == 3)
+    }
+
+    @Test func neverRunsMoreThanMaxInFlight() async throws {
+        let recorder = FanOutRecorder()
+        let hit = try song("s1", artist: "a1")
+        _ = try await LibraryService.runInstantMixFanOut(artists: artists, maxInFlight: 3, probeCount: 3) { artist in
+            await recorder.begin(artist)
+            for _ in 0..<5 { await Task.yield() }
+            await recorder.end()
+            return [hit]
+        }
+
+        #expect(await recorder.peakInFlight <= 3)
+        #expect(await recorder.fetched.count == artists.count)
+    }
+
+    @Test func noArtists_makesNoRequests() async throws {
+        let result = try await LibraryService.runInstantMixFanOut(artists: [], maxInFlight: 3, probeCount: 3) { _ in
+            Issue.record("No request expected")
+            return []
+        }
+
+        #expect(!result.probeFoundNothing)
+        #expect(result.callMs.isEmpty)
+    }
+
+    @Test func cancellation_propagates() async throws {
+        let task = Task {
+            try await LibraryService.runInstantMixFanOut(artists: ["a1", "a2", "a3", "a4"], maxInFlight: 3, probeCount: 3) { _ in
+                throw CancellationError()
+            }
+        }
+        await #expect(throws: CancellationError.self) { _ = try await task.value }
+    }
+}
+
+@Suite("Instant Mix fan-out memory (#8)")
+struct InstantMixFanOutMemoryTests {
+    @Test func oneEmptyProbe_keepsTheFanOutButSkipsThoseArtists() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: ["a1", "a2", "a3"], probeFoundNothing: true, productive: false)
+
+        #expect(!memory.isDisabled)
+        #expect(memory.candidates(["a1", "a4", "a2", "a5"]) == ["a4", "a5"])
+    }
+
+    @Test func twoEmptyProbesInARow_disableTheFanOut() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: ["a1"], probeFoundNothing: true, productive: false)
+        memory.record(emptyArtists: ["b1"], probeFoundNothing: true, productive: false)
+
+        #expect(memory.isDisabled)
+        #expect(memory.candidates(["c1", "c2"]).isEmpty)
+    }
+
+    @Test func aProductiveMix_resetsTheCount() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: ["a1"], probeFoundNothing: true, productive: false)
+        memory.record(emptyArtists: ["b1"], probeFoundNothing: false, productive: true)
+        memory.record(emptyArtists: ["c1"], probeFoundNothing: true, productive: false)
+
+        #expect(!memory.isDisabled)
+        #expect(memory.candidates(["a1", "b1", "c1", "d1"]) == ["d1"])
+    }
+
+    @Test func aFailedProbe_leavesTheCountUnchanged() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: [], probeFoundNothing: true, productive: false)
+        memory.record(emptyArtists: [], probeFoundNothing: false, productive: false)
+
+        #expect(memory.consecutiveEmptyProbes == 1)
+        #expect(!memory.isDisabled)
+    }
+}
