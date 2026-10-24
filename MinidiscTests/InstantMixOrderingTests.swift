@@ -107,6 +107,7 @@ struct InstantMixFanOutTests {
         #expect(result.songs.map(\.id) == ["s1"])
         #expect(Set(await recorder.fetched) == Set(artists))
         #expect(result.callMs.count == artists.count)
+        #expect(Set(result.emptyArtists) == Set(artists).subtracting(["a2"]))
     }
 
     @Test func failedProbe_stopsButDoesNotReportTheServerAsEmpty() async throws {
@@ -154,5 +155,44 @@ struct InstantMixFanOutTests {
             }
         }
         await #expect(throws: CancellationError.self) { _ = try await task.value }
+    }
+}
+
+@Suite("Instant Mix fan-out memory (#8)")
+struct InstantMixFanOutMemoryTests {
+    @Test func oneEmptyProbe_keepsTheFanOutButSkipsThoseArtists() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: ["a1", "a2", "a3"], probeFoundNothing: true, productive: false)
+
+        #expect(!memory.isDisabled)
+        #expect(memory.candidates(["a1", "a4", "a2", "a5"]) == ["a4", "a5"])
+    }
+
+    @Test func twoEmptyProbesInARow_disableTheFanOut() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: ["a1"], probeFoundNothing: true, productive: false)
+        memory.record(emptyArtists: ["b1"], probeFoundNothing: true, productive: false)
+
+        #expect(memory.isDisabled)
+        #expect(memory.candidates(["c1", "c2"]).isEmpty)
+    }
+
+    @Test func aProductiveMix_resetsTheCount() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: ["a1"], probeFoundNothing: true, productive: false)
+        memory.record(emptyArtists: ["b1"], probeFoundNothing: false, productive: true)
+        memory.record(emptyArtists: ["c1"], probeFoundNothing: true, productive: false)
+
+        #expect(!memory.isDisabled)
+        #expect(memory.candidates(["a1", "b1", "c1", "d1"]) == ["d1"])
+    }
+
+    @Test func aFailedProbe_leavesTheCountUnchanged() {
+        var memory = InstantMixFanOutMemory()
+        memory.record(emptyArtists: [], probeFoundNothing: true, productive: false)
+        memory.record(emptyArtists: [], probeFoundNothing: false, productive: false)
+
+        #expect(memory.consecutiveEmptyProbes == 1)
+        #expect(!memory.isDisabled)
     }
 }
