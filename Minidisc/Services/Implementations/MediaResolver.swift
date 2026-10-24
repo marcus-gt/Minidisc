@@ -34,6 +34,10 @@ actor MediaResolver: MediaResolverProtocol {
     }
 
     func availability(songId: String, serverId: UUID) async -> MediaAvailability {
+        guard Self.isValidSongID(songId) else {
+            Self.logInvalidSongID(operation: "availability")
+            return .unknown
+        }
         if await localSource(songId: songId, serverId: serverId) != nil {
             return .available
         }
@@ -80,6 +84,10 @@ actor MediaResolver: MediaResolverProtocol {
     }
 
     func resolve(songId: String, serverId: UUID) async throws -> MediaSource {
+        guard Self.isValidSongID(songId) else {
+            Self.logInvalidSongID(operation: "resolve")
+            throw MinidiscError.mediaNotFound(songId: songId)
+        }
         if let source = await localSource(songId: songId, serverId: serverId) {
             return source
         }
@@ -127,6 +135,17 @@ actor MediaResolver: MediaResolverProtocol {
         let customHeaders = connection.authorizationHeaders(for: url)
         Logger.resolver.debug("Resolved radio '\(station.id, privacy: .public)' as live stream.")
         return .liveStream(url, customHeaders: customHeaders, stationId: station.id)
+    }
+
+    /// An empty id would reach the server as `getSong?id=` or `stream?id=` (issue #7).
+    nonisolated static func isValidSongID(_ songId: String) -> Bool {
+        !songId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// The call stack names the path that produced the empty id; it holds only symbols.
+    private nonisolated static func logInvalidSongID(operation: String) {
+        let callers = Thread.callStackSymbols.dropFirst(2).prefix(8).joined(separator: " | ")
+        Logger.resolver.fault("[RESOLVER] \(operation, privacy: .public) rejected an empty song id; callers: \(callers, privacy: .public)")
     }
 
     nonisolated static func isSameOrigin(_ lhs: URL, _ rhs: URL) -> Bool {
