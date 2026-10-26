@@ -43,10 +43,32 @@ struct TrackMetadataTests {
         #expect(TrackArtistCredits.credits(for: song, albumArtistID: "a", albumArtistName: "Gorillaz").isEmpty)
     }
 
-    @Test func credits_withGuest_listsEveryArtist() {
-        let credits = [ArtistCredit(id: "a", name: "Gorillaz"), ArtistCredit(id: "b", name: "Bootie Brown")]
-        let song = makeSong(artists: credits)
-        #expect(TrackArtistCredits.credits(for: song, albumArtistID: "a", albumArtistName: "Gorillaz") == credits)
+    @Test func credits_withGuest_listsOnlyTheGuests() {
+        let song = makeSong(artists: [ArtistCredit(id: "a", name: "Gorillaz"), ArtistCredit(id: "b", name: "Bootie Brown")])
+        #expect(TrackArtistCredits.credits(for: song, albumArtistID: "a", albumArtistName: "Gorillaz")
+            == [ArtistCredit(id: "b", name: "Bootie Brown")])
+    }
+
+    @Test func credits_severalGuests_keepCreditOrder() {
+        let song = makeSong(artists: [
+            ArtistCredit(id: "av", name: "The Avalanches"),
+            ArtistCredit(id: "ri", name: "Ryoji Ikeda"),
+            ArtistCredit(id: "po", name: "Pond")
+        ])
+        #expect(TrackArtistCredits.credits(for: song, albumArtistID: "av", albumArtistName: "The Avalanches").map(\.name)
+            == ["Ryoji Ikeda", "Pond"])
+    }
+
+    @Test func credits_albumArtistWithoutID_matchedByName() {
+        let song = makeSong(artists: [ArtistCredit(id: nil, name: "the avalanches "), ArtistCredit(id: "cs", name: "Carly Simon")])
+        #expect(TrackArtistCredits.credits(for: song, albumArtistID: nil, albumArtistName: "The Avalanches").map(\.name)
+            == ["Carly Simon"])
+    }
+
+    @Test func credits_guestOnlyTrack_listsTheGuest() {
+        let song = makeSong(artists: [ArtistCredit(id: "b", name: "Bootie Brown")])
+        #expect(TrackArtistCredits.credits(for: song, albumArtistID: "a", albumArtistName: "Gorillaz").map(\.name)
+            == ["Bootie Brown"])
     }
 
     @Test func credits_legacyArtistString_differentFromAlbumArtist_shown() {
