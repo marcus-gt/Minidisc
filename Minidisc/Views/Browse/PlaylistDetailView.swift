@@ -4,21 +4,23 @@ import SwiftData
 import OSLog
 import UniformTypeIdentifiers
 
-/// Local ordering for the track list. Release date is absent on purpose: `DisplayableSong` carries no year.
-enum PlaylistSortOrder: String, CaseIterable, Identifiable {
-    case playlistOrder
-    case title
-    case artist
-    case album
-
-    var id: String { rawValue }
-
+extension PlaylistSortOrder {
     var label: LocalizedStringKey {
         switch self {
         case .playlistOrder: "Playlist Order"
         case .title: "Title"
         case .artist: "Artist"
         case .album: "Album"
+        }
+    }
+
+    /// Direction labels follow the field: positions read as first/last, text fields as A to Z.
+    func label(for direction: PlaylistSortDirection) -> LocalizedStringKey {
+        switch (self, direction) {
+        case (.playlistOrder, .ascending): "First to Last"
+        case (.playlistOrder, .descending): "Last to First"
+        case (_, .ascending): "A to Z"
+        case (_, .descending): "Z to A"
         }
     }
 }
@@ -87,6 +89,7 @@ struct PlaylistDetailView: View {
     @State private var localCoverId: String?
     @State private var showThemeColorSheet = false
     @State private var sortOrder: PlaylistSortOrder = .playlistOrder
+    @State private var sortDirection: PlaylistSortDirection = .ascending
     @State private var showDeleteAlert = false
     @State private var showAddMusic = false
 
@@ -149,19 +152,14 @@ struct PlaylistDetailView: View {
         return record.songIds.compactMap { bySongId[$0] }.map { DisplayableSong(from: $0) }
     }
 
-    /// The order the list and playback follow. Purely local — the stored order is untouched, so edit / remove
-    /// keep working against the real positions.
+    /// Stored positions in the order the list and playback follow. Purely local — the stored order is
+    /// untouched, so edit / remove keep working against the real positions.
+    private func displayOrder(_ songs: [DisplayableSong]) -> [Int] {
+        PlaylistSort.displayOrder(of: songs, by: sortOrder, direction: sortDirection)
+    }
+
     private func sortedSongs(_ songs: [DisplayableSong]) -> [DisplayableSong] {
-        switch sortOrder {
-        case .playlistOrder:
-            return songs
-        case .title:
-            return songs.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-        case .artist:
-            return songs.sorted { ($0.artist ?? "").localizedStandardCompare($1.artist ?? "") == .orderedAscending }
-        case .album:
-            return songs.sorted { ($0.albumName ?? "").localizedStandardCompare($1.albumName ?? "") == .orderedAscending }
-        }
+        displayOrder(songs).map { songs[$0] }
     }
 
     private func playSongs(_ requested: [DisplayableSong], startIndex: Int) async {
@@ -251,11 +249,10 @@ struct PlaylistDetailView: View {
                 } else {
                     let serverId = container?.serverState.activeServer?.id ?? UUID()
                     // Rows are displayed in the sorted order, the view model removes by stored position.
+                    let storedPositions = displayOrder(resolvedSongs(vm))
                     let removeTrack: ((Int) -> Void)? = vm.isOffline ? nil : { index in
-                        guard songs.indices.contains(index) else { return }
-                        let song = songs[index]
-                        guard let stored = resolvedSongs(vm).firstIndex(where: { $0.id == song.id }) else { return }
-                        Task { await vm.removeTrack(at: stored) }
+                        guard storedPositions.indices.contains(index) else { return }
+                        Task { await vm.removeTrack(at: storedPositions[index]) }
                     }
                     PlaylistSongRows(
                         songs: songs,
@@ -498,6 +495,11 @@ struct PlaylistDetailView: View {
                             Picker("Sort By", selection: $sortOrder) {
                                 ForEach(PlaylistSortOrder.allCases) { order in
                                     Text(order.label).tag(order)
+                                }
+                            }
+                            Picker("Direction", selection: $sortDirection) {
+                                ForEach(PlaylistSortDirection.allCases) { direction in
+                                    Text(sortOrder.label(for: direction)).tag(direction)
                                 }
                             }
                         } label: {
