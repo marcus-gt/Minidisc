@@ -167,8 +167,9 @@ actor PlayerService: PlayerServiceProtocol {
     /// Last elapsed position sent to the system Now Playing center. Position updates are intentionally
     /// throttled: the progress UI remains at 2 Hz, while lock-screen metadata only needs 1 Hz.
     private var lastNowPlayingPushElapsed: TimeInterval?
-    private var subsonicPlayingNowTask: Task<Void, Never>?
     private var playingNowTask: Task<Void, Never>?
+    /// How long a track must have been audible before "now playing" is reported anywhere.
+    private let playingNowDelay: TimeInterval
     private var cacheDownloadTask: Task<Void, Never>?
     private let cacheSession: URLSession
     private var prefetchScheduled = false
@@ -279,9 +280,11 @@ actor PlayerService: PlayerServiceProtocol {
         networkRecoveryTiming: PlaybackNetworkRecoveryTiming = PlaybackNetworkRecoveryTiming(),
         audioSession: any AudioSessionControlling = SystemAudioSessionController(),
         audioRecoveryTiming: PlaybackAudioRecoveryTiming = PlaybackAudioRecoveryTiming(),
-        localMusicStore: LocalMusicStore? = nil
+        localMusicStore: LocalMusicStore? = nil,
+        playingNowDelay: TimeInterval = 3
     ) {
         self.localMusicStore = localMusicStore
+        self.playingNowDelay = playingNowDelay
         self.state = state
         self.mediaResolver = mediaResolver
         self.serverService = serverService
@@ -760,21 +763,23 @@ actor PlayerService: PlayerServiceProtocol {
             playbackGeneration: generation,
             transportIntentGeneration: transportGeneration
         ) else { return }
-        if !song.isLocalFile {
-            subsonicPlayingNowTask = Task { [libraryService] in
-                await libraryService.scrobble(songId: songId, submission: false)
-            }
-        }
-        let playingNowDelay = max(0, 3 - (promotedPlayback?.audibleDuration ?? 0))
-        playingNowTask = Task { [listenBrainzService, weak self] in
-            if playingNowDelay > 0 {
-                try? await Task.sleep(for: .seconds(playingNowDelay))
+        // Both "now playing" reports wait until the track has been audible for a moment and is still
+        // current, so rapid skipping sends none for the skipped tracks. Navidrome forwards the Subsonic
+        // report to ListenBrainz, which answered a burst of them with 429 (#11).
+        let reportsToServer = !song.isLocalFile
+        let remainingDelay = max(0, playingNowDelay - (promotedPlayback?.audibleDuration ?? 0))
+        playingNowTask = Task { [libraryService, listenBrainzService, weak self] in
+            if remainingDelay > 0 {
+                try? await Task.sleep(for: .seconds(remainingDelay))
             }
             guard !Task.isCancelled, let self else { return }
             let stillActive = await MainActor.run {
                 self.state.playbackState == .playing && self.state.currentTrack?.id == song.id
             }
-            guard stillActive else { return }
+            guard stillActive, !Task.isCancelled else { return }
+            if reportsToServer {
+                await libraryService.scrobble(songId: songId, submission: false)
+            }
             await listenBrainzService.notifyTrackStarted(song: song)
         }
 
@@ -3410,8 +3415,6 @@ actor PlayerService: PlayerServiceProtocol {
     // MARK: - Scrobble
 
     private func cancelPendingScrobble() {
-        subsonicPlayingNowTask?.cancel()
-        subsonicPlayingNowTask = nil
         playingNowTask?.cancel()
         playingNowTask = nil
     }

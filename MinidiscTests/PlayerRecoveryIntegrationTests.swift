@@ -172,6 +172,25 @@ private nonisolated final class RecoveryTestLibrary: AlbumBrowsing, ArtistBrowsi
     func scrobble(songId: String, submission: Bool) async {}
 }
 
+/// Records Subsonic scrobble calls so tests can see which tracks reported "now playing".
+private nonisolated final class ScrobbleRecordingLibrary: AlbumBrowsing, ArtistBrowsing, PlaybackQueueBuilding, PlaybackReporting {
+    private let calls = Mutex<[(songId: String, submission: Bool)]>([])
+
+    var nowPlayingIDs: [String] { calls.withLock { $0.filter { !$0.submission }.map(\.songId) } }
+
+    func album(id: String) async throws -> AlbumID3 { throw MinidiscError.notImplemented }
+    func allAlbums() async throws -> [AlbumID3] { [] }
+    func artists() async throws -> [ArtistIndex] { [] }
+    func artist(id: String) async throws -> ArtistID3 { throw MinidiscError.notImplemented }
+    func fetchAllTracks(forArtistID artistID: String) async throws -> [DisplayableSong] { [] }
+    func smartShuffleQueue(targetSize: Int) async throws -> [DisplayableSong] { [] }
+    func similarBackfillQueue(targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] { [] }
+    func instantMix(from seed: InstantMixSeed, count: Int) async throws -> [DisplayableSong] { [] }
+    func scrobble(songId: String, submission: Bool) async {
+        calls.withLock { $0.append((songId, submission)) }
+    }
+}
+
 @MainActor
 private struct RecoveryListenBrainzTransport: ListenBrainzTransport {
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
@@ -195,7 +214,8 @@ private struct RecoveryHarness {
         audioRetryDelay: Duration = .milliseconds(40),
         localMusicStore: LocalMusicStore? = nil,
         configureServer: Bool = true,
-        library: (any AlbumBrowsing & ArtistBrowsing & PlaybackQueueBuilding & PlaybackReporting)? = nil
+        library: (any AlbumBrowsing & ArtistBrowsing & PlaybackQueueBuilding & PlaybackReporting)? = nil,
+        playingNowDelay: TimeInterval = 3
     ) throws {
         let container = try ModelContainer.minidisc(inMemory: true)
         let server = MockServerService()
@@ -244,7 +264,8 @@ private struct RecoveryHarness {
                 retryDelay: audioRetryDelay, routeGrace: .seconds(2),
                 startupGrace: audioStartupGrace, pollInterval: .milliseconds(10)
             ),
-            localMusicStore: localMusicStore
+            localMusicStore: localMusicStore,
+            playingNowDelay: playingNowDelay
         )
     }
 
@@ -279,7 +300,10 @@ private struct RecoveryHarness {
 struct PlayerRecoveryIntegrationTests {
     @Test(arguments: [false, true])
     func stalledStreamUsesNewlyCompletedCacheWithoutServerProbe(offline: Bool) async throws {
-        let h = try RecoveryHarness(startupGrace: .milliseconds(100))
+        // The startup probe is a no-op once `.playing` below is handled; it only rebuilds (from the
+        // stream, before the cache exists) if that takes longer than the grace. 100 ms was too
+        // tight on a loaded simulator (#11). The later stall probe waits out the rest of the grace.
+        let h = try RecoveryHarness(startupGrace: .seconds(3))
         try await h.play()
         try await h.waitUntil { h.report.contains("engine state=buffering") }
         _ = await h.engine.seek(to: 37)
@@ -313,6 +337,30 @@ struct PlayerRecoveryIntegrationTests {
         #expect(h.engine.progress >= 37)
         #expect(h.engine.volume > 0)
         await h.player.stop()
+    }
+
+    @Test func rapidSkips_reportNowPlayingOnlyForTheTrackThatKeepsPlaying() async throws {
+        let library = ScrobbleRecordingLibrary()
+        let h = try RecoveryHarness(library: library, playingNowDelay: 0.2)
+        try await h.play(["a", "b", "c"])
+        try await h.player.skipToNext()
+        try await h.player.skipToNext()
+        #expect(h.state.currentTrack?.id == "c")
+        // Only "c" ever reaches the playing state; the skipped tracks never report (#11).
+        await h.player.handleEngineState(.playing, playbackToken: h.engine.token)
+        try await h.waitUntil { library.nowPlayingIDs == ["c"] }
+        await h.player.stop()
+        #expect(library.nowPlayingIDs == ["c"])
+    }
+
+    @Test func nowPlaying_waitsForTheDelay() async throws {
+        let library = ScrobbleRecordingLibrary()
+        let h = try RecoveryHarness(library: library, playingNowDelay: 60)
+        try await h.play(["a"])
+        await h.player.handleEngineState(.playing, playbackToken: h.engine.token)
+        #expect(library.nowPlayingIDs.isEmpty)
+        await h.player.stop()
+        #expect(library.nowPlayingIDs.isEmpty)
     }
 
     @Test(arguments: [false, true])

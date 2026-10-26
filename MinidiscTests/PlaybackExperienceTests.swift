@@ -5,22 +5,26 @@ import Testing
 @Suite @MainActor
 struct PlaybackPresentationTests {
     @Test func briefTrackLoadingDoesNotFlashAStatusAndPauseCancelsDelayedStatus() async throws {
+        // Await the reveal task itself rather than sleeping, so a loaded simulator can't reorder it (#11).
         let state = PlayerState(waitingMessageDelay: .milliseconds(40))
         state.playbackState = .loading
         #expect(state.playbackStatusMessage == nil)
+        let briefLoad = try #require(state.pendingWaitingMessage)
         state.playbackState = .playing
         state.waitingReason = nil
-        try await Task.sleep(for: .milliseconds(80))
+        await briefLoad.value
         #expect(state.playbackStatusMessage == nil)
 
         state.playbackState = .loading
-        try await Task.sleep(for: .milliseconds(100))
+        let longLoad = try #require(state.pendingWaitingMessage)
+        await longLoad.value
         #expect(state.playbackStatusMessage == PlaybackWaitingReason.loading.title)
         state.playbackState = .paused
         #expect(state.playbackStatusMessage == nil)
         state.playbackState = .loading
+        let pausedLoad = try #require(state.pendingWaitingMessage)
         state.playbackState = .paused
-        try await Task.sleep(for: .milliseconds(80))
+        await pausedLoad.value
         #expect(state.playbackStatusMessage == nil)
     }
     @Test func loadingCanBePausedAndLateBufferingDoesNotOverridePause() {

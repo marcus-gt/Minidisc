@@ -39,6 +39,8 @@ final class PlayerState {
     private var visibleWaitingReason: PlaybackWaitingReason?
     @ObservationIgnored private var waitingMessageTask: Task<Void, Never>?
     @ObservationIgnored private let waitingMessageDelay: Duration
+    /// The task that reveals the waiting message after its delay. Tests await it instead of sleeping.
+    var pendingWaitingMessage: Task<Void, Never>? { waitingMessageTask }
     var wantsPlayback: Bool { playbackState == .playing || playbackState == .loading }
 
     var playbackStatusMessage: String? {
