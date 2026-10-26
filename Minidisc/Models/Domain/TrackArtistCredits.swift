@@ -2,18 +2,14 @@ import Foundation
 
 /// Decides which artists an album track list credits under each title.
 nonisolated enum TrackArtistCredits {
-    /// The credits to show under a track, or an empty array when the album artist alone performs it.
-    /// When any other artist is credited, the full list is returned (album artist included) so the line
-    /// reads like the release credits.
+    /// The guest artists to show under a track, in credit order. The album artist is left out: the
+    /// album header already names them (issue #31). Empty when the album artist alone performs it.
     static func credits(
         for song: DisplayableSong,
         albumArtistID: String?,
         albumArtistName: String?
     ) -> [ArtistCredit] {
-        let credits = allCredits(for: song)
-        guard !credits.isEmpty else { return [] }
-        let hasGuest = credits.contains { !isAlbumArtist($0, id: albumArtistID, name: albumArtistName) }
-        return hasGuest ? credits : []
+        allCredits(for: song).filter { !isAlbumArtist($0, id: albumArtistID, name: albumArtistName) }
     }
 
     /// Every artist credited on the track: OpenSubsonic `artists` when present, else the legacy artist field.
