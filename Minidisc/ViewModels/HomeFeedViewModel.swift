@@ -130,14 +130,24 @@ final class HomeFeedViewModel {
                 group.addTask { await Self.fetch(.history) { .history(try await service.recentlyPlayedAlbums(size: 20)) } }
                 group.addTask {
                     await Self.fetch(.genres) {
+                        let day = HomeGenreShelves.dayKey(for: Date())
+                        // Main genres from the library index: one shelf per album (#29), in a daily order.
+                        if let byMainGenre = try await service.albumsByMainGenre() {
+                            return .genres(HomeGenreShelves.shelves(byMainGenre: byMainGenre, day: day)
+                                .map { GenreShelf(name: $0.name, albums: $0.albums) })
+                        }
+                        // Until the index is complete: the server's genres, which list an album under every
+                        // tag. Its byGenre list is A–Z, so take a wider page and pick from it daily.
                         let genres = try await service.genres()
-                            .filter { $0.albumCount > 0 }.sorted { $0.albumCount > $1.albumCount }.prefix(5)
+                            .filter { $0.albumCount > 0 }.sorted { $0.albumCount > $1.albumCount }
+                            .prefix(HomeGenreShelves.shelfCount)
                         var shelves: [GenreShelf] = []
                         // A separate task from the main shelves: a slow genre never holds them back.
                         for genre in genres {
                             try Task.checkCancellation()
-                            let albums = try await service.albumsByGenre(genre.value, size: 20)
-                            if !albums.isEmpty { shelves.append(GenreShelf(name: genre.value, albums: albums)) }
+                            let albums = try await service.albumsByGenre(genre.value, size: 100)
+                            let picked = HomeGenreShelves.dailyPick(albums, genre: genre.value, day: day)
+                            if !picked.isEmpty { shelves.append(GenreShelf(name: genre.value, albums: picked)) }
                         }
                         return .genres(shelves)
                     }
