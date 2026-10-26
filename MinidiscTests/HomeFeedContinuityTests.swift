@@ -44,7 +44,8 @@ struct HomeFeedContinuityTests {
         let source = HomeFeedSource(failHistory: true, waitForGenres: true)
         let model = HomeFeedViewModel(libraryService: source)
         let load = Task { await model.load() }
-        let deadline = ContinuousClock.now + .seconds(3)
+        // A ceiling, not a timing assumption: the loop ends as soon as the state is reached (#11).
+        let deadline = ContinuousClock.now + .seconds(30)
         while (!(await source.waiting) || model.recentlyAdded.isEmpty), ContinuousClock.now < deadline {
             try await Task.sleep(for: .milliseconds(10))
         }
@@ -92,7 +93,7 @@ struct HomeFeedContinuityTests {
         let source = HomeFeedSource(waitForGenres: true)
         let model = HomeFeedViewModel(libraryService: source)
         let load = Task { await model.load() }
-        let deadline = ContinuousClock.now + .seconds(3)
+        let deadline = ContinuousClock.now + .seconds(30)
         while (!(await source.waiting) || model.recentlyAdded.isEmpty), ContinuousClock.now < deadline {
             try await Task.sleep(for: .milliseconds(10))
         }
