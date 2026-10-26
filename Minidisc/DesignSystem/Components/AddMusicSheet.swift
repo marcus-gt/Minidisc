@@ -740,6 +740,7 @@ enum AddMusicCommitter {
                 playlistId: playlistId, playlistName: playlistName, coverArtId: coverArtId,
                 serverId: serverId, container: container, colorExtractor: colorExtractor)
             RecentPlaylistDestinations(serverID: serverId.uuidString).record(playlistId)
+            container.playlistUsage.recordUse(playlistID: playlistId, serverID: serverId.uuidString)
             container.toastService.showConfirmation(String(localized: "\(addedSongs.count) songs added"),
                 subtitle: playlistName, coverArtId: coverArtId,
                 action: .navigateToPlaylist(id: playlistId, name: playlistName, coverArtId: coverArtId))

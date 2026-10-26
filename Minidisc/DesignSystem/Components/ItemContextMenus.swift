@@ -204,6 +204,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                         Task {
                             do {
                                 try await container?.playerService.play(tracks: songs, startIndex: 0)
+                                if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                             } catch {
                                 Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                             }
@@ -217,6 +218,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                         Task {
                             do {
                                 try await container?.playerService.play(tracks: shuffled, startIndex: 0)
+                                if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                             } catch {
                                 Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                             }
@@ -363,6 +365,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                         guard let songs = try? await playableSongs(), !songs.isEmpty else { return }
                         do {
                             try await container?.playerService.play(tracks: songs, startIndex: 0)
+                            if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                         } catch {
                             Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                         }
@@ -376,6 +379,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                         guard let songs = try? await playableSongs(), !songs.isEmpty else { return }
                         do {
                             try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0)
+                            if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                         } catch {
                             Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                         }

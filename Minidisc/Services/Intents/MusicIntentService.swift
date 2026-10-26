@@ -170,6 +170,7 @@ struct MusicIntentService {
             guard !tracks.isEmpty else { throw MusicIntentError.empty }
             return PreparedPlaybackQueue(tracks: shuffle ? tracks.shuffled() : tracks, startIndex: 0, repeatMode: repeatMode)
         })
+        if reference.kind == .playlist { container.recordPlaylistUse(reference.resourceID) }
     }
 
     func enqueue(id: String, next: Bool, shuffle: Bool) async throws {
@@ -194,6 +195,7 @@ struct MusicIntentService {
             let tracks = try await self.tracks(reference, context: context)
             try await self.validate(context)
             guard !tracks.isEmpty else { throw MusicIntentError.empty }
+            await self.container.recordPlaylistUse(reference.resourceID)
             return PreparedPlaybackQueue(tracks: tracks, startIndex: 0)
         })
     }

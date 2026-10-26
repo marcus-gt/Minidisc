@@ -19,15 +19,18 @@ final class AddToPlaylistViewModel {
     private let playlistService: any PlaylistServiceProtocol
     private let toastService: ToastService
     private let recents: RecentPlaylistDestinations
+    private let recordUse: (String) -> Void
     private var intents: [String: PlaylistAppendIntent] = [:]
     private var completed: Set<String> = []
 
     init(songs: [DisplayableSong], playlistService: any PlaylistServiceProtocol,
-         toastService: ToastService, recents: RecentPlaylistDestinations) {
+         toastService: ToastService, recents: RecentPlaylistDestinations,
+         recordUse: @escaping (String) -> Void = { _ in }) {
         self.songs = songs
         self.playlistService = playlistService
         self.toastService = toastService
         self.recents = recents
+        self.recordUse = recordUse
         self.recentIDs = recents.ids
     }
 
@@ -107,6 +110,7 @@ final class AddToPlaylistViewModel {
             }
             completed.insert(playlist.id)
             recents.record(playlist.id)
+            recordUse(playlist.id)
             recentIDs = recents.ids
             let message = intent.songs.isEmpty ? String(localized: "These songs are already in the playlist.")
                 : String(localized: "\(intent.songs.count) songs added")

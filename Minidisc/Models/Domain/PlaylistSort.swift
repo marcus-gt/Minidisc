@@ -8,6 +8,11 @@ nonisolated enum PlaylistSortOrder: String, CaseIterable, Identifiable, Sendable
     case album
 
     var id: String { rawValue }
+
+    /// Playlist order opens last to first, so the most recently added songs are on top; text fields start at A.
+    var defaultDirection: PlaylistSortDirection {
+        self == .playlistOrder ? .descending : .ascending
+    }
 }
 
 nonisolated enum PlaylistSortDirection: String, CaseIterable, Identifiable, Sendable {

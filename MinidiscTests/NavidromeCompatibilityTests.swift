@@ -147,6 +147,8 @@ struct NavidromeCompatibilityTests {
         defaults.set(playlist, forKey: moodKey)
         defaults.set(playlist, forKey: wrappedKey)
         defaults.set([playlist], forKey: recentKey)
+        let usageKey = PlaylistUsageStore.key(serverID: config.id.uuidString)
+        defaults.set([playlist: 1_000.0, "unrelated-id": 2_000.0], forKey: usageKey)
         let context = ModelContext(container)
         context.insert(DownloadedTrack(songId: legacy, serverId: config.id, filePath: "keep.flac", fileSize: 4,
                                        mimeType: "audio/flac", title: "Keep"))
@@ -164,6 +166,10 @@ struct NavidromeCompatibilityTests {
         #expect(defaults.string(forKey: moodKey) == "7rke2SAWaicSeSYzkhww6R")
         #expect(defaults.string(forKey: wrappedKey) == "7rke2SAWaicSeSYzkhww6R")
         #expect(defaults.stringArray(forKey: recentKey) == ["7rke2SAWaicSeSYzkhww6R"])
+        let usage = defaults.dictionary(forKey: usageKey) as? [String: Double]
+        #expect(usage?["7rke2SAWaicSeSYzkhww6R"] == 1_000)
+        #expect(usage?[playlist] == nil)
+        #expect(usage?.count == 2)
         #expect(try ModelContext(container).fetch(FetchDescriptor<DownloadedTrack>()).first?.songId == canonical)
     }
 

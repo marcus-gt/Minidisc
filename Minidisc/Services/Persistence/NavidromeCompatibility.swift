@@ -184,6 +184,14 @@ actor NavidromeCompatibility {
             } else if key == "minidisc.recentPlaylistDestinations" + suffix, let ids = defaults.stringArray(forKey: key) {
                 let replacement = ids.map(NavidromeCanonicalID.convert)
                 if ids != replacement { defaults.set(replacement, forKey: key) }
+            } else if key == PlaylistUsageStore.key(serverID: serverID.uuidString),
+                      let dates = defaults.doubleDictionary(forKey: key) {
+                // Two old ids can't map to one new id, but keep the latest use if they ever do.
+                let replacement = Dictionary(
+                    dates.map { (NavidromeCanonicalID.convert($0.key), $0.value) },
+                    uniquingKeysWith: max
+                )
+                if dates != replacement { defaults.set(replacement, forKey: key) }
             }
         }
     }

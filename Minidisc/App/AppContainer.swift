@@ -55,6 +55,8 @@ final class AppContainer {
     let externalArtworkCache = ExternalArtworkCache()
     let externalArtistImageResolver = ExternalArtistImageResolver()
     let searchHistoryService: SearchHistoryService
+    /// When each playlist was last added to or played; the Playlists list sorts by it.
+    let playlistUsage: PlaylistUsageStore
     let replayGainSettings: ReplayGainSettings
     let crossfadeSettings: CrossfadeSettings
     let streamSettings: StreamSettings
@@ -243,6 +245,7 @@ final class AppContainer {
         recommendationService = RecommendationService(providers: [lbProvider, subsonicProvider])
 
         searchHistoryService = SearchHistoryService(container: modelContainer)
+        playlistUsage = PlaylistUsageStore(defaults: userDefaults)
 
         lifecycleTasks = [
             Task { [download, downloadActivity, offlineLibrary] in
@@ -595,5 +598,13 @@ extension EnvironmentValues {
     var appContainer: AppContainer? {
         get { self[AppContainerKey.self] }
         set { self[AppContainerKey.self] = newValue }
+    }
+}
+
+extension AppContainer {
+    /// Records that a playlist was added to or played on the active server ("Last Used" in Playlists).
+    func recordPlaylistUse(_ playlistID: String) {
+        guard let serverID = serverState.activeServer?.id.uuidString else { return }
+        playlistUsage.recordUse(playlistID: playlistID, serverID: serverID)
     }
 }

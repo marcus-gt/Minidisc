@@ -60,3 +60,15 @@ struct PlaylistSortTests {
         #expect(PlaylistSort.displayOrder(of: [], by: .title, direction: .descending).isEmpty)
     }
 }
+
+@Suite("Playlist sort defaults")
+struct PlaylistSortDefaultsTests {
+    @Test func playlistOrder_opensLastToFirst() {
+        #expect(PlaylistSortOrder.playlistOrder.defaultDirection == .descending)
+    }
+
+    @Test(arguments: [PlaylistSortOrder.title, .artist, .album])
+    func textFields_startAtA(order: PlaylistSortOrder) {
+        #expect(order.defaultDirection == .ascending)
+    }
+}

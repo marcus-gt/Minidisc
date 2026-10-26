@@ -89,7 +89,7 @@ struct PlaylistDetailView: View {
     @State private var localCoverId: String?
     @State private var showThemeColorSheet = false
     @State private var sortOrder: PlaylistSortOrder = .playlistOrder
-    @State private var sortDirection: PlaylistSortDirection = .ascending
+    @State private var sortDirection: PlaylistSortDirection = PlaylistSortOrder.playlistOrder.defaultDirection
     @State private var showDeleteAlert = false
     @State private var showAddMusic = false
 
@@ -173,6 +173,7 @@ struct PlaylistDetailView: View {
                 }
                 return PreparedPlaybackQueue(tracks: refreshed, startIndex: index)
             })
+            container.recordPlaylistUse(playlistId)
         } catch {
             if !UserFacingError.isCancellation(error), !vm.isRemovedFromServer {
                 container.toastService.showError(UserFacingError.from(error).displayMessage)
@@ -409,6 +410,9 @@ struct PlaylistDetailView: View {
         .navigationBarBackButtonHidden(true)
         .enableSwipeBack()
         .toolbar { toolbarContent }
+        .onChange(of: sortOrder) { _, newOrder in
+            sortDirection = newOrder.defaultDirection
+        }
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task(id: container?.serverState.isOnline) {
