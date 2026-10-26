@@ -9,6 +9,9 @@ struct PlaylistListView: View {
     @State private var viewModel: PlaylistListViewModel?
     @State private var showCreateSheet = false
     @State private var filterText = ""
+    @AppStorage("minidisc.playlistListSort") private var sort: PlaylistListSort = .lastUsed
+    /// Snapshot of local "added to or played" dates, refreshed whenever the list appears.
+    @State private var lastUsed: [String: Date] = [:]
     /// Set once a playlist is created, to open it so songs and a cover can be added.
     @State private var createdPlaylist: PlaylistWithSongs?
 
@@ -25,6 +28,10 @@ struct PlaylistListView: View {
         .toolbarTitleDisplayMode(.inline)
         .minidiscFilterable(text: $filterText, prompt: "Filter playlists")
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                PlaylistListSortMenu(sort: $sort)
+                    .tint(.primary)
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("New Playlist", systemImage: "plus") {
                     showCreateSheet = true
@@ -44,10 +51,12 @@ struct PlaylistListView: View {
         }
         .task(id: container?.serverState.isOnline) {
             guard let svc = container?.libraryService else { return }
+            refreshLastUsed()
             if viewModel == nil { viewModel = PlaylistListViewModel(libraryService: svc) }
             guard container?.serverState.isOnline == true else { return }
             await viewModel?.load()
         }
+        .onAppear { refreshLastUsed() }
         // Reload after confirmed deletion without refetching on every navigation.
         .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistDeleted)) { _ in
             Task { await viewModel?.load() }
@@ -59,7 +68,15 @@ struct PlaylistListView: View {
     }
 
     private func displayedPlaylists(_ vm: PlaylistListViewModel) -> [Playlist] {
-        LibraryFilter.filter(allPlaylists(vm), by: filterText) { [$0.name] }
+        sort.sorted(LibraryFilter.filter(allPlaylists(vm), by: filterText) { [$0.name] }, lastUsed: lastUsed)
+    }
+
+    private func refreshLastUsed() {
+        guard let container, let serverID = container.serverState.activeServer?.id.uuidString else {
+            lastUsed = [:]
+            return
+        }
+        lastUsed = container.playlistUsage.lastUsed(serverID: serverID)
     }
 
     @ViewBuilder

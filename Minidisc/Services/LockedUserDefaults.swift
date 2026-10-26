@@ -36,6 +36,22 @@ nonisolated final class LockedUserDefaults: @unchecked Sendable {
         lock.withLock { _ in storage.stringArray(forKey: key) }
     }
 
+    func doubleDictionary(forKey key: String) -> [String: Double]? {
+        lock.withLock { _ in storage.dictionary(forKey: key) as? [String: Double] }
+    }
+
+    func set(_ value: [String: Double], forKey key: String) {
+        lock.withLock { _ in storage.set(value, forKey: key) }
+    }
+
+    /// Read-modify-write under one lock, so concurrent updates can't drop each other's entries.
+    func updateDoubleDictionary(forKey key: String, _ transform: ([String: Double]) -> [String: Double]) {
+        lock.withLock { _ in
+            let current = storage.dictionary(forKey: key) as? [String: Double] ?? [:]
+            storage.set(transform(current), forKey: key)
+        }
+    }
+
     func set(_ value: [String], forKey key: String) {
         lock.withLock { _ in storage.set(value, forKey: key) }
     }

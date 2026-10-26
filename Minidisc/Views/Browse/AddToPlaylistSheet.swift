@@ -41,9 +41,12 @@ struct AddToPlaylistSheet: View {
         .interactiveDismissDisabled(vm?.isSaving == true)
         .task {
             guard vm == nil, let container else { return }
+            let serverID = container.serverState.activeServer?.id.uuidString ?? ""
+            let usage = container.playlistUsage
             let model = AddToPlaylistViewModel(songs: request.songs, playlistService: container.playlistService,
                 toastService: container.toastService,
-                recents: RecentPlaylistDestinations(serverID: container.serverState.activeServer?.id.uuidString ?? ""))
+                recents: RecentPlaylistDestinations(serverID: serverID),
+                recordUse: { usage.recordUse(playlistID: $0, serverID: serverID) })
             vm = model
             showCreate = request.createsPlaylist
             await model.load()
