@@ -10,6 +10,8 @@ actor LibraryCatalog {
     private let source: any LibraryRemoteSource
     private let store: LibraryIndexStore
     private let synchronizer: LibraryIndexSynchronizer
+    /// `albumsByMainGenre()` for one index sync; reading every track again on each Home load is wasteful.
+    private var mainGenreCache: (stamp: String, albums: [String: [AlbumID3]])?
 
     init(
         source: any LibraryRemoteSource,
@@ -478,6 +480,36 @@ actor LibraryCatalog {
             offset += pageSize
         }
         return tracks
+    }
+
+    /// Indexed albums grouped by their main genre, the tag the most of their tracks carry (#29).
+    /// `nil` while tracks or albums are not fully indexed.
+    func albumsByMainGenre() async throws -> [String: [AlbumID3]]? {
+        guard let stamp = try await queueBuilderStamp() else { return nil }
+        if let cached = mainGenreCache, cached.stamp == stamp { return cached.albums }
+        let serverID = try await source.activeServerID()
+        var trackGenres: [String: [[String]]] = [:]
+        let pageSize = 2_000
+        var offset = 0
+        while true {
+            try Task.checkCancellation()
+            let page = try await store.songs(serverID: serverID, offset: offset, count: pageSize)
+            for song in page {
+                guard let albumID = song.albumId else { continue }
+                trackGenres[albumID, default: []].append(song.genres?.map(\.name) ?? song.genre.map { [$0] } ?? [])
+            }
+            guard page.count == pageSize else { break }
+            offset += pageSize
+        }
+        var grouped: [String: [AlbumID3]] = [:]
+        for album in try await store.albums(serverID: serverID) {
+            let albumGenres = album.genres?.map(\.name) ?? album.genre.map { [$0] } ?? []
+            guard let main = MainGenre.of(trackGenres: trackGenres[album.id] ?? [], albumGenres: albumGenres) else { continue }
+            grouped[main, default: []].append(album)
+        }
+        // The index may have moved on while this ran; only cache what matches the current sync.
+        if try await queueBuilderStamp() == stamp { mainGenreCache = (stamp, grouped) }
+        return grouped
     }
 
     /// Indexed album headers for the given IDs, in no particular order.

@@ -399,6 +399,10 @@ actor LibraryService: LibraryServiceProtocol {
         try await client().getAlbumList2(type: .byGenre, size: size, genre: genre)
     }
 
+    func albumsByMainGenre() async throws -> [String: [AlbumID3]]? {
+        try await catalog.albumsByMainGenre()
+    }
+
     func randomSongs(size: Int) async throws -> [Song] {
         try await client().getRandomSongs(size: size)
     }

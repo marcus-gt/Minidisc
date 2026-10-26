@@ -6,14 +6,18 @@ import Testing
 private actor HomeFeedSource: PlaylistBrowsing, RecentlyAddedAlbumBrowsing, ListeningHistoryBrowsing, GenreBrowsing {
     private let failHistory: Bool
     private let waitForGenres: Bool
+    private let mainGenres: [String: [AlbumID3]]?
     private var genreWaiter: CheckedContinuation<Void, Never>?
     private(set) var calls = 0
+    private(set) var serverGenreCalls = 0
     var waiting: Bool { genreWaiter != nil }
 
-    init(failHistory: Bool = false, waitForGenres: Bool = false) {
+    init(failHistory: Bool = false, waitForGenres: Bool = false, mainGenres: [String: [AlbumID3]]? = nil) {
         self.failHistory = failHistory
         self.waitForGenres = waitForGenres
+        self.mainGenres = mainGenres
     }
+    func albumsByMainGenre() async throws -> [String: [AlbumID3]]? { mainGenres }
     func playlists() async throws -> [Playlist] {
         calls += 1
         return [Playlist(id: "p", name: "Saved", songCount: 1, duration: 100)]
@@ -31,6 +35,7 @@ private actor HomeFeedSource: PlaylistBrowsing, RecentlyAddedAlbumBrowsing, List
     func mostPlayedAlbums(size: Int) async throws -> [AlbumID3] { [] }
     func genres() async throws -> [Genre] {
         calls += 1
+        serverGenreCalls += 1
         if waitForGenres { await withCheckedContinuation { genreWaiter = $0 } }
         return []
     }
@@ -56,6 +61,22 @@ struct HomeFeedContinuityTests {
         #expect(model.topPicks.map(\.id) == ["p"])
         #expect(model.hasPartialFailure)
         #expect(!model.isEmpty)
+    }
+
+    @Test func genreShelves_useMainGenresFromTheIndexWhenAvailable() async throws {
+        func album(_ id: String) throws -> AlbumID3 {
+            try JSONDecoder().decode(AlbumID3.self, from: Data(#"{"id":"\#(id)","name":"\#(id)","songCount":1,"duration":100}"#.utf8))
+        }
+        let source = HomeFeedSource(mainGenres: [
+            "Dubstep": [try album("trap")],
+            "Jazz": [try album("j1"), try album("j2")]
+        ])
+        let model = HomeFeedViewModel(libraryService: source)
+        await model.load()
+
+        #expect(model.genreShelves.map(\.name) == ["Jazz", "Dubstep"])
+        #expect(Set(model.genreShelves[0].albums.map(\.id)) == ["j1", "j2"])
+        #expect(await source.serverGenreCalls == 0)
     }
 
     @Test func homeSurvivesRelaunchOfflineAndIsScopedToItsServer() async throws {

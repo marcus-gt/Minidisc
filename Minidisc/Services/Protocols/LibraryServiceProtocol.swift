@@ -88,6 +88,13 @@ nonisolated protocol RecentlyAddedTrackBrowsing: AnyObject, Sendable {
 nonisolated protocol GenreBrowsing: AnyObject, Sendable {
     func genres() async throws -> [Genre]
     func albumsByGenre(_ genre: String, size: Int) async throws -> [AlbumID3]
+    /// Albums grouped by main genre (the tag most of their tracks carry); `nil` while the library index
+    /// is incomplete.
+    func albumsByMainGenre() async throws -> [String: [AlbumID3]]?
+}
+
+extension GenreBrowsing {
+    func albumsByMainGenre() async throws -> [String: [AlbumID3]]? { nil }
 }
 
 nonisolated protocol RecordLabelBrowsing: AnyObject, Sendable {
