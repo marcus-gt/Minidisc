@@ -67,6 +67,8 @@ extension Notification.Name {
     static let minidiscFavoritesChanged = Notification.Name("minidisc.favoritesChanged")
     static let minidiscPlaylistsChanged   = Notification.Name("minidisc.playlistsChanged")
     static let minidiscMoodPlaylistsChanged = Notification.Name("minidisc.moodPlaylistsChanged")
+    /// The library new-releases feed finished a refresh (#15).
+    static let minidiscFreshReleasesChanged = Notification.Name("minidisc.freshReleasesChanged")
     static let lidarrLibraryDidChange     = Notification.Name("minidisc.lidarrLibraryDidChange")
     static let lidarrQueueDidChange       = Notification.Name("minidisc.lidarrQueueDidChange")
 }

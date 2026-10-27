@@ -5,6 +5,9 @@ struct FreshReleaseDetailView: View {
     let release: AlbumRecommendation
     let providers: [ExternalReleaseProvider]
 
+    @Environment(\.appContainer) private var container
+    @State private var storeLinks: [StoreLink]?
+
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .long
@@ -34,20 +37,22 @@ struct FreshReleaseDetailView: View {
                         .font(.minidiscCellTitle)
                         .foregroundStyle(.secondary)
 
-                    if let date = release.releaseDate {
-                        Text(Self.dateFormatter.string(from: date))
+                    if let details = detailsLine {
+                        Text(verbatim: details)
                             .font(.minidiscCaption)
                             .foregroundStyle(.secondary)
                     }
                 }
 
+                storeSection
                 externalLinksSection
             }
             .padding(MinidiscSpacing.l)
         }
         .navigationTitle(release.title)
         .navigationBarTitleDisplayMode(.inline)
-        .task {
+        .task(id: release.id) {
+            await loadStoreLinks()
             for provider in providers {
                 if provider.buildURL(artistName: release.artistName, albumTitle: release.title) == nil {
                     Logger.integrations.warning("buildURL returned nil for provider '\(provider.name, privacy: .public)'")
@@ -56,30 +61,70 @@ struct FreshReleaseDetailView: View {
         }
     }
 
+    /// "16 October 2026 · Album · Live".
+    private var detailsLine: String? {
+        let parts = [release.releaseDate.map { Self.dateFormatter.string(from: $0) }, release.typeLabel].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    // MARK: - Stores (#15)
+
     @ViewBuilder
-    private var externalLinksSection: some View {
-        if providers.isEmpty {
-            if let id = release.id,
-               let lbURL = URL(string: "https://listenbrainz.org/release-group/\(id)") {
-                externalLinkButton(title: "View on ListenBrainz", url: lbURL)
-            }
-        } else {
-            VStack(spacing: MinidiscSpacing.s) {
-                ForEach(providers) { provider in
-                    if let url = provider.buildURL(artistName: release.artistName, albumTitle: release.title) {
-                        externalLinkButton(title: "View on \(provider.name)", url: url)
+    private var storeSection: some View {
+        if let storeLinks {
+            if !storeLinks.isEmpty {
+                VStack(spacing: MinidiscSpacing.s) {
+                    ForEach(storeLinks) { link in
+                        externalLinkButton(
+                            title: link.isSearch ? Text("Search on \(link.store.name)") : Text("Open on \(link.store.name)"),
+                            url: link.url
+                        )
                     }
                 }
+            }
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, MinidiscSpacing.s)
+        }
+    }
+
+    private func loadStoreLinks() async {
+        guard let id = release.id, let container else {
+            storeLinks = ReleaseStoreLinks.links(recordPages: [:], artist: release.artistName, title: release.title,
+                                                 region: Locale.current.region?.identifier)
+            return
+        }
+        let links = await container.newReleasesService.storeLinks(
+            releaseGroupID: id, artist: release.artistName, title: release.title,
+            region: Locale.current.region?.identifier
+        )
+        guard !Task.isCancelled else { return }
+        storeLinks = links
+    }
+
+    // MARK: - Other links
+
+    @ViewBuilder
+    private var externalLinksSection: some View {
+        VStack(spacing: MinidiscSpacing.s) {
+            ForEach(providers) { provider in
+                if let url = provider.buildURL(artistName: release.artistName, albumTitle: release.title) {
+                    externalLinkButton(title: Text("View on \(provider.name)"), url: url)
+                }
+            }
+            if let id = release.id, let url = URL(string: "https://musicbrainz.org/release-group/\(id)") {
+                externalLinkButton(title: Text("View on MusicBrainz"), url: url)
             }
         }
     }
 
-    private func externalLinkButton(title: String, url: URL) -> some View {
+    private func externalLinkButton(title: Text, url: URL) -> some View {
         Button {
             ExternalLinkOpener.open(url)
         } label: {
             HStack {
-                Text(title)
+                title
                 Spacer(minLength: 0)
                 Image(systemName: "arrow.up.right")
             }

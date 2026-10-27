@@ -437,6 +437,15 @@ actor LibraryCatalog {
         }
     }
 
+    /// The album artists the new-releases feed follows (#15). `nil` while artists or albums are not fully indexed.
+    func newReleaseWatchlist() async throws -> NewReleaseWatchlist? {
+        let serverID = try await source.activeServerID()
+        let status = try await store.status(for: serverID)
+        guard status.artists, status.albums else { return nil }
+        let artists = try await store.artists(serverID: serverID).flatMap(\.artist)
+        return NewReleaseWatchlist.build(artists: artists, albums: try await store.albums(serverID: serverID))
+    }
+
     /// Library → Genres (#49): the indexed albums' tags grouped under main genres and styles.
     /// `nil` while the album index is incomplete.
     func genreLibrary() async throws -> [MainGenreSummary]? {

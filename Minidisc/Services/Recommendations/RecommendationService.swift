@@ -3,9 +3,12 @@ import OSLog
 
 actor RecommendationService {
     private let providers: [any RecommendationProvider]
+    /// Fresh Releases come from these when given (the library feed, #15); otherwise from `providers`.
+    private let freshReleaseProviders: [any RecommendationProvider]
 
-    init(providers: [any RecommendationProvider]) {
+    init(providers: [any RecommendationProvider], freshReleaseProviders: [any RecommendationProvider]? = nil) {
         self.providers = providers
+        self.freshReleaseProviders = freshReleaseProviders ?? providers
     }
 
     func similarArtists(to artistID: String, limit: Int = 20) async throws -> [SimilarArtistRecommendation] {
@@ -26,7 +29,7 @@ actor RecommendationService {
     }
 
     func freshReleases(limit: Int = 20, daysWindow: Int = 90) async throws -> [AlbumRecommendation] {
-        for provider in providers {
+        for provider in freshReleaseProviders {
             let results = try await provider.freshReleases(limit: limit, daysWindow: daysWindow)
             if !results.isEmpty {
                 Logger.recommendations.debug("freshReleases: \(results.count) result(s) from \(String(describing: type(of: provider)), privacy: .public)")

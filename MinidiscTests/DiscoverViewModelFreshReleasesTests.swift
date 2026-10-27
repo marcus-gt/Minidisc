@@ -121,6 +121,20 @@ struct DiscoverViewModelFreshReleasesTests {
         #expect(vm.freshReleases.count == 20)
     }
 
+    @Test("the shelf keeps the newest releases only")
+    func shelfKeepsTheNewestTwenty() async {
+        let manyReleases = (1...25).map {
+            AlbumRecommendation(id: "id-\($0)", title: "Album \($0)", artistName: "Artist",
+                                releaseDate: dvDate(year: 2026, month: 5, day: $0),
+                                coverArtURL: nil, inLibrary: false)
+        }
+        let vm = makeVM(releases: manyReleases)
+        await vm.loadFreshReleases()
+        #expect(vm.freshReleases.count == DiscoverViewModel.freshReleasesShelfLimit)
+        #expect(vm.freshReleases.first?.id == "id-25")
+        #expect(vm.freshReleases.last?.id == "id-6")
+    }
+
     @Test("only releases in the current calendar month are kept")
     func filtersToCurrentCalendarMonth() async {
         let releases = [
