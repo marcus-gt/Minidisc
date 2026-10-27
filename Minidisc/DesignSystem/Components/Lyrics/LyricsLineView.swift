@@ -37,9 +37,11 @@ struct LyricsLineView: View {
         }
     }
 
+    /// The current line is emphasised by shrinking the others: scaling it up instead would push its
+    /// text past the right edge, where it was cut off.
     private var scale: CGFloat {
         guard isSynced, isFollowing, currentIndex != nil else { return 1.0 }
-        return distance == 0 ? 1.05 : 1.0
+        return distance == 0 ? 1.0 : 0.95
     }
 
     private var lineFont: Font {

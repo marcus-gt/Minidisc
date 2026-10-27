@@ -210,7 +210,7 @@ final class LyricsViewModel {
         let best = lyricsService.selectBestLanguage(from: list, preferred: selectedLanguage)
         currentLineIndex = nil
         state = best.map { .loaded($0) } ?? .empty
-        Logger.lyrics.info(
+        Logger.lyrics.debug(
             "[LINE] songId=\(self.track.id, privacy: .public) source=\(self.source.rawValue, privacy: .public) sets=\(list.structuredLyrics.map { ($0.lang ?? "nil") + ($0.synced ? "/synced" : "/plain") }.joined(separator: ","), privacy: .public) chose=\(best.map { ($0.lang ?? "nil") + ($0.synced ? "/synced" : "/plain") } ?? "none", privacy: .public)"
         )
         reconcileTracking()

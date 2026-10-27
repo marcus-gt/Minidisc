@@ -20,6 +20,8 @@ struct CurrentLyricLineView: View {
                     .foregroundStyle(contentColor.opacity(0.75))
                     .multilineTextAlignment(.center)
                     .lineLimit(1)
+                    // A long line shrinks a little rather than losing its ending.
+                    .minimumScaleFactor(0.7)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity)
                     .contentTransition(.opacity)
