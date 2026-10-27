@@ -154,12 +154,14 @@ actor ExternalArtistImageResolver {
     private var inflight: [String: InFlightEntry] = [:]
     private let musicBrainzRateLimiter: MusicBrainzRateLimiter
 
+    /// `musicBrainzRateLimiter` is shared with the new-releases feed: MusicBrainz' limit is per application.
     init(
         httpClient: any ArtistImageHTTPClient = URLSession.shared,
-        minimumMBRequestInterval: Duration = .seconds(1)
+        minimumMBRequestInterval: Duration = .seconds(1),
+        musicBrainzRateLimiter: MusicBrainzRateLimiter? = nil
     ) {
         self.httpClient = httpClient
-        musicBrainzRateLimiter = MusicBrainzRateLimiter(minimumInterval: minimumMBRequestInterval)
+        self.musicBrainzRateLimiter = musicBrainzRateLimiter ?? MusicBrainzRateLimiter(minimumInterval: minimumMBRequestInterval)
     }
 
     // MARK: - Public API

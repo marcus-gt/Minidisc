@@ -53,7 +53,9 @@ final class AppContainer {
     let listenBrainzService: ListenBrainzService
     let externalProvidersStore: ExternalProvidersStore
     let externalArtworkCache = ExternalArtworkCache()
-    let externalArtistImageResolver = ExternalArtistImageResolver()
+    let externalArtistImageResolver: ExternalArtistImageResolver
+    /// "New releases by artists in your library" behind Fresh Releases (#15).
+    let newReleasesService: LibraryNewReleasesService
     let searchHistoryService: SearchHistoryService
     /// When each playlist was last added to or played; the Playlists list sorts by it.
     let playlistUsage: PlaylistUsageStore
@@ -242,7 +244,23 @@ final class AppContainer {
 
         let subsonicProvider = SubsonicRecommendationProvider(libraryService: library)
         let lbProvider = ListenBrainzRecommendationProvider(client: lbClient, service: lb, libraryService: library)
-        recommendationService = RecommendationService(providers: [lbProvider, subsonicProvider])
+        let musicBrainzLimiter = MusicBrainzRateLimiter()
+        let activeServerState = serverState
+        externalArtistImageResolver = ExternalArtistImageResolver(musicBrainzRateLimiter: musicBrainzLimiter)
+        let newReleases = LibraryNewReleasesService(
+            watchlist: { try await catalog.newReleaseWatchlist() },
+            activeServerID: { await MainActor.run { activeServerState.activeServer?.id.uuidString } },
+            client: MusicBrainzReleaseClient(rateLimiter: musicBrainzLimiter),
+            directory: inMemory
+                ? URL.temporaryDirectory.appendingPathComponent("minidisc-new-releases-\(UUID())")
+                : URL.applicationSupportDirectory.appendingPathComponent("minidisc-new-releases"),
+            onChange: { await MainActor.run { NotificationCenter.default.post(name: .minidiscFreshReleasesChanged, object: nil) } }
+        )
+        newReleasesService = newReleases
+        recommendationService = RecommendationService(
+            providers: [lbProvider, subsonicProvider],
+            freshReleaseProviders: [LibraryNewReleasesProvider(service: newReleases)]
+        )
 
         searchHistoryService = SearchHistoryService(container: modelContainer)
         playlistUsage = PlaylistUsageStore(defaults: userDefaults)

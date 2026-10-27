@@ -12,7 +12,6 @@ struct DiscoverView: View {
     @Namespace private var freshReleaseZoomNamespace
     @State private var showAllFreshReleases = false
     @State private var allReleasesVM: AllFreshReleasesViewModel?
-    @State private var isListenBrainzConnected: Bool = false
     @State private var availableMoods: [MoodPlaylist] = []
     @State private var moodReloadID = 0
     @AppStorage(DiscoverLayoutConfiguration.storageKey) private var discoverLayout: DiscoverLayoutConfiguration = .default
@@ -52,12 +51,18 @@ struct DiscoverView: View {
                 radioStations = []
                 yearlyPlaylists = []
                 availableMoods = []
-                isListenBrainzConnected = false
             }
             if isOnline { await refreshDiscover(forceRefresh: false) }
             else if let serverID { await loadMoodPlaylists(serverId: serverID.uuidString) }
         }
         .refreshable { await refreshDiscover(forceRefresh: true) }
+        // The library feed refreshes in the background and says when it has something new (#15).
+        .onReceive(NotificationCenter.default.publisher(for: .minidiscFreshReleasesChanged)) { _ in
+            Task {
+                await vm?.loadFreshReleases()
+                await allReleasesVM?.loadReleases()
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .minidiscMoodPlaylistsChanged)) { _ in
             moodReloadID += 1
         }
@@ -171,11 +176,10 @@ struct DiscoverView: View {
 
     @ViewBuilder
     private func freshReleasesSection(vm: DiscoverViewModel) -> some View {
-        if isListenBrainzConnected, !vm.freshReleases.isEmpty {
+        if !vm.freshReleases.isEmpty {
             FreshReleasesCard(
                 releases: vm.freshReleases,
                 isLoading: false,
-                isListenBrainzConnected: isListenBrainzConnected,
                 onSeeAll: { showAllFreshReleases = true },
                 zoomNamespace: freshReleaseZoomNamespace
             )
@@ -225,12 +229,9 @@ struct DiscoverView: View {
         _ = await (personal, releases, radio, mixes)
     }
 
+    /// New releases by artists in the library, from MusicBrainz (#15); no ListenBrainz account needed.
     private func refreshFreshReleases(_ model: DiscoverViewModel) async {
-        guard let container else { return }
-        let connected = await container.listenBrainzService.currentSnapshot().isEnabled
-        guard !Task.isCancelled else { return }
-        isListenBrainzConnected = connected
-        if connected { await model.loadFreshReleases() }
+        await model.loadFreshReleases()
     }
 
     private func refreshServerMixes() async {

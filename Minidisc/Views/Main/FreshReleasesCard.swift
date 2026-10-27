@@ -5,7 +5,6 @@ struct FreshReleasesCard: View {
 
     let releases: [AlbumRecommendation]
     let isLoading: Bool
-    let isListenBrainzConnected: Bool
     let onSeeAll: () -> Void
     var zoomNamespace: Namespace.ID? = nil
 
@@ -31,15 +30,10 @@ struct FreshReleasesCard: View {
                     }
                     .padding(.horizontal, MinidiscSpacing.m)
                 }
-            } else if !isListenBrainzConnected {
-                emptyStatePlaceholder(
-                    icon: "waveform.circle",
-                    message: "Connect ListenBrainz in Settings to discover fresh releases based on your listening history."
-                )
             } else {
                 emptyStatePlaceholder(
                     icon: "music.note.list",
-                    message: "No fresh releases found based on your recent listening history."
+                    message: "No new releases from artists in your library this month."
                 )
             }
         }
