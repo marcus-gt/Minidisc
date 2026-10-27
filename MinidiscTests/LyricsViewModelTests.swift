@@ -231,30 +231,47 @@ struct LyricsViewModelSeekTests {
     }
 }
 
-// MARK: - Auto-scroll
+// MARK: - Following the music while scrolling (#36)
 
-@Suite("LyricsViewModel — auto-scroll")
+@Suite("LyricsViewModel — following")
 @MainActor
 struct LyricsViewModelScrollTests {
 
-    @Test func userStartedScrolling_setsFlag() throws {
+    @Test func scrollingByHand_stopsFollowing() throws {
         let (vm, _) = try makeViewModel()
-        #expect(vm.isUserScrolling == false)
+        #expect(vm.isFollowing)
         vm.userStartedScrolling()
-        #expect(vm.isUserScrolling == true)
+        #expect(!vm.isFollowing)
     }
 
-    @Test func isUserScrolling_resetAfter5Seconds() async throws {
+    /// Reading must not be interrupted, so following only comes back when asked for.
+    @Test func followingStaysOffUntilResumed() async throws {
         let (vm, _) = try makeViewModel()
         vm.userStartedScrolling()
-        #expect(vm.isUserScrolling == true)
+        try await Task.sleep(for: .seconds(1))
+        #expect(!vm.isFollowing)
+        vm.resumeFollowing()
+        #expect(vm.isFollowing)
+    }
 
-        let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: .seconds(10))
-        while vm.isUserScrolling, clock.now < deadline {
-            try await Task.sleep(for: .milliseconds(100))
-        }
-        #expect(vm.isUserScrolling == false)
+    @Test func closingThePanel_followsAgain() throws {
+        let (vm, _) = try makeViewModel()
+        vm.setVisible(true)
+        vm.userStartedScrolling()
+        vm.setVisible(false)
+        #expect(vm.isFollowing)
+    }
+
+    /// A plain and a synced set of the same language are one choice in the picker, not two.
+    @Test func availableLanguages_collapseUnspecifiedDuplicates() async throws {
+        let id = UUID()
+        let list = LyricsList(structuredLyrics: [
+            StructuredLyrics(lang: "und", synced: true, line: [Line(value: "Timed", start: 0)]),
+            StructuredLyrics(lang: "xxx", synced: false, line: [Line(value: "Plain")])
+        ])
+        let (vm, _) = try makeViewModel(serverId: id, lyrics: list)
+        await vm.load()
+        #expect(vm.availableLanguages == ["und"])
     }
 }
 

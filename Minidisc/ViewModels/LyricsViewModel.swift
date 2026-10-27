@@ -16,12 +16,13 @@ final class LyricsViewModel {
     private(set) var currentLineIndex: Int?
     private(set) var availableLanguages: [String] = []
     var selectedLanguage: String?
-    var autoScrollEnabled: Bool = true
-    private(set) var isUserScrolling: Bool = false
+    /// While following, the view scrolls with the music and dims the lines around the current one.
+    /// Scrolling by hand turns it off so the lyrics can simply be read, until the listener taps
+    /// "Follow" again or the track changes (#36).
+    private(set) var isFollowing: Bool = true
 
     private var lyricsList: LyricsList?
     private var trackingTask: Task<Void, Never>?
-    private var resumeTask: Task<Void, Never>?
     /// The panel and the player's single line both track lines; either one keeps the timer running.
     private var isPanelShown = false
     private var isLineShown = false
@@ -54,7 +55,6 @@ final class LyricsViewModel {
 
     isolated deinit {
         trackingTask?.cancel()
-        resumeTask?.cancel()
     }
 
     // MARK: - Load
@@ -115,20 +115,14 @@ final class LyricsViewModel {
         }
     }
 
-    // MARK: - Auto-scroll
+    // MARK: - Following
 
     func userStartedScrolling() {
-        isUserScrolling = true
-        resumeTask?.cancel()
-        resumeTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(3))
-            guard !Task.isCancelled else { return }
-            self?.isUserScrolling = false
-        }
+        isFollowing = false
     }
 
-    func userStoppedScrolling() {
-        userStartedScrolling()
+    func resumeFollowing() {
+        isFollowing = true
     }
 
     // MARK: - Language selection
@@ -149,13 +143,11 @@ final class LyricsViewModel {
         return false
     }
 
-    /// Called when the lyrics panel appears/disappears. The auto-scroll resume task is torn down on hide.
+    /// Called when the lyrics panel appears/disappears. Closing it starts following again, so the
+    /// panel always opens on the current line.
     func setVisible(_ visible: Bool) {
         isPanelShown = visible
-        if !visible {
-            resumeTask?.cancel()
-            resumeTask = nil
-        }
+        if !visible { isFollowing = true }
         reconcileTracking()
     }
 
@@ -208,9 +200,11 @@ final class LyricsViewModel {
 
     private func applyCurrentLanguage() {
         guard let list = lyricsList else { return }
+        // "xxx" and "und" both mean "unspecified", and a plain and a synced set of the same language
+        // are one choice, not two.
         var seen = Set<String>()
         availableLanguages = list.structuredLyrics
-            .compactMap { $0.lang }
+            .compactMap { $0.lang == "xxx" ? "und" : $0.lang }
             .filter { seen.insert($0).inserted }
         let best = lyricsService.selectBestLanguage(from: list, preferred: selectedLanguage)
         currentLineIndex = nil

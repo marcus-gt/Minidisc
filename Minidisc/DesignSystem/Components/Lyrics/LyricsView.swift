@@ -27,6 +27,7 @@ struct LyricsView: View {
         .onAppear { viewModel.setVisible(true) }
         .onDisappear { viewModel.setVisible(false) }
         .onChange(of: viewModel.isPlaying) { _, _ in viewModel.reconcileTracking() }
+        .animation(.easeInOut(duration: 0.25), value: viewModel.isFollowing)
     }
 
     // MARK: - Loaded
@@ -42,6 +43,8 @@ struct LyricsView: View {
                             index: index,
                             currentIndex: viewModel.currentLineIndex,
                             isSynced: structured.synced,
+                            // Reading mode: no blur, so any line can be read while scrolling.
+                            isFollowing: viewModel.isFollowing,
                             isTappable: structured.synced && line.start != nil,
                             onTap: { viewModel.userTapped(lineIndex: index) }
                         )
@@ -53,36 +56,30 @@ struct LyricsView: View {
             }
             .scrollIndicators(.hidden)
             .onChange(of: viewModel.currentLineIndex) { _, newIndex in
-                guard viewModel.autoScrollEnabled,
-                      !viewModel.isUserScrolling,
-                      let newIndex else { return }
+                guard viewModel.isFollowing, let newIndex else { return }
                 withAnimation(.easeInOut(duration: 0.3)) {
                     proxy.scrollTo(newIndex, anchor: .center)
                 }
             }
             .onScrollPhaseChange { _, newPhase in
-                switch newPhase {
-                case .interacting:
-                    viewModel.userStartedScrolling()
-                case .decelerating, .idle:
-                    guard viewModel.isUserScrolling else { return }
-                    viewModel.userStoppedScrolling()
-                default:
-                    break
-                }
+                if newPhase == .interacting { viewModel.userStartedScrolling() }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 header
+            }
+            .overlay(alignment: .bottom) {
+                followButton(proxy: proxy)
             }
         }
     }
 
     // MARK: - Header
 
+    /// Only a language choice, and only when the lyrics really come in more than one language.
     @ViewBuilder
     private var header: some View {
-        HStack(spacing: 16) {
-            if viewModel.availableLanguages.count > 1 {
+        if viewModel.availableLanguages.count > 1 {
+            HStack(spacing: 16) {
                 Menu {
                     ForEach(viewModel.availableLanguages, id: \.self) { lang in
                         Button(displayName(for: lang)) {
@@ -97,23 +94,36 @@ struct LyricsView: View {
                     .font(.callout)
                     .foregroundStyle(.white.opacity(0.8))
                 }
+                .accessibilityLabel(Text("Lyrics language"))
+
+                Spacer()
             }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 12)
+        }
+    }
 
-            Spacer()
-
+    /// Scrolling by hand stops the lyrics following the music; this brings them back.
+    @ViewBuilder
+    private func followButton(proxy: ScrollViewProxy) -> some View {
+        if !viewModel.isFollowing, viewModel.currentLineIndex != nil {
             Button {
-                viewModel.autoScrollEnabled.toggle()
+                viewModel.resumeFollowing()
+                if let index = viewModel.currentLineIndex {
+                    withAnimation(.easeInOut(duration: 0.3)) { proxy.scrollTo(index, anchor: .center) }
+                }
             } label: {
-                Image(systemName: viewModel.autoScrollEnabled
-                    ? "arrow.up.arrow.down.circle.fill"
-                    : "arrow.up.arrow.down.circle")
-                    .font(.title3)
-                    .foregroundStyle(.white.opacity(0.8))
+                Label("Follow", systemImage: "arrow.down.circle.fill")
+                    .font(.minidiscCellTitle)
+                    .padding(.horizontal, MinidiscSpacing.m)
+                    .padding(.vertical, MinidiscSpacing.s)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
+            .padding(.bottom, MinidiscSpacing.m)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
-        .padding(.horizontal, 32)
-        .padding(.vertical, 12)
     }
 
     // MARK: - Empty states
@@ -165,7 +175,7 @@ struct LyricsView: View {
     // MARK: - Helpers
 
     private func displayName(for lang: String) -> String {
-        guard lang != "und", lang != "xxx" else { return "—" }
+        guard lang != "und", lang != "xxx" else { return String(localized: "Original") }
         return Locale.current.localizedString(forLanguageCode: lang)?.capitalized ?? lang.uppercased()
     }
 }
