@@ -8,11 +8,15 @@ struct CurrentLyricLineView: View {
     let contentColor: Color
     let onTap: () -> Void
 
+    private static let noteGlyph = "\u{266A}"
+
     var body: some View {
         Group {
             if let line = viewModel.currentLine {
-                Text(verbatim: line)
+                // Italic between two note glyphs, so the line reads as sung words rather than metadata.
+                Text(verbatim: "\(Self.noteGlyph) \(line) \(Self.noteGlyph)")
                     .font(.minidiscCellTitle)
+                    .italic()
                     .foregroundStyle(contentColor.opacity(0.75))
                     .multilineTextAlignment(.center)
                     .lineLimit(1)
