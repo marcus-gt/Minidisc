@@ -10,6 +10,7 @@ final class LyricsViewModel {
     private let track: DisplayableSong
     private let serverId: UUID
     private let source: LyricsSource
+    private let settings: LyricsSettings?
 
     private(set) var state: State = .loading
     private(set) var currentLineIndex: Int?
@@ -21,7 +22,9 @@ final class LyricsViewModel {
     private var lyricsList: LyricsList?
     private var trackingTask: Task<Void, Never>?
     private var resumeTask: Task<Void, Never>?
-    private var isShown = false
+    /// The panel and the player's single line both track lines; either one keeps the timer running.
+    private var isPanelShown = false
+    private var isLineShown = false
 
     nonisolated enum State: Equatable {
         case loading
@@ -37,11 +40,13 @@ final class LyricsViewModel {
         source: LyricsSource,
         lyricsService: LyricsService,
         playerService: any PlayerServiceProtocol,
-        playerState: PlayerState
+        playerState: PlayerState,
+        settings: LyricsSettings? = nil
     ) {
         self.track = track
         self.serverId = serverId
         self.source = source
+        self.settings = settings
         self.lyricsService = lyricsService
         self.playerService = playerService
         self.playerState = playerState
@@ -82,7 +87,8 @@ final class LyricsViewModel {
             currentLineIndex = nil
             return
         }
-        let adjustedMs = elapsedMs - structured.offset
+        // The song's own offset, plus the listener's correction for lyrics that run early or late.
+        let adjustedMs = elapsedMs - structured.offset - (settings?.timingOffsetMs ?? 0)
         var newIndex: Int? = nil
         for (index, line) in structured.line.enumerated() {
             guard let start = line.start else { continue }
@@ -103,7 +109,7 @@ final class LyricsViewModel {
         guard case .loaded(let structured) = state, structured.synced else { return }
         guard lineIndex < structured.line.count else { return }
         guard let startMs = structured.line[lineIndex].start else { return }
-        let targetSeconds = TimeInterval(startMs + structured.offset) / 1000.0
+        let targetSeconds = TimeInterval(startMs + structured.offset + (settings?.timingOffsetMs ?? 0)) / 1000.0
         Task { [weak self] in
             await self?.playerService.seek(to: targetSeconds)
         }
@@ -143,9 +149,9 @@ final class LyricsViewModel {
         return false
     }
 
-    /// Called when the lyrics view appears/disappears. The auto-scroll resume task is torn down on hide.
+    /// Called when the lyrics panel appears/disappears. The auto-scroll resume task is torn down on hide.
     func setVisible(_ visible: Bool) {
-        isShown = visible
+        isPanelShown = visible
         if !visible {
             resumeTask?.cancel()
             resumeTask = nil
@@ -153,12 +159,28 @@ final class LyricsViewModel {
         reconcileTracking()
     }
 
+    /// Called when the player's single current line appears/disappears (#36).
+    func setLineVisible(_ visible: Bool) {
+        isLineShown = visible
+        reconcileTracking()
+    }
+
+    /// The line to show in the player: the current one, or the first once playback starts.
+    var currentLine: String? {
+        guard case .loaded(let structured) = state, structured.synced,
+              let index = currentLineIndex, structured.line.indices.contains(index) else { return nil }
+        let value = structured.line[index].value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
+
     /// Runs line tracking only for visible, playing, time-synced lyrics.
     func reconcileTracking() {
-        if isShown && isPlaying && hasSyncedLyrics {
+        if (isPanelShown || isLineShown) && isPlaying && hasSyncedLyrics {
             startTimer()
         } else {
             stopTimer()
+            // A seek while paused still moves the line.
+            if isPanelShown || isLineShown { update(elapsedMs: Int(playerState.position * 1000)) }
         }
     }
 

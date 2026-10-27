@@ -16,6 +16,7 @@ private struct LyricsLoadKey: Equatable {
     let trackID: String?
     let source: LyricsSource
     let isRequested: Bool
+    let timingOffsetMs: Int
 }
 
 private struct FullPlayerBackground: View {
@@ -54,6 +55,11 @@ struct FullPlayerView: View {
     private static let playerCoverToTitleGap: CGFloat = MinidiscSpacing.xl
     private static let playerControlsSpacing: CGFloat = MinidiscSpacing.xl
 
+    /// With the player's current line on, every track's lyrics are loaded, not just the panel's (#36).
+    private var showsCurrentLyricLine: Bool {
+        container?.lyricsSettings.showsCurrentLineInPlayer ?? true
+    }
+
     var body: some View {
         @Bindable var playlistAddition = playlistAddition
 
@@ -62,7 +68,8 @@ struct FullPlayerView: View {
             let lyricsLoadKey = LyricsLoadKey(
                 trackID: playerState.currentTrack?.id,
                 source: lyricsSource,
-                isRequested: showLyrics
+                isRequested: showLyrics || showsCurrentLyricLine,
+                timingOffsetMs: container?.lyricsSettings.timingOffsetMs ?? 0
             )
             let themeCoverId: String? = playerState.isLiveStream
                 ? playerState.currentRadio?.coverArt
@@ -77,7 +84,7 @@ struct FullPlayerView: View {
                         lyricsViewModel = nil
                         return
                     }
-                    guard showLyrics,
+                    guard showLyrics || showsCurrentLyricLine,
                           let track = playerState.currentTrack, !track.isLocalFile,
                           let serverId = container?.serverState.activeServer?.id,
                           let lyricsService = container?.lyricsService,
@@ -91,7 +98,8 @@ struct FullPlayerView: View {
                         source: lyricsSource,
                         lyricsService: lyricsService,
                         playerService: playerService,
-                        playerState: playerState
+                        playerState: playerState,
+                        settings: container?.lyricsSettings
                     )
                     lyricsViewModel = newVM
                     await newVM.load()
@@ -179,6 +187,16 @@ struct FullPlayerView: View {
                         trackSwipe: trackSwipe
                     )
                     .padding(.horizontal, Self.playerHorizontalPadding)
+                }
+
+                if !showingQueue, !showLyrics, showsCurrentLyricLine, let lyricsVM = lyricsViewModel {
+                    CurrentLyricLineView(
+                        viewModel: lyricsVM,
+                        contentColor: vm.contentColor,
+                        onTap: { withAnimation(.smooth(duration: 0.3)) { showLyrics = true } }
+                    )
+                    .padding(.horizontal, Self.playerHorizontalPadding)
+                    .padding(.top, MinidiscSpacing.m)
                 }
 
                 if !playerState.isLiveStream {
