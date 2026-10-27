@@ -30,8 +30,9 @@ actor LyricsService {
     ) async throws -> LyricsList {
         switch source {
         case .automatic:
+            let fromServer: LyricsList
             do {
-                return try await fetchLyrics(for: track, serverId: serverId, provider: .navidrome)
+                fromServer = try await fetchLyrics(for: track, serverId: serverId, provider: .navidrome)
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
@@ -39,6 +40,20 @@ actor LyricsService {
                     "Navidrome lyrics unavailable; trying LRCLIB — songId=\(track.id, privacy: .public)"
                 )
                 return try await fetchLyrics(for: track, serverId: serverId, provider: .lrclib)
+            }
+            // Most tagged lyrics are plain text. LRCLIB often has the same song with timings, which is
+            // what makes the lyrics follow the music, so ask it too and keep the server's as a fallback.
+            guard !fromServer.structuredLyrics.contains(where: \.synced) else { return fromServer }
+            do {
+                let fromLRCLIB = try await fetchLyrics(for: track, serverId: serverId, provider: .lrclib)
+                let synced = fromLRCLIB.structuredLyrics.filter(\.synced)
+                guard !synced.isEmpty else { return fromServer }
+                Logger.lyrics.info("Using LRCLIB synced lyrics over the server's plain ones — songId=\(track.id, privacy: .public)")
+                return LyricsList(structuredLyrics: synced + fromServer.structuredLyrics)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                return fromServer
             }
         case .navidrome:
             return try await fetchLyrics(for: track, serverId: serverId, provider: .navidrome)
