@@ -91,10 +91,16 @@ nonisolated protocol GenreBrowsing: AnyObject, Sendable {
     /// Albums grouped by main genre (the tag most of their tracks carry); `nil` while the library index
     /// is incomplete.
     func albumsByMainGenre() async throws -> [String: [AlbumID3]]?
+    /// Library → Genres: main genres with their styles; `nil` while the album index is incomplete.
+    func genreLibrary() async throws -> [MainGenreSummary]?
+    /// Indexed albums carrying any of `tags`, by name; `nil` while the album index is incomplete.
+    func albums(genreTags tags: [String]) async throws -> [AlbumID3]?
 }
 
 extension GenreBrowsing {
     func albumsByMainGenre() async throws -> [String: [AlbumID3]]? { nil }
+    func genreLibrary() async throws -> [MainGenreSummary]? { nil }
+    func albums(genreTags tags: [String]) async throws -> [AlbumID3]? { nil }
 }
 
 nonisolated protocol RecordLabelBrowsing: AnyObject, Sendable {

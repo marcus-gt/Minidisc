@@ -403,6 +403,14 @@ actor LibraryService: LibraryServiceProtocol {
         try await catalog.albumsByMainGenre()
     }
 
+    func genreLibrary() async throws -> [MainGenreSummary]? {
+        try await catalog.genreLibrary()
+    }
+
+    func albums(genreTags tags: [String]) async throws -> [AlbumID3]? {
+        try await catalog.albums(genreTags: tags)
+    }
+
     func randomSongs(size: Int) async throws -> [Song] {
         try await client().getRandomSongs(size: size)
     }
