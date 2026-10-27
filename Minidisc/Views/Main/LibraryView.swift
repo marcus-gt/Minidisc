@@ -41,6 +41,8 @@ struct LibraryView: View {
                 DownloadedView()
             case .libraryRecordLabels:
                 RecordLabelListView()
+            case .libraryGenres:
+                GenreListView()
             case .album(let album):
                 AlbumDetailView(
                     album: album,
@@ -135,8 +137,13 @@ struct LibraryView: View {
                     .buttonStyle(.plain)
                     Divider().padding(.leading, 52)
                 }
-                // Labels come from the indexed albums, which offline browsing does not filter to downloads.
+                // Genres and Labels come from the indexed albums, which offline browsing does not filter to downloads.
                 if isOnline {
+                    NavigationLink(value: HomeDestination.libraryGenres) {
+                        HomeLibraryRowLabel(title: "Genres", systemImage: "guitars")
+                    }
+                    .buttonStyle(.plain)
+                    Divider().padding(.leading, 52)
                     NavigationLink(value: HomeDestination.libraryRecordLabels) {
                         HomeLibraryRowLabel(title: "Labels", systemImage: "building.2")
                     }

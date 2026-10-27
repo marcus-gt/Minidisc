@@ -437,6 +437,21 @@ actor LibraryCatalog {
         }
     }
 
+    /// Library → Genres (#49): the indexed albums' tags grouped under main genres and styles.
+    /// `nil` while the album index is incomplete.
+    func genreLibrary() async throws -> [MainGenreSummary]? {
+        let serverID = try await source.activeServerID()
+        guard try await store.status(for: serverID).albums else { return nil }
+        return GenreLibrary.summaries(from: try await store.albums(serverID: serverID))
+    }
+
+    /// Indexed albums carrying any of `tags` (case-insensitive). `nil` while the album index is incomplete.
+    func albums(genreTags tags: [String]) async throws -> [AlbumID3]? {
+        let serverID = try await source.activeServerID()
+        guard try await store.status(for: serverID).albums else { return nil }
+        return try await store.albums(serverID: serverID).filter { GenreLibrary.album($0, hasAnyOf: tags) }
+    }
+
     /// Every record label on an indexed album, with album counts. `nil` while the album index is incomplete.
     func recordLabels() async throws -> [RecordLabelSummary]? {
         let serverID = try await source.activeServerID()

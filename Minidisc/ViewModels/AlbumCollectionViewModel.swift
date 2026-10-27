@@ -2,20 +2,22 @@ import Foundation
 import SwiftSonic
 import OSLog
 
-/// What an album collection page gathers: every album in a genre, or from a record label.
+/// What an album collection page gathers: every album in a genre, from a record label, or carrying any
+/// of a group of genre tags (a main genre or style in Library → Genres).
 nonisolated enum AlbumCollectionKind: Hashable, Sendable {
     case genre(String)
     case recordLabel(String)
+    case genreGroup(name: String, tags: [String])
 
     var name: String {
         switch self {
-        case .genre(let name), .recordLabel(let name): name
+        case .genre(let name), .recordLabel(let name), .genreGroup(let name, _): name
         }
     }
 
     var systemImage: String {
         switch self {
-        case .genre: "music.note.list"
+        case .genre, .genreGroup: "music.note.list"
         case .recordLabel: "building.2"
         }
     }
@@ -55,6 +57,8 @@ final class AlbumCollectionViewModel {
                 loaded = try await library.albumsByGenre(genre, size: Self.genreAlbumLimit)
             case .recordLabel(let label):
                 loaded = try await library.albums(recordLabel: label)
+            case .genreGroup(_, let tags):
+                loaded = try await library.albums(genreTags: tags)
             }
             try Task.checkCancellation()
             guard let loaded else {

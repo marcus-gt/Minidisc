@@ -10,6 +10,7 @@ nonisolated enum HomeDestination: Hashable {
     case libraryFavorites
     case libraryDownloads
     case libraryRecordLabels
+    case libraryGenres
 
     // MARK: - Content destinations
     case album(AlbumID3)

@@ -342,6 +342,14 @@ nonisolated final class PreviewLibraryService: AlbumBrowsing, ArtistBrowsing, St
     func albumsByGenre(_ genre: String, size: Int) async throws -> [AlbumID3] {
         Array(PreviewFixtures.albums.filter { $0.genre == genre }.prefix(size)).map(PreviewFixtures.withoutSongs)
     }
+
+    func genreLibrary() async throws -> [MainGenreSummary]? {
+        GenreLibrary.summaries(from: PreviewFixtures.albums.map(PreviewFixtures.withoutSongs))
+    }
+
+    func albums(genreTags tags: [String]) async throws -> [AlbumID3]? {
+        PreviewFixtures.albums.map(PreviewFixtures.withoutSongs).filter { GenreLibrary.album($0, hasAnyOf: tags) }
+    }
 }
 
 /// Similar artists for the artist page. All are in the library, so the view model never asks

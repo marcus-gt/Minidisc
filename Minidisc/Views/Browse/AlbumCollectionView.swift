@@ -40,6 +40,13 @@ struct AlbumCollectionView: View {
         }
     }
 
+    private var waitingMessage: LocalizedStringKey {
+        switch kind {
+        case .genreGroup: "Genre pages appear once maekster has indexed every album. Try again shortly."
+        case .genre, .recordLabel: "Label pages appear once maekster has indexed every album. Try again shortly."
+        }
+    }
+
     @ViewBuilder
     private func content(_ viewModel: AlbumCollectionViewModel) -> some View {
         switch viewModel.state {
@@ -49,7 +56,7 @@ struct AlbumCollectionView: View {
             EmptyStateView(
                 systemImage: "hourglass",
                 title: "Still Indexing Your Library",
-                subtitle: "Label pages appear once maekster has indexed every album. Try again shortly."
+                subtitle: waitingMessage
             )
         case .failed(let error):
             EmptyStateView(
