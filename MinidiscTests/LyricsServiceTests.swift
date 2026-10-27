@@ -136,9 +136,29 @@ struct LyricsSelectBestLanguageTests {
         #expect(result?.synced == false)
     }
 
-    @Test func locale_frFR_picksFrenchUnsynced_overEnglishSynced() throws {
+    /// Lyrics that follow the music are the point, so a timed set beats a plain one in the listener's
+    /// own language (#36).
+    @Test func locale_frFR_picksSyncedEnglish_overPlainFrench() throws {
         let (service, _) = try makeService()
         let result = service.selectBestLanguage(from: sampleList(), locale: Locale(identifier: "fr_FR"))
+        #expect(result?.lang == "en")
+        #expect(result?.synced == true)
+    }
+
+    /// Unless the language was chosen by hand.
+    @Test func preferredFrench_stillWinsOverSyncedEnglish() throws {
+        let (service, _) = try makeService()
+        let result = service.selectBestLanguage(from: sampleList(), locale: Locale(identifier: "fr_FR"), preferred: "fr")
+        #expect(result?.lang == "fr")
+    }
+
+    @Test func plainLocaleLanguage_isUsedWhenNothingIsSynced() throws {
+        let list = LyricsList(structuredLyrics: [
+            StructuredLyrics(lang: "en", synced: false, line: [Line(value: "Hello")]),
+            StructuredLyrics(lang: "fr", synced: false, line: [Line(value: "Bonjour")])
+        ])
+        let (service, _) = try makeService()
+        let result = service.selectBestLanguage(from: list, locale: Locale(identifier: "fr_FR"))
         #expect(result?.lang == "fr")
     }
 
