@@ -40,11 +40,15 @@ nonisolated struct URLSessionLRCLIBTransport: LRCLIBTransport {
 
 actor LRCLIBClient: LRCLIBLyricsFetching {
     private static let minimumRequestInterval: TimeInterval = 0.25
+    /// LRCLIB answers 503 "ServerOverloaded" now and then, and it clears quickly; without a retry the
+    /// track simply loses its timed lyrics for that play.
+    static let maximumAttempts = 3
 
     private let transport: any LRCLIBTransport
     private let endpoint: URL
     private let clientIdentifier: String
     private let now: @Sendable () -> Date
+    private let retryDelay: Duration
     private var rateLimitedUntil: Date?
     private var nextRequestAllowedAt: Date?
     // Actors are reentrant across `await`; this chain prevents overlapping LRCLIB requests as required by its API.
@@ -55,12 +59,14 @@ actor LRCLIBClient: LRCLIBLyricsFetching {
         transport: any LRCLIBTransport = URLSessionLRCLIBTransport(),
         endpoint: URL = LRCLIBClient.defaultEndpoint,
         clientIdentifier: String = MaeksterBrand.userAgent,
-        now: @escaping @Sendable () -> Date = Date.init
+        now: @escaping @Sendable () -> Date = Date.init,
+        retryDelay: Duration = .seconds(1)
     ) {
         self.transport = transport
         self.endpoint = endpoint
         self.clientIdentifier = clientIdentifier
         self.now = now
+        self.retryDelay = retryDelay
     }
 
     nonisolated private static var defaultEndpoint: URL {
@@ -84,7 +90,7 @@ actor LRCLIBClient: LRCLIBLyricsFetching {
                 try Task.checkCancellation()
             }
             guard let self else { throw CancellationError() }
-            return try await self.performRequest(for: signature)
+            return try await self.requestWithRetries(for: signature)
         }
         requestTail = request
         defer {
@@ -98,6 +104,19 @@ actor LRCLIBClient: LRCLIBLyricsFetching {
         } onCancel: {
             request.cancel()
         }
+    }
+
+    /// Retries a busy server, with a short wait that doubles. Anything else is reported at once.
+    private func requestWithRetries(for signature: LRCLIBTrackSignature) async throws -> LRCLIBLyricsRecord {
+        for attempt in 0..<Self.maximumAttempts {
+            do {
+                return try await performRequest(for: signature)
+            } catch LyricsError.serverBusy {
+                guard attempt < Self.maximumAttempts - 1 else { break }
+                try await Task.sleep(for: retryDelay * (1 << attempt))
+            }
+        }
+        throw LyricsError.networkError(underlying: String(localized: "LRCLIB is busy. Try again in a moment."))
     }
 
     private func performRequest(for signature: LRCLIBTrackSignature) async throws -> LRCLIBLyricsRecord {
@@ -166,6 +185,8 @@ actor LRCLIBClient: LRCLIBLyricsFetching {
                 throw LyricsError.networkError(
                     underlying: String(localized: "LRCLIB is temporarily rate-limiting requests. Try again later.")
                 )
+            case 500...599:
+                throw LyricsError.serverBusy
             default:
                 throw LyricsError.networkError(
                     underlying: "LRCLIB request failed (HTTP \(httpResponse.statusCode))"

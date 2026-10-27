@@ -785,11 +785,53 @@ private struct LyricsSettingsSection: View {
             }
             .pickerStyle(.menu)
             .tint(.secondary)
+
+            Toggle("Current line in player", isOn: $settings.showsCurrentLineInPlayer)
         } header: {
             Text("Lyrics")
         } footer: {
-            Text("Auto checks Navidrome first and falls back to LRCLIB. LRCLIB requests include the track title, artist, album, and duration.")
+            Text("Auto checks Navidrome first, prefers lyrics with timings and falls back to LRCLIB. LRCLIB requests include the track title, artist, album, and duration.")
         }
+
+        Section {
+            LabeledContent {
+                Text(timingLabel)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            } label: {
+                Text("Timing")
+            }
+            Slider(
+                value: timingSeconds,
+                in: -Double(LyricsSettings.timingOffsetLimitMs) / 1000...Double(LyricsSettings.timingOffsetLimitMs) / 1000,
+                step: 0.05
+            ) {
+                Text("Timing")
+            } minimumValueLabel: {
+                Text("Earlier")
+                    .font(.minidiscCaption)
+            } maximumValueLabel: {
+                Text("Later")
+                    .font(.minidiscCaption)
+            }
+            if settings.timingOffsetMs != 0 {
+                Button("Reset") { settings.timingOffsetMs = 0 }
+            }
+        } footer: {
+            Text("Shifts every timed lyric line when it runs ahead of or behind the music.")
+        }
+    }
+
+    private var timingSeconds: Binding<Double> {
+        Binding(
+            get: { Double(settings.timingOffsetMs) / 1000 },
+            set: { settings.timingOffsetMs = Int(($0 * 1000).rounded()) }
+        )
+    }
+
+    private var timingLabel: String {
+        let seconds = Double(settings.timingOffsetMs) / 1000
+        return seconds.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always(includingZero: false))) + " s"
     }
 }
 

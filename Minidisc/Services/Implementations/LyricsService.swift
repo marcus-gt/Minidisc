@@ -30,8 +30,9 @@ actor LyricsService {
     ) async throws -> LyricsList {
         switch source {
         case .automatic:
+            let fromServer: LyricsList
             do {
-                return try await fetchLyrics(for: track, serverId: serverId, provider: .navidrome)
+                fromServer = try await fetchLyrics(for: track, serverId: serverId, provider: .navidrome)
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
@@ -39,6 +40,26 @@ actor LyricsService {
                     "Navidrome lyrics unavailable; trying LRCLIB — songId=\(track.id, privacy: .public)"
                 )
                 return try await fetchLyrics(for: track, serverId: serverId, provider: .lrclib)
+            }
+            // Most tagged lyrics are plain text. LRCLIB often has the same song with timings, which is
+            // what makes the lyrics follow the music, so ask it too and keep the server's as a fallback.
+            guard !fromServer.structuredLyrics.contains(where: \.synced) else { return fromServer }
+            do {
+                let fromLRCLIB = try await fetchLyrics(for: track, serverId: serverId, provider: .lrclib)
+                let synced = fromLRCLIB.structuredLyrics.filter(\.synced)
+                guard !synced.isEmpty else {
+                    Logger.lyrics.info("LRCLIB has no timed lyrics either — songId=\(track.id, privacy: .public)")
+                    return fromServer
+                }
+                Logger.lyrics.info("Using LRCLIB synced lyrics over the server's plain ones — songId=\(track.id, privacy: .public)")
+                return LyricsList(structuredLyrics: synced + fromServer.structuredLyrics)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                Logger.lyrics.info(
+                    "LRCLIB lookup for timed lyrics failed, keeping the server's — songId=\(track.id, privacy: .public): \(String(describing: error), privacy: .public)"
+                )
+                return fromServer
             }
         case .navidrome:
             return try await fetchLyrics(for: track, serverId: serverId, provider: .navidrome)
@@ -53,8 +74,9 @@ actor LyricsService {
     ///
     /// Priority:
     /// 1. User-selected `preferred` language — synced variant if available, else unsynced.
-    /// 2. System locale language — synced variant if available, else unsynced.
-    /// 3. Any synced set, then first available.
+    /// 2. A synced set: the locale's language first, then any. Lyrics that follow the music beat a
+    ///    plain set in the listener's own language; only an explicit choice overrides that.
+    /// 3. The locale's language, then the first set.
     ///
     /// "xxx" is normalised to "und" per OpenSubsonic spec (both mean unspecified language).
     nonisolated func selectBestLanguage(
@@ -79,12 +101,10 @@ actor LyricsService {
         }
 
         let langCode = locale.language.languageCode?.identifier ?? ""
-        if !langCode.isEmpty {
-            let matching = entries.filter { normalized($0.lang) == langCode }
-            if let hit = best(among: matching) { return hit }
-        }
+        let inLocale = langCode.isEmpty ? [] : entries.filter { normalized($0.lang) == langCode }
 
-        return entries.first(where: { $0.synced }) ?? entries.first
+        if let hit = inLocale.first(where: \.synced) ?? entries.first(where: \.synced) { return hit }
+        return inLocale.first ?? entries.first
     }
 
     // MARK: - Private cache

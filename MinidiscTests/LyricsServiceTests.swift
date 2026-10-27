@@ -136,9 +136,29 @@ struct LyricsSelectBestLanguageTests {
         #expect(result?.synced == false)
     }
 
-    @Test func locale_frFR_picksFrenchUnsynced_overEnglishSynced() throws {
+    /// Lyrics that follow the music are the point, so a timed set beats a plain one in the listener's
+    /// own language (#36).
+    @Test func locale_frFR_picksSyncedEnglish_overPlainFrench() throws {
         let (service, _) = try makeService()
         let result = service.selectBestLanguage(from: sampleList(), locale: Locale(identifier: "fr_FR"))
+        #expect(result?.lang == "en")
+        #expect(result?.synced == true)
+    }
+
+    /// Unless the language was chosen by hand.
+    @Test func preferredFrench_stillWinsOverSyncedEnglish() throws {
+        let (service, _) = try makeService()
+        let result = service.selectBestLanguage(from: sampleList(), locale: Locale(identifier: "fr_FR"), preferred: "fr")
+        #expect(result?.lang == "fr")
+    }
+
+    @Test func plainLocaleLanguage_isUsedWhenNothingIsSynced() throws {
+        let list = LyricsList(structuredLyrics: [
+            StructuredLyrics(lang: "en", synced: false, line: [Line(value: "Hello")]),
+            StructuredLyrics(lang: "fr", synced: false, line: [Line(value: "Bonjour")])
+        ])
+        let (service, _) = try makeService()
+        let result = service.selectBestLanguage(from: list, locale: Locale(identifier: "fr_FR"))
         #expect(result?.lang == "fr")
     }
 
@@ -240,6 +260,71 @@ struct LyricsSourceRoutingTests {
         #expect(result.structuredLyrics.first?.line.first?.value == "Fallback")
         let requests = await fetcher.requests
         #expect(requests.count == 1)
+    }
+
+    /// Most tagged lyrics are plain text, so automatic asks LRCLIB for a timed version too (#36).
+    @Test func autoPrefersLRCLIBSyncedOverPlainServerLyrics() async throws {
+        let fetcher = RecordingLRCLIBFetcher(record: lrclibRecord())
+        let (service, container) = try makeService(lrclibFetcher: fetcher)
+        let serverId = UUID()
+        let track = sampleTrack()
+        let plainFromServer = LyricsList(structuredLyrics: [
+            StructuredLyrics(lang: "en", synced: false, line: [Line(value: "Plain from the server")])
+        ])
+        let context = ModelContext(container)
+        context.insert(CachedLyrics(
+            songId: track.id,
+            serverId: serverId,
+            jsonPayload: try JSONEncoder().encode(plainFromServer),
+            provider: .navidrome
+        ))
+        try context.save()
+
+        let result = try await service.fetchLyrics(for: track, serverId: serverId, source: .automatic)
+
+        #expect(result.structuredLyrics.first?.synced == true)
+        #expect(result.structuredLyrics.first?.line.first?.value == "Run boy run")
+        // The server's own lines stay as a fallback for the language picker.
+        #expect(result.structuredLyrics.contains { $0.line.first?.value == "Plain from the server" })
+    }
+
+    @Test func autoKeepsServerLyricsWhenLRCLIBHasNoSyncedVersion() async throws {
+        let fetcher = RecordingLRCLIBFetcher(record: lrclibRecord(plainLyrics: "Plain from LRCLIB", syncedLyrics: nil))
+        let (service, container) = try makeService(lrclibFetcher: fetcher)
+        let serverId = UUID()
+        let track = sampleTrack()
+        let plainFromServer = LyricsList(structuredLyrics: [
+            StructuredLyrics(lang: "en", synced: false, line: [Line(value: "Plain from the server")])
+        ])
+        let context = ModelContext(container)
+        context.insert(CachedLyrics(
+            songId: track.id,
+            serverId: serverId,
+            jsonPayload: try JSONEncoder().encode(plainFromServer),
+            provider: .navidrome
+        ))
+        try context.save()
+
+        let result = try await service.fetchLyrics(for: track, serverId: serverId, source: .automatic)
+        #expect(result == plainFromServer)
+    }
+
+    @Test func autoDoesNotContactLRCLIBWhenServerLyricsAreSynced() async throws {
+        let fetcher = RecordingLRCLIBFetcher(record: lrclibRecord())
+        let (service, container) = try makeService(lrclibFetcher: fetcher)
+        let serverId = UUID()
+        let track = sampleTrack()
+        let context = ModelContext(container)
+        context.insert(CachedLyrics(
+            songId: track.id,
+            serverId: serverId,
+            jsonPayload: try JSONEncoder().encode(sampleList()),
+            provider: .navidrome
+        ))
+        try context.save()
+
+        _ = try await service.fetchLyrics(for: track, serverId: serverId, source: .automatic)
+        #expect(await fetcher.requests.isEmpty)
     }
 
     @Test func navidromeOnlyNeverContactsLRCLIB() async throws {

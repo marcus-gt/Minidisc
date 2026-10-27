@@ -51,7 +51,8 @@ final class MockPlayerService: PlayerServiceProtocol {
 private func makeViewModel(
     songId: String = "song-1",
     serverId: UUID = UUID(),
-    lyrics: LyricsList? = nil
+    lyrics: LyricsList? = nil,
+    settings: LyricsSettings? = nil
 ) throws -> (LyricsViewModel, MockPlayerService) {
     let container = try ModelContainer(
         for: Schema([CachedLyrics.self]),
@@ -95,7 +96,8 @@ private func makeViewModel(
         source: .navidrome,
         lyricsService: service,
         playerService: playerService,
-        playerState: playerState
+        playerState: playerState,
+        settings: settings
     )
     return (vm, playerService)
 }
@@ -229,30 +231,47 @@ struct LyricsViewModelSeekTests {
     }
 }
 
-// MARK: - Auto-scroll
+// MARK: - Following the music while scrolling (#36)
 
-@Suite("LyricsViewModel — auto-scroll")
+@Suite("LyricsViewModel — following")
 @MainActor
 struct LyricsViewModelScrollTests {
 
-    @Test func userStartedScrolling_setsFlag() throws {
+    @Test func scrollingByHand_stopsFollowing() throws {
         let (vm, _) = try makeViewModel()
-        #expect(vm.isUserScrolling == false)
+        #expect(vm.isFollowing)
         vm.userStartedScrolling()
-        #expect(vm.isUserScrolling == true)
+        #expect(!vm.isFollowing)
     }
 
-    @Test func isUserScrolling_resetAfter5Seconds() async throws {
+    /// Reading must not be interrupted, so following only comes back when asked for.
+    @Test func followingStaysOffUntilResumed() async throws {
         let (vm, _) = try makeViewModel()
         vm.userStartedScrolling()
-        #expect(vm.isUserScrolling == true)
+        try await Task.sleep(for: .seconds(1))
+        #expect(!vm.isFollowing)
+        vm.resumeFollowing()
+        #expect(vm.isFollowing)
+    }
 
-        let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: .seconds(10))
-        while vm.isUserScrolling, clock.now < deadline {
-            try await Task.sleep(for: .milliseconds(100))
-        }
-        #expect(vm.isUserScrolling == false)
+    @Test func closingThePanel_followsAgain() throws {
+        let (vm, _) = try makeViewModel()
+        vm.setVisible(true)
+        vm.userStartedScrolling()
+        vm.setVisible(false)
+        #expect(vm.isFollowing)
+    }
+
+    /// A plain and a synced set of the same language are one choice in the picker, not two.
+    @Test func availableLanguages_collapseUnspecifiedDuplicates() async throws {
+        let id = UUID()
+        let list = LyricsList(structuredLyrics: [
+            StructuredLyrics(lang: "und", synced: true, line: [Line(value: "Timed", start: 0)]),
+            StructuredLyrics(lang: "xxx", synced: false, line: [Line(value: "Plain")])
+        ])
+        let (vm, _) = try makeViewModel(serverId: id, lyrics: list)
+        await vm.load()
+        #expect(vm.availableLanguages == ["und"])
     }
 }
 
@@ -333,5 +352,76 @@ struct LyricsViewModelLoadTests {
         let (vm, _) = try makeViewModel(serverId: id, lyrics: empty)
         await vm.load()
         #expect(vm.state == .empty)
+    }
+}
+
+// MARK: - Player current line (#36)
+
+@Suite("LyricsViewModel — current line in the player")
+@MainActor
+struct LyricsViewModelCurrentLineTests {
+
+    private func settings(timingOffsetMs: Int = 0) -> LyricsSettings {
+        let defaults = UserDefaults(suiteName: "lyrics-line-tests-\(UUID().uuidString)")!
+        let settings = LyricsSettings(defaults: defaults)
+        settings.timingOffsetMs = timingOffsetMs
+        return settings
+    }
+
+    @Test func currentLine_followsTheSyncedLines() async throws {
+        let (vm, _) = try makeViewModel(lyrics: syncedList())
+        await vm.load()
+        #expect(vm.currentLine == nil)
+        vm.update(elapsedMs: 1_200)
+        #expect(vm.currentLine == "Line 1")
+        vm.update(elapsedMs: 2_400)
+        #expect(vm.currentLine == "Line 2")
+    }
+
+    @Test func currentLine_isEmptyForPlainLyrics() async throws {
+        let plain = LyricsList(structuredLyrics: [
+            StructuredLyrics(lang: "en", synced: false, line: [Line(value: "No timings here")])
+        ])
+        let (vm, _) = try makeViewModel(lyrics: plain)
+        await vm.load()
+        vm.update(elapsedMs: 5_000)
+        #expect(vm.currentLine == nil)
+    }
+
+    @Test func timingOffset_shiftsTheLineLater() async throws {
+        let (vm, _) = try makeViewModel(lyrics: syncedList(), settings: settings(timingOffsetMs: 500))
+        await vm.load()
+        vm.update(elapsedMs: 1_200)
+        #expect(vm.currentLine == "Line 0")
+        vm.update(elapsedMs: 1_600)
+        #expect(vm.currentLine == "Line 1")
+    }
+
+    @Test func timingOffset_shiftsTheLineEarlier() async throws {
+        let (vm, _) = try makeViewModel(lyrics: syncedList(), settings: settings(timingOffsetMs: -500))
+        await vm.load()
+        vm.update(elapsedMs: 600)
+        #expect(vm.currentLine == "Line 1")
+    }
+
+    @Test func timingOffset_appliesToSeeking() async throws {
+        let (vm, player) = try makeViewModel(lyrics: syncedList(), settings: settings(timingOffsetMs: 250))
+        await vm.load()
+        vm.userTapped(lineIndex: 2)
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(player.seekCalledWith == 2.25)
+    }
+
+    @Test func settings_clampTheOffsetAndRememberIt() {
+        let suite = "lyrics-line-tests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let settings = LyricsSettings(defaults: defaults)
+        #expect(settings.showsCurrentLineInPlayer)
+        settings.timingOffsetMs = 99_000
+        #expect(settings.timingOffsetMs == LyricsSettings.timingOffsetLimitMs)
+        settings.showsCurrentLineInPlayer = false
+        let reloaded = LyricsSettings(defaults: defaults)
+        #expect(reloaded.timingOffsetMs == LyricsSettings.timingOffsetLimitMs)
+        #expect(!reloaded.showsCurrentLineInPlayer)
     }
 }

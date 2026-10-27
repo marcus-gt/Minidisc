@@ -28,8 +28,65 @@ actor LRCLIBTransportRecorder: LRCLIBTransport {
     }
 }
 
+/// Answers with a scripted sequence of (status, body) pairs, so a busy server can be followed by success.
+actor LRCLIBScriptedTransport: LRCLIBTransport {
+    private let steps: [(Int, String)]
+    private(set) var requestCount = 0
+
+    init(_ steps: [(Int, String)]) {
+        self.steps = steps
+    }
+
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        let step = steps[min(requestCount, steps.count - 1)]
+        requestCount += 1
+        let url = try #require(request.url)
+        let response = try #require(HTTPURLResponse(url: url, statusCode: step.0, httpVersion: nil, headerFields: nil))
+        return (Data(step.1.utf8), response)
+    }
+}
+
 @Suite("LRCLIBClient")
 struct LRCLIBClientTests {
+    private static let record = """
+    {"id": 42, "trackName": "Run Boy Run", "artistName": "Woodkid", "albumName": "The Golden Age",
+     "duration": 213.42, "instrumental": false, "plainLyrics": "Run boy run", "syncedLyrics": "[00:01.25]Run boy run"}
+    """
+
+    private func signature() -> LRCLIBTrackSignature {
+        LRCLIBTrackSignature(title: "Run Boy Run", artist: "Woodkid", album: "The Golden Age", duration: 213.42)
+    }
+
+    /// LRCLIB's 503 "ServerOverloaded" is common and brief; it must not cost the track its timed lyrics.
+    @Test func busyServerIsRetried() async throws {
+        let endpoint = try #require(URL(string: "https://lrclib.net/api/get"))
+        let busy = #"{"message":"The server is busy, please retry in a moment","name":"ServerOverloaded","statusCode":503}"#
+        let transport = LRCLIBScriptedTransport([(503, busy), (200, Self.record)])
+        let client = LRCLIBClient(transport: transport, endpoint: endpoint, retryDelay: .zero)
+
+        let result = try await client.lyrics(for: signature())
+        #expect(result.id == 42)
+        #expect(await transport.requestCount == 2)
+    }
+
+    @Test func busyServerGivesUpAfterTheLastAttempt() async throws {
+        let endpoint = try #require(URL(string: "https://lrclib.net/api/get"))
+        let transport = LRCLIBScriptedTransport([(503, "")])
+        let client = LRCLIBClient(transport: transport, endpoint: endpoint, retryDelay: .zero)
+
+        await #expect(throws: (any Error).self) { try await client.lyrics(for: signature()) }
+        #expect(await transport.requestCount == LRCLIBClient.maximumAttempts)
+    }
+
+    @Test func notFoundIsNotRetried() async throws {
+        let endpoint = try #require(URL(string: "https://lrclib.net/api/get"))
+        let transport = LRCLIBScriptedTransport([(404, "")])
+        let client = LRCLIBClient(transport: transport, endpoint: endpoint, retryDelay: .zero)
+
+        await #expect(throws: LyricsError.notFound) { try await client.lyrics(for: signature()) }
+        #expect(await transport.requestCount == 1)
+    }
+
     @Test func exactRequestIncludesRecommendedMetadataAndClientIdentity() async throws {
         let endpoint = try #require(URL(string: "https://lrclib.net/api/get"))
         let response = try #require(HTTPURLResponse(
