@@ -12,6 +12,8 @@ struct DiscoverView: View {
     @Namespace private var freshReleaseZoomNamespace
     @State private var showAllFreshReleases = false
     @State private var allReleasesVM: AllFreshReleasesViewModel?
+    /// The library feed's first result is still being prepared (#15): show the card as loading.
+    @State private var isPreparingFreshReleases = false
     @State private var availableMoods: [MoodPlaylist] = []
     @State private var moodReloadID = 0
     @AppStorage(DiscoverLayoutConfiguration.storageKey) private var discoverLayout: DiscoverLayoutConfiguration = .default
@@ -61,6 +63,7 @@ struct DiscoverView: View {
             Task {
                 await vm?.loadFreshReleases()
                 await allReleasesVM?.loadReleases()
+                isPreparingFreshReleases = await container?.newReleasesService.isPreparing() ?? false
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .minidiscMoodPlaylistsChanged)) { _ in
@@ -176,10 +179,10 @@ struct DiscoverView: View {
 
     @ViewBuilder
     private func freshReleasesSection(vm: DiscoverViewModel) -> some View {
-        if !vm.freshReleases.isEmpty {
+        if !vm.freshReleases.isEmpty || isPreparingFreshReleases {
             FreshReleasesCard(
                 releases: vm.freshReleases,
-                isLoading: false,
+                isLoading: vm.freshReleases.isEmpty,
                 onSeeAll: { showAllFreshReleases = true },
                 zoomNamespace: freshReleaseZoomNamespace
             )
@@ -232,6 +235,7 @@ struct DiscoverView: View {
     /// New releases by artists in the library, from MusicBrainz (#15); no ListenBrainz account needed.
     private func refreshFreshReleases(_ model: DiscoverViewModel) async {
         await model.loadFreshReleases()
+        isPreparingFreshReleases = await container?.newReleasesService.isPreparing() ?? false
     }
 
     private func refreshServerMixes() async {

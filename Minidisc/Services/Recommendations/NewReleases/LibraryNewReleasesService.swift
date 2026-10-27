@@ -31,6 +31,8 @@ actor LibraryNewReleasesService {
     /// Name lookups per refresh, so a big library's first runs stay short; the rest follow next time.
     static let nameLookupsPerRefresh = 120
     static let retryUnresolvedAfter: TimeInterval = 30 * 86_400
+    /// Least time between automatic attempts, so a failing or skipped run isn't retried on every reload.
+    static let retryFailedAfter: TimeInterval = 15 * 60
 
     private let watchlist: @Sendable () async throws -> NewReleaseWatchlist?
     private let activeServerID: @Sendable () async -> String?
@@ -41,6 +43,7 @@ actor LibraryNewReleasesService {
 
     private var states: [String: NewReleasesState] = [:]
     private var refreshTask: Task<Void, Never>?
+    private var lastAutomaticStart: Date?
     private var storeLinkCache: [String: [StoreLink]] = [:]
 
     init(
@@ -65,7 +68,13 @@ actor LibraryNewReleasesService {
     func releases() async -> [AlbumRecommendation] {
         guard let serverID = await activeServerID() else { return [] }
         let state = loadState(serverID: serverID)
-        if Self.isStale(state, now: now()) { startRefresh() }
+        let date = now()
+        if Self.isStale(state, now: date),
+           lastAutomaticStart.map({ date.timeIntervalSince($0) >= Self.retryFailedAfter }) ?? true,
+           refreshTask == nil {
+            lastAutomaticStart = date
+            startRefresh()
+        }
         return state.releases.map(Self.recommendation)
     }
 
@@ -104,57 +113,103 @@ actor LibraryNewReleasesService {
                 Logger.recommendations.warning("[NEW-RELEASES] refresh failed: \(String(describing: error), privacy: .public)")
             }
             refreshTask = nil
+            // Also after a failed or skipped run (index not ready), so a screen waiting for the first
+            // result stops showing it as being prepared.
+            await onChange()
         }
     }
 
-    /// One full refresh. Keeps the previous result when a MusicBrainz request fails; name lookups that
-    /// did succeed are kept either way.
+    /// One full refresh, in two passes so the first result comes quickly: artists whose MusicBrainz ID is
+    /// already known are searched and published first; artists still to be looked up by name follow.
+    /// A failed search keeps the previous result. Name lookups are saved as they go, and one that fails
+    /// is skipped and tried again next time.
     func refresh() async throws {
         guard let serverID = await activeServerID(), let watchlist = try await watchlist() else { return }
         var state = loadState(serverID: serverID)
         let today = now()
+        let from = NewReleaseMatching.musicBrainzDay(today.addingTimeInterval(-Double(Self.windowDays) * 86_400))
+        let to = NewReleaseMatching.musicBrainzDay(today)
 
         // Which MusicBrainz artists to follow, and what is owned by each.
         var owned: [String: Set<String>] = [:]
-        var lookups = 0
+        var toLookUp: [WatchedArtist] = []
         for artist in watchlist.artists {
-            try Task.checkCancellation()
             var mbid = artist.musicBrainzID
             if mbid == nil {
-                let key = NewReleaseMatching.normalisedName(artist.name)
-                if let known = state.resolvedNames[key],
+                if let known = state.resolvedNames[NewReleaseMatching.normalisedName(artist.name)],
                    known.musicBrainzID != nil || today.timeIntervalSince(known.triedAt) < Self.retryUnresolvedAfter {
                     mbid = known.musicBrainzID
-                } else if lookups < Self.nameLookupsPerRefresh {
-                    lookups += 1
-                    mbid = try await client.artistID(named: artist.name)
-                    state.resolvedNames[key] = .init(musicBrainzID: mbid, triedAt: today)
+                } else {
+                    toLookUp.append(artist)
                 }
             }
-            if let mbid, !NewReleaseWatchlist.specialPurposeArtistIDs.contains(mbid) {
-                owned[mbid, default: []].formUnion(artist.ownedTitles)
+            if let mbid { Self.follow(mbid, owning: artist.ownedTitles, in: &owned) }
+        }
+
+        var found = try await releaseGroups(artistIDs: owned.keys.sorted(), from: from, to: to)
+        guard try await publish(found, owned: owned, today: to, refreshedAt: today, in: &state, serverID: serverID) else { return }
+
+        var lookups = 0
+        var resolved: [String: Set<String>] = [:]
+        for artist in toLookUp.prefix(Self.nameLookupsPerRefresh) {
+            try Task.checkCancellation()
+            let mbid: String?
+            do {
+                mbid = try await client.artistID(named: artist.name)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                Logger.recommendations.warning("[NEW-RELEASES] name lookup failed: \(String(describing: error), privacy: .public)")
+                continue
+            }
+            lookups += 1
+            state.resolvedNames[NewReleaseMatching.normalisedName(artist.name)] = .init(musicBrainzID: mbid, triedAt: today)
+            if lookups.isMultiple(of: 20) { try save(state, serverID: serverID) }
+            guard let mbid else { continue }
+            if owned[mbid] != nil {
+                Self.follow(mbid, owning: artist.ownedTitles, in: &owned)
+            } else {
+                Self.follow(mbid, owning: artist.ownedTitles, in: &resolved)
             }
         }
+        guard await activeServerID() == serverID else { return }
         if lookups > 0 { try save(state, serverID: serverID) }
+        Logger.recommendations.info("[NEW-RELEASES] \(lookups, privacy: .public) name lookups, \(resolved.count, privacy: .public) new artists")
 
-        let from = NewReleaseMatching.musicBrainzDay(today.addingTimeInterval(-Double(Self.windowDays) * 86_400))
-        let to = NewReleaseMatching.musicBrainzDay(today)
-        let ids = owned.keys.sorted()
+        // Ownership may have grown through a looked-up name, so the second publish re-filters everything.
+        guard !resolved.isEmpty || lookups > 0 else { return }
+        found += try await releaseGroups(artistIDs: resolved.keys.sorted(), from: from, to: to)
+        owned.merge(resolved) { $0.union($1) }
+        _ = try await publish(found, owned: owned, today: to, refreshedAt: today, in: &state, serverID: serverID)
+    }
+
+    private nonisolated static func follow(_ mbid: String, owning titles: Set<String>, in owned: inout [String: Set<String>]) {
+        guard !NewReleaseWatchlist.specialPurposeArtistIDs.contains(mbid) else { return }
+        owned[mbid, default: []].formUnion(titles)
+    }
+
+    private func releaseGroups(artistIDs ids: [String], from: String, to: String) async throws -> [MBReleaseGroup] {
         var found: [MBReleaseGroup] = []
         for start in stride(from: 0, to: ids.count, by: MusicBrainzReleaseClient.artistsPerQuery) {
             try Task.checkCancellation()
             let batch = Array(ids[start..<min(start + MusicBrainzReleaseClient.artistsPerQuery, ids.count)])
             found += try await client.releaseGroups(artistIDs: batch, from: from, to: to)
         }
+        return found
+    }
 
-        let releases = Self.newReleases(from: found, owned: owned, today: to)
-        // A server switch during the refresh must not store this server's result under another one.
-        guard await activeServerID() == serverID else { return }
+    /// Stores and announces a result. `false` when the active server changed meanwhile: this server's
+    /// result must not be stored under another one, and the refresh should stop.
+    private func publish(_ found: [MBReleaseGroup], owned: [String: Set<String>], today: String, refreshedAt: Date,
+                         in state: inout NewReleasesState, serverID: String) async throws -> Bool {
+        let releases = Self.newReleases(from: found, owned: owned, today: today)
+        guard await activeServerID() == serverID else { return false }
         state.releases = releases
-        state.refreshedAt = today
+        state.refreshedAt = refreshedAt
         try save(state, serverID: serverID)
-        Logger.recommendations.info("[NEW-RELEASES] \(releases.count, privacy: .public) new releases from \(ids.count, privacy: .public) artists (\(lookups, privacy: .public) name lookups)")
+        Logger.recommendations.info("[NEW-RELEASES] \(releases.count, privacy: .public) new releases from \(owned.count, privacy: .public) artists")
         await onChange()
+        return true
     }
 
     /// Released, credited to a followed artist, not owned, newest first. One entry per release group, and

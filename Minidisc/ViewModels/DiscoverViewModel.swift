@@ -20,6 +20,8 @@ final class DiscoverViewModel {
     private(set) var isLoading: Bool = false
     private(set) var loadError: Error?
     private(set) var freshReleases: [AlbumRecommendation] = []
+    /// Newest releases on the Discover shelf; the rest are behind "See all".
+    static let freshReleasesShelfLimit = 20
     private(set) var isLoadingFreshReleases: Bool = false
 
     init(
@@ -91,7 +93,7 @@ final class DiscoverViewModel {
                 limit: .max,
                 daysWindow: max(1, elapsedDays + 1)
             )
-            freshReleases = fetched
+            let thisMonth = fetched
                 .filter { release in
                     guard let releaseDate = release.releaseDate else { return false }
                     return releaseDate >= currentMonth.start && releaseDate < currentMonth.end
@@ -99,6 +101,7 @@ final class DiscoverViewModel {
                 .sorted {
                     ($0.releaseDate ?? .distantPast) > ($1.releaseDate ?? .distantPast)
                 }
+            freshReleases = Array(thisMonth.prefix(Self.freshReleasesShelfLimit))
         } catch {
             Logger.discover.error("Failed to load fresh releases: \(error, privacy: .public)")
         }

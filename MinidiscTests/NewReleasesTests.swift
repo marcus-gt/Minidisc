@@ -232,6 +232,25 @@ struct LibraryNewReleasesServiceTests {
         #expect(http.requests(to: "artist").count == LibraryNewReleasesService.nameLookupsPerRefresh)
     }
 
+    @Test func refresh_failingNameLookupsDoNotHoldBackKnownArtists() async throws {
+        let body = #"{"count":1,"release-groups":["# + group("rg-1", "No Bad Memories", date: "2026-10-16") + "]}"
+        let http = StubMusicBrainz { components in
+            components.path.hasSuffix("artist") ? (500, "") : (200, body)
+        }
+        let watchlist = NewReleaseWatchlist(artists: [
+            WatchedArtist(name: "The Avalanches", musicBrainzID: Self.avalanches, ownedTitles: []),
+            WatchedArtist(name: "Kraftwerk", musicBrainzID: nil, ownedTitles: ["computerwelt"])
+        ])
+        let directory = tempDirectory()
+        let service = makeService(watchlist: watchlist, http: http, directory: directory)
+        try await service.refresh()
+        #expect(await service.releases().map(\.id) == ["rg-1"])
+
+        // The failed lookup wasn't remembered as "no match": the next run asks again.
+        try await makeService(watchlist: watchlist, http: http, directory: directory).refresh()
+        #expect(http.requests(to: "artist").count == 2)
+    }
+
     @Test func refresh_failedSearchKeepsThePreviousResult() async throws {
         let failing = Mutex(false)
         let body = #"{"count":1,"release-groups":["# + group("rg-1", "No Bad Memories", date: "2026-10-16") + "]}"
