@@ -3,6 +3,15 @@ import SwiftSonic
 
 enum AddToPlaylistResult { case added, duplicate, failed }
 
+/// How much of the selection a playlist already holds, for the checkbox beside it (#14).
+nonisolated enum PlaylistMembership: Equatable, Sendable {
+    /// Not looked up yet.
+    case unknown
+    case absent
+    case partial
+    case all
+}
+
 @MainActor
 @Observable
 final class AddToPlaylistViewModel {
@@ -13,6 +22,8 @@ final class AddToPlaylistViewModel {
     private(set) var recentIDs: [String]
     private(set) var createdPlaylist: Playlist?
     private(set) var isCreating = false
+    /// Playlist id → how much of the selection it holds. Filled in as rows come into view (#14).
+    private(set) var membership: [String: PlaylistMembership] = [:]
     var newPlaylistName = ""
     let songs: [DisplayableSong]
 
@@ -22,6 +33,9 @@ final class AddToPlaylistViewModel {
     private let recordUse: (String) -> Void
     private var intents: [String: PlaylistAppendIntent] = [:]
     private var completed: Set<String> = []
+    /// The song ids each inspected playlist holds, in playlist order.
+    private var entryIDs: [String: [String]] = [:]
+    private var membershipLookups: Set<String> = []
 
     init(songs: [DisplayableSong], playlistService: any PlaylistServiceProtocol,
          toastService: ToastService, recents: RecentPlaylistDestinations,
@@ -44,6 +58,32 @@ final class AddToPlaylistViewModel {
         return filtered.filter { !recentIDs.contains($0.id) }.sorted {
             $0.name.localizedStandardCompare($1.name) == .orderedAscending
         }
+    }
+
+    // MARK: - Membership
+
+    func membership(of playlist: Playlist) -> PlaylistMembership {
+        membership[playlist.id] ?? .unknown
+    }
+
+    /// Looks the playlist's songs up once, when its row appears, so a long list costs only what is seen.
+    func loadMembership(of playlist: Playlist) async {
+        guard membership[playlist.id] == nil, membershipLookups.insert(playlist.id).inserted else { return }
+        do {
+            let detail = try await playlistService.getPlaylist(id: playlist.id)
+            apply(entryIDs: detail.entry?.map(\.id) ?? [], for: playlist.id)
+        } catch {
+            // An unreachable playlist simply shows no checkbox; the next appearance tries again.
+            membershipLookups.remove(playlist.id)
+        }
+    }
+
+    private func apply(entryIDs ids: [String], for playlistID: String) {
+        entryIDs[playlistID] = ids
+        let held = Set(ids)
+        let selected = Set(songs.map(\.id))
+        let found = selected.intersection(held)
+        membership[playlistID] = found.isEmpty ? .absent : (found.count == selected.count ? .all : .partial)
     }
 
     func load() async {
@@ -108,6 +148,7 @@ final class AddToPlaylistViewModel {
             if !remaining.isEmpty {
                 try await playlistService.addTracks(playlistId: playlist.id, songs: remaining.map { $0.asSong() })
             }
+            apply(entryIDs: ids + remaining.map(\.id), for: playlist.id)
             completed.insert(playlist.id)
             recents.record(playlist.id)
             recordUse(playlist.id)

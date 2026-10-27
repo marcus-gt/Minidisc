@@ -5230,6 +5230,9 @@
         }
       }
     },
+    "All songs already in this playlist" : {
+
+    },
     "Allow Siri to search your maekster library and control music playback." : {
       "localizations" : {
         "de" : {
@@ -5339,6 +5342,9 @@
           }
         }
       }
+    },
+    "Already in this playlist" : {
+
     },
     "An unexpected error occurred." : {
       "localizations" : {
@@ -27024,6 +27030,9 @@
         }
       }
     },
+    "Not in this playlist" : {
+
+    },
     "Not in your library" : {
       "localizations" : {
         "de" : {
@@ -36850,6 +36859,9 @@
           }
         }
       }
+    },
+    "Some songs already in this playlist" : {
+
     },
     "Something went wrong." : {
       "localizations" : {

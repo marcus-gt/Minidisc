@@ -120,7 +120,8 @@ private struct PlaylistDestinationsList: View {
     }
 
     private func destination(_ playlist: Playlist) -> some View {
-        Button { onSelect(playlist) } label: {
+        let membership = vm.membership(of: playlist)
+        return Button { onSelect(playlist) } label: {
             HStack(spacing: MinidiscSpacing.m) {
                 PlaylistCoverThumbnail(playlistId: playlist.id, serverId: nil,
                     coverArtId: playlist.coverArt ?? playlist.id, title: playlist.name, size: 44)
@@ -129,13 +130,49 @@ private struct PlaylistDestinationsList: View {
                     Text("\(playlist.songCount) tracks").font(.minidiscCaption).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
-                if vm.addingToPlaylistIds.contains(playlist.id) { ProgressView() }
+                if vm.addingToPlaylistIds.contains(playlist.id) {
+                    ProgressView()
+                } else {
+                    membershipMark(membership)
+                }
             }
             .padding(.vertical, MinidiscSpacing.xs)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("playlist.destination.\(playlist.id)")
+        .accessibilityValue(membershipLabel(membership))
+        .task { await vm.loadMembership(of: playlist) }
+    }
+
+    /// Which part of the selection this playlist already holds (#14).
+    @ViewBuilder
+    private func membershipMark(_ membership: PlaylistMembership) -> some View {
+        switch membership {
+        case .unknown:
+            Color.clear.frame(width: 22, height: 22)
+        case .absent:
+            Image(systemName: "circle")
+                .font(.title3)
+                .foregroundStyle(.tertiary)
+        case .partial:
+            Image(systemName: "minus.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Color.minidiscAccent.opacity(0.6))
+        case .all:
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Color.minidiscAccent)
+        }
+    }
+
+    private func membershipLabel(_ membership: PlaylistMembership) -> Text {
+        switch membership {
+        case .unknown: Text("")
+        case .absent: Text("Not in this playlist")
+        case .partial: Text("Some songs already in this playlist")
+        case .all: Text(vm.songs.count == 1 ? "Already in this playlist" : "All songs already in this playlist")
+        }
     }
 }
 

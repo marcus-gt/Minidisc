@@ -96,6 +96,60 @@ struct PlaylistBatchAdditionTests {
         #expect(RecentPlaylistDestinations(serverID: "other", defaults: defaults).ids.isEmpty)
     }
 
+    @Test("A playlist holding every selected song is marked as holding all of them")
+    func membershipAll() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a", "b"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .all)
+    }
+
+    @Test("A playlist holding part of the selection is marked as partial")
+    func membershipPartial() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .partial)
+    }
+
+    @Test("A playlist holding none of the selection is marked as absent")
+    func membershipAbsent() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["z"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .absent)
+    }
+
+    /// Rows reappear as the list scrolls, so the lookup must happen once per playlist.
+    @Test("Membership is looked up once per playlist")
+    func membershipLookupIsCachedAndLazy() async throws {
+        let service = BatchPlaylistStub()
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        #expect(vm.membership(of: destination) == .unknown)
+        #expect(service.lookupCalls == 0)
+        await vm.loadMembership(of: destination)
+        await vm.loadMembership(of: destination)
+        #expect(service.lookupCalls == 1)
+    }
+
+    @Test("Adding the selection marks the playlist as holding all of it")
+    func membershipFollowsAnAdd() async throws {
+        let service = BatchPlaylistStub()
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .absent)
+        #expect(await vm.checkAndAdd(to: destination) == .added)
+        #expect(vm.membership(of: destination) == .all)
+    }
+
     @Test("Batch presentation preserves queue order and intentional duplicates")
     func batchPresentation() throws {
         let addition = PlaylistAddition()
@@ -131,12 +185,15 @@ private final class BatchPlaylistStub: PlaylistServiceProtocol {
     var songs: [Song] = []
     private(set) var appendBatches: [[String]] = []
     private(set) var createCalls = 0
+    private(set) var lookupCalls = 0
+    private(set) var removedIndices: [[Int]] = []
     var ids: [String] { songs.map(\.id) }
     var appendCalls: Int { appendBatches.count }
     func setFailure(_ value: Failure) { failure = value }
     func setSongs(_ value: [Song]) { songs = value }
     func listPlaylists() async throws -> [Playlist] { [Playlist(id: "p", name: "Été", songCount: songs.count, duration: 0)] }
     func getPlaylist(id: String) async throws -> PlaylistWithSongs {
+        lookupCalls += 1
         if failure == .lookup { failure = nil; throw URLError(.timedOut) }
         return PlaylistWithSongs(id: id, name: "Été", songCount: songs.count, duration: 0, entry: songs)
     }
@@ -154,7 +211,10 @@ private final class BatchPlaylistStub: PlaylistServiceProtocol {
     }
     func renamePlaylist(id: String, newName: String) async throws {}
     func updateDescription(id: String, description: String) async throws {}
-    func removeTracks(playlistId: String, indices: [Int]) async throws {}
+    func removeTracks(playlistId: String, indices: [Int]) async throws {
+        removedIndices.append(indices)
+        for index in indices.sorted(by: >) where songs.indices.contains(index) { songs.remove(at: index) }
+    }
     func reorderTracks(playlistId: String, orderedSongIds: [String]) async throws {}
     func deletePlaylist(id: String, purgeDownloads: Bool) async throws {}
 }
