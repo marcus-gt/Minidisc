@@ -83,17 +83,46 @@ struct PlaylistBatchAdditionTests {
         #expect(service.ids == ["a", "b"])
     }
 
-    @Test("Recent destinations are server-scoped, filtered, and never duplicated")
+    @Test("Recent destinations are server-scoped and searchable in one list")
     func recentDestinations() async throws {
         let service = BatchPlaylistStub()
         let (vm, defaults, key) = model(try makeSongs(["a"]), service)
         defer { defaults.removePersistentDomain(forName: key) }
         #expect(await vm.checkAndAdd(to: destination) == .added)
         await vm.load()
-        #expect(vm.destinations(query: "ete", recent: true).map(\.id) == [destination.id])
-        #expect(vm.destinations(query: "", recent: false).isEmpty)
-        #expect(vm.destinations(query: "missing", recent: true).isEmpty)
+        #expect(vm.destinations(query: "ete").map(\.id) == [destination.id])
+        #expect(vm.destinations(query: "missing").isEmpty)
+        #expect(vm.recentIDs == [destination.id])
         #expect(RecentPlaylistDestinations(serverID: "other", defaults: defaults).ids.isEmpty)
+    }
+
+    /// Ticking a playlist records it as the newest destination, but the list must not reshuffle
+    /// under the finger; the new order only applies the next time the sheet opens.
+    @Test("The list keeps its order while the sheet is open")
+    func listOrderIsFrozenForTheVisit() async throws {
+        let service = BatchPlaylistStub()
+        service.setPlaylists([
+            Playlist(id: "p1", name: "Alpha", songCount: 0, duration: 0),
+            Playlist(id: "p2", name: "Beta", songCount: 0, duration: 0)
+        ])
+        let key = "BatchPlaylistTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: key)!
+        defer { defaults.removePersistentDomain(forName: key) }
+        let recents = RecentPlaylistDestinations(serverID: "server", defaults: defaults)
+        let songs = try makeSongs(["a"])
+
+        let first = AddToPlaylistViewModel(songs: songs, playlistService: service,
+                                          toastService: ToastService(), recents: recents)
+        await first.load()
+        #expect(first.destinations(query: "").map(\.id) == ["p1", "p2"])
+        #expect(await first.checkAndAdd(to: Playlist(id: "p2", name: "Beta", songCount: 0, duration: 0)) == .added)
+        #expect(first.destinations(query: "").map(\.id) == ["p1", "p2"])
+
+        // A new sheet starts from the recorded order.
+        let second = AddToPlaylistViewModel(songs: songs, playlistService: service,
+                                           toastService: ToastService(), recents: recents)
+        await second.load()
+        #expect(second.destinations(query: "").map(\.id) == ["p2", "p1"])
     }
 
     @Test("A playlist holding every selected song is marked as holding all of them")
@@ -259,7 +288,11 @@ private final class BatchPlaylistStub: PlaylistServiceProtocol {
     var appendCalls: Int { appendBatches.count }
     func setFailure(_ value: Failure) { failure = value }
     func setSongs(_ value: [Song]) { songs = value }
-    func listPlaylists() async throws -> [Playlist] { [Playlist(id: "p", name: "Été", songCount: songs.count, duration: 0)] }
+    var playlists: [Playlist]?
+    func setPlaylists(_ value: [Playlist]) { playlists = value }
+    func listPlaylists() async throws -> [Playlist] {
+        playlists ?? [Playlist(id: "p", name: "Été", songCount: songs.count, duration: 0)]
+    }
     func getPlaylist(id: String) async throws -> PlaylistWithSongs {
         lookupCalls += 1
         if failure == .lookup { failure = nil; throw URLError(.timedOut) }

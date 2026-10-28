@@ -34,6 +34,9 @@ final class AddToPlaylistViewModel {
     private let toastService: ToastService
     private let recents: RecentPlaylistDestinations
     private let recordUse: (String) -> Void
+    /// The order the list is shown in, taken once when the sheet opens. Ticking a playlist records it
+    /// as the newest destination for next time, but must not move it under the finger now (#14).
+    private let displayOrder: [String]
     private var intents: [String: PlaylistAppendIntent] = [:]
     private var completed: Set<String> = []
     /// The song ids each inspected playlist holds, in playlist order.
@@ -49,18 +52,20 @@ final class AddToPlaylistViewModel {
         self.recents = recents
         self.recordUse = recordUse
         self.recentIDs = recents.ids
+        self.displayOrder = recents.ids
     }
 
     var isSaving: Bool { isCreating || !addingToPlaylistIds.isEmpty }
     var canCreate: Bool { !newPlaylistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSaving }
 
-    func destinations(query: String, recent: Bool) -> [Playlist] {
+    /// One list: the playlists last added to first, in that order, then the rest by name.
+    func destinations(query: String) -> [Playlist] {
         let query = LibrarySearchRanking.normalized(query)
         let filtered = playlists.filter { query.isEmpty || LibrarySearchRanking.normalized($0.name).contains(query) }
-        if recent { return recentIDs.compactMap { id in filtered.first { $0.id == id } } }
-        return filtered.filter { !recentIDs.contains($0.id) }.sorted {
-            $0.name.localizedStandardCompare($1.name) == .orderedAscending
-        }
+        let recent = displayOrder.compactMap { id in filtered.first { $0.id == id } }
+        let rest = filtered.filter { playlist in !displayOrder.contains(playlist.id) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        return recent + rest
     }
 
     // MARK: - Membership

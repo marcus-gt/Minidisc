@@ -98,19 +98,13 @@ private struct PlaylistDestinationsList: View {
                 }
             }
             if vm.isLoading && vm.playlists.isEmpty { ProgressView() }
-            let recent = vm.destinations(query: query, recent: true)
-            let other = vm.destinations(query: query, recent: false)
-            if !recent.isEmpty {
-                Section("Recent Playlists") {
-                    ForEach(recent) { playlist in destination(playlist) }
+            let destinations = vm.destinations(query: query)
+            if !destinations.isEmpty {
+                Section {
+                    ForEach(destinations) { playlist in destination(playlist) }
                 }
             }
-            if !other.isEmpty {
-                Section("Playlists") {
-                    ForEach(other) { playlist in destination(playlist) }
-                }
-            }
-            if recent.isEmpty && other.isEmpty && !vm.isLoading && vm.error == nil {
+            if destinations.isEmpty && !vm.isLoading && vm.error == nil {
                 Text(query.isEmpty ? LocalizedStringResource("No playlists yet. Create one above.") : LocalizedStringResource("No matching playlists"))
                     .foregroundStyle(.secondary)
             }
