@@ -3,6 +3,9 @@ import SwiftSonic
 
 enum AddToPlaylistResult { case added, duplicate, failed }
 
+/// What tapping a playlist's checkbox did, or asks for (#14).
+enum PlaylistToggleResult { case added, removed, needsRemovalConfirmation, failed }
+
 /// How much of the selection a playlist already holds, for the checkbox beside it (#14).
 nonisolated enum PlaylistMembership: Equatable, Sendable {
     /// Not looked up yet.
@@ -93,6 +96,57 @@ final class AddToPlaylistViewModel {
         defer { isLoading = false }
         do { playlists = try await playlistService.listPlaylists() }
         catch { report(error) }
+    }
+
+    // MARK: - Toggling
+
+    /// Ticks or unticks a playlist: a playlist that already holds the whole selection gives it up,
+    /// anything else is filled up with the songs it is missing. Removing several songs at once asks
+    /// first, through `needsRemovalConfirmation`.
+    func toggle(_ playlist: Playlist) async -> PlaylistToggleResult {
+        guard !isSaving else { return .failed }
+        if membership(of: playlist) == .all {
+            guard songs.count == 1 else { return .needsRemovalConfirmation }
+            return await remove(from: playlist)
+        }
+        // Filling a checkbox never duplicates what is already there.
+        return await forceAdd(to: playlist, skippingDuplicates: true) ? .added : .failed
+    }
+
+    /// Takes every occurrence of the selected songs out of the playlist.
+    @discardableResult
+    func remove(from playlist: Playlist) async -> PlaylistToggleResult {
+        guard !songs.isEmpty, !isSaving else { return .failed }
+        addingToPlaylistIds.insert(playlist.id)
+        error = nil
+        defer { addingToPlaylistIds.remove(playlist.id) }
+        do {
+            // Indices come from the playlist as it is now: a stale list would remove the wrong tracks.
+            let current = try await playlistService.getPlaylist(id: playlist.id)
+            let ids = current.entry?.map(\.id) ?? []
+            let selected = Set(songs.map(\.id))
+            let indices = ids.enumerated().filter { selected.contains($0.element) }.map(\.offset)
+            guard !indices.isEmpty else {
+                apply(entryIDs: ids, for: playlist.id)
+                return .removed
+            }
+            try await playlistService.removeTracks(playlistId: playlist.id, indices: indices)
+            let remaining = ids.enumerated().filter { !indices.contains($0.offset) }.map(\.element)
+            apply(entryIDs: remaining, for: playlist.id)
+            // A later tap on the same playlist starts a fresh append.
+            completed.remove(playlist.id)
+            intents[playlist.id] = nil
+            recordUse(playlist.id)
+            let message = songs.count == 1
+                ? String(localized: "Removed from playlist")
+                : String(localized: "\(indices.count) songs removed")
+            toastService.showConfirmation(message, subtitle: playlist.name, coverArtId: playlist.coverArt,
+                action: .navigateToPlaylist(id: playlist.id, name: playlist.name, coverArtId: playlist.coverArt))
+            return .removed
+        } catch {
+            report(error)
+            return .failed
+        }
     }
 
     func checkAndAdd(to playlist: Playlist) async -> AddToPlaylistResult {

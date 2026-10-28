@@ -150,6 +150,74 @@ struct PlaylistBatchAdditionTests {
         #expect(vm.membership(of: destination) == .all)
     }
 
+    @Test("Ticking an empty checkbox adds the songs it is missing, without duplicating the rest")
+    func toggleFillsThePlaylist() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .partial)
+        #expect(await vm.toggle(destination) == .added)
+        #expect(service.ids == ["a", "b"])
+        #expect(vm.membership(of: destination) == .all)
+    }
+
+    @Test("Unticking one song takes every one of its occurrences out")
+    func toggleRemovesASingleSong() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["x", "a", "y", "a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .all)
+        #expect(await vm.toggle(destination) == .removed)
+        #expect(service.removedIndices == [[1, 3]])
+        #expect(service.ids == ["x", "y"])
+        #expect(vm.membership(of: destination) == .absent)
+    }
+
+    /// Taking several songs out at once is confirmed first, so a stray tap cannot empty a playlist.
+    @Test("Unticking a multi-song selection asks before removing")
+    func toggleAsksBeforeRemovingSeveral() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a", "b"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(await vm.toggle(destination) == .needsRemovalConfirmation)
+        #expect(service.removedIndices.isEmpty)
+        #expect(await vm.remove(from: destination) == .removed)
+        #expect(service.ids.isEmpty)
+    }
+
+    @Test("A playlist can be ticked again after being unticked")
+    func toggleBackOn() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(await vm.toggle(destination) == .removed)
+        #expect(await vm.toggle(destination) == .added)
+        #expect(service.ids == ["a"])
+        #expect(vm.membership(of: destination) == .all)
+    }
+
+    @Test("A failed removal leaves the playlist and the checkbox alone")
+    func failedRemovalKeepsState() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        service.setFailure(.lookup)
+        #expect(await vm.toggle(destination) == .failed)
+        #expect(vm.error != nil)
+        #expect(service.removedIndices.isEmpty)
+        #expect(vm.membership(of: destination) == .all)
+    }
+
     @Test("Batch presentation preserves queue order and intentional duplicates")
     func batchPresentation() throws {
         let addition = PlaylistAddition()

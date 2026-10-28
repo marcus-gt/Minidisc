@@ -9,7 +9,9 @@ struct AddToPlaylistSheet: View {
     @State private var vm: AddToPlaylistViewModel?
     @State private var searchText = ""
     @State private var showCreate = false
-    @State private var pendingDuplicate: Playlist?
+    @State private var pendingRemoval: Playlist?
+    /// Toggles apply straight away, so the caller is only told once the sheet closes.
+    @State private var didChange = false
 
     var body: some View {
         NavigationStack {
@@ -17,9 +19,9 @@ struct AddToPlaylistSheet: View {
                 if let vm {
                     PlaylistDestinationsList(vm: vm, query: searchText, onCreate: { showCreate = true }) { playlist in
                         Task {
-                            switch await vm.checkAndAdd(to: playlist) {
-                            case .added: finish()
-                            case .duplicate: pendingDuplicate = playlist
+                            switch await vm.toggle(playlist) {
+                            case .added, .removed: didChange = true
+                            case .needsRemovalConfirmation: pendingRemoval = playlist
                             case .failed: break
                             }
                         }
@@ -30,12 +32,12 @@ struct AddToPlaylistSheet: View {
             .navigationBarTitleDisplayModeInline()
             .searchable(text: $searchText, prompt: "Find a playlist")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.disabled(vm?.isSaving == true)
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { finish() }.disabled(vm?.isSaving == true)
                 }
             }
             .navigationDestination(isPresented: $showCreate) {
-                if let vm { NewPlaylistDestinationForm(vm: vm, onSaved: finish) }
+                if let vm { NewPlaylistDestinationForm(vm: vm, onSaved: { didChange = true; finish() }) }
             }
         }
         .interactiveDismissDisabled(vm?.isSaving == true)
@@ -51,26 +53,25 @@ struct AddToPlaylistSheet: View {
             showCreate = request.createsPlaylist
             await model.load()
         }
-        .confirmationDialog("Already in Playlist", isPresented: Binding(
-            get: { pendingDuplicate != nil }, set: { if !$0 { pendingDuplicate = nil } }
-        ), titleVisibility: .visible, presenting: pendingDuplicate) { playlist in
-            Button("Add Only New Songs") { add(to: playlist, skippingDuplicates: true) }
-            Button("Add Anyway") { add(to: playlist, skippingDuplicates: false) }
-            Button("Cancel", role: .cancel) { pendingDuplicate = nil }
-        } message: { _ in
-            Text("Some selected songs are already in this playlist.")
+        .confirmationDialog("Remove from Playlist", isPresented: Binding(
+            get: { pendingRemoval != nil }, set: { if !$0 { pendingRemoval = nil } }
+        ), titleVisibility: .visible, presenting: pendingRemoval) { playlist in
+            Button("Remove", role: .destructive) { remove(from: playlist) }
+            Button("Cancel", role: .cancel) { pendingRemoval = nil }
+        } message: { playlist in
+            Text("\(vm?.songs.count ?? 0) songs will be taken out of \(playlist.name).")
         }
         .tint(.primary)
     }
 
     private func finish() {
         dismiss()
-        onAdded?()
+        if didChange { onAdded?() }
     }
 
-    private func add(to playlist: Playlist, skippingDuplicates: Bool) {
-        pendingDuplicate = nil
-        Task { if await vm?.forceAdd(to: playlist, skippingDuplicates: skippingDuplicates) == true { finish() } }
+    private func remove(from playlist: Playlist) {
+        pendingRemoval = nil
+        Task { if await vm?.remove(from: playlist) == .removed { didChange = true } }
     }
 }
 
