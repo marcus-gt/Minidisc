@@ -83,17 +83,168 @@ struct PlaylistBatchAdditionTests {
         #expect(service.ids == ["a", "b"])
     }
 
-    @Test("Recent destinations are server-scoped, filtered, and never duplicated")
+    @Test("Recent destinations are server-scoped and searchable in one list")
     func recentDestinations() async throws {
         let service = BatchPlaylistStub()
         let (vm, defaults, key) = model(try makeSongs(["a"]), service)
         defer { defaults.removePersistentDomain(forName: key) }
         #expect(await vm.checkAndAdd(to: destination) == .added)
         await vm.load()
-        #expect(vm.destinations(query: "ete", recent: true).map(\.id) == [destination.id])
-        #expect(vm.destinations(query: "", recent: false).isEmpty)
-        #expect(vm.destinations(query: "missing", recent: true).isEmpty)
+        #expect(vm.destinations(query: "ete").map(\.id) == [destination.id])
+        #expect(vm.destinations(query: "missing").isEmpty)
+        #expect(vm.recentIDs == [destination.id])
         #expect(RecentPlaylistDestinations(serverID: "other", defaults: defaults).ids.isEmpty)
+    }
+
+    /// Ticking a playlist records it as the newest destination, but the list must not reshuffle
+    /// under the finger; the new order only applies the next time the sheet opens.
+    @Test("The list keeps its order while the sheet is open")
+    func listOrderIsFrozenForTheVisit() async throws {
+        let service = BatchPlaylistStub()
+        service.setPlaylists([
+            Playlist(id: "p1", name: "Alpha", songCount: 0, duration: 0),
+            Playlist(id: "p2", name: "Beta", songCount: 0, duration: 0)
+        ])
+        let key = "BatchPlaylistTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: key)!
+        defer { defaults.removePersistentDomain(forName: key) }
+        let recents = RecentPlaylistDestinations(serverID: "server", defaults: defaults)
+        let songs = try makeSongs(["a"])
+
+        let first = AddToPlaylistViewModel(songs: songs, playlistService: service,
+                                          toastService: ToastService(), recents: recents)
+        await first.load()
+        #expect(first.destinations(query: "").map(\.id) == ["p1", "p2"])
+        #expect(await first.checkAndAdd(to: Playlist(id: "p2", name: "Beta", songCount: 0, duration: 0)) == .added)
+        #expect(first.destinations(query: "").map(\.id) == ["p1", "p2"])
+
+        // A new sheet starts from the recorded order.
+        let second = AddToPlaylistViewModel(songs: songs, playlistService: service,
+                                           toastService: ToastService(), recents: recents)
+        await second.load()
+        #expect(second.destinations(query: "").map(\.id) == ["p2", "p1"])
+    }
+
+    @Test("A playlist holding every selected song is marked as holding all of them")
+    func membershipAll() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a", "b"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .all)
+    }
+
+    @Test("A playlist holding part of the selection is marked as partial")
+    func membershipPartial() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .partial)
+    }
+
+    @Test("A playlist holding none of the selection is marked as absent")
+    func membershipAbsent() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["z"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .absent)
+    }
+
+    /// Rows reappear as the list scrolls, so the lookup must happen once per playlist.
+    @Test("Membership is looked up once per playlist")
+    func membershipLookupIsCachedAndLazy() async throws {
+        let service = BatchPlaylistStub()
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        #expect(vm.membership(of: destination) == .unknown)
+        #expect(service.lookupCalls == 0)
+        await vm.loadMembership(of: destination)
+        await vm.loadMembership(of: destination)
+        #expect(service.lookupCalls == 1)
+    }
+
+    @Test("Adding the selection marks the playlist as holding all of it")
+    func membershipFollowsAnAdd() async throws {
+        let service = BatchPlaylistStub()
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .absent)
+        #expect(await vm.checkAndAdd(to: destination) == .added)
+        #expect(vm.membership(of: destination) == .all)
+    }
+
+    @Test("Ticking an empty checkbox adds the songs it is missing, without duplicating the rest")
+    func toggleFillsThePlaylist() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .partial)
+        #expect(await vm.toggle(destination) == .added)
+        #expect(service.ids == ["a", "b"])
+        #expect(vm.membership(of: destination) == .all)
+    }
+
+    @Test("Unticking one song takes every one of its occurrences out")
+    func toggleRemovesASingleSong() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["x", "a", "y", "a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(vm.membership(of: destination) == .all)
+        #expect(await vm.toggle(destination) == .removed)
+        #expect(service.removedIndices == [[1, 3]])
+        #expect(service.ids == ["x", "y"])
+        #expect(vm.membership(of: destination) == .absent)
+    }
+
+    /// Taking several songs out at once is confirmed first, so a stray tap cannot empty a playlist.
+    @Test("Unticking a multi-song selection asks before removing")
+    func toggleAsksBeforeRemovingSeveral() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a", "b"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a", "b"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(await vm.toggle(destination) == .needsRemovalConfirmation)
+        #expect(service.removedIndices.isEmpty)
+        #expect(await vm.remove(from: destination) == .removed)
+        #expect(service.ids.isEmpty)
+    }
+
+    @Test("A playlist can be ticked again after being unticked")
+    func toggleBackOn() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        #expect(await vm.toggle(destination) == .removed)
+        #expect(await vm.toggle(destination) == .added)
+        #expect(service.ids == ["a"])
+        #expect(vm.membership(of: destination) == .all)
+    }
+
+    @Test("A failed removal leaves the playlist and the checkbox alone")
+    func failedRemovalKeepsState() async throws {
+        let service = BatchPlaylistStub()
+        service.setSongs(try makeSongs(["a"]).map { $0.asSong() })
+        let (vm, defaults, key) = model(try makeSongs(["a"]), service)
+        defer { defaults.removePersistentDomain(forName: key) }
+        await vm.loadMembership(of: destination)
+        service.setFailure(.lookup)
+        #expect(await vm.toggle(destination) == .failed)
+        #expect(vm.error != nil)
+        #expect(service.removedIndices.isEmpty)
+        #expect(vm.membership(of: destination) == .all)
     }
 
     @Test("Batch presentation preserves queue order and intentional duplicates")
@@ -131,12 +282,19 @@ private final class BatchPlaylistStub: PlaylistServiceProtocol {
     var songs: [Song] = []
     private(set) var appendBatches: [[String]] = []
     private(set) var createCalls = 0
+    private(set) var lookupCalls = 0
+    private(set) var removedIndices: [[Int]] = []
     var ids: [String] { songs.map(\.id) }
     var appendCalls: Int { appendBatches.count }
     func setFailure(_ value: Failure) { failure = value }
     func setSongs(_ value: [Song]) { songs = value }
-    func listPlaylists() async throws -> [Playlist] { [Playlist(id: "p", name: "Été", songCount: songs.count, duration: 0)] }
+    var playlists: [Playlist]?
+    func setPlaylists(_ value: [Playlist]) { playlists = value }
+    func listPlaylists() async throws -> [Playlist] {
+        playlists ?? [Playlist(id: "p", name: "Été", songCount: songs.count, duration: 0)]
+    }
     func getPlaylist(id: String) async throws -> PlaylistWithSongs {
+        lookupCalls += 1
         if failure == .lookup { failure = nil; throw URLError(.timedOut) }
         return PlaylistWithSongs(id: id, name: "Été", songCount: songs.count, duration: 0, entry: songs)
     }
@@ -154,7 +312,10 @@ private final class BatchPlaylistStub: PlaylistServiceProtocol {
     }
     func renamePlaylist(id: String, newName: String) async throws {}
     func updateDescription(id: String, description: String) async throws {}
-    func removeTracks(playlistId: String, indices: [Int]) async throws {}
+    func removeTracks(playlistId: String, indices: [Int]) async throws {
+        removedIndices.append(indices)
+        for index in indices.sorted(by: >) where songs.indices.contains(index) { songs.remove(at: index) }
+    }
     func reorderTracks(playlistId: String, orderedSongIds: [String]) async throws {}
     func deletePlaylist(id: String, purgeDownloads: Bool) async throws {}
 }

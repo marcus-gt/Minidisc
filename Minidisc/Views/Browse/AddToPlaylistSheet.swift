@@ -9,7 +9,9 @@ struct AddToPlaylistSheet: View {
     @State private var vm: AddToPlaylistViewModel?
     @State private var searchText = ""
     @State private var showCreate = false
-    @State private var pendingDuplicate: Playlist?
+    @State private var pendingRemoval: Playlist?
+    /// Toggles apply straight away, so the caller is only told once the sheet closes.
+    @State private var didChange = false
 
     var body: some View {
         NavigationStack {
@@ -17,9 +19,9 @@ struct AddToPlaylistSheet: View {
                 if let vm {
                     PlaylistDestinationsList(vm: vm, query: searchText, onCreate: { showCreate = true }) { playlist in
                         Task {
-                            switch await vm.checkAndAdd(to: playlist) {
-                            case .added: finish()
-                            case .duplicate: pendingDuplicate = playlist
+                            switch await vm.toggle(playlist) {
+                            case .added, .removed: didChange = true
+                            case .needsRemovalConfirmation: pendingRemoval = playlist
                             case .failed: break
                             }
                         }
@@ -30,12 +32,12 @@ struct AddToPlaylistSheet: View {
             .navigationBarTitleDisplayModeInline()
             .searchable(text: $searchText, prompt: "Find a playlist")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.disabled(vm?.isSaving == true)
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { finish() }.disabled(vm?.isSaving == true)
                 }
             }
             .navigationDestination(isPresented: $showCreate) {
-                if let vm { NewPlaylistDestinationForm(vm: vm, onSaved: finish) }
+                if let vm { NewPlaylistDestinationForm(vm: vm, onSaved: { didChange = true; finish() }) }
             }
         }
         .interactiveDismissDisabled(vm?.isSaving == true)
@@ -51,26 +53,25 @@ struct AddToPlaylistSheet: View {
             showCreate = request.createsPlaylist
             await model.load()
         }
-        .confirmationDialog("Already in Playlist", isPresented: Binding(
-            get: { pendingDuplicate != nil }, set: { if !$0 { pendingDuplicate = nil } }
-        ), titleVisibility: .visible, presenting: pendingDuplicate) { playlist in
-            Button("Add Only New Songs") { add(to: playlist, skippingDuplicates: true) }
-            Button("Add Anyway") { add(to: playlist, skippingDuplicates: false) }
-            Button("Cancel", role: .cancel) { pendingDuplicate = nil }
-        } message: { _ in
-            Text("Some selected songs are already in this playlist.")
+        .confirmationDialog("Remove from Playlist", isPresented: Binding(
+            get: { pendingRemoval != nil }, set: { if !$0 { pendingRemoval = nil } }
+        ), titleVisibility: .visible, presenting: pendingRemoval) { playlist in
+            Button("Remove", role: .destructive) { remove(from: playlist) }
+            Button("Cancel", role: .cancel) { pendingRemoval = nil }
+        } message: { playlist in
+            Text("\(vm?.songs.count ?? 0) songs will be taken out of \(playlist.name).")
         }
         .tint(.primary)
     }
 
     private func finish() {
         dismiss()
-        onAdded?()
+        if didChange { onAdded?() }
     }
 
-    private func add(to playlist: Playlist, skippingDuplicates: Bool) {
-        pendingDuplicate = nil
-        Task { if await vm?.forceAdd(to: playlist, skippingDuplicates: skippingDuplicates) == true { finish() } }
+    private func remove(from playlist: Playlist) {
+        pendingRemoval = nil
+        Task { if await vm?.remove(from: playlist) == .removed { didChange = true } }
     }
 }
 
@@ -97,19 +98,13 @@ private struct PlaylistDestinationsList: View {
                 }
             }
             if vm.isLoading && vm.playlists.isEmpty { ProgressView() }
-            let recent = vm.destinations(query: query, recent: true)
-            let other = vm.destinations(query: query, recent: false)
-            if !recent.isEmpty {
-                Section("Recent Playlists") {
-                    ForEach(recent) { playlist in destination(playlist) }
+            let destinations = vm.destinations(query: query)
+            if !destinations.isEmpty {
+                Section {
+                    ForEach(destinations) { playlist in destination(playlist) }
                 }
             }
-            if !other.isEmpty {
-                Section("Playlists") {
-                    ForEach(other) { playlist in destination(playlist) }
-                }
-            }
-            if recent.isEmpty && other.isEmpty && !vm.isLoading && vm.error == nil {
+            if destinations.isEmpty && !vm.isLoading && vm.error == nil {
                 Text(query.isEmpty ? LocalizedStringResource("No playlists yet. Create one above.") : LocalizedStringResource("No matching playlists"))
                     .foregroundStyle(.secondary)
             }
@@ -120,7 +115,8 @@ private struct PlaylistDestinationsList: View {
     }
 
     private func destination(_ playlist: Playlist) -> some View {
-        Button { onSelect(playlist) } label: {
+        let membership = vm.membership(of: playlist)
+        return Button { onSelect(playlist) } label: {
             HStack(spacing: MinidiscSpacing.m) {
                 PlaylistCoverThumbnail(playlistId: playlist.id, serverId: nil,
                     coverArtId: playlist.coverArt ?? playlist.id, title: playlist.name, size: 44)
@@ -129,13 +125,49 @@ private struct PlaylistDestinationsList: View {
                     Text("\(playlist.songCount) tracks").font(.minidiscCaption).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
-                if vm.addingToPlaylistIds.contains(playlist.id) { ProgressView() }
+                if vm.addingToPlaylistIds.contains(playlist.id) {
+                    ProgressView()
+                } else {
+                    membershipMark(membership)
+                }
             }
             .padding(.vertical, MinidiscSpacing.xs)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("playlist.destination.\(playlist.id)")
+        .accessibilityValue(membershipLabel(membership))
+        .task { await vm.loadMembership(of: playlist) }
+    }
+
+    /// Which part of the selection this playlist already holds (#14).
+    @ViewBuilder
+    private func membershipMark(_ membership: PlaylistMembership) -> some View {
+        switch membership {
+        case .unknown:
+            Color.clear.frame(width: 22, height: 22)
+        case .absent:
+            Image(systemName: "circle")
+                .font(.title3)
+                .foregroundStyle(.tertiary)
+        case .partial:
+            Image(systemName: "minus.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Color.minidiscAccent.opacity(0.6))
+        case .all:
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Color.minidiscAccent)
+        }
+    }
+
+    private func membershipLabel(_ membership: PlaylistMembership) -> Text {
+        switch membership {
+        case .unknown: Text("")
+        case .absent: Text("Not in this playlist")
+        case .partial: Text("Some songs already in this playlist")
+        case .all: Text(vm.songs.count == 1 ? "Already in this playlist" : "All songs already in this playlist")
+        }
     }
 }
 
