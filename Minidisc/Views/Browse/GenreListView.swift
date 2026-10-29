@@ -74,7 +74,7 @@ struct GenreListView: View {
             } else {
                 List(genres) { genre in
                     NavigationLink {
-                        GenreDetailView(genre: genre, sort: sort)
+                        GenreDetailView(genre: genre)
                     } label: {
                         GenreRow(title: GenreRow.title(genre.isOther ? nil : genre.name), albumCount: genre.albumCount, coverArtId: genre.coverArtId)
                     }
@@ -91,11 +91,10 @@ struct GenreListView: View {
     }
 }
 
-/// One main genre: "All <genre>", then its styles in the genre list's order.
+/// One main genre: "All <genre>", then its styles, with their own Sort.
 struct GenreDetailView: View {
     let genre: MainGenreSummary
-    /// The styles follow the genre list's order.
-    var sort: GenreListSort = .mostAlbums
+    @AppStorage("minidisc.genreStyleSort") private var sort: GenreListSort = .mostAlbums
 
     var body: some View {
         List {
@@ -128,6 +127,14 @@ struct GenreDetailView: View {
         .minidiscContentWidth()
         .navigationTitle(genre.isOther ? Text("Other") : Text(verbatim: genre.name))
         .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            if genre.styles.count > 1 {
+                ToolbarItem(placement: .primaryAction) {
+                    LibrarySortMenu(sort: $sort)
+                        .tint(.primary)
+                }
+            }
+        }
     }
 }
 
