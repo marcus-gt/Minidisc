@@ -95,14 +95,4 @@ struct PinnedShelfTests {
         #expect(!PlaylistRenamer.canRename(playlistName: WrappedPlaylistService.playlistName(year: 2025)))
         #expect(!PlaylistRenamer.canRename(playlistName: Mood.allCases[0].playlistName))
     }
-
-    /// A spaced dash stays with the word before it, so every name wraps the same way.
-    @Test func displayName_tiesSpacedDashesToThePrecedingWord() {
-        #expect(pinnedDisplayName("Techno – Chill") == "Techno\u{00A0}– Chill")
-        #expect(pinnedDisplayName("Techno - Chill") == "Techno\u{00A0}- Chill")
-        #expect(pinnedDisplayName("A — B – C") == "A\u{00A0}— B\u{00A0}– C")
-        // Hyphenated words and names without dashes are left alone.
-        #expect(pinnedDisplayName("Lo-fi beats") == "Lo-fi beats")
-        #expect(pinnedDisplayName("Jazz tunes") == "Jazz tunes")
-    }
 }

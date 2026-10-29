@@ -66,18 +66,6 @@ struct PinnedShelf: View {
     }
 }
 
-/// A name as shown on a pin: a spaced dash is tied to the word before it with a no-break space, so a
-/// wrapped name always reads "Techno –" / "Chill". Otherwise iOS, avoiding a lone last word, moves the
-/// dash down for short names only, and "Techno" / "– Chill" sits next to "Discover –" / "this month".
-/// Display only: the stored name keeps whatever was typed.
-nonisolated func pinnedDisplayName(_ name: String) -> String {
-    var result = name
-    for dash in [" – ", " — ", " - "] {
-        result = result.replacingOccurrences(of: dash, with: "\u{00A0}" + dash.dropFirst())
-    }
-    return result
-}
-
 /// What a pin's card says under its name: the artist for an album, the kind for the others, so a
 /// mixed shelf reads at a glance.
 private func pinnedSubtitle(_ item: PinnedItem) -> String? {
@@ -141,7 +129,7 @@ private struct PinnedGridTile: View {
             } detail: {
                 VStack(alignment: .leading, spacing: 2) {
                     // Two lines: pinned names like "Techno - Peak Time" are often longer than half a row.
-                    Text(verbatim: pinnedDisplayName(item.displayName))
+                    Text(item.displayName)
                         .font(.minidiscCellTitle)
                         .foregroundStyle(.primary)
                         .lineLimit(2)
@@ -174,7 +162,7 @@ private struct PinnedShelfCard: View {
             VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
                 PinnedCover(item: item, side: side, cornerRadius: MinidiscCornerRadius.standard)
                     .frame(width: side, height: side)
-                CoverCardMetadata(title: pinnedDisplayName(item.displayName), subtitle: pinnedSubtitle(item))
+                CoverCardMetadata(title: item.displayName, subtitle: pinnedSubtitle(item))
             }
             .frame(width: side, alignment: .leading)
         }
