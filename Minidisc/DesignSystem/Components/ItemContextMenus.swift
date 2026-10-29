@@ -253,8 +253,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     Divider()
                 }
 
-                // Only playlists can be pinned: they feed Home's playlist shelf. Pinned albums had
-                // their own Library grid, which is gone.
+                // Albums and playlists pin to Home's Pinned shelf (#44).
                 if isPinned {
                     Button {
                         HapticFeedback.light.trigger()
@@ -262,7 +261,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     } label: {
                         Label(itemType.unpinLabel, systemImage: "pin.slash")
                     }
-                } else if itemType == .playlist {
+                } else {
                     Button {
                         guard let serverId = container?.serverState.activeServer?.id,
                               let pin = container?.pinService else { return }
@@ -351,6 +350,8 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
             switch itemType {
             case .album: return local.albumSongs(itemId)
             case .playlist: return local.playlistSongs[itemId] ?? []
+            // Artists don't use the collection menus.
+            case .artist: return []
             }
         }
         return try await songLoader()
@@ -419,8 +420,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     Divider()
                 }
 
-                // Only playlists can be pinned: they feed Home's playlist shelf. Pinned albums had
-                // their own Library grid, which is gone.
+                // Albums and playlists pin to Home's Pinned shelf (#44).
                 if isPinned {
                     Button {
                         HapticFeedback.light.trigger()
@@ -428,7 +428,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     } label: {
                         Label(itemType.unpinLabel, systemImage: "pin.slash")
                     }
-                } else if itemType == .playlist {
+                } else {
                     Button {
                         guard let serverId = container?.serverState.activeServer?.id,
                               let pin = container?.pinService else { return }
@@ -483,6 +483,7 @@ extension PinnedItemType {
         switch self {
         case .album: "Pin Album"
         case .playlist: "Pin Playlist"
+        case .artist: "Pin Artist"
         }
     }
 
@@ -490,6 +491,7 @@ extension PinnedItemType {
         switch self {
         case .album: "Unpin Album"
         case .playlist: "Unpin Playlist"
+        case .artist: "Unpin Artist"
         }
     }
 }

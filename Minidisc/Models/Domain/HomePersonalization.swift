@@ -18,13 +18,6 @@ enum HomePersonalization {
         playlists.enumerated().filter { $0.offset < limit || ids.contains($0.element.id) }.map(\.element)
     }
 
-    /// The Home playlist shelf: everything, or only the pinned playlists in pin order.
-    static func shelfPlaylists(_ playlists: [Playlist], pinnedIDs: [String], pinnedOnly: Bool) -> [Playlist] {
-        guard pinnedOnly else { return playlists }
-        let byID = Dictionary(playlists.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        return pinnedIDs.compactMap { byID[$0] }
-    }
-
     static func rediscovery(favorites: [AlbumID3], frequent: [AlbumID3], recent: [AlbumID3]) -> [AlbumID3] {
         unique(favorites + frequent, excluding: Set(recent.map(\.id))).prefix(12).map { $0 }
     }

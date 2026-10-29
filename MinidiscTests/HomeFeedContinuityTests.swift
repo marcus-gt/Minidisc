@@ -102,14 +102,6 @@ struct HomeFeedContinuityTests {
         #expect(capped.map(\.id) == ["p0", "p1", "p4"])
     }
 
-    @Test func shelfPlaylists_pinnedOnly_showsPinnedInPinOrder() {
-        let playlists = (0..<3).map { Playlist(id: "p\($0)", name: "P\($0)", songCount: 1, duration: 100) }
-        let all = HomePersonalization.shelfPlaylists(playlists, pinnedIDs: ["p2", "gone", "p0"], pinnedOnly: false)
-        let pinned = HomePersonalization.shelfPlaylists(playlists, pinnedIDs: ["p2", "gone", "p0"], pinnedOnly: true)
-        #expect(all.map(\.id) == ["p0", "p1", "p2"])
-        #expect(pinned.map(\.id) == ["p2", "p0"])
-    }
-
     @Test func cancellingALoadPreservesVisibleContent() async throws {
         let source = HomeFeedSource(waitForGenres: true)
         let model = HomeFeedViewModel(libraryService: source)
