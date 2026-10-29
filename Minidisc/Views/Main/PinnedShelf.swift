@@ -113,10 +113,12 @@ private struct PinnedGridTile: View {
                     .frame(width: HomeShelfLayout.gridTileCoverSide, height: HomeShelfLayout.gridTileCoverSide)
             } detail: {
                 VStack(alignment: .leading, spacing: 2) {
+                    // Two lines: pinned names like "Techno - Peak Time" are often longer than half a row.
                     Text(item.displayName)
                         .font(.minidiscCellTitle)
                         .foregroundStyle(.primary)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     if let subtitle = pinnedSubtitle(item) {
                         Text(subtitle)
                             .font(.minidiscCaption)
