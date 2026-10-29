@@ -3,7 +3,9 @@ import Foundation
 /// Where the current track's audio comes from, as shown on the player ("Download", "Streaming").
 nonisolated enum PlaybackSourceKind: Equatable, Sendable {
     case localFile
-    case downloaded
+    /// `fileFormat` is the downloaded file's own format, which differs from the song's when the
+    /// download was transcoded (#32).
+    case downloaded(fileFormat: String?)
     case cached
     /// `transcodedFormat` / `maxBitRate` are what the stream URL asked the server for; `nil` means original.
     case stream(transcodedFormat: String?, maxBitRate: Int?)
@@ -12,7 +14,9 @@ nonisolated enum PlaybackSourceKind: Equatable, Sendable {
     init(_ source: MediaSource) {
         switch source {
         case .localFile: self = .localFile
-        case .downloaded: self = .downloaded
+        case .downloaded(let url):
+            let ext = url.pathExtension.lowercased()
+            self = .downloaded(fileFormat: ext.isEmpty ? nil : ext)
         case .cached: self = .cached
         case .liveStream: self = .liveStream
         case .stream(let url, _):

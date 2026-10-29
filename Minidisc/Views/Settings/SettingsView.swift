@@ -261,10 +261,25 @@ struct StorageSettingsView: View {
                 }
             }
             .disabled(vm.isClearingAll)
+            if let stream = container?.streamSettings {
+                Picker(selection: Binding(
+                    get: { stream.downloadQuality },
+                    set: { stream.downloadQuality = $0 }
+                )) {
+                    ForEach(StreamQuality.allCases) { quality in
+                        Text(quality.displayName).tag(quality)
+                    }
+                } label: {
+                    Text("Quality")
+                        .foregroundStyle(.primary)
+                }
+                .pickerStyle(.menu)
+                .tint(.secondary)
+            }
             } header: {
                 Text("Downloads")
             } footer: {
-                Text("Downloaded tracks are stored permanently and available offline.")
+                Text("Downloaded tracks are stored permanently and available offline. Quality applies to new downloads; tracks already downloaded keep theirs.")
             }
 
             if let container {

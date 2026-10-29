@@ -190,13 +190,16 @@ actor DownloadService: DownloadServiceProtocol {
     private let journalURL: URL
     private let diagnostics: PlaybackDiagnostics?
     private var queueController: DownloadQueueController?
+    private let downloadQuality: DownloadQueueController.QualityProvider
 
     nonisolated let progressStream: AsyncStream<[DownloadProgress]>
 
     init(serverService: any ServerServiceProtocol, modelContainer: ModelContainer, toastService: ToastService,
          transferTransport: (any DownloadTransport)? = nil, journalURL: URL? = nil,
+         downloadQuality: @escaping DownloadQueueController.QualityProvider = { .original },
          diagnostics: PlaybackDiagnostics? = nil) {
         self.serverService = serverService
+        self.downloadQuality = downloadQuality
         self.modelContainer = modelContainer
         self.toastService = toastService
         self.transferTransport = transferTransport
@@ -260,6 +263,7 @@ actor DownloadService: DownloadServiceProtocol {
                 try await self.commitDownloadedSong(song, serverId: serverID, tempURL: url, response: response)
             },
             onProgress: { [weak self] values in await self?.publishDownloadProgress(values) },
+            quality: downloadQuality,
             diagnostics: diagnostics
         )
         queueController = queue
@@ -520,7 +524,8 @@ actor DownloadService: DownloadServiceProtocol {
         let track = song.track
         let duration = song.duration
         let coverArtId = song.coverArt
-        let suffix = song.suffix
+        // A transcoded download is not in the source's format; record what the file holds.
+        let suffix = sniffed.map { $0.rawValue != song.suffix?.lowercased() ? ext : song.suffix } ?? song.suffix
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int64) ?? 0
         let rgTrackGain    = song.replayGain?.trackGain
         let rgTrackPeak    = song.replayGain?.trackPeak

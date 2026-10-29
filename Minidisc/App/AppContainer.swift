@@ -133,8 +133,11 @@ final class AppContainer {
         wrappedPlaylistService = WrappedPlaylistService(serverService: server, statsService: stats)
         radioService = RadioService(serverService: server)
 
+        let downloadStreamSettings = streamSettings
         let download = DownloadService(serverService: server, modelContainer: modelContainer, toastService: toastService,
-                                       transferTransport: inMemory ? nil : BackgroundDownloadTransport.shared, diagnostics: playbackDiagnostics)
+                                       transferTransport: inMemory ? nil : BackgroundDownloadTransport.shared,
+                                       downloadQuality: { await MainActor.run { downloadStreamSettings.downloadQuality } },
+                                       diagnostics: playbackDiagnostics)
         downloadService = download
         let offlineReader = OfflineBrowsingReader(models: modelContainer, downloads: download, cache: cache,
                                                   favorites: favoritesStore, index: indexStore)

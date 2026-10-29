@@ -14369,6 +14369,7 @@
       }
     },
     "Downloaded tracks are stored permanently and available offline." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -14416,6 +14417,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已下載的曲目會永久儲存，並可離線使用。"
+          }
+        }
+      }
+    },
+    "Downloaded tracks are stored permanently and available offline. Quality applies to new downloads; tracks already downloaded keep theirs." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geladene Titel werden dauerhaft gespeichert und sind offline verfügbar. Die Qualität gilt für neue Downloads; bereits geladene Titel behalten ihre."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Τα ληφθέντα τραγούδια αποθηκεύονται μόνιμα και είναι διαθέσιμα εκτός σύνδεσης. Η ποιότητα ισχύει για νέες λήψεις· όσα έχουν ήδη ληφθεί διατηρούν τη δική τους."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las canciones descargadas se guardan de forma permanente y están disponibles sin conexión. La calidad se aplica a las nuevas descargas; las ya descargadas conservan la suya."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les morceaux téléchargés sont conservés en permanence et disponibles hors ligne. La qualité s’applique aux nouveaux téléchargements ; ceux déjà téléchargés gardent la leur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I brani scaricati restano salvati e disponibili offline. La qualità si applica ai nuovi download; quelli già scaricati mantengono la propria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロードした曲は端末に保存され、オフラインで再生できます。音質は新しいダウンロードに適用され、ダウンロード済みの曲はそのままです。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的歌曲会永久保存并可离线播放。音质设置仅适用于新的下载，已下载的歌曲保持原样。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的歌曲會永久保存並可離線播放。音質設定僅適用於新的下載，已下載的歌曲維持原樣。"
           }
         }
       }

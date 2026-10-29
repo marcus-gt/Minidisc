@@ -153,9 +153,22 @@ struct TrackMetadataTests {
     @Test func formatLine_download_showsSourceFormatAndBitRate() {
         var song = makeSong(audioFormat: "FLAC")
         song.bitRate = 1213
-        let line = PlaybackFormatDescription(track: song, source: .downloaded, isCellular: false)
+        let line = PlaybackFormatDescription(track: song, source: .downloaded(fileFormat: "flac"), isCellular: false)
         #expect(line?.parts == ["Downloaded", "FLAC", "1213 kbps"])
         #expect(line?.systemImage == "arrow.down.circle")
+    }
+
+    /// A download transcoded to MP3 must not claim the source's FLAC format and bit rate (#32).
+    @Test func formatLine_transcodedDownload_showsTheFilesFormat() {
+        var song = makeSong(audioFormat: "FLAC")
+        song.bitRate = 1213
+        let line = PlaybackFormatDescription(track: song, source: .downloaded(fileFormat: "mp3"), isCellular: false)
+        #expect(line?.parts == ["Downloaded", "MP3"])
+    }
+
+    @Test func sourceKind_downloadReadsTheFileExtension() {
+        let kind = PlaybackSourceKind(.downloaded(URL(fileURLWithPath: "/tmp/downloads/song.MP3")))
+        #expect(kind == .downloaded(fileFormat: "mp3"))
     }
 
     @Test func formatLine_transcodedStream_showsRequestedFormat() {
