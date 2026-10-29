@@ -46,6 +46,8 @@ struct WrappedTopArtistsSection: View {
     private func artistCard(_ artist: TopArtistEntry, isFirst: Bool) -> some View {
         let cardWidth: CGFloat = isFirst ? 240 : 200
         return Button {
+            // An artist only in the ListenBrainz history isn't on the server to open (#16).
+            guard WrappedIDs.isLibraryID(artist.artistId) else { return }
             Task {
                 artistToNavigate = try? await container?.libraryService.artist(id: artist.artistId)
             }

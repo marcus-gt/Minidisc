@@ -412,6 +412,14 @@ actor LibraryCatalog {
         }
     }
 
+    /// Every indexed song, read locally, for matching ListenBrainz listens to the library (#16).
+    /// `nil` while the track index is incomplete.
+    func allIndexedSongs() async throws -> [Song]? {
+        let serverID = try await source.activeServerID()
+        guard try await store.status(for: serverID).tracks else { return nil }
+        return try await store.songs(serverID: serverID, offset: 0, count: 1_000_000)
+    }
+
     /// `nil` means the index is not complete enough to build an authoritative queue.
     func songs(artistID: String) async throws -> [Song]? {
         let serverID = try await source.activeServerID()

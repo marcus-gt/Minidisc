@@ -186,6 +186,61 @@ actor ListenBrainzClient {
         }
     }
 
+    // MARK: - Listen history (#16)
+
+    /// Up to `count` (max 1,000) listens older than `maxTs`, newest first. Public: no token needed.
+    /// A rate limit is reported with the server's wait, so the caller can pause and continue.
+    func listens(forUser username: String, maxTs: Int, count: Int = 1000) async throws -> [LBListen] {
+        try await listens(forUser: username, bound: URLQueryItem(name: "max_ts", value: String(maxTs)), count: count)
+    }
+
+    /// The oldest listen, which bounds how far back Wrapped can go. `nil` for an empty history.
+    func oldestListen(forUser username: String) async throws -> LBListen? {
+        try await listens(forUser: username, bound: URLQueryItem(name: "min_ts", value: "0"), count: 1).first
+    }
+
+    /// ListenBrainz takes one of `max_ts` / `min_ts`, not both.
+    private func listens(forUser username: String, bound: URLQueryItem, count: Int) async throws -> [LBListen] {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "api.listenbrainz.org"
+        components.path = "/1/user/\(username)/listens"
+        components.queryItems = [
+            URLQueryItem(name: "count", value: String(min(max(count, 1), 1000))),
+            bound,
+        ]
+        guard let url = components.url else { throw ListenBrainzError.invalidUsername }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        let (data, response): (Data, HTTPURLResponse)
+        do {
+            (data, response) = try await transport.send(request)
+        } catch let error as ListenBrainzError {
+            throw error
+        } catch {
+            throw ListenBrainzError.network(error)
+        }
+
+        switch response.statusCode {
+        case 200:
+            break
+        case 404:
+            throw ListenBrainzError.userNotFound
+        case 429:
+            let wait = response.value(forHTTPHeaderField: "X-RateLimit-Reset-In").flatMap { TimeInterval($0) }
+                ?? response.value(forHTTPHeaderField: "Retry-After").flatMap { TimeInterval($0) }
+            throw ListenBrainzError.rateLimited(retryAfter: wait)
+        default:
+            throw ListenBrainzError.httpError(statusCode: response.statusCode)
+        }
+        do {
+            return try JSONDecoder().decode(LBListensResponse.self, from: data).payload.listens
+        } catch {
+            throw ListenBrainzError.decoding(error)
+        }
+    }
+
     // MARK: - Similar artists
 
     /// Uses ListenBrainz’s internal artist-page endpoint, not the versioned REST API.

@@ -59,11 +59,11 @@ struct WrappedStoryPlayerView: View {
     private func loadWrappedData() async {
         guard let container,
               let serverId = container.serverState.activeServer?.id.uuidString else { return }
-        wrappedData = await container.statsService.wrappedData(
+        wrappedData = await container.wrappedDataSource.wrappedData(
             for: .year(year),
             serverId: serverId,
             calendar: .current
-        )
+        ).data
     }
 
     // MARK: - Overlay (progress bar + close button)
