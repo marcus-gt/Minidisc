@@ -35,7 +35,6 @@ nonisolated struct LocalMusicGroup: Identifiable {
 
 struct LocalMusicView: View {
     @Environment(\.appContainer) private var container
-    @State private var showingSettings = false
 
     private var tracks: [LocalMusicTrack] {
         (container?.localMusic.snapshot.tracks ?? []).sorted(by: LocalMusicTrack.mostRecentFirst)
@@ -97,13 +96,9 @@ struct LocalMusicView: View {
                 }
                 .tint(.primary)
             }
-            if container?.serverState.activeServer == nil {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Settings", systemImage: "gearshape.fill") { showingSettings = true }
-                }
-            }
         }
-        .sheet(isPresented: $showingSettings) { SettingsSheet() }
+        // Without a server this is the app's only tab, so it carries Settings like every tab root.
+        .modifier(LocalMusicSettingsToolbar(isRoot: container?.serverState.activeServer == nil))
     }
 
     private func sectionHeader(_ category: LocalMusicCategory) -> some View {
@@ -204,5 +199,14 @@ struct LocalMusicArtwork: View {
                 .clipShape(RoundedRectangle(cornerRadius: isArtist ? geometry.size.width / 2 : MinidiscCornerRadius.standard))
         }
         .accessibilityHidden(true)
+    }
+}
+
+/// Settings only when Local Files is the app's root (no server); under a server it's a pushed page.
+private struct LocalMusicSettingsToolbar: ViewModifier {
+    let isRoot: Bool
+
+    func body(content: Content) -> some View {
+        if isRoot { content.minidiscSettingsToolbar() } else { content }
     }
 }

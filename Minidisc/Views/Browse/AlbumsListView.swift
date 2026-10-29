@@ -36,14 +36,16 @@ struct AlbumsListView: View {
                     .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                Button(
-                    gridLayout ? "List view" : "Grid view",
-                    systemImage: gridLayout ? "list.bullet" : "square.grid.2x2"
-                ) {
-                    gridLayout.toggle()
+                MinidiscMoreMenu {
+                    Button(
+                        gridLayout ? "List view" : "Grid view",
+                        systemImage: gridLayout ? "list.bullet" : "square.grid.2x2"
+                    ) {
+                        gridLayout.toggle()
+                    }
+                    .accessibilityIdentifier("browse.albums.layout")
                 }
                 .tint(.primary)
-                .accessibilityIdentifier("browse.albums.layout")
             }
         }
         .task(id: loadID) {

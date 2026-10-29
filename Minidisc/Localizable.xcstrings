@@ -7433,6 +7433,7 @@
       }
     },
     "Automix" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

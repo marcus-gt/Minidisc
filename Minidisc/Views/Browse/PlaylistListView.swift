@@ -33,11 +33,13 @@ struct PlaylistListView: View {
                     .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("New Playlist", systemImage: "plus") {
-                    showCreateSheet = true
+                MinidiscMoreMenu {
+                    Button("New Playlist", systemImage: "plus") {
+                        showCreateSheet = true
+                    }
+                    .disabled(container?.serverState.isOnline != true)
                 }
                 .tint(.primary)
-                .disabled(container?.serverState.isOnline != true)
             }
         }
         .sheet(isPresented: $showCreateSheet) {

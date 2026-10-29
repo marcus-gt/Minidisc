@@ -25,6 +25,7 @@ struct LibraryView: View {
         }
         .navigationTitle("Library")
         .toolbarTitleDisplayMode(.inlineLarge)
+        .minidiscSettingsToolbar()
         .navigationDestination(for: HomeDestination.self) { destination in
             switch destination {
             case .libraryAlbums:

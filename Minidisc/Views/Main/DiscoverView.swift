@@ -41,6 +41,7 @@ struct DiscoverView: View {
         }
         .navigationTitle("Discover")
         .toolbarTitleDisplayMode(.inlineLarge)
+        .minidiscSettingsToolbar()
         .minidiscContentWidth()
         .task(id: container?.serverState.accessSnapshot) {
             guard let container else { return }

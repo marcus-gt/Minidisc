@@ -822,8 +822,10 @@ actor LibraryService: LibraryServiceProtocol {
         try Task.checkCancellation()
         let baseMs = Int(Date().timeIntervalSince(tBase) * 1000)
         guard !base.isEmpty else {
-            Logger.library.info("[MIX-TIMING] base=\(baseMs, privacy: .public)ms → empty, aborting")
-            return []
+            // The server has no similarity for this seed (no AudioMuse, no Last.fm match). Build the
+            // mix from the seed's own artist and genre instead, so Instant Mix still plays (#43).
+            Logger.library.info("[MIX-TIMING] base=\(baseMs, privacy: .public)ms → empty, using the artist + genre fallback")
+            return try await fallbackInstantMix(from: seed, count: count, client: c)
         }
 
         // 2) Fan out on the distinct artists we found (plus the seed artist) to broaden the pool —
@@ -890,6 +892,107 @@ actor LibraryService: LibraryServiceProtocol {
             kept \(min(count, diversified.count), privacy: .public)
             """)
         return diversified.prefix(count).map { DisplayableSong(from: $0) }
+    }
+
+    // MARK: - Instant Mix fallback
+
+    /// More of the seed's artist plus its genre, for a server without similarity data. Smart
+    /// Shuffle's random draw is the last resort, so a mix always starts.
+    private func fallbackInstantMix(from seed: InstantMixSeed, count: Int, client c: SwiftSonicClient) async throws -> [DisplayableSong] {
+        var artistID: String?
+        var genre: String?
+        var excluded: Set<String> = []
+        do {
+            switch seed {
+            case .song(let id):
+                let song = try await c.getSong(id: id)
+                artistID = song.artistId
+                genre = song.genres?.first?.name ?? song.genre
+                excluded.insert(id)
+            case .album(let id):
+                let album = try await c.getAlbum(id: id)
+                artistID = album.artistId
+                genre = album.genres?.first?.name ?? album.genre
+            case .artist(let id):
+                artistID = id
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            Logger.library.info("[MIX] fallback could not read the seed: \(error, privacy: .public)")
+        }
+        try Task.checkCancellation()
+
+        var artistSongs: [DisplayableSong] = []
+        if let artistID {
+            do { artistSongs = try await fetchAllTracks(forArtistID: artistID) }
+            catch is CancellationError { throw CancellationError() }
+            catch {}
+        }
+        // An artist seed has no single genre; take the one most of its songs carry.
+        if genre == nil { genre = Self.dominantGenre(of: artistSongs) }
+        var genreSongs: [DisplayableSong] = []
+        if let genre, !genre.isEmpty {
+            do {
+                genreSongs = try await c.getSongsByGenre(genre, count: Self.backfillGenreFetchCount).map { DisplayableSong(from: $0) }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {}
+        }
+        try Task.checkCancellation()
+
+        var mix = Self.fallbackMix(artistSongs: artistSongs, genreSongs: genreSongs, excluding: excluded,
+                                   count: count, maxPerArtist: Self.instantMixMaxPerArtist)
+        if mix.isEmpty {
+            do {
+                mix = try await c.getRandomSongs(size: count).map { DisplayableSong(from: $0) }.filter { !excluded.contains($0.id) }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {}
+        }
+        Logger.library.info("[MIX] fallback: \(mix.count, privacy: .public) tracks (artist \(artistSongs.count, privacy: .public), genre \(genreSongs.count, privacy: .public))")
+        return mix
+    }
+
+    nonisolated static func dominantGenre(of songs: [DisplayableSong]) -> String? {
+        var counts: [String: Int] = [:]
+        for genre in songs.compactMap(\.genre) where !genre.isEmpty { counts[genre, default: 0] += 1 }
+        return counts.max { $0.value < $1.value || ($0.value == $1.value && $0.key > $1.key) }?.key
+    }
+
+    /// About a quarter from the seed's artist, the rest from its genre, at most `maxPerArtist` per
+    /// other artist, interleaved so the seed's artist recurs through the mix rather than in one block.
+    nonisolated static func fallbackMix(
+        artistSongs: [DisplayableSong],
+        genreSongs: [DisplayableSong],
+        excluding excluded: Set<String>,
+        count: Int,
+        maxPerArtist: Int
+    ) -> [DisplayableSong] {
+        guard count > 0 else { return [] }
+        var seen = excluded
+        let own = artistSongs.shuffled().filter { seen.insert($0.id).inserted }
+        let ownArtist = artistSongs.first?.artistId
+        var perArtist: [String: Int] = [:]
+        let others = genreSongs.shuffled().filter { song in
+            let key = song.artistId ?? song.artist ?? ""
+            guard key != ownArtist, seen.insert(song.id).inserted else { return false }
+            perArtist[key, default: 0] += 1
+            return perArtist[key, default: 0] <= maxPerArtist
+        }
+        // With no genre songs, the artist's own songs make the whole mix.
+        let ownShare = others.isEmpty ? count : max(1, count / 4)
+        var ownQueue = Array(own.prefix(ownShare))[...]
+        var otherQueue = others[...]
+        var result: [DisplayableSong] = []
+        while result.count < count, !(ownQueue.isEmpty && otherQueue.isEmpty) {
+            if let next = ownQueue.popFirst() { result.append(next) }
+            for _ in 0..<3 where result.count < count {
+                guard let next = otherQueue.popFirst() else { break }
+                result.append(next)
+            }
+        }
+        return result
     }
 
     // Bound Instant Mix fan-out to limit server load.
