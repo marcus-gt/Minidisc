@@ -4,6 +4,38 @@ import SwiftSonic
 import Testing
 @testable import Minidisc
 
+@MainActor
+private final class DownloadedFileStub: DownloadServiceProtocol {
+    var albumData: LocalAlbumData?
+    var fileURL: URL?
+
+    let progressStream: AsyncStream<[DownloadProgress]> = AsyncStream { $0.finish() }
+    func localAlbumData(albumId: String, serverId: UUID) async -> LocalAlbumData? { albumData }
+    func downloadedURL(forSongId songId: String, serverId: UUID) async -> URL? { fileURL }
+    func isDownloaded(songId: String, serverId: UUID) async -> Bool { fileURL != nil }
+    func downloadedSongIds(serverId: UUID) async -> Set<String> { [] }
+    func localCoverArtURL(forId coverArtId: String) async -> URL? { nil }
+    func persistCover(_ data: Data, forId coverArtId: String) async {}
+    func removeCover(forId coverArtId: String) async {}
+    func garbageCollectOrphanedCovers(referencedIds: Set<String>) async -> Int { 0 }
+    func coverCacheStats() async -> (count: Int, bytes: Int64) { (0, 0) }
+    func clearAllCovers() async {}
+    func localPlaylistData(playlistId: String, serverId: UUID) async -> LocalPlaylistData? { nil }
+    func localArtistData(artistId: String, artistName: String?, serverId: UUID) async -> LocalArtistData? { nil }
+    func backfillPlaylistSongIds(playlistId: String, serverId: UUID, orderedSongIds: [String]) async {}
+    func download(song: Song, serverId: UUID) async throws { throw URLError(.unknown) }
+    func download(album: AlbumID3, serverId: UUID) async throws { throw URLError(.unknown) }
+    func download(playlist: PlaylistWithSongs, serverId: UUID) async throws { throw URLError(.unknown) }
+    func isDownloading(songId: String, serverId: UUID) async -> Bool { false }
+    func isDownloadingAlbum(_ albumId: String) async -> Bool { false }
+    func isDownloadingPlaylist(_ playlistId: String) async -> Bool { false }
+    func cancelDownload(songId: String, serverId: UUID) async {}
+    func remove(songId: String, serverId: UUID) async throws { throw URLError(.unknown) }
+    func remove(albumId: String, serverId: UUID) async throws { throw URLError(.unknown) }
+    func remove(playlistId: String, serverId: UUID) async throws { throw URLError(.unknown) }
+    func removeAll() async throws { throw URLError(.unknown) }
+}
+
 @Suite("Media availability")
 @MainActor
 struct MediaAvailabilityTests {
@@ -134,5 +166,80 @@ struct MediaAvailabilityTests {
             return
         }
         #expect(url.absoluteString.contains("id=song-1"))
+    }
+
+    // MARK: - Streaming instead of a download
+
+    private func downloadResolver(online: Bool, cellular: Bool, wifiStream: Bool, cellularStream: Bool,
+                                  cached: Bool = false) throws -> (MediaResolver, UUID, URL) {
+        let server = MockServerService()
+        let snapshot = ServerSnapshot(from: ServerConfig(displayName: "Test", baseURL: "https://example.invalid", username: "test"))
+        server.connection = try ServerConnection(
+            version: .init(serverID: snapshot.id, revision: 1), server: snapshot,
+            credentials: .init(password: "test", customHeaders: [:])
+        )
+        server.state.isOnline = online
+        let downloads = DownloadedFileStub()
+        let file = URL(fileURLWithPath: "/downloads/song.flac")
+        downloads.fileURL = file
+        let cache = MockAudioStreamCache()
+        if cached { cache.localURL = URL(fileURLWithPath: "/cache/song.flac") }
+        let settings = StreamSettings(defaults: UserDefaults(suiteName: "media-stream-instead.\(UUID())")!)
+        settings.streamsOverDownloadsOnWifi = wifiStream
+        settings.streamsOverDownloadsOnCellular = cellularStream
+        settings.networkPathDidChange(isCellular: cellular)
+        let resolver = MediaResolver(downloadService: downloads, audioStreamCache: cache, serverService: server,
+                                     serverState: server.state, streamSettings: settings, songLookup: { _, _ in })
+        return (resolver, snapshot.id, file)
+    }
+
+    @Test func downloadIsPlayedWhenStreamingInsteadIsOff() async throws {
+        let (resolver, serverID, file) = try downloadResolver(online: true, cellular: false, wifiStream: false, cellularStream: false)
+        let source = try await resolver.resolve(songId: "song", serverId: serverID)
+        #expect(source.url == file)
+    }
+
+    @Test func downloadIsPassedOverForAStreamOnWifi() async throws {
+        let (resolver, serverID, _) = try downloadResolver(online: true, cellular: false, wifiStream: true, cellularStream: false)
+        guard case .stream = try await resolver.resolve(songId: "song", serverId: serverID) else {
+            Issue.record("Expected a stream"); return
+        }
+    }
+
+    /// Each network has its own switch.
+    @Test func wifiSettingDoesNotApplyOnCellular() async throws {
+        let (resolver, serverID, file) = try downloadResolver(online: true, cellular: true, wifiStream: true, cellularStream: false)
+        #expect(try await resolver.resolve(songId: "song", serverId: serverID).url == file)
+        let (cellular, cellularID, _) = try downloadResolver(online: true, cellular: true, wifiStream: false, cellularStream: true)
+        guard case .stream = try await cellular.resolve(songId: "song", serverId: cellularID) else {
+            Issue.record("Expected a stream on cellular"); return
+        }
+    }
+
+    @Test func downloadStillPlaysOffline() async throws {
+        let (resolver, serverID, file) = try downloadResolver(online: false, cellular: false, wifiStream: true, cellularStream: true)
+        #expect(try await resolver.resolve(songId: "song", serverId: serverID).url == file)
+    }
+
+    /// The cache holds what was streamed before, so it is used ahead of a new request.
+    @Test func cachedCopyIsUsedBeforeStreamingAgain() async throws {
+        let (resolver, serverID, _) = try downloadResolver(online: true, cellular: false, wifiStream: true, cellularStream: false, cached: true)
+        guard case .cached = try await resolver.resolve(songId: "song", serverId: serverID) else {
+            Issue.record("Expected the cached copy"); return
+        }
+    }
+
+    /// Without a usable connection the download still plays rather than failing.
+    @Test func downloadPlaysWhenNoStreamCanBeBuilt() async throws {
+        let (resolver, serverID, file) = try downloadResolver(online: true, cellular: false, wifiStream: true, cellularStream: false)
+        let broken = MockServerService()
+        broken.state.isOnline = true
+        let fallback = MediaResolver(downloadService: { let d = DownloadedFileStub(); d.fileURL = file; return d }(),
+                                     audioStreamCache: MockAudioStreamCache(), serverService: broken,
+                                     serverState: broken.state,
+                                     streamSettings: { let s = StreamSettings(defaults: UserDefaults(suiteName: "media-stream-instead.\(UUID())")!); s.streamsOverDownloadsOnWifi = true; return s }(),
+                                     songLookup: { _, _ in })
+        _ = resolver
+        #expect(try await fallback.resolve(songId: "song", serverId: serverID).url == file)
     }
 }

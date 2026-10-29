@@ -31,12 +31,14 @@ actor DownloadQueueController {
     typealias ConnectionProvider = @Sendable (UUID) async throws -> ServerConnection
     typealias LocalLookup = @Sendable (String, UUID) async -> Bool
     typealias Commit = @Sendable (Song, UUID, URL, HTTPURLResponse) async throws -> Void
+    typealias QualityProvider = @Sendable () async -> StreamQuality
     private let journalURL: URL
     private let transport: any DownloadTransport
     private let connection: ConnectionProvider
     private let isDownloaded: LocalLookup
     private let commit: Commit
     private let onProgress: @Sendable ([DownloadProgress]) async -> Void
+    private let quality: QualityProvider
     private let diagnostics: PlaybackDiagnostics?
     private var jobs: [UUID: QueuedDownload] = [:]
     private var waiters: [UUID: [UUID: CheckedContinuation<Void, any Error>]] = [:]
@@ -49,6 +51,7 @@ actor DownloadQueueController {
     init(journalURL: URL, transport: any DownloadTransport, connection: @escaping ConnectionProvider,
          isDownloaded: @escaping LocalLookup, commit: @escaping Commit,
          onProgress: @escaping @Sendable ([DownloadProgress]) async -> Void,
+         quality: @escaping QualityProvider = { .original },
          diagnostics: PlaybackDiagnostics? = nil) {
         self.journalURL = journalURL
         self.transport = transport
@@ -56,6 +59,7 @@ actor DownloadQueueController {
         self.isDownloaded = isDownloaded
         self.commit = commit
         self.onProgress = onProgress
+        self.quality = quality
         self.diagnostics = diagnostics
     }
 
@@ -225,6 +229,18 @@ actor DownloadQueueController {
         await transport.acknowledge(jobID: id)
     }
 
+    /// Original is the file itself; anything else is a transcode at an exact length, which a
+    /// permanent download needs (an estimated length can truncate it or fail validation).
+    nonisolated static func downloadURL(for songID: String, quality: StreamQuality, client: SwiftSonicClient) -> URL? {
+        guard quality != .original else { return client.streamURL(id: songID) }
+        return client.streamURL(
+            id: songID,
+            maxBitRate: quality.subsonicMaxBitRate,
+            format: quality.subsonicFormat,
+            estimateContentLength: false
+        )
+    }
+
     func snapshot() -> [QueuedDownload] { jobs.values.sorted { $0.song.title < $1.song.title } }
 
     private func schedulePending() async {
@@ -237,7 +253,9 @@ actor DownloadQueueController {
                     starting.remove(id)
                     continue
                 }
-                guard let url = connection.makeSwiftSonicClient().streamURL(id: job.song.id) else {
+                // The quality is read when the transfer starts, so a queue restored after a relaunch
+                // follows the current setting.
+                guard let url = Self.downloadURL(for: job.song.id, quality: await quality(), client: connection.makeSwiftSonicClient()) else {
                     throw UserFacingError.contentRemoved
                 }
                 var request = URLRequest(url: url)

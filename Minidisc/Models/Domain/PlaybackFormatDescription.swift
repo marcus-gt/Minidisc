@@ -21,9 +21,14 @@ nonisolated struct PlaybackFormatDescription: Equatable, Sendable {
         case .localFile:
             systemImage = "folder"
             sourceLabel = String(localized: "On Device")
-        case .downloaded:
+        case .downloaded(let fileFormat):
             systemImage = "arrow.down.circle"
             sourceLabel = String(localized: "Downloaded")
+            // A transcoded download: the song's bit rate describes the source, not this file.
+            if let fileFormat, fileFormat.uppercased() != format {
+                format = fileFormat.uppercased()
+                bitRate = nil
+            }
         case .cached:
             systemImage = "internaldrive"
             sourceLabel = String(localized: "Cached")

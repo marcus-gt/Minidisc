@@ -261,10 +261,43 @@ struct StorageSettingsView: View {
                 }
             }
             .disabled(vm.isClearingAll)
+            if let stream = container?.streamSettings {
+                Picker(selection: Binding(
+                    get: { stream.downloadQuality },
+                    set: { stream.downloadQuality = $0 }
+                )) {
+                    ForEach(StreamQuality.allCases) { quality in
+                        Text(quality.displayName).tag(quality)
+                    }
+                } label: {
+                    Text("Quality")
+                        .foregroundStyle(.primary)
+                }
+                .pickerStyle(.menu)
+                .tint(.secondary)
+
+                Toggle(isOn: Binding(
+                    get: { stream.streamsOverDownloadsOnWifi },
+                    set: { stream.streamsOverDownloadsOnWifi = $0 }
+                )) {
+                    Text("Stream instead on Wi-Fi")
+                        .foregroundStyle(.primary)
+                }
+                .tint(Color(.systemGreen))
+
+                Toggle(isOn: Binding(
+                    get: { stream.streamsOverDownloadsOnCellular },
+                    set: { stream.streamsOverDownloadsOnCellular = $0 }
+                )) {
+                    Text("Stream instead on cellular")
+                        .foregroundStyle(.primary)
+                }
+                .tint(Color(.systemGreen))
+            }
             } header: {
                 Text("Downloads")
             } footer: {
-                Text("Downloaded tracks are stored permanently and available offline.")
+                Text("Downloaded tracks are stored permanently and available offline. Quality applies to new downloads; tracks already downloaded keep theirs. Streaming instead plays downloaded tracks from the server at your streaming quality while you are online; the download takes over offline or if the stream fails.")
             }
 
             if let container {

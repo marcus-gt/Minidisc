@@ -36,4 +36,22 @@ struct StreamSettingsTests {
         #expect(restored.wifiQuality == .mp3_320)
         #expect(restored.cellularQuality == .mp3_192)
     }
+
+    /// Downloads have their own quality, untouched by the streaming tiers (#32).
+    @Test("Download quality defaults to the original file and persists on its own")
+    func downloadQualityIsSeparate() {
+        let suiteName = "test.stream-settings.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = StreamSettings(defaults: defaults)
+        #expect(settings.downloadQuality == .original)
+        settings.wifiQuality = .mp3_192
+        settings.downloadQuality = .mp3_320
+        settings.networkPathDidChange(isCellular: true)
+
+        let restored = StreamSettings(defaults: defaults)
+        #expect(restored.downloadQuality == .mp3_320)
+        #expect(restored.wifiQuality == .mp3_192)
+    }
 }

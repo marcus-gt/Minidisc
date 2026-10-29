@@ -3,7 +3,8 @@ import SwiftSonic
 import OSLog
 
 /// Single entry point for obtaining a playable URL for a given song.
-/// Resolution order: downloaded → cached → stream.
+/// Resolution order: downloaded → cached → stream. Online, the listener can pass over downloads for a
+/// stream on Wi-Fi and/or cellular; the download then still serves offline and as the recovery source.
 /// PlayerService always calls this — it never contacts SwiftSonic directly.
 actor MediaResolver: MediaResolverProtocol {
     private let downloadService: any DownloadServiceProtocol
@@ -88,16 +89,34 @@ actor MediaResolver: MediaResolverProtocol {
             Self.logInvalidSongID(operation: "resolve")
             throw MinidiscError.mediaNotFound(songId: songId)
         }
+        let (isOnline, prefersStreaming) = await MainActor.run {
+            (serverState.isOnline, streamSettings.prefersStreamingOverDownloads)
+        }
+        if isOnline && prefersStreaming {
+            if let url = await audioStreamCache.cachedURL(forSongId: songId, serverId: serverId) {
+                Logger.resolver.debug("Resolved '\(songId, privacy: .public)' from cache (downloads passed over).")
+                return .cached(url)
+            }
+            do {
+                return try await streamSource(songId: songId)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                // No usable connection after all: the download is still here.
+                Logger.resolver.info("Stream unavailable for '\(songId, privacy: .public)', using the download: \(String(describing: error), privacy: .public)")
+            }
+        }
         if let source = await localSource(songId: songId, serverId: serverId) {
             return source
         }
-
-        let isOnline = await MainActor.run { serverState.isOnline }
         guard isOnline else {
             Logger.resolver.warning("'\(songId, privacy: .public)' not available offline.")
             throw MinidiscError.offlineUnavailable(songId: songId)
         }
+        return try await streamSource(songId: songId)
+    }
 
+    private func streamSource(songId: String) async throws -> MediaSource {
         let connection = try await serverService.activeConnection()
         let client = connection.makeSwiftSonicClient()
         let quality = await MainActor.run { streamSettings.currentQuality }

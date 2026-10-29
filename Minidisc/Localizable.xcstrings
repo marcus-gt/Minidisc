@@ -14369,6 +14369,7 @@
       }
     },
     "Downloaded tracks are stored permanently and available offline." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -14416,6 +14417,111 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已下載的曲目會永久儲存，並可離線使用。"
+          }
+        }
+      }
+    },
+    "Downloaded tracks are stored permanently and available offline. Quality applies to new downloads; tracks already downloaded keep theirs." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geladene Titel werden dauerhaft gespeichert und sind offline verfügbar. Die Qualität gilt für neue Downloads; bereits geladene Titel behalten ihre."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Τα ληφθέντα τραγούδια αποθηκεύονται μόνιμα και είναι διαθέσιμα εκτός σύνδεσης. Η ποιότητα ισχύει για νέες λήψεις· όσα έχουν ήδη ληφθεί διατηρούν τη δική τους."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las canciones descargadas se guardan de forma permanente y están disponibles sin conexión. La calidad se aplica a las nuevas descargas; las ya descargadas conservan la suya."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les morceaux téléchargés sont conservés en permanence et disponibles hors ligne. La qualité s’applique aux nouveaux téléchargements ; ceux déjà téléchargés gardent la leur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I brani scaricati restano salvati e disponibili offline. La qualità si applica ai nuovi download; quelli già scaricati mantengono la propria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロードした曲は端末に保存され、オフラインで再生できます。音質は新しいダウンロードに適用され、ダウンロード済みの曲はそのままです。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的歌曲会永久保存并可离线播放。音质设置仅适用于新的下载，已下载的歌曲保持原样。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的歌曲會永久保存並可離線播放。音質設定僅適用於新的下載，已下載的歌曲維持原樣。"
+          }
+        }
+      }
+    },
+    "Downloaded tracks are stored permanently and available offline. Quality applies to new downloads; tracks already downloaded keep theirs. Streaming instead plays downloaded tracks from the server at your streaming quality while you are online; the download takes over offline or if the stream fails." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geladene Titel werden dauerhaft gespeichert und sind offline verfügbar. Die Qualität gilt für neue Downloads; bereits geladene Titel behalten ihre. „Stattdessen streamen“ spielt geladene Titel online vom Server in deiner Streaming-Qualität; offline oder wenn der Stream abbricht, übernimmt der Download."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Τα ληφθέντα τραγούδια αποθηκεύονται μόνιμα και είναι διαθέσιμα εκτός σύνδεσης. Η ποιότητα ισχύει για νέες λήψεις· όσα έχουν ήδη ληφθεί διατηρούν τη δική τους. Η ροή αντί για λήψη παίζει τα ληφθέντα τραγούδια από τον διακομιστή στην ποιότητα ροής όσο είστε συνδεδεμένοι· εκτός σύνδεσης ή αν η ροή αποτύχει, αναλαμβάνει η λήψη."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las canciones descargadas se guardan de forma permanente y están disponibles sin conexión. La calidad se aplica a las nuevas descargas; las ya descargadas conservan la suya. Transmitir en su lugar reproduce las descargas desde el servidor con tu calidad de streaming mientras estés conectado; sin conexión o si falla la transmisión, se usa la descarga."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les morceaux téléchargés sont conservés en permanence et disponibles hors ligne. La qualité s’applique aux nouveaux téléchargements ; ceux déjà téléchargés gardent la leur. « Diffuser à la place » lit les morceaux téléchargés depuis le serveur à votre qualité de streaming tant que vous êtes en ligne ; hors ligne ou si le flux échoue, le téléchargement prend le relais."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I brani scaricati restano salvati e disponibili offline. La qualità si applica ai nuovi download; quelli già scaricati mantengono la propria. Lo streaming al posto del download riproduce i brani scaricati dal server con la tua qualità di streaming quando sei online; offline o se lo streaming si interrompe, subentra il download."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロードした曲は端末に保存され、オフラインで再生できます。音質は新しいダウンロードに適用され、ダウンロード済みの曲はそのままです。ストリーミングを選ぶと、オンライン中はダウンロード済みの曲もストリーミング音質でサーバーから再生し、オフライン時やストリーミングが途切れたときはダウンロードを再生します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的歌曲会永久保存并可离线播放。音质设置仅适用于新的下载，已下载的歌曲保持原样。改为串流播放时，在线状态下会以串流音质从服务器播放已下载的歌曲；离线或串流中断时改用下载文件。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的歌曲會永久保存並可離線播放。音質設定僅適用於新的下載，已下載的歌曲維持原樣。改為串流播放時，在線狀態下會以串流音質從伺服器播放已下載的歌曲；離線或串流中斷時改用下載檔案。"
           }
         }
       }
@@ -38517,6 +38623,110 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "串流快取"
+          }
+        }
+      }
+    },
+    "Stream instead on cellular" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über Mobilfunk stattdessen streamen"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ροή αντί για λήψη με δεδομένα κινητής"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transmitir en su lugar con datos móviles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diffuser à la place en données cellulaires"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riproduci in streaming con rete cellulare"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モバイル通信時はストリーミング"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蜂窝网络下改为串流播放"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行動網路下改為串流播放"
+          }
+        }
+      }
+    },
+    "Stream instead on Wi-Fi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über WLAN stattdessen streamen"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ροή αντί για λήψη σε Wi-Fi"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transmitir en su lugar con Wi-Fi"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diffuser à la place en Wi-Fi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riproduci in streaming con Wi-Fi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi接続時はストリーミング"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi 下改为串流播放"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi 下改為串流播放"
           }
         }
       }

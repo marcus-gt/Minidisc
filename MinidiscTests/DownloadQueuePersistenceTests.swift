@@ -66,12 +66,45 @@ struct DownloadQueuePersistenceTests {
     }
 
     private func controller(at journal: URL, transport: QueueTestTransport, storage: QueueTestStorage,
-                            serverID: UUID, connectionID: UUID? = nil) throws -> DownloadQueueController {
+                            serverID: UUID, connectionID: UUID? = nil,
+                            quality: StreamQuality = .original) throws -> DownloadQueueController {
         let connection = try connection(serverID: connectionID ?? serverID)
         return DownloadQueueController(journalURL: journal, transport: transport,
             connection: { _ in connection },
             isDownloaded: { id, _ in await storage.lookup(id) },
-            commit: { song, _, _, _ in try await storage.commit(song.id) }, onProgress: { _ in })
+            commit: { song, _, _, _ in try await storage.commit(song.id) }, onProgress: { _ in },
+            quality: { quality })
+    }
+
+    private func query(of request: URLRequest?) -> [String: String] {
+        let items = request?.url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false) }?.queryItems ?? []
+        return Dictionary(items.map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Downloads follow their own quality setting (#32); Original stays the untouched file.
+    @Test func transferAsksForTheDownloadQuality() async throws {
+        let root = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let server = UUID(), storage = QueueTestStorage()
+
+        let transcoding = QueueTestTransport()
+        let mp3 = try controller(at: root.appendingPathComponent("mp3.json"), transport: transcoding,
+                                 storage: storage, serverID: server, quality: .mp3_320)
+        try await mp3.enqueue(try songs(["a"]), serverID: server, owner: .track)
+        let transcoded = query(of: await transcoding.requests.values.first)
+        #expect(transcoded["format"] == "mp3")
+        #expect(transcoded["maxBitRate"] == "320")
+        // A permanent file needs its real length, not an estimate.
+        #expect(transcoded["estimateContentLength"] != "true")
+
+        let untouched = QueueTestTransport()
+        let original = try controller(at: root.appendingPathComponent("original.json"), transport: untouched,
+                                      storage: storage, serverID: server, quality: .original)
+        try await original.enqueue(try songs(["b"]), serverID: server, owner: .track)
+        let plain = query(of: await untouched.requests.values.first)
+        #expect(plain["id"] == "b")
+        #expect(plain["format"] == nil)
+        #expect(plain["maxBitRate"] == nil)
     }
 
     private func wait(_ condition: @MainActor () async -> Bool) async throws {
