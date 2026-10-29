@@ -9,6 +9,7 @@ struct AlbumsListView: View {
     @AppStorage("minidisc.albumSort") private var albumSort: AlbumSort = .recentlyAdded
     @AppStorage("minidisc.albumListGrid") private var gridLayout = false
     @State private var filterText = ""
+    @State private var recentlyPlayed = RecentlyPlayedOrder()
 
     private func allAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] {
         container?.serverState.isOnline == false ? container?.offlineLibrary.snapshot.albums ?? [] : vm.albums
@@ -16,7 +17,9 @@ struct AlbumsListView: View {
     private func displayedAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] {
         LibraryFilter.filter(allAlbums(vm), by: filterText) { [$0.name, $0.artist] }
     }
-    private func sortedAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] { albumSort.sorted(displayedAlbums(vm)) }
+    private func sortedAlbums(_ vm: AlbumListViewModel) -> [AlbumID3] {
+        albumSort.sorted(displayedAlbums(vm), recentlyPlayed: recentlyPlayed)
+    }
 
     var body: some View {
         Group {
@@ -30,20 +33,23 @@ struct AlbumsListView: View {
         .navigationTitle("Albums")
         .toolbarTitleDisplayMode(.inline)
         .minidiscFilterable(text: $filterText, prompt: "Filter albums")
+        .recentlyPlayedOrder($recentlyPlayed, when: albumSort == .recentlyPlayed)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 AlbumSortMenu(sort: $albumSort)
                     .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                Button(
-                    gridLayout ? "List view" : "Grid view",
-                    systemImage: gridLayout ? "list.bullet" : "square.grid.2x2"
-                ) {
-                    gridLayout.toggle()
+                MinidiscMoreMenu {
+                    Button(
+                        gridLayout ? "List view" : "Grid view",
+                        systemImage: gridLayout ? "list.bullet" : "square.grid.2x2"
+                    ) {
+                        gridLayout.toggle()
+                    }
+                    .accessibilityIdentifier("browse.albums.layout")
                 }
                 .tint(.primary)
-                .accessibilityIdentifier("browse.albums.layout")
             }
         }
         .task(id: loadID) {

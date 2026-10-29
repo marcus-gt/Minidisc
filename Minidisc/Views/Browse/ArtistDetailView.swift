@@ -218,23 +218,20 @@ struct ArtistDetailView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                Button("Share", systemImage: "square.and.arrow.up") {
-                    prepareArtistShare()
-                }
-                .tint(headerTextColor)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Menu("More options", systemImage: "ellipsis") {
-                    Button("Automix", systemImage: instantMixSymbol) {
+                MinidiscMoreMenu {
+                    Button("Instant Mix", systemImage: instantMixSymbol) {
                         startArtistAutomix()
                     }
                     .disabled(!canStartArtistAutomix)
+                    Divider()
                     PinMenuButton(
                         itemType: .artist, itemId: artist.id, displayName: artist.name,
                         displaySubtitle: "",
                         coverArtId: viewModel?.artist?.coverArt ?? artist.coverArt
                     )
+                    Button("Share", systemImage: "square.and.arrow.up") {
+                        prepareArtistShare()
+                    }
                 }
                 .tint(headerTextColor)
             }

@@ -84,6 +84,7 @@ struct MainTabView: View {
                         SearchView(searchQuery: $searchText, path: $searchPath)
                             .navigationTitle("Search")
                             .toolbarTitleDisplayMode(.inlineLarge)
+                            .minidiscSettingsToolbar()
                     }
                     .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always),
                                 prompt: "Artists, albums, songs, playlists…")

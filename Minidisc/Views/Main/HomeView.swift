@@ -6,7 +6,6 @@ struct HomeView: View {
     @Environment(\.appContainer) private var container
     @Environment(ArtworkImageCache.self) private var artworkImageCache
     @State private var viewModel: HomeFeedViewModel?
-    @State private var showSettings = false
     @State private var loadedServerID: UUID?
     @AppStorage(HomeShelfLayout.storageKey(for: HomeSection.playlists.shelfIdentifier)) private var playlistShelfLayout: HomeShelfLayout = .carousel
     @AppStorage(HomeLayoutConfiguration.storageKey) private var homeLayout: HomeLayoutConfiguration = .default
@@ -38,13 +37,7 @@ struct HomeView: View {
         }
         .navigationTitle("Home")
         .toolbarTitleDisplayMode(.inlineLarge)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Settings", systemImage: "gearshape.fill") { showSettings = true }
-                    .tint(.primary)
-            }
-        }
-        .sheet(isPresented: $showSettings) { SettingsSheet() }
+        .minidiscSettingsToolbar()
         .navigationDestination(for: HomeDestination.self) { destination in
             resolve(destination)
         }

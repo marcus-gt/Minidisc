@@ -5,6 +5,7 @@ nonisolated enum SongSort: String, CaseIterable, Sendable {
     case title
     case artist
     case recentlyAdded
+    case recentlyPlayed
     case releaseDate
 
     var label: String {
@@ -12,6 +13,7 @@ nonisolated enum SongSort: String, CaseIterable, Sendable {
         case .title: return "Title"
         case .artist: return "Artist"
         case .recentlyAdded: return "Recently Added"
+        case .recentlyPlayed: return "Recently Played"
         case .releaseDate: return "Release Date"
         }
     }
@@ -21,6 +23,7 @@ nonisolated enum SongSort: String, CaseIterable, Sendable {
         case .title: return "textformat"
         case .artist: return "music.mic"
         case .recentlyAdded: return "clock"
+        case .recentlyPlayed: return "play.circle"
         case .releaseDate: return "calendar"
         }
     }
@@ -38,6 +41,8 @@ nonisolated enum SongSort: String, CaseIterable, Sendable {
             }
         case .recentlyAdded:
             return songs.sorted { ($0.created ?? .distantPast) > ($1.created ?? .distantPast) }
+        case .recentlyPlayed:
+            return RecentlyPlayedOrder.byDateThenName(songs, date: \.played, name: key)
         case .releaseDate:
             return songs.sorted { ($0.year ?? Int.min) > ($1.year ?? Int.min) }
         }

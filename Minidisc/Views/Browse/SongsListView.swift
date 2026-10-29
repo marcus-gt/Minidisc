@@ -35,15 +35,18 @@ struct SongsListView: View {
         .sheet(item: $songSelection) { SongSelectionSheet(request: $0) }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Select Songs", systemImage: "checkmark.circle") {
-                    songSelection = SongSelectionRequest(songs: filteredSongs ?? viewModel?.displaySongs ?? [])
-                }
-                .disabled(container?.serverState.isOnline != true
-                          || (filteredSongs ?? viewModel?.displaySongs ?? []).isEmpty)
-            }
-            ToolbarItem(placement: .primaryAction) {
                 SongSortMenu(sort: $songSort)
                     .tint(.primary)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                MinidiscMoreMenu {
+                    Button("Select Songs", systemImage: "checkmark.circle") {
+                        songSelection = SongSelectionRequest(songs: filteredSongs ?? viewModel?.displaySongs ?? [])
+                    }
+                    .disabled(container?.serverState.isOnline != true
+                              || (filteredSongs ?? viewModel?.displaySongs ?? []).isEmpty)
+                }
+                .tint(.primary)
             }
         }
         .task(id: loadID) {

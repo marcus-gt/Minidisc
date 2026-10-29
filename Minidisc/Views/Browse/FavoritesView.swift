@@ -7,6 +7,8 @@ struct FavoritesView: View {
     @Environment(PlaylistAddition.self) private var playlistAddition
     @State private var viewModel: FavoritesViewModel?
     @State private var filterText = ""
+    @AppStorage("minidisc.favoritesSort") private var sort: FavoritesListSort = .name
+    @State private var recentlyPlayed = RecentlyPlayedOrder()
 
     var body: some View {
         Group {
@@ -20,6 +22,13 @@ struct FavoritesView: View {
         .navigationTitle("Favorites")
         .toolbarTitleDisplayMode(.inline)
         .minidiscFilterable(text: $filterText, prompt: "Filter favorites")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                LibrarySortMenu(sort: $sort)
+                    .tint(.primary)
+            }
+        }
+        .recentlyPlayedOrder($recentlyPlayed, when: sort == .recentlyPlayed)
         .task(id: container?.serverState.accessSnapshot) {
             guard let svc = container?.libraryService else { return }
             if viewModel == nil { viewModel = FavoritesViewModel(libraryService: svc) }
@@ -51,12 +60,11 @@ struct FavoritesView: View {
                 subtitle: "Songs, albums, and artists you favorite will appear here."
             )
         } else {
-            let displayableSongs = LibraryFilter.filter(favorites.songs.map { DisplayableSong(from: $0) }, by: filterText) {
-                [$0.title, $0.artist, $0.albumName]
-            }
-            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-            let albums = AlbumSort.name.sorted(LibraryFilter.filter(favorites.albums, by: filterText) { [$0.name, $0.artist] })
-            let artists = ArtistSort.name.sorted(LibraryFilter.filter(favorites.artists, by: filterText) { [$0.name] })
+            let displayableSongs = sortedSongs(LibraryFilter.filter(favorites.songs, by: filterText) {
+                [$0.title, $0.artist, $0.album]
+            }).map { DisplayableSong(from: $0) }
+            let albums = sortedAlbums(LibraryFilter.filter(favorites.albums, by: filterText) { [$0.name, $0.artist] })
+            let artists = sortedArtists(LibraryFilter.filter(favorites.artists, by: filterText) { [$0.name] })
             if displayableSongs.isEmpty && albums.isEmpty && artists.isEmpty {
                 FilterNoResultsView(query: filterText)
             } else {
@@ -70,7 +78,8 @@ struct FavoritesView: View {
         let index = displayableSongs.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.title) }
             + albums.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.sortName ?? $0.name) }
             + artists.map { AlphabetScrollEntry(id: $0.favoriteScrollID, name: $0.sortName ?? $0.name) }
-        return AlphabetIndexedContent(entries: index) {
+        // The A–Z bar jumps by name, so using it switches to the name order.
+        return AlphabetIndexedContent(entries: index, prepareJump: sort == .name ? nil : { sort = .name }) {
             List {
                 songsSection(displayableSongs)
                 albumsSection(albums)
@@ -81,6 +90,32 @@ struct FavoritesView: View {
                 if offline { await container?.offlineLibrary.refresh() }
                 else { await vm.load() }
             }
+        }
+    }
+
+    // MARK: - Sorting
+
+    private func sortedSongs(_ songs: [Song]) -> [Song] {
+        switch sort {
+        case .name: SongSort.title.sorted(songs)
+        case .recentlyFavorited: RecentlyPlayedOrder.byDateThenName(songs, date: \.starred, name: \.title)
+        case .recentlyPlayed: SongSort.recentlyPlayed.sorted(songs)
+        }
+    }
+
+    private func sortedAlbums(_ albums: [AlbumID3]) -> [AlbumID3] {
+        switch sort {
+        case .name: AlbumSort.name.sorted(albums)
+        case .recentlyFavorited: RecentlyPlayedOrder.byDateThenName(albums, date: \.starred) { $0.sortName ?? $0.name }
+        case .recentlyPlayed: AlbumSort.recentlyPlayed.sorted(albums, recentlyPlayed: recentlyPlayed)
+        }
+    }
+
+    private func sortedArtists(_ artists: [ArtistID3]) -> [ArtistID3] {
+        switch sort {
+        case .name: ArtistSort.name.sorted(artists)
+        case .recentlyFavorited: RecentlyPlayedOrder.byDateThenName(artists, date: \.starred) { $0.sortName ?? $0.name }
+        case .recentlyPlayed: ArtistSort.recentlyPlayed.sorted(artists, recentlyPlayed: recentlyPlayed)
         }
     }
 

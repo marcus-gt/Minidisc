@@ -369,18 +369,20 @@ struct AlbumDetailView: View {
                 .tint(palette.contentColor)
             }
             ToolbarItem(placement: .primaryAction) {
-                Menu("More options", systemImage: "ellipsis") {
+                // ⋯ order shared by the detail pages (#43): playback, Select Songs, edit, Pin, Share, appearance.
+                MinidiscMoreMenu {
                     Group {
-                        Button("Select Songs", systemImage: "checkmark.circle") {
-                            songSelection = SongSelectionRequest(songs: displaySongs())
-                        }
-                        .disabled(container?.serverState.isOnline != true || displaySongs().isEmpty)
-                        Divider()
                         Button("Instant Mix", systemImage: instantMixSymbol) {
                             HapticFeedback.medium.trigger()
                             startInstantMix(from: .album(id: albumId), using: container)
                         }
                         .disabled(displaySongs().isEmpty || !isOnline)
+                        Divider()
+                        Button("Select Songs", systemImage: "checkmark.circle") {
+                            songSelection = SongSelectionRequest(songs: displaySongs())
+                        }
+                        .disabled(container?.serverState.isOnline != true || displaySongs().isEmpty)
+                        Divider()
                         PinMenuButton(
                             itemType: .album, itemId: albumId,
                             displayName: viewModel?.albumName ?? initialName,

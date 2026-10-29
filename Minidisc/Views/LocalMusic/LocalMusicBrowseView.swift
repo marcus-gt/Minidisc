@@ -142,9 +142,11 @@ struct LocalMusicBrowseView: View {
             }
             if category != .songs {
                 ToolbarItem(placement: .primaryAction) {
-                    Button(gridLayout ? "List view" : "Grid view", systemImage: gridLayout ? "list.bullet" : "square.grid.2x2") {
-                        if category == .albums { albumGrid.toggle() }
-                        else { artistGrid.toggle() }
+                    MinidiscMoreMenu {
+                        Button(gridLayout ? "List view" : "Grid view", systemImage: gridLayout ? "list.bullet" : "square.grid.2x2") {
+                            if category == .albums { albumGrid.toggle() }
+                            else { artistGrid.toggle() }
+                        }
                     }
                     .tint(.primary)
                 }

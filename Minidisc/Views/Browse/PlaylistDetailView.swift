@@ -483,7 +483,24 @@ struct PlaylistDetailView: View {
                 .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                Menu("More options", systemImage: "ellipsis") {
+                Menu {
+                    Picker("Sort By", selection: $sortOrder) {
+                        ForEach(PlaylistSortOrder.allCases) { order in
+                            Text(order.label).tag(order)
+                        }
+                    }
+                    Picker("Direction", selection: $sortDirection) {
+                        ForEach(PlaylistSortDirection.allCases) { direction in
+                            Text(sortOrder.label(for: direction)).tag(direction)
+                        }
+                    }
+                } label: {
+                    Label("Sort By", systemImage: "arrow.up.arrow.down")
+                }
+                .tint(.primary)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                MinidiscMoreMenu {
                     Group {
                         Button("Select Songs", systemImage: "checkmark.circle") {
                             songSelection = SongSelectionRequest(songs: sortedSongs(resolvedSongs(viewModel)))
@@ -509,21 +526,6 @@ struct PlaylistDetailView: View {
                         }
                         Divider()
                         pinMenuButton
-                        Divider()
-                        Menu {
-                            Picker("Sort By", selection: $sortOrder) {
-                                ForEach(PlaylistSortOrder.allCases) { order in
-                                    Text(order.label).tag(order)
-                                }
-                            }
-                            Picker("Direction", selection: $sortDirection) {
-                                ForEach(PlaylistSortDirection.allCases) { direction in
-                                    Text(sortOrder.label(for: direction)).tag(direction)
-                                }
-                            }
-                        } label: {
-                            Label("Sort By", systemImage: "arrow.up.arrow.down")
-                        }
                         Divider()
                         Button("Theme colour", systemImage: "paintpalette") {
                             showThemeColorSheet = true

@@ -822,8 +822,8 @@ actor LibraryService: LibraryServiceProtocol {
         try Task.checkCancellation()
         let baseMs = Int(Date().timeIntervalSince(tBase) * 1000)
         guard !base.isEmpty else {
-            Logger.library.info("[MIX-TIMING] base=\(baseMs, privacy: .public)ms → empty, aborting")
-            return []
+            Logger.library.info("[MIX-TIMING] base=\(baseMs, privacy: .public)ms → empty, using the Smart Shuffle fallback")
+            return try await fallbackInstantMix(from: seed, count: count)
         }
 
         // 2) Fan out on the distinct artists we found (plus the seed artist) to broaden the pool —
@@ -890,6 +890,17 @@ actor LibraryService: LibraryServiceProtocol {
             kept \(min(count, diversified.count), privacy: .public)
             """)
         return diversified.prefix(count).map { DisplayableSong(from: $0) }
+    }
+
+    // MARK: - Instant Mix fallback
+
+    /// A server with no similarity for the seed (no AudioMuse or other agent match) gets Smart
+    /// Shuffle's queue, so Instant Mix always starts. A song seed already plays first, so it is left out.
+    private func fallbackInstantMix(from seed: InstantMixSeed, count: Int) async throws -> [DisplayableSong] {
+        let excluded: String? = if case .song(let id) = seed { id } else { nil }
+        let mix = try await smartShuffleQueue(targetSize: count).filter { $0.id != excluded }
+        Logger.library.info("[MIX] no similarity for the seed; Smart Shuffle fallback with \(mix.count, privacy: .public) tracks")
+        return mix
     }
 
     // Bound Instant Mix fan-out to limit server load.

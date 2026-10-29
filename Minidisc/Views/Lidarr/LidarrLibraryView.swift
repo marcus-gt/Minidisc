@@ -10,6 +10,7 @@ struct LidarrLibraryView: View {
     @State private var errorMessage: String?
     @State private var client: LidarrClient?
     @State private var showSearch = false
+    @State private var showActivity = false
     // Keep Lidarr’s sort preference separate from the music-server library.
     @AppStorage("minidisc.lidarrArtistSort") private var artistSort: ArtistSort = .name
     @AppStorage("minidisc.lidarrLibraryGrid") private var gridLayout = true
@@ -67,33 +68,28 @@ struct LidarrLibraryView: View {
         }
         .navigationTitle("Lidarr")
         .toolbar {
+            // Sort, then More, on the right like every list (#43).
             if !artists.isEmpty {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    Button(
-                        gridLayout ? "List view" : "Grid view",
-                        systemImage: gridLayout ? "list.bullet" : "square.grid.2x2"
-                    ) { gridLayout.toggle() }
-                    .tint(.primary)
-                    Menu {
-                        Picker("Sort By", selection: $artistSort) {
-                            ForEach(ArtistSort.allCases, id: \.self) { option in
-                                Label(option.label, systemImage: option.systemImage).tag(option)
-                            }
-                        }
-                    } label: {
-                        Label("Sort", systemImage: "arrow.up.arrow.down")
-                    }
-                    .tint(.primary)
+                ToolbarItem(placement: .primaryAction) {
+                    ArtistSortMenu(sort: $artistSort, options: [.name, .albumCount])
+                        .tint(.primary)
                 }
             }
-            if !isOffline {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    NavigationLink(value: LidarrQueueRoute()) {
-                        Label("Activity", systemImage: "waveform.path.ecg")
+            if !artists.isEmpty || !isOffline {
+                ToolbarItem(placement: .primaryAction) {
+                    MinidiscMoreMenu {
+                        if !isOffline {
+                            Button("Add Artist", systemImage: "plus") { showSearch = true }
+                            Button("Activity", systemImage: "waveform.path.ecg") { showActivity = true }
+                        }
+                        if !artists.isEmpty {
+                            Button(
+                                gridLayout ? "List view" : "Grid view",
+                                systemImage: gridLayout ? "list.bullet" : "square.grid.2x2"
+                            ) { gridLayout.toggle() }
+                        }
                     }
                     .tint(.primary)
-                    Button("Add Artist", systemImage: "plus") { showSearch = true }
-                        .tint(.primary)
                 }
             }
         }
@@ -111,6 +107,12 @@ struct LidarrLibraryView: View {
             }
         }
         .navigationDestination(for: LidarrQueueRoute.self) { _ in
+            if let client {
+                LidarrQueueView(client: client)
+            }
+        }
+        // Opened from the ⋯ menu; a NavigationLink can't live inside a Menu.
+        .navigationDestination(isPresented: $showActivity) {
             if let client {
                 LidarrQueueView(client: client)
             }
@@ -307,7 +309,8 @@ private extension ArtistSort {
     /// two orderings are applied here rather than coupling the domain enum to the Lidarr layer.
     func sortedLidarr(_ artists: [LidarrArtist]) -> [LidarrArtist] {
         switch self {
-        case .name:
+        // Lidarr doesn't know what was played; its menu doesn't offer Recently Played.
+        case .name, .recentlyPlayed:
             return artists.sorted { $0.artistName.localizedStandardCompare($1.artistName) == .orderedAscending }
         case .albumCount:
             return artists.sorted {

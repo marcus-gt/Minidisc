@@ -6,6 +6,7 @@ struct GenreListView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: GenreListViewModel?
     @State private var filterText = ""
+    @AppStorage("minidisc.genreListSort") private var sort: GenreListSort = .mostAlbums
 
     /// `viewModel` is for Previews: a supplied model is loaded instead of one built from the container.
     init(viewModel: GenreListViewModel? = nil) {
@@ -24,6 +25,12 @@ struct GenreListView: View {
         .navigationTitle("Genres")
         .toolbarTitleDisplayMode(.inline)
         .minidiscFilterable(text: $filterText, prompt: "Filter genres")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                LibrarySortMenu(sort: $sort)
+                    .tint(.primary)
+            }
+        }
         .task {
             if let viewModel {
                 if viewModel.state == .loading { await viewModel.load() }
@@ -61,7 +68,7 @@ struct GenreListView: View {
                 subtitle: "None of your albums are tagged with a genre."
             )
         case .loaded:
-            let genres = filtered(viewModel.genres)
+            let genres = sort.sorted(filtered(viewModel.genres))
             if genres.isEmpty {
                 FilterNoResultsView(query: filterText)
             } else {
@@ -84,9 +91,10 @@ struct GenreListView: View {
     }
 }
 
-/// One main genre: "All <genre>", then its styles, biggest first.
+/// One main genre: "All <genre>", then its styles, with their own Sort.
 struct GenreDetailView: View {
     let genre: MainGenreSummary
+    @AppStorage("minidisc.genreStyleSort") private var sort: GenreListSort = .mostAlbums
 
     var body: some View {
         List {
@@ -103,7 +111,7 @@ struct GenreDetailView: View {
             }
             if !genre.styles.isEmpty {
                 Section {
-                    ForEach(genre.styles) { style in
+                    ForEach(sort.sorted(genre.styles)) { style in
                         NavigationLink {
                             AlbumCollectionView(kind: .genreGroup(name: style.name, tags: style.tags))
                         } label: {
@@ -119,6 +127,14 @@ struct GenreDetailView: View {
         .minidiscContentWidth()
         .navigationTitle(genre.isOther ? Text("Other") : Text(verbatim: genre.name))
         .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            if genre.styles.count > 1 {
+                ToolbarItem(placement: .primaryAction) {
+                    LibrarySortMenu(sort: $sort)
+                        .tint(.primary)
+                }
+            }
+        }
     }
 }
 

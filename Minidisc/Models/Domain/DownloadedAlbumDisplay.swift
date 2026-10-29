@@ -13,6 +13,8 @@ nonisolated struct DownloadedAlbumDisplay: Identifiable, Sendable, Hashable {
     let totalTracksCount: Int?
     /// `true` if a `DownloadedAlbum` record exists (the user explicitly downloaded the full album).
     let hasFullDownloadIntent: Bool
+    /// When its newest track finished downloading, for Downloads' "Recently Downloaded" order.
+    var lastDownloadedAt: Date? = nil
 }
 
 enum DownloadedAlbumMerger {
@@ -27,9 +29,10 @@ enum DownloadedAlbumMerger {
         var byAlbumId: [String: DownloadedAlbumDisplay] = [:]
 
         for record in records {
-            let trackCount = tracks.filter {
+            let albumTracks = tracks.filter {
                 $0.albumId == record.albumId && $0.serverId == record.serverId
-            }.count
+            }
+            let trackCount = albumTracks.count
             byAlbumId[record.albumId] = DownloadedAlbumDisplay(
                 id: record.albumId,
                 albumId: record.albumId,
@@ -39,7 +42,8 @@ enum DownloadedAlbumMerger {
                 coverArtId: record.coverArtId,
                 downloadedTracksCount: trackCount,
                 totalTracksCount: record.totalTracksCount,
-                hasFullDownloadIntent: true
+                hasFullDownloadIntent: true,
+                lastDownloadedAt: albumTracks.map(\.downloadedAt).max() ?? record.downloadedAt
             )
         }
 
@@ -58,7 +62,8 @@ enum DownloadedAlbumMerger {
                 coverArtId: first.coverArtId,
                 downloadedTracksCount: group.count,
                 totalTracksCount: nil,
-                hasFullDownloadIntent: false
+                hasFullDownloadIntent: false,
+                lastDownloadedAt: group.map(\.downloadedAt).max()
             )
         }
 
