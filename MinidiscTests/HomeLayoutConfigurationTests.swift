@@ -94,7 +94,7 @@ struct HomeLayoutConfigurationTests {
         #expect(decoded.order.first == .pinned)
         #expect(decoded.isVisible(.pinned))
         #expect(!decoded.isVisible(.genres))
-        #expect(!HomeSection.pinned.supportsLayoutChoice)
+        #expect(HomeSection.pinned.supportsLayoutChoice)
     }
 
     @Test func decode_garbage_returnsNil() {

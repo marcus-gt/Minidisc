@@ -39,8 +39,8 @@ nonisolated enum HomeSection: String, LayoutSection {
     var shelfIdentifier: String { "home.\(rawValue)" }
 
     /// Favorite Songs is a short vertical list and the Queue Builder a set of pickers, so neither has
-    /// a carousel / grid choice; the Pinned shelf mixes shapes and stays a carousel.
-    var supportsLayoutChoice: Bool { self != .favoriteSongs && self != .queueBuilder && self != .pinned }
+    /// a carousel / grid choice.
+    var supportsLayoutChoice: Bool { self != .favoriteSongs && self != .queueBuilder }
 }
 
 /// Which Home sections are shown, and in what order.
