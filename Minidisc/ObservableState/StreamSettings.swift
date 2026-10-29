@@ -8,6 +8,8 @@ final class StreamSettings {
     @ObservationIgnored private var _wifiQuality: StreamQuality
     @ObservationIgnored private var _cellularQuality: StreamQuality
     @ObservationIgnored private var _downloadQuality: StreamQuality
+    @ObservationIgnored private var _streamsOverDownloadsOnWifi: Bool
+    @ObservationIgnored private var _streamsOverDownloadsOnCellular: Bool
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var isCellular = false
 
@@ -45,7 +47,36 @@ final class StreamSettings {
         }
     }
 
+    /// Plays a downloaded track from the server instead while on Wi-Fi, at the streaming quality.
+    var streamsOverDownloadsOnWifi: Bool {
+        get {
+            access(keyPath: \.streamsOverDownloadsOnWifi)
+            return _streamsOverDownloadsOnWifi
+        }
+        set {
+            withMutation(keyPath: \.streamsOverDownloadsOnWifi) { _streamsOverDownloadsOnWifi = newValue }
+            defaults.set(newValue, forKey: Self.streamOverDownloadsWifiKey)
+        }
+    }
+
+    /// The same on cellular.
+    var streamsOverDownloadsOnCellular: Bool {
+        get {
+            access(keyPath: \.streamsOverDownloadsOnCellular)
+            return _streamsOverDownloadsOnCellular
+        }
+        set {
+            withMutation(keyPath: \.streamsOverDownloadsOnCellular) { _streamsOverDownloadsOnCellular = newValue }
+            defaults.set(newValue, forKey: Self.streamOverDownloadsCellularKey)
+        }
+    }
+
     var currentQuality: StreamQuality { isCellular ? cellularQuality : wifiQuality }
+
+    /// Whether a download should be passed over for a stream on the current network.
+    var prefersStreamingOverDownloads: Bool {
+        isCellular ? streamsOverDownloadsOnCellular : streamsOverDownloadsOnWifi
+    }
 
     static let defaultWifiQuality: StreamQuality = .original
     static let defaultCellularQuality: StreamQuality = .mp3_192
@@ -55,6 +86,8 @@ final class StreamSettings {
     private static let wifiKey = "minidisc.stream.wifiQuality"
     private static let cellularKey = "minidisc.stream.cellularQuality"
     private static let downloadKey = "minidisc.download.quality"
+    private static let streamOverDownloadsWifiKey = "minidisc.download.streamInsteadOnWifi"
+    private static let streamOverDownloadsCellularKey = "minidisc.download.streamInsteadOnCellular"
     /// Pre-split single-quality key; used to seed both tiers on upgrade.
     private static let legacyKey = "minidisc.stream.quality"
 
@@ -66,6 +99,8 @@ final class StreamSettings {
         _wifiQuality = StreamQuality(rawValue: wifiRaw ?? "") ?? Self.defaultWifiQuality
         _cellularQuality = StreamQuality(rawValue: cellularRaw ?? "") ?? Self.defaultCellularQuality
         _downloadQuality = StreamQuality(rawValue: defaults.string(forKey: Self.downloadKey) ?? "") ?? Self.defaultDownloadQuality
+        _streamsOverDownloadsOnWifi = defaults.bool(forKey: Self.streamOverDownloadsWifiKey)
+        _streamsOverDownloadsOnCellular = defaults.bool(forKey: Self.streamOverDownloadsCellularKey)
     }
 
     /// Fed by the app-wide NetworkMonitor so connectivity is observed by a single system monitor.
