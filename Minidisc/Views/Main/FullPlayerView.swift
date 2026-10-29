@@ -493,17 +493,15 @@ private struct TrackInfoSection: View {
                         }
                         .disabled(!isOnline || playerState.currentTrack == nil || playerState.currentTrack?.isLocalFile == true)
                         Divider()
-                        Button("Instant Mix", systemImage: instantMixSymbol) {
-                            guard let track = playerState.currentTrack else { return }
-                            startInstantMix(from: .song(id: track.id), using: container, startingWith: track)
-                        }
-                        .disabled(!isOnline || playerState.currentTrack == nil || playerState.currentTrack?.isLocalFile == true)
-                        Divider()
                     }
-                    Button {
-                        Task { await triggerSmartShuffle() }
-                    } label: {
-                        Label("Smart Shuffle", systemImage: "shuffle.circle")
+                    // One mix action (#43). A mix needs the server's similarity for an online server
+                    // track; offline, or for a local file, it shuffles the library instead.
+                    Button("Instant Mix", systemImage: instantMixSymbol) {
+                        if isOnline, let track = playerState.currentTrack, !track.isLocalFile {
+                            startInstantMix(from: .song(id: track.id), using: container, startingWith: track)
+                        } else {
+                            Task { await triggerSmartShuffle() }
+                        }
                     }
                     .disabled(container?.serverState.activeServer == nil)
                 } label: {

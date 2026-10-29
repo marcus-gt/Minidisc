@@ -71,7 +71,7 @@ struct LidarrLibraryView: View {
             // Sort, then More, on the right like every list (#43).
             if !artists.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
-                    ArtistSortMenu(sort: $artistSort)
+                    ArtistSortMenu(sort: $artistSort, options: [.name, .albumCount])
                         .tint(.primary)
                 }
             }
@@ -309,7 +309,8 @@ private extension ArtistSort {
     /// two orderings are applied here rather than coupling the domain enum to the Lidarr layer.
     func sortedLidarr(_ artists: [LidarrArtist]) -> [LidarrArtist] {
         switch self {
-        case .name:
+        // Lidarr doesn't know what was played; its menu doesn't offer Recently Played.
+        case .name, .recentlyPlayed:
             return artists.sorted { $0.artistName.localizedStandardCompare($1.artistName) == .orderedAscending }
         case .albumCount:
             return artists.sorted {

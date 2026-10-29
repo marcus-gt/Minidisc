@@ -5,6 +5,7 @@ struct RecordLabelListView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: RecordLabelListViewModel?
     @State private var filterText = ""
+    @AppStorage("minidisc.recordLabelSort") private var sort: RecordLabelListSort = .name
 
     /// `viewModel` is for Previews: a supplied model is loaded instead of one built from the container.
     init(viewModel: RecordLabelListViewModel? = nil) {
@@ -23,6 +24,12 @@ struct RecordLabelListView: View {
         .navigationTitle("Labels")
         .toolbarTitleDisplayMode(.inline)
         .minidiscFilterable(text: $filterText, prompt: "Filter labels")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                LibrarySortMenu(sort: $sort)
+                    .tint(.primary)
+            }
+        }
         .task {
             if let viewModel {
                 if viewModel.state == .loading { await viewModel.load() }
@@ -60,7 +67,7 @@ struct RecordLabelListView: View {
                 subtitle: "None of your albums are tagged with a record label."
             )
         case .loaded:
-            let labels = LibraryFilter.filter(viewModel.labels, by: filterText) { [$0.name] }
+            let labels = sort.sorted(LibraryFilter.filter(viewModel.labels, by: filterText) { [$0.name] })
             if labels.isEmpty {
                 FilterNoResultsView(query: filterText)
             } else {
@@ -70,7 +77,9 @@ struct RecordLabelListView: View {
     }
 
     private func labelList(_ labels: [RecordLabelSummary], viewModel: RecordLabelListViewModel) -> some View {
-        AlphabetIndexedContent(entries: labels.map { AlphabetScrollEntry(id: $0.id, name: $0.name) }) {
+        // The A–Z bar jumps by name, so using it switches to the name order.
+        AlphabetIndexedContent(entries: RecordLabelListSort.name.sorted(labels).map { AlphabetScrollEntry(id: $0.id, name: $0.name) },
+                               prepareJump: { sort = .name }) {
             List(labels) { label in
                 NavigationLink {
                     AlbumCollectionView(kind: .recordLabel(label.name))

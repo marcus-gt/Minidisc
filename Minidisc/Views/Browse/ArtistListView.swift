@@ -8,6 +8,7 @@ struct ArtistListView: View {
     @AppStorage("minidisc.artistSort") private var artistSort: ArtistSort = .name
     @AppStorage("minidisc.artistListGrid") private var gridLayout = false
     @State private var filterText = ""
+    @State private var recentlyPlayed = RecentlyPlayedOrder()
 
     private let gridColumns = [GridItem(.adaptive(minimum: 110, maximum: 180), spacing: MinidiscSpacing.l)]
 
@@ -23,6 +24,7 @@ struct ArtistListView: View {
         .navigationTitle("Artists")
         .toolbarTitleDisplayMode(.inline)
         .minidiscFilterable(text: $filterText, prompt: "Filter artists")
+        .recentlyPlayedOrder($recentlyPlayed, when: artistSort == .recentlyPlayed)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 ArtistSortMenu(sort: $artistSort)
@@ -86,7 +88,7 @@ struct ArtistListView: View {
 
     private func flatList(_ vm: ArtistListViewModel) -> some View {
         AlphabetIndexedContent(entries: artistIndex(vm), prepareJump: { artistSort = .name }) {
-            List(artistSort.sorted(displayedArtists(vm))) { artist in
+            List(artistSort.sorted(displayedArtists(vm), recentlyPlayed: recentlyPlayed)) { artist in
                 NavigationLink(value: HomeDestination.artist(artist)) {
                     ArtistRow(artist: artist)
                 }
@@ -102,7 +104,7 @@ struct ArtistListView: View {
         AlphabetIndexedContent(entries: artistIndex(vm), prepareJump: { artistSort = .name }) {
             ScrollView {
                 LazyVGrid(columns: gridColumns, spacing: MinidiscSpacing.l) {
-                    ForEach(artistSort.sorted(displayedArtists(vm))) { artist in
+                    ForEach(artistSort.sorted(displayedArtists(vm), recentlyPlayed: recentlyPlayed)) { artist in
                         NavigationLink(value: HomeDestination.artist(artist)) {
                             ArtistGridCard(artist: artist)
                         }

@@ -35,3 +35,26 @@ extension View {
         modifier(SettingsToolbarModifier())
     }
 }
+
+// MARK: - Recently Played order
+
+/// Fetches the server's recently-played order while a list is sorted by it, so the order is
+/// current each time the sort is picked or the list opens. Nothing is fetched for other sorts.
+private struct RecentlyPlayedOrderModifier: ViewModifier {
+    @Binding var order: RecentlyPlayedOrder
+    let isActive: Bool
+    @Environment(\.appContainer) private var container
+
+    func body(content: Content) -> some View {
+        content.task(id: isActive) {
+            guard isActive, let library = container?.libraryService, container?.serverState.isOnline == true else { return }
+            order = await RecentlyPlayedOrder.load(from: library)
+        }
+    }
+}
+
+extension View {
+    func recentlyPlayedOrder(_ order: Binding<RecentlyPlayedOrder>, when isActive: Bool) -> some View {
+        modifier(RecentlyPlayedOrderModifier(order: order, isActive: isActive))
+    }
+}
