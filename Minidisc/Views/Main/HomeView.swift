@@ -8,7 +8,6 @@ struct HomeView: View {
     @State private var viewModel: HomeFeedViewModel?
     @State private var showSettings = false
     @State private var loadedServerID: UUID?
-    @AppStorage(HomeLayoutConfiguration.pinnedPlaylistsOnlyKey) private var pinnedPlaylistsOnly = false
     @AppStorage(HomeShelfLayout.storageKey(for: HomeSection.playlists.shelfIdentifier)) private var playlistShelfLayout: HomeShelfLayout = .carousel
     @AppStorage(HomeLayoutConfiguration.storageKey) private var homeLayout: HomeLayoutConfiguration = .default
     @Query(sort: \PinnedItem.sortOrder) private var pinnedItems: [PinnedItem]
@@ -18,12 +17,10 @@ struct HomeView: View {
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
 
-    /// Playlists pinned on the active server, in pin order.
-    private var pinnedPlaylistIDs: [String] {
+    /// Everything pinned on the active server, in pin order.
+    private var pinnedOnServer: [PinnedItem] {
         let serverID = container?.serverState.activeServer?.id
-        return pinnedItems
-            .filter { $0.itemType == PinnedItemType.playlist.rawValue && $0.serverId == serverID }
-            .map(\.itemId)
+        return pinnedItems.filter { $0.serverId == serverID }
     }
 
     /// `viewModel` is for Previews: a supplied model is loaded instead of one built from the container.
@@ -67,11 +64,13 @@ struct HomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
             Task { await viewModel?.load(isOnline: isOnline, preserveLayout: true) }
         }
-        .onChange(of: pinnedPlaylistIDs) { _, ids in
-            // A newly pinned playlist can sit past the feed's cap; reload so the shelf can show it.
-            guard let vm = viewModel, !Set(ids).isSubset(of: vm.topPicks.map(\.id)) else { return }
-            Task { await vm.load(isOnline: isOnline, preserveLayout: true) }
+        // Pins keep a snapshot of the name; a playlist renamed elsewhere catches up here.
+        .onChange(of: viewModel?.topPicks.map { "\($0.id)\u{1F}\($0.name)" } ?? []) { _, _ in
+            guard let c = container, let serverID = c.serverState.activeServer?.id, let picks = viewModel?.topPicks,
+                  !picks.isEmpty else { return }
+            c.pinService.reconcilePinnedPlaylists(with: picks, serverId: serverID)
         }
+
     }
 
     // MARK: - Feed
@@ -143,6 +142,8 @@ struct HomeView: View {
         genres: [HomeFeedViewModel.GenreShelf]
     ) -> some View {
         switch section {
+        case .pinned:
+            PinnedShelf(items: pinnedOnServer)
         case .playlists:
             if isOnline, picks.isEmpty, vm.pendingSections.contains(.playlists) {
                 HomeShelfPlaceholder(title: section.title, side: 250)
@@ -190,45 +191,28 @@ struct HomeView: View {
 
     // MARK: - Playlist shelf
 
-    /// Stays visible when "Pinned Only" has nothing to show, with a hint on how to pin.
     @ViewBuilder
-    private func playlistShelf(_ picks: [Playlist]) -> some View {
-        let shown = HomePersonalization.shelfPlaylists(picks, pinnedIDs: pinnedPlaylistIDs, pinnedOnly: pinnedPlaylistsOnly)
-        let title: LocalizedStringResource = pinnedPlaylistsOnly ? "Pinned Playlists" : "Your Playlists"
+    private func playlistShelf(_ shown: [Playlist]) -> some View {
+        let title: LocalizedStringResource = "Your Playlists"
         switch playlistShelfLayout {
         case .carousel:
             MinidiscShelf {
                 playlistShelfHeader(title, shown: shown)
             } content: {
-                if shown.isEmpty {
-                    playlistShelfEmptyHint
-                } else {
-                    ForEach(Array(shown.prefix(MinidiscCarouselMetrics.previewLimit))) { playlist in
-                        TopPickCard(playlist: playlist, namespace: homeZoomNamespace)
-                    }
+                ForEach(Array(shown.prefix(MinidiscCarouselMetrics.previewLimit))) { playlist in
+                    TopPickCard(playlist: playlist, namespace: homeZoomNamespace)
                 }
             }
             .accessibilityIdentifier("home.playlists")
         case .grid:
             VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
                 playlistShelfHeader(title, shown: shown)
-                if shown.isEmpty {
-                    playlistShelfEmptyHint
-                        .padding(.horizontal, MinidiscSpacing.l)
-                } else {
-                    HomeShelfGrid(shown.prefix(HomeShelfLayout.gridLimit)) { playlist in
-                        PlaylistGridTile(playlist: playlist, namespace: homeZoomNamespace)
-                    }
+                HomeShelfGrid(shown.prefix(HomeShelfLayout.gridLimit)) { playlist in
+                    PlaylistGridTile(playlist: playlist, namespace: homeZoomNamespace)
                 }
             }
             .accessibilityIdentifier("home.playlists")
         }
-    }
-
-    private var playlistShelfEmptyHint: some View {
-        Text("Pin a playlist from its menu to show it here.")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
     }
 
     private func playlistShelfHeader(_ title: LocalizedStringResource, shown: [Playlist]) -> some View {

@@ -381,6 +381,12 @@ struct AlbumDetailView: View {
                             startInstantMix(from: .album(id: albumId), using: container)
                         }
                         .disabled(displaySongs().isEmpty || !isOnline)
+                        PinMenuButton(
+                            itemType: .album, itemId: albumId,
+                            displayName: viewModel?.albumName ?? initialName,
+                            displaySubtitle: viewModel?.artistName ?? initialArtistName ?? "",
+                            coverArtId: albumCoverId
+                        )
                         Divider()
                         // ColorPicker requires a sheet rather than Menu content.
                         Button("Theme colour", systemImage: "paintpalette") {

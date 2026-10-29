@@ -3,6 +3,9 @@ import Foundation
 /// A section of the online Home feed that the user can show, hide and reorder in Settings.
 /// Raw values are persisted: never rename an existing case.
 nonisolated enum HomeSection: String, LayoutSection {
+    /// Pinned albums, playlists and artists, mixed in pin order (#44). First, so it also lands
+    /// first in a layout saved before it existed.
+    case pinned
     case playlists
     case queueBuilder
     case favoriteSongs
@@ -18,6 +21,7 @@ nonisolated enum HomeSection: String, LayoutSection {
 
     var title: LocalizedStringResource {
         switch self {
+        case .pinned: "Pinned"
         case .playlists: "Your Playlists"
         case .queueBuilder: "Queue Builder"
         case .favoriteSongs: "Your Favorite Songs"
@@ -44,6 +48,4 @@ typealias HomeLayoutConfiguration = SectionLayoutConfiguration<HomeSection>
 
 extension SectionLayoutConfiguration where Section == HomeSection {
     static var storageKey: String { "minidisc.homeLayout" }
-    /// The playlist shelf shows only pinned playlists, in pin order.
-    static var pinnedPlaylistsOnlyKey: String { "minidisc.homePinnedPlaylistsOnly" }
 }

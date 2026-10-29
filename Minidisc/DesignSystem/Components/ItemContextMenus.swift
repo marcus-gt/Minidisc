@@ -185,6 +185,13 @@ struct CollectionContextMenuModifier: ViewModifier {
     let onDelete: (() -> Void)?
 
     @Environment(\.appContainer) private var container
+    @State private var renameRequest: PlaylistRenameRequest?
+
+    /// Playlists the listener named themselves can be renamed in place (#44 follow-up).
+    private var canRename: Bool {
+        itemType == .playlist && container?.serverState.isOnline == true
+            && PlaylistRenamer.canRename(playlistName: displayName)
+    }
 
     private var isPinned: Bool {
         container?.pinService.isPinned(itemType: itemType, itemId: itemId) == true
@@ -253,8 +260,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     Divider()
                 }
 
-                // Only playlists can be pinned: they feed Home's playlist shelf. Pinned albums had
-                // their own Library grid, which is gone.
+                // Albums and playlists pin to Home's Pinned shelf (#44).
                 if isPinned {
                     Button {
                         HapticFeedback.light.trigger()
@@ -262,7 +268,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     } label: {
                         Label(itemType.unpinLabel, systemImage: "pin.slash")
                     }
-                } else if itemType == .playlist {
+                } else {
                     Button {
                         guard let serverId = container?.serverState.activeServer?.id,
                               let pin = container?.pinService else { return }
@@ -299,8 +305,16 @@ struct CollectionContextMenuModifier: ViewModifier {
                     }
                 }
 
-                if onEdit != nil || onDelete != nil {
+                if onEdit != nil || onDelete != nil || canRename {
                     Divider()
+                }
+
+                if canRename {
+                    Button {
+                        renameRequest = PlaylistRenameRequest(playlistId: itemId, currentName: displayName, coverArtId: coverArtId)
+                    } label: {
+                        Label("Rename", systemImage: "character.cursor.ibeam")
+                    }
                 }
 
                 if let onEdit {
@@ -319,6 +333,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     displaySubtitle: displaySubtitle
                 )
             }
+            .playlistRenameAlert($renameRequest)
     }
 }
 
@@ -351,6 +366,8 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
             switch itemType {
             case .album: return local.albumSongs(itemId)
             case .playlist: return local.playlistSongs[itemId] ?? []
+            // Artists don't use the collection menus.
+            case .artist: return []
             }
         }
         return try await songLoader()
@@ -419,8 +436,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     Divider()
                 }
 
-                // Only playlists can be pinned: they feed Home's playlist shelf. Pinned albums had
-                // their own Library grid, which is gone.
+                // Albums and playlists pin to Home's Pinned shelf (#44).
                 if isPinned {
                     Button {
                         HapticFeedback.light.trigger()
@@ -428,7 +444,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     } label: {
                         Label(itemType.unpinLabel, systemImage: "pin.slash")
                     }
-                } else if itemType == .playlist {
+                } else {
                     Button {
                         guard let serverId = container?.serverState.activeServer?.id,
                               let pin = container?.pinService else { return }
@@ -483,6 +499,7 @@ extension PinnedItemType {
         switch self {
         case .album: "Pin Album"
         case .playlist: "Pin Playlist"
+        case .artist: "Pin Artist"
         }
     }
 
@@ -490,6 +507,7 @@ extension PinnedItemType {
         switch self {
         case .album: "Unpin Album"
         case .playlist: "Unpin Playlist"
+        case .artist: "Unpin Artist"
         }
     }
 }

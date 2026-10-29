@@ -1,9 +1,11 @@
 import Foundation
 import SwiftData
 
+/// Raw values are persisted in `PinnedItem.itemType` and its id: never rename an existing case.
 nonisolated enum PinnedItemType: String, CaseIterable, Sendable {
     case album
     case playlist
+    case artist
 }
 
 /// Persists an item pinned to HomeView. Stores a metadata snapshot so the

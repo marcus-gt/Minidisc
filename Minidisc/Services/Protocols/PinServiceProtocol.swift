@@ -1,4 +1,5 @@
 import Foundation
+import SwiftSonic
 
 @MainActor
 protocol PinServiceProtocol: AnyObject {
@@ -17,4 +18,9 @@ protocol PinServiceProtocol: AnyObject {
     /// IDs of the items of one type pinned on a server, in pin order.
     func pinnedItemIds(itemType: PinnedItemType, serverId: UUID) -> [String]
     func updateCoverArtId(itemType: PinnedItemType, itemId: String, newCoverArtId: String?)
+    /// Brings a pin's snapshot name up to date after a rename. No-op when the item isn't pinned.
+    func updateDisplayName(itemType: PinnedItemType, itemId: String, displayName: String)
+    /// Catches the pinned playlists up with the server's names, so a rename made in another app or
+    /// on the server also reaches the Pinned shelf.
+    func reconcilePinnedPlaylists(with playlists: [Playlist], serverId: UUID)
 }

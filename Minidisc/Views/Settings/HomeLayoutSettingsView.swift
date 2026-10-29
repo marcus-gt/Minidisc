@@ -4,7 +4,6 @@ import SwiftUI
 /// Style writes the same per-shelf keys as the shelf "…" menus, so both stay in sync.
 struct HomeLayoutSettingsView: View {
     @AppStorage(HomeLayoutConfiguration.storageKey) private var configuration: HomeLayoutConfiguration = .default
-    @AppStorage(HomeLayoutConfiguration.pinnedPlaylistsOnlyKey) private var pinnedPlaylistsOnly = false
 
     var body: some View {
         List {
@@ -28,24 +27,14 @@ struct HomeLayoutSettingsView: View {
             }
 
             Section {
-                Toggle("Pinned Playlists Only", isOn: $pinnedPlaylistsOnly)
-                    .accessibilityIdentifier("settings.homeLayout.pinnedOnly")
-            } header: {
-                Text("Your Playlists")
-            } footer: {
-                Text("Show only the playlists you've pinned, in the order you pinned them.")
-            }
-
-            Section {
                 Button("Reset to Default") {
                     configuration = .default
-                    pinnedPlaylistsOnly = false
                     for section in HomeSection.allCases where section.supportsLayoutChoice {
                         UserDefaults.standard.removeObject(forKey: HomeShelfLayout.storageKey(for: section.shelfIdentifier))
                     }
                 }
             } footer: {
-                Text("Shows every section in the original order, as carousels, with all playlists.")
+                Text("Shows every section in the original order, as carousels.")
             }
         }
         // Always in edit mode so the drag handles show without an Edit button.

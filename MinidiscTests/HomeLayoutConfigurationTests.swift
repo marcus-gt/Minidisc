@@ -10,14 +10,14 @@ struct HomeLayoutConfigurationTests {
 
     @Test func queueBuilder_isShownByDefaultWithoutAStyleChoice() {
         #expect(HomeLayoutConfiguration.default.isVisible(.queueBuilder))
-        #expect(HomeLayoutConfiguration.default.order.prefix(2) == [.playlists, .queueBuilder])
+        #expect(HomeLayoutConfiguration.default.order.prefix(3) == [.pinned, .playlists, .queueBuilder])
         #expect(!HomeSection.queueBuilder.supportsLayoutChoice)
     }
 
     @Test func layoutSavedBeforeTheQueueBuilder_getsItAppendedVisible() throws {
         let saved = #"{"hidden":["rediscover"],"order":["playlists","favoriteSongs","favoriteAlbums","recentlyPlayed","heavyRotation","rediscover","relevantAdditions","recentlyAdded","genres"]}"#
         let decoded = try #require(HomeLayoutConfiguration(rawValue: saved))
-        #expect(decoded.order.prefix(3) == [.playlists, .queueBuilder, .favoriteSongs])
+        #expect(decoded.order.prefix(4) == [.pinned, .playlists, .queueBuilder, .favoriteSongs])
         #expect(decoded.isVisible(.queueBuilder))
         #expect(!decoded.isVisible(.rediscover))
     }
@@ -25,7 +25,7 @@ struct HomeLayoutConfigurationTests {
     @Test func newSection_followsPlaylistsWhereverTheUserMovedThem() throws {
         let saved = #"{"hidden":[],"order":["recentlyPlayed","genres","playlists","favoriteSongs","favoriteAlbums","heavyRotation","rediscover","relevantAdditions","recentlyAdded"]}"#
         let decoded = try #require(HomeLayoutConfiguration(rawValue: saved))
-        #expect(decoded.order.prefix(4) == [.recentlyPlayed, .genres, .playlists, .queueBuilder])
+        #expect(decoded.order.prefix(5) == [.pinned, .recentlyPlayed, .genres, .playlists, .queueBuilder])
     }
 
     @Test func equality_comparesFieldsNotEncodedStrings() {
@@ -47,7 +47,8 @@ struct HomeLayoutConfigurationTests {
         // Layouts saved before keys were sorted may have `order` first.
         let legacy = #"{"order":["genres","playlists"],"hidden":["rediscover"]}"#
         let decoded = try #require(HomeLayoutConfiguration(rawValue: legacy))
-        #expect(decoded.order.prefix(2) == [.genres, .playlists])
+        // Pinned didn't exist when this was saved, so it lands first (#44).
+        #expect(decoded.order.prefix(3) == [.pinned, .genres, .playlists])
         #expect(!decoded.isVisible(.rediscover))
     }
 
@@ -59,7 +60,7 @@ struct HomeLayoutConfigurationTests {
         let decoded = try #require(HomeLayoutConfiguration(rawValue: config.rawValue))
 
         #expect(decoded == config)
-        #expect(decoded.order.prefix(2) == [.genres, .playlists])
+        #expect(decoded.order.prefix(3) == [.pinned, .genres, .playlists])
         #expect(!decoded.isVisible(.rediscover))
     }
 
@@ -83,6 +84,17 @@ struct HomeLayoutConfigurationTests {
         // Every missing section goes after its default predecessor, which rebuilds the default order.
         #expect(decoded.order == HomeSection.allCases)
         #expect(decoded.visibleSections.count == HomeSection.allCases.count)
+    }
+
+    /// A layout saved before the Pinned shelf existed shows it, at the top (#44).
+    @Test func pinnedShelf_appearsFirstInAnOlderLayout() throws {
+        let saved = HomeSection.allCases.filter { $0 != .pinned }.map { "\"\($0.rawValue)\"" }
+        let raw = #"{"order":["# + saved.joined(separator: ",") + #"],"hidden":["genres"]}"#
+        let decoded = try #require(HomeLayoutConfiguration(rawValue: raw))
+        #expect(decoded.order.first == .pinned)
+        #expect(decoded.isVisible(.pinned))
+        #expect(!decoded.isVisible(.genres))
+        #expect(HomeSection.pinned.supportsLayoutChoice)
     }
 
     @Test func decode_garbage_returnsNil() {

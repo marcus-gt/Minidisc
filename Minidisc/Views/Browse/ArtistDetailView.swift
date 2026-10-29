@@ -230,6 +230,11 @@ struct ArtistDetailView: View {
                         startArtistAutomix()
                     }
                     .disabled(!canStartArtistAutomix)
+                    PinMenuButton(
+                        itemType: .artist, itemId: artist.id, displayName: artist.name,
+                        displaySubtitle: "",
+                        coverArtId: viewModel?.artist?.coverArt ?? artist.coverArt
+                    )
                 }
                 .tint(headerTextColor)
             }
