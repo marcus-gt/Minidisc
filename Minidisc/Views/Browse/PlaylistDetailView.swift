@@ -98,6 +98,7 @@ struct PlaylistDetailView: View {
     // MARK: - In-place edit mode
 
     @State private var isEditing = false
+    @State private var renameRequest: PlaylistRenameRequest?
     @State private var editName: String = ""
     @State private var editComment: String = ""
     @State private var editSongs: [DisplayableSong] = []
@@ -410,6 +411,12 @@ struct PlaylistDetailView: View {
         .navigationBarBackButtonHidden(true)
         .enableSwipeBack()
         .toolbar { toolbarContent }
+        .playlistRenameAlert($renameRequest) {
+            Task {
+                await viewModel?.load()
+                refreshCoverAppearance()
+            }
+        }
         .onChange(of: sortOrder) { _, newOrder in
             sortDirection = newOrder.defaultDirection
         }
@@ -492,6 +499,14 @@ struct PlaylistDetailView: View {
                             enterEdit()
                         }
                         .disabled(!canEdit)
+                        let currentName = viewModel?.name ?? initialName
+                        if PlaylistRenamer.canRename(playlistName: currentName) {
+                            Button("Rename", systemImage: "character.cursor.ibeam") {
+                                renameRequest = PlaylistRenameRequest(playlistId: playlistId, currentName: currentName,
+                                                                      coverArtId: effectiveCoverArtId)
+                            }
+                            .disabled(!canEdit)
+                        }
                         Divider()
                         pinMenuButton
                         Divider()
@@ -722,10 +737,14 @@ struct PlaylistDetailView: View {
             // Leave the editor and all draft fields intact so Save can retry the same snapshot.
             return
         }
+        if nameChanged {
+            PlaylistRenamer.didRename(playlistId: playlistId, coverArtId: effectiveCoverArtId, to: trimmedName, container: c)
+        }
         if coverDirty {
             await applyCoverInPlace(container: c, serverId: serverId, originalSongs: originalSongs)
         } else if nameChanged {
-            await rebakeGradientTitle(container: c, serverId: serverId, title: trimmedName)
+            await PlaylistRenamer.rebakeGradientTitle(playlistId: playlistId, coverArtId: effectiveCoverArtId,
+                                                      title: trimmedName, serverId: serverId, container: c)
         }
         await AddMusicCommitter.deriveFirstTrackCoverIfNeeded(
             wasEmpty: originalSongs.isEmpty,
@@ -740,18 +759,6 @@ struct PlaylistDetailView: View {
         await viewModel?.load()
         refreshCoverAppearance()
         withAnimation(.smooth) { isEditing = false }
-    }
-
-    /// A gradient cover carries the playlist title as pixels, so a rename has to re-render it.
-    private func rebakeGradientTitle(container c: AppContainer, serverId: UUID, title: String) async {
-        let store = PlaylistCoverStore(modelContainer: c.modelContainer)
-        guard let choice = store.choice(playlistId: playlistId, serverId: serverId),
-              choice.isUserPicked, let spec = choice.spec else { return }
-        let manager = PlaylistCoverManager(
-            downloadService: c.downloadService,
-            artworkImageCache: c.artworkImageCache
-        )
-        await manager.applyGradientCover(spec, playlistId: playlistId, title: title, coverArtId: effectiveCoverArtId)
     }
 
     private func applyCoverInPlace(container c: AppContainer, serverId: UUID, originalSongs: [DisplayableSong]) async {

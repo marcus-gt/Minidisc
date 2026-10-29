@@ -64,6 +64,12 @@ struct HomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
             Task { await viewModel?.load(isOnline: isOnline, preserveLayout: true) }
         }
+        // Pins keep a snapshot of the name; a playlist renamed elsewhere catches up here.
+        .onChange(of: viewModel?.topPicks.map { "\($0.id)\u{1F}\($0.name)" } ?? []) { _, _ in
+            guard let c = container, let serverID = c.serverState.activeServer?.id, let picks = viewModel?.topPicks,
+                  !picks.isEmpty else { return }
+            c.pinService.reconcilePinnedPlaylists(with: picks, serverId: serverID)
+        }
 
     }
 

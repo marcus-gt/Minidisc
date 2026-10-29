@@ -55,4 +55,44 @@ struct PinnedShelfTests {
         item.itemType = "fromTheFuture"
         #expect(PinnedShelf.destination(for: item) == nil)
     }
+
+    // MARK: - Renaming
+
+    @Test func rename_updatesThePinnedName() throws {
+        let (pins, container) = try service()
+        let server = UUID()
+        pins.pin(itemType: .playlist, itemId: "pl1", displayName: "Techno - Chill", displaySubtitle: "", coverArtId: nil, serverId: server)
+        pins.updateDisplayName(itemType: .playlist, itemId: "pl1", displayName: "  Techno – Chill  ")
+        let stored = try ModelContext(container).fetch(FetchDescriptor<PinnedItem>())
+        #expect(stored.first?.displayName == "Techno – Chill")
+        // Not pinned: nothing is created.
+        pins.updateDisplayName(itemType: .playlist, itemId: "unpinned", displayName: "X")
+        #expect(try ModelContext(container).fetch(FetchDescriptor<PinnedItem>()).count == 1)
+    }
+
+    /// A playlist renamed in another app or on the server reaches the Pinned shelf too.
+    @Test func reconcile_catchesPinnedPlaylistsUpWithTheServer() throws {
+        let (pins, container) = try service()
+        let server = UUID(), other = UUID()
+        pins.pin(itemType: .playlist, itemId: "pl1", displayName: "Old", displaySubtitle: "", coverArtId: nil, serverId: server)
+        pins.pin(itemType: .album, itemId: "pl1", displayName: "An album", displaySubtitle: "", coverArtId: nil, serverId: server)
+        pins.pin(itemType: .playlist, itemId: "pl2", displayName: "Elsewhere", displaySubtitle: "", coverArtId: nil, serverId: other)
+
+        pins.reconcilePinnedPlaylists(with: [
+            Playlist(id: "pl1", name: "New", songCount: 1, duration: 1),
+            Playlist(id: "pl2", name: "Not this server", songCount: 1, duration: 1)
+        ], serverId: server)
+
+        let names = Dictionary(uniqueKeysWithValues: try ModelContext(container).fetch(FetchDescriptor<PinnedItem>()).map { ($0.id, $0.displayName) })
+        #expect(names["playlist:pl1"] == "New")
+        #expect(names["album:pl1"] == "An album")
+        #expect(names["playlist:pl2"] == "Elsewhere")
+    }
+
+    /// Mood and Wrapped playlists are named by the app and would be renamed back.
+    @Test func generatedPlaylists_cannotBeRenamed() {
+        #expect(PlaylistRenamer.canRename(playlistName: "Techno - Chill"))
+        #expect(!PlaylistRenamer.canRename(playlistName: WrappedPlaylistService.playlistName(year: 2025)))
+        #expect(!PlaylistRenamer.canRename(playlistName: Mood.allCases[0].playlistName))
+    }
 }

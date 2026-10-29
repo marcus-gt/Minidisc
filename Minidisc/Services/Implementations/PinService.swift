@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import OSLog
+import SwiftSonic
 
 @MainActor
 final class PinService: PinServiceProtocol {
@@ -107,6 +108,36 @@ final class PinService: PinServiceProtocol {
         item.coverArtId = newCoverArtId
         try? modelContext.save()
         Logger.pin.debug("Updated coverArtId for \(itemType.rawValue, privacy: .public) \(itemId, privacy: .public) → \(newCoverArtId ?? "<nil>", privacy: .public)")
+    }
+
+    func updateDisplayName(itemType: PinnedItemType, itemId: String, displayName: String) {
+        let name = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let compositeId = "\(itemType.rawValue):\(itemId)"
+        var descriptor = FetchDescriptor<PinnedItem>(
+            predicate: #Predicate<PinnedItem> { $0.id == compositeId }
+        )
+        descriptor.fetchLimit = 1
+        guard !name.isEmpty, let item = try? modelContext.fetch(descriptor).first, item.displayName != name else { return }
+        item.displayName = name
+        try? modelContext.save()
+        Logger.pin.debug("Updated name for \(itemType.rawValue, privacy: .public) \(itemId, privacy: .public)")
+    }
+
+    func reconcilePinnedPlaylists(with playlists: [Playlist], serverId: UUID) {
+        let type = PinnedItemType.playlist.rawValue
+        let descriptor = FetchDescriptor<PinnedItem>(
+            predicate: #Predicate<PinnedItem> { $0.itemType == type && $0.serverId == serverId }
+        )
+        let byID = Dictionary(playlists.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var changed = 0
+        for item in (try? modelContext.fetch(descriptor)) ?? [] {
+            guard let playlist = byID[item.itemId], !playlist.name.isEmpty, playlist.name != item.displayName else { continue }
+            item.displayName = playlist.name
+            changed += 1
+        }
+        guard changed > 0 else { return }
+        try? modelContext.save()
+        Logger.pin.info("Caught \(changed, privacy: .public) pinned playlist name(s) up with the server")
     }
 
     // MARK: - Reorder

@@ -185,6 +185,13 @@ struct CollectionContextMenuModifier: ViewModifier {
     let onDelete: (() -> Void)?
 
     @Environment(\.appContainer) private var container
+    @State private var renameRequest: PlaylistRenameRequest?
+
+    /// Playlists the listener named themselves can be renamed in place (#44 follow-up).
+    private var canRename: Bool {
+        itemType == .playlist && container?.serverState.isOnline == true
+            && PlaylistRenamer.canRename(playlistName: displayName)
+    }
 
     private var isPinned: Bool {
         container?.pinService.isPinned(itemType: itemType, itemId: itemId) == true
@@ -298,8 +305,16 @@ struct CollectionContextMenuModifier: ViewModifier {
                     }
                 }
 
-                if onEdit != nil || onDelete != nil {
+                if onEdit != nil || onDelete != nil || canRename {
                     Divider()
+                }
+
+                if canRename {
+                    Button {
+                        renameRequest = PlaylistRenameRequest(playlistId: itemId, currentName: displayName, coverArtId: coverArtId)
+                    } label: {
+                        Label("Rename", systemImage: "character.cursor.ibeam")
+                    }
                 }
 
                 if let onEdit {
@@ -318,6 +333,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     displaySubtitle: displaySubtitle
                 )
             }
+            .playlistRenameAlert($renameRequest)
     }
 }
 

@@ -5,6 +5,7 @@ import SwiftSonic
 /// pins' own snapshots, so it shows at launch and offline without waiting for the server.
 struct PinnedShelf: View {
     let items: [PinnedItem]
+    @State private var renameRequest: PlaylistRenameRequest?
     @AppStorage(HomeShelfLayout.storageKey(for: HomeSection.pinned.shelfIdentifier)) private var layout: HomeShelfLayout = .carousel
 
     /// Every pin shows in either layout: pins are a short, hand-picked list.
@@ -17,23 +18,29 @@ struct PinnedShelf: View {
                 } content: {
                     ForEach(items) { item in
                         if let destination = Self.destination(for: item) {
-                            PinnedShelfCard(item: item, destination: destination)
+                            PinnedShelfCard(item: item, destination: destination, onRename: rename)
                         }
                     }
                 }
                 .accessibilityIdentifier(HomeSection.pinned.shelfIdentifier)
+                .playlistRenameAlert($renameRequest)
             case .grid:
                 VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
                     header
                     HomeShelfGrid(items) { item in
                         if let destination = Self.destination(for: item) {
-                            PinnedGridTile(item: item, destination: destination)
+                            PinnedGridTile(item: item, destination: destination, onRename: rename)
                         }
                     }
                 }
                 .accessibilityIdentifier(HomeSection.pinned.shelfIdentifier)
+                .playlistRenameAlert($renameRequest)
             }
         }
+    }
+
+    private func rename(_ item: PinnedItem) {
+        renameRequest = PlaylistRenameRequest(playlistId: item.itemId, currentName: item.displayName, coverArtId: item.coverArtId)
     }
 
     private var header: some View {
@@ -70,10 +77,17 @@ private func pinnedSubtitle(_ item: PinnedItem) -> String? {
     }
 }
 
-private struct PinnedUnpinMenu: View {
+/// A pin's long-press menu: Rename for a playlist the listener named, and Unpin.
+private struct PinnedItemMenu: View {
     let item: PinnedItem
+    let onRename: (PinnedItem) -> Void
+    @Environment(\.appContainer) private var container
 
     var body: some View {
+        if item.itemType == PinnedItemType.playlist.rawValue, container?.serverState.isOnline == true,
+           PlaylistRenamer.canRename(playlistName: item.displayName) {
+            Button("Rename", systemImage: "character.cursor.ibeam") { onRename(item) }
+        }
         if let type = PinnedItemType(rawValue: item.itemType) {
             PinMenuButton(itemType: type, itemId: item.itemId, displayName: item.displayName,
                           displaySubtitle: item.displaySubtitle, coverArtId: item.coverArtId)
@@ -105,6 +119,7 @@ private struct PinnedCover: View {
 private struct PinnedGridTile: View {
     let item: PinnedItem
     let destination: HomeDestination
+    let onRename: (PinnedItem) -> Void
 
     var body: some View {
         NavigationLink(value: destination) {
@@ -129,7 +144,7 @@ private struct PinnedGridTile: View {
             }
         }
         .buttonStyle(.plain)
-        .contextMenu { PinnedUnpinMenu(item: item) }
+        .contextMenu { PinnedItemMenu(item: item, onRename: onRename) }
         .accessibilityIdentifier("home.pinned.\(item.id)")
     }
 }
@@ -138,6 +153,7 @@ private struct PinnedShelfCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let item: PinnedItem
     let destination: HomeDestination
+    let onRename: (PinnedItem) -> Void
 
     private var side: CGFloat { dynamicTypeSize.isAccessibilitySize ? 260 : 160 }
 
@@ -151,7 +167,7 @@ private struct PinnedShelfCard: View {
             .frame(width: side, alignment: .leading)
         }
         .buttonStyle(.plain)
-        .contextMenu { PinnedUnpinMenu(item: item) }
+        .contextMenu { PinnedItemMenu(item: item, onRename: onRename) }
         .accessibilityIdentifier("home.pinned.\(item.id)")
     }
 }
