@@ -14,6 +14,7 @@ struct WrappedYearlyListView: View {
                     columns: [GridItem(.adaptive(minimum: 140, maximum: 200), spacing: MinidiscSpacing.s)],
                     spacing: MinidiscSpacing.s
                 ) {
+                    WrappedYearTile(period: .allTime)
                     ForEach(years, id: \.self) { year in
                         WrappedYearTile(year: year)
                     }

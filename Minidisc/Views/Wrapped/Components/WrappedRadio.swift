@@ -56,6 +56,7 @@ struct WrappedRadioCard: View {
     private var year: Int {
         switch period {
         case .month(let year, _), .year(let year): year
+        case .allTime: Calendar.current.component(.year, from: Date())
         }
     }
 

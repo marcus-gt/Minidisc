@@ -176,10 +176,12 @@ final class AppContainer {
             )
             await manager.applyGradientCover(spec, playlistId: playlistId, title: title, coverArtId: nil)
         }
+        // One scorer, so the Queue Builder and Wrapped share its per-track cache.
+        let moodScorer = AudioMuseMoodScorer(serverService: server)
         queueBuilderService = QueueBuilderService(
             source: catalog,
             library: library,
-            moodScorer: AudioMuseMoodScorer(serverService: server)
+            moodScorer: moodScorer
         )
         moodPlaylistService = MoodPlaylistService(
             serverService: server,
@@ -222,7 +224,8 @@ final class AppContainer {
                 return nil
             },
             librarySongs: { (try? await catalog.allIndexedSongs()) ?? nil },
-            songsByID: { (try? await catalog.indexedSongs(ids: $0)) ?? [] }
+            songsByID: { (try? await catalog.indexedSongs(ids: $0)) ?? [] },
+            moodScorer: moodScorer
         )
         wrappedDataSource = wrappedSource
 

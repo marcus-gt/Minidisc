@@ -1,6 +1,9 @@
 import SwiftUI
 
 nonisolated enum WrappedYearPalette {
+    /// All Time's tile (#70): the 2025 palette, set apart from the current year's.
+    static var allTime: [Color] { colors(for: 2025) }
+
     /// Returns 3 deterministic colors derived from the given year, cycling every 8 years.
     /// Used as source palette for mesh gradient backgrounds in Wrapped hero, year card,
     /// and cover generation.

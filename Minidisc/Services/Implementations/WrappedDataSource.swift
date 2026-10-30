@@ -25,18 +25,33 @@ nonisolated enum WrappedIDs {
 nonisolated struct WrappedLibraryMatcher: Sendable {
     private let byRecording: [String: Song]
     private let byTitleAndArtist: [String: Song]
-    private let byBaseTitle: [String: [Song]]
+    private let byBaseTitle: [String: [Candidate]]
     /// Library artists by normalised name, so a listen that matches no song still credits the artist.
     private let artistsByName: [String: (id: String, name: String)]
     /// Library albums by base title, for crediting an unmatched listen's album.
-    private let albumsByTitle: [String: [Song]]
+    private let albumsByTitle: [String: [Candidate]]
+
+    /// A library song with what the loose pass compares, worked out once rather than per listen.
+    private struct Candidate: Sendable {
+        let song: Song
+        let names: [String]
+        let albumBase: String?
+        let take: Int?
+
+        init(_ song: Song) {
+            self.song = song
+            names = WrappedLibraryMatcher.artistNames(of: song).flatMap(WrappedLibraryMatcher.creditedNames)
+            albumBase = song.album.map(WrappedLibraryMatcher.baseTitle)
+            take = WrappedLibraryMatcher.takeNumber(song.title)
+        }
+    }
 
     init(songs: [Song]) {
         var byRecording: [String: Song] = [:]
         var byTitleAndArtist: [String: Song] = [:]
-        var byBaseTitle: [String: [Song]] = [:]
+        var byBaseTitle: [String: [Candidate]] = [:]
         var artistsByName: [String: (id: String, name: String)] = [:]
-        var albumsByTitle: [String: [Song]] = [:]
+        var albumsByTitle: [String: [Candidate]] = [:]
         for song in songs {
             if let mbid = song.musicBrainzId?.lowercased(), !mbid.isEmpty, byRecording[mbid] == nil {
                 byRecording[mbid] = song
@@ -45,16 +60,15 @@ nonisolated struct WrappedLibraryMatcher: Sendable {
                 let key = Self.key(title: song.title, artist: artist)
                 if byTitleAndArtist[key] == nil { byTitleAndArtist[key] = song }
             }
-            byBaseTitle[Self.baseTitle(song.title), default: []].append(song)
+            let candidate = Candidate(song)
+            byBaseTitle[Self.baseTitle(song.title), default: []].append(candidate)
             for (id, name) in Self.artistCredits(of: song) {
                 let key = NewReleaseMatching.normalisedName(name)
                 if !key.isEmpty, artistsByName[key] == nil { artistsByName[key] = (id, name) }
             }
-            if let album = song.album, song.albumId != nil {
-                let key = Self.baseTitle(album)
-                if albumsByTitle[key]?.contains(where: { $0.albumId == song.albumId }) != true {
-                    albumsByTitle[key, default: []].append(song)
-                }
+            if let key = candidate.albumBase, song.albumId != nil,
+               albumsByTitle[key]?.contains(where: { $0.song.albumId == song.albumId }) != true {
+                albumsByTitle[key, default: []].append(candidate)
             }
         }
         self.byRecording = byRecording
@@ -79,13 +93,13 @@ nonisolated struct WrappedLibraryMatcher: Sendable {
         let album = listen.releaseName.map(Self.baseTitle)
         let take = Self.takeNumber(listen.trackName)
         var best: (song: Song, score: Int)?
-        for song in candidates {
-            let artistScore = Self.artistScore(Self.artistNames(of: song).flatMap(Self.creditedNames), credited)
+        for candidate in candidates {
+            let artistScore = Self.artistScore(candidate.names, credited)
             guard artistScore > 0 else { continue }
             var score = artistScore * 10
-            if let album, let songAlbum = song.album, Self.baseTitle(songAlbum) == album { score += 5 }
-            if let take, Self.takeNumber(song.title) == take { score += 2 }
-            if score > (best?.score ?? 0) { best = (song, score) }
+            if let album, candidate.albumBase == album { score += 5 }
+            if let take, candidate.take == take { score += 2 }
+            if score > (best?.score ?? 0) { best = (candidate.song, score) }
         }
         return best?.song
     }
@@ -109,9 +123,7 @@ nonisolated struct WrappedLibraryMatcher: Sendable {
         let credited = Self.creditedNames(listen.artistName)
         let libraryArtist = credited.lazy.compactMap { artistsByName[$0] }.first
         let libraryAlbum = listen.releaseName.flatMap { release in
-            albumsByTitle[Self.baseTitle(release)]?.first {
-                Self.artistScore(Self.artistNames(of: $0).flatMap(Self.creditedNames), credited) > 0
-            }
+            albumsByTitle[Self.baseTitle(release)]?.first { Self.artistScore($0.names, credited) > 0 }?.song
         }
         let artist = NewReleaseMatching.normalisedName(listen.artistName)
         let length = listenedSeconds ?? Self.assumedLength
@@ -129,6 +141,23 @@ nonisolated struct WrappedLibraryMatcher: Sendable {
         )
     }
 
+    /// Plays for many listens. A history repeats the same listen often (one song played 40 times),
+    /// so each distinct listen is matched once and its play reused with the listen's own time.
+    func plays(for listens: [LBListen]) -> [WrappedPlay] {
+        var matched: [String: WrappedPlay] = [:]
+        return listens.map { listen in
+            let key = [listen.trackName, listen.artistName, listen.releaseName ?? "", listen.recordingMBID ?? "",
+                       listen.durationMs.map(String.init) ?? ""].joined(separator: "\u{1F}")
+            if var play = matched[key] {
+                play.timestamp = Date(timeIntervalSince1970: TimeInterval(listen.listenedAt))
+                return play
+            }
+            let play = play(for: listen)
+            matched[key] = play
+            return play
+        }
+    }
+
     /// Listens without a length (not every player sends one) count as a typical track.
     static let assumedLength: TimeInterval = 210
 
@@ -141,29 +170,43 @@ nonisolated struct WrappedLibraryMatcher: Sendable {
     /// "Waltz for Debby (take 2)" both become "waltzfordebby".
     static func baseTitle(_ title: String) -> String {
         var text = title
-        if let dash = text.range(of: #"\s[-–—]\s"#, options: .regularExpression), dash.lowerBound > text.startIndex {
-            text = String(text[..<dash.lowerBound])
+        if let dash = Patterns.dash.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           dash.range.location > 0, let range = Range(dash.range, in: text) {
+            text = String(text[..<range.lowerBound])
         }
-        text = text.replacingOccurrences(of: #"[\(\[][^\)\]]*[\)\]]"#, with: " ", options: .regularExpression)
+        text = Patterns.replace(Patterns.brackets, in: text, with: " ")
         // Name folding, not title folding: that one drops "a" as an article, and "Part II a" needs it.
-        return NewReleaseMatching.normalisedName(text)
-            .replacingOccurrences(of: #"\bpt\b"#, with: "part", options: .regularExpression)
+        return Patterns.replace(Patterns.part, in: NewReleaseMatching.normalisedName(text), with: "part")
             .replacingOccurrences(of: " ", with: "")
     }
 
     /// "Take 2" in "Waltz for Debby (take 2)" or "… - Live / Take 2".
     static func takeNumber(_ title: String) -> Int? {
-        guard let range = title.range(of: #"(?i)\btake\s*(\d+)"#, options: .regularExpression) else { return nil }
-        return Int(title[range].filter(\.isNumber))
+        guard let match = Patterns.take.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)),
+              let range = Range(match.range(at: 1), in: title) else { return nil }
+        return Int(title[range])
+    }
+
+    /// Compiled once: matching a whole history runs these tens of thousands of times.
+    private enum Patterns {
+        static let dash = try! NSRegularExpression(pattern: #"\s[-–—]\s"#)
+        static let brackets = try! NSRegularExpression(pattern: #"[\(\[][^\)\]]*[\)\]]"#)
+        static let part = try! NSRegularExpression(pattern: #"\bpt\b"#)
+        static let take = try! NSRegularExpression(pattern: #"\btake\s*(\d+)"#, options: .caseInsensitive)
+        static let credits = try! NSRegularExpression(
+            pattern: #"\s*(,|&|;|/|\s(feat\.?|ft\.?|featuring|with|and|x)\s)\s*"#, options: .caseInsensitive
+        )
+
+        static func replace(_ pattern: NSRegularExpression, in text: String, with template: String) -> String {
+            pattern.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: template)
+        }
     }
 
     /// Each credited name of an artist string, normalised: "Moses Boyd, Kevin Haynes" and
     /// "Moses Boyd Exodus Feat. Kevin Haynes Grupo Elegua" both split into their names.
     static func creditedNames(_ artist: String) -> [String] {
-        let parts = artist.replacingOccurrences(
-            of: #"(?i)\s*(,|&|;|/|\s(feat\.?|ft\.?|featuring|with|and|x)\s)\s*"#,
-            with: "\u{1F}", options: .regularExpression
-        ).split(separator: "\u{1F}").map { NewReleaseMatching.normalisedName(String($0)) }
+        let parts = Patterns.replace(Patterns.credits, in: artist, with: "\u{1F}")
+            .split(separator: "\u{1F}").map { NewReleaseMatching.normalisedName(String($0)) }
         var names = [NewReleaseMatching.normalisedName(artist)]
         for part in parts where !part.isEmpty && !names.contains(part) { names.append(part) }
         return names
@@ -182,7 +225,7 @@ nonisolated struct WrappedLibraryMatcher: Sendable {
     }
 
     /// The song's own artist and each credited artist, so "A & B" also matches a listen credited to "A".
-    private static func artistNames(of song: Song) -> [String] {
+    fileprivate static func artistNames(of song: Song) -> [String] {
         var names = [song.artist].compactMap { $0 }
         names.append(contentsOf: song.artists?.map(\.name) ?? [])
         return names
@@ -210,35 +253,85 @@ actor WrappedDataSource {
     private let username: @Sendable () async -> String?
     private let librarySongs: @Sendable () async -> [Song]?
     private let songsByID: @Sendable ([String]) async -> [Song]
+    private let moodScorer: (any MoodScoring)?
+    private let now: @Sendable () -> Date
     private var matcher: (serverId: String, matcher: WrappedLibraryMatcher)?
+
+    /// The plays behind a recap, kept briefly: the recap, its stat cards, the mood and the radio all
+    /// read the same period one after the other (#70).
+    private struct CachedPlays {
+        let key: String
+        let plays: Plays
+        let storedAt: Date
+    }
+    private var playsCache: [CachedPlays] = []
+    static let playsCacheLifetime: TimeInterval = 60
+    static let playsCacheSize = 4
+
+    nonisolated struct Plays: Sendable {
+        let plays: [WrappedPlay]
+        let range: (start: Date, end: Date)
+        let source: WrappedSourceKind
+        let fellBack: Bool
+    }
 
     init(stats: StatsService, history: ListenHistoryStore,
          username: @escaping @Sendable () async -> String?,
          librarySongs: @escaping @Sendable () async -> [Song]?,
-         songsByID: @escaping @Sendable ([String]) async -> [Song] = { _ in [] }) {
+         songsByID: @escaping @Sendable ([String]) async -> [Song] = { _ in [] },
+         moodScorer: (any MoodScoring)? = nil,
+         now: @escaping @Sendable () -> Date = { Date() }) {
         self.stats = stats
         self.history = history
         self.username = username
         self.librarySongs = librarySongs
         self.songsByID = songsByID
+        self.moodScorer = moodScorer
+        self.now = now
     }
 
     func source() async -> WrappedSourceKind {
         await username() == nil ? .device : .listenBrainz
     }
 
-    func wrappedData(for period: WrappedPeriod, serverId: String, calendar: Calendar, refresh: Bool = false) async -> Result {
-        let range = period.dateRange(in: calendar)
-        if let plays = await listenBrainzPlays(range: range, serverId: serverId, calendar: calendar, refresh: refresh) {
-            let data = WrappedAggregator.aggregate(plays: plays, period: period, serverId: serverId,
-                                                   periodRange: range, calendar: calendar)
-            return Result(data: data, source: .listenBrainz, fellBack: false)
+    func wrappedData(for period: WrappedPeriod, serverId: String, calendar: Calendar, refresh: Bool = false,
+                     progress: ListenHistoryStore.Progress? = nil) async -> Result {
+        let loaded = await plays(for: period, serverId: serverId, calendar: calendar, refresh: refresh, progress: progress)
+        let data = WrappedAggregator.aggregate(plays: loaded.plays, period: period, serverId: serverId,
+                                               periodRange: loaded.range, calendar: calendar)
+        return Result(data: data, source: loaded.source, fellBack: loaded.fellBack)
+    }
+
+    /// The stat cards' charts (#70). A year or month is compared with the same one a year earlier.
+    func insights(for period: WrappedPeriod, serverId: String, calendar: Calendar) async -> WrappedInsights {
+        let current = await plays(for: period, serverId: serverId, calendar: calendar)
+        var previous: [WrappedPlay]?
+        if let earlier = WrappedInsightsBuilder.comparisonPeriod(for: period) {
+            previous = await plays(for: earlier, serverId: serverId, calendar: calendar).plays
         }
-        let fellBack = await username() != nil
-        let plays = await stats.plays(for: period, serverId: serverId, calendar: calendar)
-        let data = WrappedAggregator.aggregate(plays: plays, period: period, serverId: serverId,
-                                               periodRange: range, calendar: calendar)
-        return Result(data: data, source: .device, fellBack: fellBack)
+        return WrappedInsightsBuilder.build(period: period, plays: current.plays, previousPlays: previous, calendar: calendar)
+    }
+
+    /// How many of the period's most played library tracks get mood scores; covers most plays while
+    /// keeping the first load (AudioMuse answers one track per request) to seconds.
+    static let moodTrackLimit = 300
+
+    /// The period's mood from AudioMuse; nil when AudioMuse isn't set up or has no scores (#70).
+    func moodProfile(for period: WrappedPeriod, serverId: String, calendar: Calendar) async -> WrappedMoodProfile? {
+        guard let moodScorer, await moodScorer.isAvailable() else { return nil }
+        let loaded = await plays(for: period, serverId: serverId, calendar: calendar)
+        let library = loaded.plays.filter { WrappedIDs.isLibraryID($0.trackId) }
+        let ids = WrappedAggregator.topTracks(from: library, limit: Self.moodTrackLimit).map(\.trackId)
+        let scores: [String: AudioMuseMoodScores]
+        do {
+            scores = try await moodScorer.scores(for: ids)
+        } catch {
+            Logger.wrapped.warning("[WRAPPED] mood scores unavailable: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+        let years = WrappedInsightsBuilder.yearSpan(of: loaded.plays.map { WrappedInsightsBuilder.Stamp($0.timestamp, calendar: calendar) })
+        let buckets = WrappedInsightsBuilder.buckets(for: period, chart: .timeline, years: years, calendar: calendar)
+        return WrappedMoodBuilder.build(plays: loaded.plays, scores: scores, period: period, buckets: buckets, calendar: calendar)
     }
 
     /// A Wrapped radio: the period's library tracks in a play-count-weighted shuffle, and the
@@ -253,14 +346,7 @@ actor WrappedDataSource {
     /// The period's most played library tracks, most listened first. Listens that don't match a
     /// library song can't be played, so they are left out.
     func topLibraryTracks(for period: WrappedPeriod, serverId: String, limit: Int, calendar: Calendar) async -> [TopTrackEntry] {
-        let range = period.dateRange(in: calendar)
-        // `??` can't take an async right-hand side.
-        let plays: [WrappedPlay]
-        if let fromListenBrainz = await listenBrainzPlays(range: range, serverId: serverId, calendar: calendar, refresh: false) {
-            plays = fromListenBrainz
-        } else {
-            plays = await stats.plays(for: period, serverId: serverId, calendar: calendar)
-        }
+        let plays = await plays(for: period, serverId: serverId, calendar: calendar).plays
         let libraryPlays = plays.filter { WrappedIDs.isLibraryID($0.trackId) }
         return WrappedAggregator.topTracks(from: libraryPlays, limit: limit)
     }
@@ -314,14 +400,50 @@ actor WrappedDataSource {
         return min(year, current)
     }
 
-    private func listenBrainzPlays(range: (start: Date, end: Date), serverId: String, calendar: Calendar,
-                                   refresh: Bool) async -> [WrappedPlay]? {
-        guard let user = await username() else { return nil }
+    /// The period's plays from ListenBrainz when an account is set, else from this phone.
+    func plays(for period: WrappedPeriod, serverId: String, calendar: Calendar, refresh: Bool = false,
+               progress: ListenHistoryStore.Progress? = nil) async -> Plays {
+        let user = await username()
+        let key = "\(serverId)|\(user ?? "-")|\(period)|\(calendar.timeZone.identifier)"
+        let date = now()
+        playsCache.removeAll { date.timeIntervalSince($0.storedAt) > Self.playsCacheLifetime }
+        if !refresh, let hit = playsCache.first(where: { $0.key == key }) { return hit.plays }
+
+        let range = await range(for: period, user: user, calendar: calendar)
+        let loaded: Plays
+        if let user, let plays = await listenBrainzPlays(user: user, range: range, serverId: serverId, calendar: calendar,
+                                                         refresh: refresh, progress: progress) {
+            loaded = Plays(plays: plays, range: range, source: .listenBrainz, fellBack: false)
+        } else {
+            let plays = await stats.plays(for: period, serverId: serverId, calendar: calendar)
+            loaded = Plays(plays: plays, range: range, source: .device, fellBack: user != nil)
+        }
+        // A fallback is retried next time rather than kept.
+        if !loaded.fellBack {
+            playsCache.removeAll { $0.key == key }
+            playsCache.insert(CachedPlays(key: key, plays: loaded, storedAt: date), at: 0)
+            playsCache = Array(playsCache.prefix(Self.playsCacheSize))
+        }
+        return loaded
+    }
+
+    /// All Time starts at the first ListenBrainz listen rather than the period's open-ended start, so
+    /// the history isn't walked through decades before it began.
+    private func range(for period: WrappedPeriod, user: String?, calendar: Calendar) async -> (start: Date, end: Date) {
+        let range = period.dateRange(in: calendar)
+        guard case .allTime = period, let user,
+              let year = try? await history.firstYear(user: user, calendar: calendar),
+              let start = calendar.date(from: DateComponents(year: year, month: 1, day: 1)) else { return range }
+        return (start, range.end)
+    }
+
+    private func listenBrainzPlays(user: String, range: (start: Date, end: Date), serverId: String, calendar: Calendar,
+                                   refresh: Bool, progress: ListenHistoryStore.Progress?) async -> [WrappedPlay]? {
         do {
             let listens = try await history.listens(user: user, from: range.start, to: range.end,
-                                                    calendar: calendar, refresh: refresh)
+                                                    calendar: calendar, refresh: refresh, progress: progress)
             let matcher = await libraryMatcher(serverId: serverId)
-            return listens.map(matcher.play)
+            return matcher.plays(for: listens)
         } catch is CancellationError {
             return nil
         } catch {
