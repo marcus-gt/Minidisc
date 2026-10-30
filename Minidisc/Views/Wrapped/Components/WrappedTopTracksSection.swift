@@ -30,7 +30,7 @@ struct WrappedTopTracksSection: View {
     private func trackRow(_ track: TopTrackEntry) -> some View {
         Button {
             Task {
-                guard let container else { return }
+                guard let container, WrappedIDs.isLibraryID(track.trackId) else { return }
                 let song = DisplayableSong(
                     id: track.trackId,
                     title: track.title,

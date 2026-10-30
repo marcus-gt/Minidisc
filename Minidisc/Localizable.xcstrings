@@ -17405,6 +17405,110 @@
         }
       }
     },
+    "From the plays recorded on this iPhone. Connect ListenBrainz to include every player." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus den auf diesem iPhone erfassten Wiedergaben. Verbinde ListenBrainz, um alle Player einzubeziehen."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Από τις αναπαραγωγές που καταγράφηκαν σε αυτό το iPhone. Συνδέστε το ListenBrainz για να συμπεριληφθούν όλες οι συσκευές αναπαραγωγής."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partir de las reproducciones registradas en este iPhone. Conecta ListenBrainz para incluir todos los reproductores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D’après les écoutes enregistrées sur cet iPhone. Connectez ListenBrainz pour inclure tous les lecteurs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagli ascolti registrati su questo iPhone. Collega ListenBrainz per includere tutti i lettori."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このiPhoneで記録された再生に基づいています。ListenBrainzを接続すると、すべてのプレーヤーの再生が含まれます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基于此 iPhone 记录的播放。连接 ListenBrainz 以包含所有播放器的播放。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根據此 iPhone 記錄的播放。連接 ListenBrainz 以包含所有播放器的播放。"
+          }
+        }
+      }
+    },
+    "From your ListenBrainz history, across every player." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus deinem ListenBrainz-Verlauf, über alle Player hinweg."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Από το ιστορικό σας στο ListenBrainz, από όλες τις συσκευές αναπαραγωγής."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De tu historial de ListenBrainz, en todos los reproductores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D’après votre historique ListenBrainz, sur tous les lecteurs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dalla tua cronologia ListenBrainz, su tutti i lettori."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてのプレーヤーにわたるListenBrainzの履歴に基づいています。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基于你在所有播放器上的 ListenBrainz 历史记录。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "根據你在所有播放器上的 ListenBrainz 歷史記錄。"
+          }
+        }
+      }
+    },
     "Full indexing requires an unmetered, unconstrained network connection." : {
       "localizations" : {
         "de" : {
@@ -21906,6 +22010,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ListenBrainz 是由 MetaBrainz Foundation 提供的開源音樂播放記錄與推薦服務。maekster 可以提交你的聆聽記錄，並呈現個人化的最新發行和相似藝人。"
+          }
+        }
+      }
+    },
+    "ListenBrainz is unavailable, so this shows the plays recorded on this iPhone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ListenBrainz ist nicht erreichbar, daher werden die auf diesem iPhone erfassten Wiedergaben angezeigt."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το ListenBrainz δεν είναι διαθέσιμο, οπότε εμφανίζονται οι αναπαραγωγές που καταγράφηκαν σε αυτό το iPhone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ListenBrainz no está disponible, así que se muestran las reproducciones registradas en este iPhone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ListenBrainz est indisponible : les écoutes enregistrées sur cet iPhone sont affichées."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ListenBrainz non è disponibile, quindi vengono mostrati gli ascolti registrati su questo iPhone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ListenBrainzを利用できないため、このiPhoneで記録された再生を表示しています。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ListenBrainz 不可用，因此显示此 iPhone 记录的播放。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ListenBrainz 無法使用，因此顯示此 iPhone 記錄的播放。"
           }
         }
       }
@@ -47221,6 +47377,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wrapped"
+          }
+        }
+      }
+    },
+    "Year" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jahr"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Έτος"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Año"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Année"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anno"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年份"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年份"
           }
         }
       }

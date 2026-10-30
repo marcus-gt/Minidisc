@@ -282,6 +282,8 @@ final class ArtworkImageCache {
     @discardableResult
     func load(coverArtId: String?, tier: ArtworkTier = .thumb) async -> PlatformImage? {
         guard !Task.isCancelled, let coverArtId else { return nil }
+        // Wrapped entries from outside the library have no cover on the server (#16).
+        guard WrappedIDs.isLibraryID(coverArtId) else { return nil }
 
         let key = cacheKey(id: coverArtId, tier: tier)
         if coverArtId.hasPrefix("local:") {

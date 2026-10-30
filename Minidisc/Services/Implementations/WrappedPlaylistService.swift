@@ -59,6 +59,9 @@ actor WrappedPlaylistService {
     }
 
     private let statsService: StatsService
+    /// The year's most played library tracks. ListenBrainz-backed in the app (#16), local in tests.
+    typealias TopTracksProvider = @Sendable (_ year: Int, _ serverId: String, _ limit: Int, _ calendar: Calendar) async -> [TopTrackEntry]
+    private let topTracks: TopTracksProvider
     private let preferences: WrappedPreferences
     private let makeClient: @Sendable () async throws -> any PlaylistSyncClient
     private let serverService: (any ServerServiceProtocol)?
@@ -68,9 +71,11 @@ actor WrappedPlaylistService {
     init(
         serverService: any ServerServiceProtocol,
         statsService: StatsService,
-        preferences: WrappedPreferences = WrappedPreferences()
+        preferences: WrappedPreferences = WrappedPreferences(),
+        topTracks: TopTracksProvider? = nil
     ) {
         self.statsService = statsService
+        self.topTracks = topTracks ?? Self.localTopTracks(statsService)
         self.preferences = preferences
         self.serverService = serverService
         self.makeClient = { try await serverService.activeConnection().makeSwiftSonicClient() }
@@ -84,10 +89,17 @@ actor WrappedPlaylistService {
         owner: String? = nil
     ) {
         self.statsService = statsService
+        self.topTracks = Self.localTopTracks(statsService)
         self.preferences = preferences
         self.serverService = nil
         self.makeClient = clientFactory
         self.currentOwner = { owner }
+    }
+
+    private static func localTopTracks(_ stats: StatsService) -> TopTracksProvider {
+        { year, serverId, limit, calendar in
+            await stats.topTracks(forPeriod: .year(year), serverId: serverId, limit: limit, calendar: calendar)
+        }
     }
 
     // MARK: - Public API
@@ -131,7 +143,7 @@ actor WrappedPlaylistService {
 
         Logger.wrapped.debug("[WRAPPED-SYNC] start year=\(year, privacy: .public) serverId=\(serverId, privacy: .public)")
 
-        let tracks = await statsService.topTracks(forPeriod: .year(year), serverId: serverId, limit: 100, calendar: calendar)
+        let tracks = await topTracks(year, serverId, 100, calendar)
         try Task.checkCancellation()
         Logger.wrapped.debug("[WRAPPED-SYNC] top tracks count=\(tracks.count, privacy: .public)")
 

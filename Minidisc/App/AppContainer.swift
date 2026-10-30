@@ -41,6 +41,8 @@ final class AppContainer {
     let statsService: StatsService
     private let _player: PlayerService
     let wrappedPlaylistService: WrappedPlaylistService
+    /// Wrapped's plays: ListenBrainz when an account is set, this phone's otherwise (#16).
+    let wrappedDataSource: WrappedDataSource
     let moodPlaylistService: MoodPlaylistService
     let queueBuilderService: QueueBuilderService
     /// One Queue Builder state per server, shared by the Home and Discover cards and the full page,
@@ -130,7 +132,6 @@ final class AppContainer {
         )
         libraryCatalog = catalog
         lyricsService = LyricsService(serverService: server, modelContainer: modelContainer)
-        wrappedPlaylistService = WrappedPlaylistService(serverService: server, statsService: stats)
         radioService = RadioService(serverService: server)
 
         let downloadStreamSettings = streamSettings
@@ -201,6 +202,35 @@ final class AppContainer {
         let lbClient = ListenBrainzClient(transport: URLSessionListenBrainzTransport())
         let lb = ListenBrainzService(client: lbClient, keychain: keychain)
         listenBrainzService = lb
+
+        let listenHistory = ListenHistoryStore(
+            directory: inMemory
+                ? URL.temporaryDirectory.appendingPathComponent("minidisc-listen-history-\(UUID())")
+                : URL.applicationSupportDirectory.appendingPathComponent("minidisc-listen-history"),
+            fetchPage: { user, maxTs in try await lbClient.listens(forUser: user, maxTs: maxTs) },
+            fetchOldest: { user in try await lbClient.oldestListen(forUser: user) }
+        )
+        let wrappedSource = WrappedDataSource(
+            stats: stats,
+            history: listenHistory,
+            username: {
+                // The public account first; the scrobbling account when it is ListenBrainz itself.
+                let account = await lb.currentSnapshot()
+                if account.isEnabled, let user = account.username { return user }
+                let scrobbling = await lb.scrobblingSnapshot()
+                if scrobbling.isEnabled, let user = scrobbling.username,
+                   scrobbling.serverRootURL.contains("api.listenbrainz.org") { return user }
+                return nil
+            },
+            librarySongs: { (try? await catalog.allIndexedSongs()) ?? nil }
+        )
+        wrappedDataSource = wrappedSource
+        wrappedPlaylistService = WrappedPlaylistService(
+            serverService: server, statsService: stats,
+            topTracks: { year, serverId, limit, calendar in
+                await wrappedSource.topLibraryTracks(year: year, serverId: serverId, limit: limit, calendar: calendar)
+            }
+        )
 
         let audioEngine: AudioEngine = AVPlayerEngine()
         let player = PlayerService(

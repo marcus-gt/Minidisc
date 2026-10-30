@@ -17,12 +17,17 @@ struct WrappedTopAlbumsSection: View {
             } else {
                 LazyVGrid(columns: columns, spacing: MinidiscSpacing.m) {
                     ForEach(albums.prefix(6)) { album in
-                        NavigationLink {
-                            AlbumDetailView(albumId: album.albumId, albumName: album.title, coverArtId: album.albumId)
-                        } label: {
+                        // An album only in the ListenBrainz history isn't on the server to open (#16).
+                        if WrappedIDs.isLibraryID(album.albumId) {
+                            NavigationLink {
+                                AlbumDetailView(albumId: album.albumId, albumName: album.title, coverArtId: album.albumId)
+                            } label: {
+                                albumCard(album)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
                             albumCard(album)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }

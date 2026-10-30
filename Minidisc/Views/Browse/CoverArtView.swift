@@ -94,6 +94,12 @@ private struct CoverArtViewContent: View {
         .task(id: "\(loadingEnabled):\(id):\(coverArtUploadVersion)") {
             guard loadingEnabled else { return }
             url = nil
+            // A Wrapped entry from outside the library has nothing on the server to show (#16).
+            guard WrappedIDs.isLibraryID(id) else {
+                cachedImage = nil
+                displayedId = nil
+                return
+            }
             let t = resolvedTier
             let online = container?.serverState.isOnline ?? true
 

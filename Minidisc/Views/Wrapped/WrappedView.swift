@@ -10,6 +10,10 @@ struct WrappedView: View {
     @State private var wrappedPlaylistId: String?
     @State private var appeared = false
     @State private var loadFailed = false
+    /// Where the shown recap came from, and how far back the history goes (#16).
+    @State private var source: WrappedSourceKind?
+    @State private var fellBack = false
+    @State private var firstYear: Int?
     #if DEBUG
     @AppStorage("debug.wrappedFakeDataActive") private var overrideWithFakeData = false
     @AppStorage("debug.wrappedFakeDataJSON") private var persistedFakeDataJSON = ""
@@ -19,14 +23,22 @@ struct WrappedView: View {
         _selectedPeriod = State(initialValue: initialPeriod)
     }
 
+    /// The selected year's months (up to this month for the current year), then the year itself.
     private var availablePeriods: [WrappedPeriod] {
         let calendar = Calendar.current
         let now = Date()
-        let year = calendar.component(.year, from: now)
-        let month = calendar.component(.month, from: now)
-        var periods: [WrappedPeriod] = (1...month).map { .month(year: year, month: $0) }
-        periods.append(.year(year))
+        let thisYear = calendar.component(.year, from: now)
+        let lastMonth = currentYear == thisYear ? calendar.component(.month, from: now) : 12
+        var periods: [WrappedPeriod] = (1...lastMonth).map { .month(year: currentYear, month: $0) }
+        periods.append(.year(currentYear))
         return periods
+    }
+
+    private var thisYear: Int { Calendar.current.component(.year, from: Date()) }
+
+    /// Every year with listens, newest first. Only the current one without a ListenBrainz history.
+    private var selectableYears: [Int] {
+        Array((min(firstYear ?? thisYear, thisYear)...thisYear).reversed())
     }
 
     private var currentYear: Int {
@@ -39,7 +51,11 @@ struct WrappedView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: MinidiscSpacing.xl) {
+                if selectableYears.count > 1 {
+                    yearMenu
+                }
                 WrappedPeriodPicker(selectedPeriod: $selectedPeriod, availablePeriods: availablePeriods)
+                sourceCaption
 
                 if isLoading {
                     ProgressView()
@@ -78,10 +94,14 @@ struct WrappedView: View {
             .padding(.top, MinidiscSpacing.l)
             .padding(.bottom, MinidiscSpacing.xl)
         }
-        .refreshable { await loadData() }
+        .refreshable { await loadData(refresh: true) }
         .navigationTitle("")
         .task(id: selectedPeriod) {
             await loadData()
+        }
+        .task {
+            guard let container, firstYear == nil else { return }
+            firstYear = await container.wrappedDataSource.firstYear(calendar: .current)
         }
         .background {
             if let serverId = container?.serverState.activeServer?.id.uuidString {
@@ -89,6 +109,49 @@ struct WrappedView: View {
                     Task { await refreshData() }
                 }
             }
+        }
+    }
+
+    // MARK: - Year and source
+
+    /// Picking a year shows that year's recap; its months are then in the picker below.
+    private var yearMenu: some View {
+        Menu {
+            Picker("Year", selection: Binding(
+                get: { currentYear },
+                set: { year in selectedPeriod = year == thisYear ? .currentMonth() : .year(year) }
+            )) {
+                ForEach(selectableYears, id: \.self) { year in
+                    Text(verbatim: String(year)).tag(year)
+                }
+            }
+        } label: {
+            HStack(spacing: MinidiscSpacing.xs) {
+                Text(verbatim: String(currentYear))
+                    .font(.minidiscDetailTitle)
+                Image(systemName: "chevron.down")
+                    .font(.minidiscCaption.weight(.semibold))
+            }
+            .foregroundStyle(.primary)
+        }
+        .accessibilityLabel(Text("Year"))
+        .accessibilityValue(Text(verbatim: String(currentYear)))
+    }
+
+    @ViewBuilder
+    private var sourceCaption: some View {
+        if fellBack {
+            Label("ListenBrainz is unavailable, so this shows the plays recorded on this iPhone.", systemImage: "exclamationmark.triangle")
+                .font(.minidiscCaption)
+                .foregroundStyle(.secondary)
+        } else if source == .listenBrainz {
+            Label("From your ListenBrainz history, across every player.", systemImage: "waveform")
+                .font(.minidiscCaption)
+                .foregroundStyle(.secondary)
+        } else if source == .device {
+            Label("From the plays recorded on this iPhone. Connect ListenBrainz to include every player.", systemImage: "iphone")
+                .font(.minidiscCaption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -117,12 +180,14 @@ struct WrappedView: View {
         guard !overrideWithFakeData else { return }
         #endif
         guard let container, let serverId = container.serverState.activeServer?.id.uuidString else { return }
-        let result = await container.statsService.wrappedData(for: selectedPeriod, serverId: serverId, calendar: .current)
+        let result = await container.wrappedDataSource.wrappedData(for: selectedPeriod, serverId: serverId, calendar: .current)
         guard !Task.isCancelled else { return }
-        data = result
+        data = result.data
+        source = result.source
+        fellBack = result.fellBack
     }
 
-    private func loadData() async {
+    private func loadData(refresh: Bool = false) async {
         #if DEBUG
         if overrideWithFakeData {
             guard isLoading,
@@ -149,17 +214,19 @@ struct WrappedView: View {
         isLoading = true
         data = nil
         wrappedPlaylistId = nil
-        let result = await container.statsService.wrappedData(
-            for: selectedPeriod, serverId: serverId, calendar: .current
+        let result = await container.wrappedDataSource.wrappedData(
+            for: selectedPeriod, serverId: serverId, calendar: .current, refresh: refresh
         )
         guard !Task.isCancelled else { return }
+        source = result.source
+        fellBack = result.fellBack
         if case .year(let y) = selectedPeriod {
             wrappedPlaylistId = await container.wrappedPlaylistService.playlistId(year: y, serverId: serverId)
         }
-        data = result
+        data = result.data
         isLoading = false
         appeared = true
-        Logger.wrapped.debug("[WRAPPED-VIEW] fetch done totalPlays=\(result.totalTracksPlayed, privacy: .public)")
+        Logger.wrapped.debug("[WRAPPED-VIEW] fetch done totalPlays=\(result.data.totalTracksPlayed, privacy: .public)")
     }
 }
 
