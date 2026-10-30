@@ -1,32 +1,43 @@
 import Charts
 import SwiftUI
 
-/// The stats carousel under a recap's hero (#70): plays against the year before, the top artists
-/// over time, the listening clock and, with AudioMuse, the period's mood. One card per page.
-struct WrappedInsightsCarousel: View {
-    let insights: WrappedInsights
+/// A recap's opening carousel (#70): the summary card first, then the stat cards to swipe through:
+/// plays against the year before, the top artists over time, the listening clock and, with
+/// AudioMuse, the period's mood. One card per page; the stat cards join once they have loaded.
+struct WrappedInsightsCarousel<Hero: View>: View {
+    let insights: WrappedInsights?
     let mood: WrappedMoodProfile?
     let isLoadingMood: Bool
     let accent: Color
+    @ViewBuilder let hero: () -> Hero
 
     @State private var page: Int? = 0
 
-    private var pageCount: Int { (mood != nil || isLoadingMood) ? 4 : 3 }
+    private var pageCount: Int {
+        guard insights != nil else { return 1 }
+        return (mood != nil || isLoadingMood) ? 5 : 4
+    }
 
     var body: some View {
         VStack(spacing: MinidiscSpacing.s) {
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: MinidiscSpacing.s) {
-                    WrappedPlaysCard(insights: insights, accent: accent).id(0)
-                    WrappedArtistTimelineCard(insights: insights).id(1)
-                    WrappedListeningClockCard(insights: insights, accent: accent).id(2)
-                    if let mood {
-                        WrappedMoodCard(mood: mood).id(3)
-                    } else if isLoadingMood {
-                        WrappedInsightCard(title: "Mood", headline: Text("Asking AudioMuse…")) {
-                            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                    hero()
+                        .frame(height: WrappedInsightCard<EmptyView>.height)
+                        .containerRelativeFrame(.horizontal)
+                        .id(0)
+                    if let insights {
+                        WrappedPlaysCard(insights: insights, accent: accent).id(1)
+                        WrappedArtistTimelineCard(insights: insights).id(2)
+                        WrappedListeningClockCard(insights: insights, accent: accent).id(3)
+                        if let mood {
+                            WrappedMoodCard(mood: mood).id(4)
+                        } else if isLoadingMood {
+                            WrappedInsightCard(title: "Mood", headline: Text("Asking AudioMuse…")) {
+                                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                            }
+                            .id(4)
                         }
-                        .id(3)
                     }
                 }
                 .scrollTargetLayout()
@@ -36,14 +47,17 @@ struct WrappedInsightsCarousel: View {
             .contentMargins(.horizontal, MinidiscSpacing.l, for: .scrollContent)
             .padding(.horizontal, -MinidiscSpacing.l)
 
-            HStack(spacing: MinidiscSpacing.xs) {
-                ForEach(0..<pageCount, id: \.self) { index in
-                    Circle()
-                        .fill(index == (page ?? 0) ? Color.primary : Color.primary.opacity(0.25))
-                        .frame(width: 6, height: 6)
+            if pageCount > 1 {
+                HStack(spacing: MinidiscSpacing.xs) {
+                    ForEach(0..<pageCount, id: \.self) { index in
+                        Circle()
+                            .fill(index == (page ?? 0) ? Color.primary : Color.primary.opacity(0.25))
+                            .frame(width: 6, height: 6)
+                    }
                 }
+                .accessibilityHidden(true)
+                .transition(.opacity)
             }
-            .accessibilityHidden(true)
         }
     }
 }
@@ -137,7 +151,7 @@ struct WrappedArtistTimelineCard: View {
 
     private var leader: String? { insights.artists.first?.name }
 
-    /// Distinct for all eight lines; the default palette repeats before that.
+    /// Distinct for every line; the default palette repeats colours.
     private static let lineColors: [Color] = [.blue, .green, .orange, .purple, .red, .cyan, .yellow, .mint]
 
     var body: some View {

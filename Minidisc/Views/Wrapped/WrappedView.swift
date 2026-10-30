@@ -89,15 +89,13 @@ struct WrappedView: View {
                         action: .init(label: "Retry") { Task { await loadData() } }
                     )
                 } else if let d = data, d.totalTracksPlayed > 0 {
-                    WrappedStatHero(data: d)
-                        .cascadeAppear(order: 0, trigger: appeared)
-                    if let insights {
-                        WrappedInsightsCarousel(
-                            insights: insights, mood: mood, isLoadingMood: isLoadingMood,
-                            accent: WrappedYearPalette.colors(for: d.period.calendarYear)[0]
-                        )
-                        .transition(.opacity)
+                    WrappedInsightsCarousel(
+                        insights: insights, mood: mood, isLoadingMood: isLoadingMood,
+                        accent: WrappedYearPalette.colors(for: d.period.calendarYear)[0]
+                    ) {
+                        WrappedStatHero(data: d)
                     }
+                    .cascadeAppear(order: 0, trigger: appeared)
                     WrappedTopArtistsSection(artists: d.topArtists)
                         .cascadeAppear(order: 1, trigger: appeared)
                     WrappedTopTracksSection(tracks: d.topTracks)

@@ -58,7 +58,7 @@ nonisolated struct WrappedInsights: Sendable, Equatable {
 
 /// Builds `WrappedInsights` from plays. Pure, so it can be tested and run off the main actor.
 nonisolated enum WrappedInsightsBuilder {
-    static let timelineArtistCount = 8
+    static let timelineArtistCount = 5
     static let rankCutoff = 10
 
     static func build(period: WrappedPeriod, plays: [WrappedPlay], previousPlays: [WrappedPlay]?,

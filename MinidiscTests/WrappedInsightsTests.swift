@@ -71,7 +71,7 @@ struct WrappedInsightsTests {
         #expect(b?.ranks == [1: 2, 2: 1])
     }
 
-    @Test func timeline_keepsTheTopEightArtists() {
+    @Test func timeline_keepsTheTopFiveArtists() {
         let plays = (0..<12).map { play(date(2026, 1, 1), artist: "artist\($0)", seconds: Double(100 + $0)) }
         let insights = WrappedInsightsBuilder.build(period: .year(2026), plays: plays, previousPlays: nil, calendar: utc)
         #expect(insights.artists.count == WrappedInsightsBuilder.timelineArtistCount)
