@@ -693,6 +693,58 @@
         }
       }
     },
+    "%@ radio" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radio %@"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ραδιόφωνο %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radio %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radio %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radio %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ラジオ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 电台"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 電台"
+          }
+        }
+      }
+    },
     "%@ songs loaded…" : {
       "localizations" : {
         "de" : {
@@ -7363,7 +7415,60 @@
         }
       }
     },
+    "AudioMuse-AI analyses how your music actually sounds, which lets maekster build a mood radio from the sound rather than from tags." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioMuse-AI analysiert, wie deine Musik tatsächlich klingt. So baut maekster ein Stimmungsradio aus dem Klang statt aus Tags."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το AudioMuse-AI αναλύει πώς ακούγεται πραγματικά η μουσική σας, ώστε το maekster να φτιάχνει ραδιόφωνο διάθεσης από τον ήχο αντί για τις ετικέτες."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioMuse-AI analiza cómo suena realmente tu música, para que maekster cree una radio de ánimo a partir del sonido en vez de las etiquetas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioMuse-AI analyse le son réel de votre musique, ce qui permet à maekster de créer une radio d’humeur à partir du son plutôt que des tags."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioMuse-AI analizza come suona davvero la tua musica, così maekster crea una radio d’umore partendo dal suono anziché dai tag."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioMuse-AI は音楽の実際の響きを分析します。maekster はタグではなく音から気分ラジオを作れます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioMuse-AI 会分析音乐的实际声音，让 maekster 根据声音而不是标签来生成情绪电台。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioMuse-AI 會分析音樂的實際聲音，讓 maekster 根據聲音而不是標籤來產生情緒電台。"
+          }
+        }
+      }
+    },
     "AudioMuse-AI analyses how your music actually sounds, which lets maekster build a playlist for a mood rather than for a tag." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7887,6 +7992,7 @@
       }
     },
     "Automatic generation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7939,6 +8045,7 @@
       }
     },
     "Automatically create and refresh mood playlists each week. Disabling this keeps existing playlists. You can regenerate them manually at any time." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11119,6 +11226,7 @@
       }
     },
     "Could not regenerate mood playlists. Check your connection and music sources, then try again." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11848,6 +11956,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法開始匯入。"
+          }
+        }
+      }
+    },
+    "Couldn't start the mood radio." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Stimmungsradio konnte nicht gestartet werden."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Δεν ήταν δυνατή η έναρξη του ραδιοφώνου διάθεσης."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo iniciar la radio de ánimo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de lancer la radio d’humeur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile avviare la radio d’umore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分ラジオを開始できませんでした。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法开始情绪电台。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法開始情緒電台。"
           }
         }
       }
@@ -12955,6 +13115,7 @@
       }
     },
     "Delete mood playlists" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -13007,6 +13168,7 @@
       }
     },
     "Delete mood playlists?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -13054,6 +13216,110 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "要刪除心情播放清單嗎？"
+          }
+        }
+      }
+    },
+    "Delete old mood playlists" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alte Stimmungsplaylists löschen"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Διαγραφή παλιών λιστών διάθεσης"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar listas de ánimo antiguas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer les anciennes playlists d’humeur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina le vecchie playlist d’umore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "古い気分プレイリストを削除"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除旧的情绪播放列表"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除舊的情緒播放列表"
+          }
+        }
+      }
+    },
+    "Delete old mood playlists?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alte Stimmungsplaylists löschen?"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Διαγραφή παλιών λιστών διάθεσης;"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar las listas de ánimo antiguas?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer les anciennes playlists d’humeur ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminare le vecchie playlist d’umore?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "古い気分プレイリストを削除しますか？"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除旧的情绪播放列表？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除舊的情緒播放列表？"
           }
         }
       }
@@ -18276,6 +18542,7 @@
       }
     },
     "Future mood playlists will use your library tags. Automatic updates follow your Application settings." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -21217,6 +21484,7 @@
       }
     },
     "Last refresh" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -24154,6 +24422,7 @@
       }
     },
     "Manage automatic updates and regenerate mood playlists in Application settings." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25046,6 +25315,7 @@
       }
     },
     "Mood playlists" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25097,7 +25367,60 @@
         }
       }
     },
+    "Mood playlists are already being deleted." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stimmungsplaylists werden bereits gelöscht."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Οι λίστες διάθεσης διαγράφονται ήδη."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las listas de ánimo ya se están eliminando."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les playlists d’humeur sont déjà en cours de suppression."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le playlist d’umore sono già in fase di eliminazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分プレイリストはすでに削除中です。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情绪播放列表正在删除。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情緒播放列表正在刪除。"
+          }
+        }
+      }
+    },
     "Mood playlists are already being updated. Try again when the update is complete." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25149,7 +25472,60 @@
         }
       }
     },
+    "Mood playlists deleted." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stimmungsplaylists gelöscht."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Οι λίστες διάθεσης διαγράφηκαν."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listas de ánimo eliminadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playlists d’humeur supprimées."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playlist d’umore eliminate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分プレイリストを削除しました。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已删除情绪播放列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已刪除情緒播放列表。"
+          }
+        }
+      }
+    },
     "Mood playlists deleted. Automatic generation is off." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25202,6 +25578,7 @@
       }
     },
     "Mood playlists regenerated." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25249,6 +25626,214 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "心情播放清單已重新產生。"
+          }
+        }
+      }
+    },
+    "Mood radio" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stimmungsradio"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ραδιόφωνο διάθεσης"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radio de ánimo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radio d’humeur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radio d’umore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分ラジオ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情绪电台"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情緒電台"
+          }
+        }
+      }
+    },
+    "Mood radios need a connection to your server." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stimmungsradios brauchen eine Verbindung zu deinem Server."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Τα ραδιόφωνα διάθεσης χρειάζονται σύνδεση με τον διακομιστή σας."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las radios de ánimo necesitan conexión con tu servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les radios d’humeur ont besoin d’une connexion à votre serveur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le radio d’umore richiedono una connessione al tuo server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分ラジオにはサーバーへの接続が必要です。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情绪电台需要连接到你的服务器。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情緒電台需要連接到你的伺服器。"
+          }
+        }
+      }
+    },
+    "Mood radios on Discover use sonic analysis when AudioMuse is connected, and your library tags otherwise." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Stimmungsradios unter „Entdecken“ nutzen die Klanganalyse, wenn AudioMuse verbunden ist, sonst die Tags deiner Mediathek."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Τα ραδιόφωνα διάθεσης στην Ανακάλυψη χρησιμοποιούν ηχητική ανάλυση όταν το AudioMuse είναι συνδεδεμένο, αλλιώς τις ετικέτες της βιβλιοθήκης σας."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las radios de ánimo de Descubrir usan el análisis sonoro si AudioMuse está conectado y, si no, las etiquetas de tu biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les radios d’humeur de Découvrir utilisent l’analyse sonore quand AudioMuse est connecté, et sinon les tags de votre bibliothèque."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le radio d’umore in Scopri usano l’analisi sonora quando AudioMuse è collegato, altrimenti i tag della tua libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「見つける」の気分ラジオは、AudioMuse が接続されていれば音響分析を、そうでなければライブラリのタグを使います。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“发现”中的情绪电台在连接 AudioMuse 时使用声音分析，否则使用资料库标签。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「探索」中的情緒電台在連接 AudioMuse 時使用聲音分析，否則使用資料庫標籤。"
+          }
+        }
+      }
+    },
+    "Mood radios will use your library tags." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stimmungsradios nutzen dann die Tags deiner Mediathek."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Τα ραδιόφωνα διάθεσης θα χρησιμοποιούν τις ετικέτες της βιβλιοθήκης σας."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las radios de ánimo usarán las etiquetas de tu biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les radios d’humeur utiliseront les tags de votre bibliothèque."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le radio d’umore useranno i tag della tua libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分ラジオはライブラリのタグを使います。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情绪电台将使用你的资料库标签。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "情緒電台將使用你的資料庫標籤。"
           }
         }
       }
@@ -25301,6 +25886,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "心情"
+          }
+        }
+      }
+    },
+    "Moods on Discover play as radios. Earlier versions saved a playlist per mood on your server; they are no longer updated and can be deleted here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stimmungen unter „Entdecken“ laufen als Radio. Frühere Versionen haben pro Stimmung eine Playlist auf deinem Server gespeichert; sie werden nicht mehr aktualisiert und können hier gelöscht werden."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Οι διαθέσεις στην Ανακάλυψη παίζουν ως ραδιόφωνο. Προηγούμενες εκδόσεις αποθήκευαν μια λίστα ανά διάθεση στον διακομιστή σας· δεν ενημερώνονται πλέον και μπορούν να διαγραφούν εδώ."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los estados de ánimo de Descubrir suenan como radio. Las versiones anteriores guardaban una lista por estado de ánimo en tu servidor; ya no se actualizan y puedes eliminarlas aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les humeurs de Découvrir se jouent en radio. Les versions précédentes enregistraient une playlist par humeur sur votre serveur ; elles ne sont plus mises à jour et peuvent être supprimées ici."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli umori in Scopri si ascoltano come radio. Le versioni precedenti salvavano una playlist per umore sul tuo server; non vengono più aggiornate e puoi eliminarle qui."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「見つける」の気分はラジオとして再生されます。以前のバージョンは気分ごとにプレイリストをサーバーに保存していました。今後は更新されないので、ここで削除できます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“发现”中的情绪以电台形式播放。旧版本会在服务器上为每种情绪保存一个播放列表；它们不再更新，可在此删除。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「探索」中的情緒以電台形式播放。舊版本會在伺服器上為每種情緒儲存一個播放列表；它們不再更新，可在此刪除。"
           }
         }
       }
@@ -28496,6 +29133,58 @@
         }
       }
     },
+    "No songs in your library fit this mood yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch passen keine Songs deiner Mediathek zu dieser Stimmung."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Δεν υπάρχουν ακόμη τραγούδια στη βιβλιοθήκη σας που ταιριάζουν σε αυτή τη διάθεση."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay canciones en tu biblioteca para este estado de ánimo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun titre de votre bibliothèque ne correspond encore à cette humeur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun brano della tua libreria si adatta ancora a questo umore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この気分に合う曲はまだライブラリにありません。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资料库中还没有符合这种情绪的歌曲。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "資料庫中還沒有符合這種情緒的歌曲。"
+          }
+        }
+      }
+    },
     "No songs match these picks. Try a broader selection." : {
 
     },
@@ -29287,6 +29976,7 @@
       }
     },
     "Not yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -31827,6 +32517,58 @@
         }
       }
     },
+    "Play a radio of songs from your library that fit a mood." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spielt ein Radio mit Songs aus deiner Mediathek, die zu einer Stimmung passen."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Παίζει ραδιόφωνο με τραγούδια της βιβλιοθήκης σας που ταιριάζουν σε μια διάθεση."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce una radio con canciones de tu biblioteca que encajan con un estado de ánimo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lance une radio de titres de votre bibliothèque qui correspondent à une humeur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riproduce una radio di brani della tua libreria adatti a un umore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分に合うライブラリの曲でラジオを再生します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放资料库中符合某种情绪的歌曲电台。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放資料庫中符合某種情緒的歌曲電台。"
+          }
+        }
+      }
+    },
     "Play a song, album, artist or playlist from your maekster library." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -32991,6 +33733,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "播放次數"
+          }
+        }
+      }
+    },
+    "Plays songs that fit the mood" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spielt Songs, die zur Stimmung passen"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Παίζει τραγούδια που ταιριάζουν στη διάθεση"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce canciones que encajan con el estado de ánimo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lance des titres qui correspondent à l’humeur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riproduce brani adatti all’umore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "気分に合う曲を再生します"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放符合该情绪的歌曲"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放符合該情緒的歌曲"
           }
         }
       }
@@ -34890,6 +35684,7 @@
       }
     },
     "Regenerate playlists" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -34942,6 +35737,7 @@
       }
     },
     "Regeneration cancelled." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -39444,6 +40240,7 @@
       }
     },
     "Some mood playlists could not be deleted. Automatic generation is off. Try again later." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -39495,7 +40292,60 @@
         }
       }
     },
+    "Some mood playlists could not be deleted. Try again later." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Stimmungsplaylists konnten nicht gelöscht werden. Versuche es später erneut."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ορισμένες λίστες διάθεσης δεν διαγράφηκαν. Δοκιμάστε ξανά αργότερα."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas listas de ánimo no se pudieron eliminar. Inténtalo más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certaines playlists d’humeur n’ont pas pu être supprimées. Réessayez plus tard."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alcune playlist d’umore non sono state eliminate. Riprova più tardi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一部の気分プレイリストを削除できませんでした。後でもう一度お試しください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分情绪播放列表无法删除。请稍后再试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分情緒播放列表無法刪除。請稍後再試。"
+          }
+        }
+      }
+    },
     "Some mood playlists could not be regenerated. Try again later." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -43575,6 +44425,58 @@
         }
       }
     },
+    "There were no mood playlists to delete." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es gab keine Stimmungsplaylists zum Löschen."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Δεν υπήρχαν λίστες διάθεσης για διαγραφή."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No había listas de ánimo que eliminar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il n’y avait aucune playlist d’humeur à supprimer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non c’erano playlist d’umore da eliminare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除する気分プレイリストはありませんでした。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可删除的情绪播放列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有可刪除的情緒播放列表。"
+          }
+        }
+      }
+    },
     "These songs are already in the playlist." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -44052,6 +44954,7 @@
       }
     },
     "This deletes your maekster mood playlists from the current server and disables automatic generation. Other playlists and downloaded music are kept." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -44479,6 +45382,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此播放列表已不在伺服器上。已下載的歌曲仍可使用。"
+          }
+        }
+      }
+    },
+    "This removes the mood playlists from your server. Mood radios are not affected." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das entfernt die Stimmungsplaylists von deinem Server. Die Stimmungsradios bleiben unverändert."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Αυτό αφαιρεί τις λίστες διάθεσης από τον διακομιστή σας. Τα ραδιόφωνα διάθεσης δεν επηρεάζονται."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto elimina las listas de ánimo de tu servidor. Las radios de ánimo no se ven afectadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cela supprime les playlists d’humeur de votre serveur. Les radios d’humeur ne sont pas touchées."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo rimuove le playlist d’umore dal tuo server. Le radio d’umore non cambiano."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバーから気分プレイリストを削除します。気分ラジオには影響しません。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会从你的服务器删除情绪播放列表。情绪电台不受影响。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這會從你的伺服器刪除情緒播放列表。情緒電台不受影響。"
           }
         }
       }
@@ -49341,6 +50296,7 @@
       }
     },
     "Without it, mood playlists still work, built from your library's genre, BPM and mood tags. The match is rougher." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -49388,6 +50344,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有它，心情播放列表照樣可用，改由音樂庫的曲風、BPM 與心情標籤產生，比對會更粗略。"
+          }
+        }
+      }
+    },
+    "Without it, mood radios still work, built from your library's genre, BPM and mood tags. The match is rougher." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne AudioMuse funktionieren Stimmungsradios trotzdem – aus Genre-, BPM- und Stimmungstags deiner Mediathek. Die Auswahl ist gröber."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Χωρίς αυτό, τα ραδιόφωνα διάθεσης λειτουργούν κανονικά, με βάση τις ετικέτες είδους, BPM και διάθεσης της βιβλιοθήκης σας. Η αντιστοίχιση είναι πιο πρόχειρη."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin él, las radios de ánimo siguen funcionando con las etiquetas de género, BPM y ánimo de tu biblioteca. La selección es menos precisa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sans lui, les radios d’humeur fonctionnent quand même, à partir des tags de genre, de BPM et d’humeur de votre bibliothèque. La sélection est plus approximative."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senza, le radio d’umore funzionano comunque, usando i tag di genere, BPM e umore della tua libreria. La selezione è meno precisa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "なくても、ライブラリのジャンル・BPM・気分タグから気分ラジオを作れます。精度は下がります。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有它，情绪电台仍可使用资料库的流派、BPM 和情绪标签生成，但匹配较粗略。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有它，情緒電台仍可使用資料庫的類型、BPM 和情緒標籤產生，但匹配較粗略。"
           }
         }
       }
@@ -50074,7 +51082,60 @@
         }
       }
     },
+    "Your %@ Wrapped" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein %@ Wrapped"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Το Wrapped σας %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu Wrapped de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre Wrapped %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo Wrapped %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@年のWrapped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的 %@ Wrapped"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的 %@ Wrapped"
+          }
+        }
+      }
+    },
     "Your %lld Wrapped" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -51229,58 +52290,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Z 到 A"
-          }
-        }
-      }
-    },
-    "Your %@ Wrapped" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein %@ Wrapped"
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Το Wrapped σας %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tu Wrapped de %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Votre Wrapped %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il tuo Wrapped %@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@年のWrapped"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你的 %@ Wrapped"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你的 %@ Wrapped"
           }
         }
       }

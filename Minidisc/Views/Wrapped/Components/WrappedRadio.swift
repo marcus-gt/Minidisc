@@ -6,9 +6,6 @@ import SwiftUI
 /// (Navidrome's, so AudioMuse when the server has it) around the period's top tracks.
 @MainActor
 enum WrappedRadio {
-    /// Queued up front; the rest arrives through the player's refill as the queue runs low.
-    static let initialCount = 50
-
     static func play(_ period: WrappedPeriod, container: AppContainer) async {
         guard let serverId = container.serverState.activeServer?.id.uuidString else {
             Logger.wrapped.warning("[WRAPPED] radio: no active server")
@@ -19,23 +16,11 @@ enum WrappedRadio {
             container.toastService.show(String(localized: "No library tracks were played in this period."))
             return
         }
-        let first = Array(radio.tracks.prefix(initialCount))
-        let rest = Array(radio.tracks.dropFirst(initialCount))
-        let seeds = radio.seedIDs
-        let library = container.libraryService
-        let refill: QueueRefill = { excluded, count in
-            let next = rest.lazy.filter { !excluded.contains($0.id) }.prefix(count)
-            if !next.isEmpty { return Array(next) }
-            for seed in seeds.shuffled() {
-                try Task.checkCancellation()
-                let similar = try await library.instantMix(from: .song(id: seed), count: count * 2)
-                    .filter { !excluded.contains($0.id) }
-                if !similar.isEmpty { return Array(similar.prefix(count)) }
-            }
-            return []
-        }
         do {
-            try await container.playerService.playBuiltQueue(first, refill: refill)
+            try await container.playerService.playBuiltQueue(
+                RadioQueue.initialTracks(radio.tracks),
+                refill: RadioQueue.refill(after: radio.tracks, seedIDs: radio.seedIDs, library: container.libraryService)
+            )
         } catch {
             Logger.wrapped.error("[WRAPPED] radio failed: \(error, privacy: .public)")
             container.toastService.showError(String(localized: "Couldn't start the Wrapped radio."))

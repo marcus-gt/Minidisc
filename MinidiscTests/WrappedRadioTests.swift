@@ -66,7 +66,7 @@ struct WrappedRadioTests {
         let items = [("often", 10.0), ("once", 1.0)]
         var oftenFirst = 0
         for _ in 0..<2_000 {
-            let order = WrappedDataSource.weightedShuffle(items, weight: { $0.1 }, using: &generator)
+            let order = items.weightedShuffled(weight: { $0.1 }, using: &generator)
             #expect(order.count == 2)
             if order.first?.0 == "often" { oftenFirst += 1 }
         }

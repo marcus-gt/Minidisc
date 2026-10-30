@@ -398,7 +398,7 @@ actor WrappedDataSource {
     func radio(for period: WrappedPeriod, serverId: String, calendar: Calendar) async -> Radio {
         let ranked = await topLibraryTracks(for: period, serverId: serverId, limit: .max, calendar: calendar)
         var generator = SystemRandomNumberGenerator()
-        let order = Self.weightedShuffle(ranked, weight: { Double($0.playCount) }, using: &generator)
+        let order = ranked.weightedShuffled(weight: { Double($0.playCount) }, using: &generator)
         let tracks = await songs(order)
         Logger.wrapped.info("[WRAPPED] radio for \(period.displayName, privacy: .public): \(ranked.count, privacy: .public) tracks played, \(tracks.count, privacy: .public) queued")
         return Radio(tracks: tracks, seedIDs: ranked.prefix(Self.radioSeedCount).map(\.trackId))
@@ -412,17 +412,6 @@ actor WrappedDataSource {
         return library.map { entry in
             indexed[entry.trackId].map { DisplayableSong(from: $0) } ?? Self.basicSong(entry)
         }
-    }
-
-    /// A shuffle where heavier items tend to come first (Efraimidis–Spirakis): each item draws
-    /// `u^(1/weight)` and the largest draws lead. A track played ten times usually comes early, one
-    /// played once can still turn up anywhere.
-    nonisolated static func weightedShuffle<T>(_ items: [T], weight: (T) -> Double,
-                                               using generator: inout some RandomNumberGenerator) -> [T] {
-        items
-            .map { item in (item, pow(Double.random(in: Double.ulpOfOne..<1, using: &generator), 1 / max(weight(item), 1))) }
-            .sorted { $0.1 > $1.1 }
-            .map(\.0)
     }
 
     /// A song the index doesn't know yet; the player resolves the stream from the ID alone.

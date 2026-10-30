@@ -22,7 +22,7 @@ struct PlayMinidiscMusicIntent: AudioPlaybackIntent {
 
 struct PlayMinidiscMoodIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Play a Mood"
-    static let description = IntentDescription("Play an existing Mood playlist from your active server.")
+    static let description = IntentDescription("Play a radio of songs from your library that fit a mood.")
     static var supportedModes: IntentModes { .background }
     @Parameter(title: "Mood") var mood: Mood
     @Dependency private var runtime: MinidiscRuntime

@@ -188,31 +188,19 @@ struct MusicIntentService {
         else { await container.playerService.addToQueue(ordered) }
     }
 
+    /// Starts the mood's radio (#60), as the Discover card does.
     func play(mood: Mood) async throws {
         let context = try context()
-        try await container.playerService.play(preparingQueue: {
-            let reference = try await self.moodReference(mood, context: context)
-            let tracks = try await self.tracks(reference, context: context)
-            try await self.validate(context)
-            guard !tracks.isEmpty else { throw MusicIntentError.empty }
-            await self.container.recordPlaylistUse(reference.resourceID)
-            return PreparedPlaybackQueue(tracks: tracks, startIndex: 0)
-        })
-    }
-
-    private func moodReference(_ mood: Mood, context: Context) async throws -> MusicIntentID {
-        let service = container.moodPlaylistService
-        let playlists: [MoodPlaylist]
-        if container.serverState.isOnline {
-            do { playlists = try await service.fetchPlaylists(serverId: context.server.id.uuidString) }
-            catch is CancellationError { throw CancellationError() }
-            catch { playlists = await service.cachedPlaylists(serverId: context.server.id.uuidString) }
-        } else {
-            playlists = await service.cachedPlaylists(serverId: context.server.id.uuidString)
-        }
+        guard container.serverState.isOnline else { throw MusicIntentError.moodUnavailable }
+        let generation = container.playerState.queueGeneration
+        let radio = try await container.moodRadioService.radio(for: mood)
         try validate(context)
-        guard let playlist = playlists.first(where: { $0.mood == mood }) else { throw MusicIntentError.moodUnavailable }
-        return MusicIntentID(scope: context.scope, kind: .playlist, resourceID: playlist.id)
+        guard generation == container.playerState.queueGeneration else { throw CancellationError() }
+        guard !radio.tracks.isEmpty else { throw MusicIntentError.empty }
+        try await container.playerService.playBuiltQueue(
+            RadioQueue.initialTracks(radio.tracks),
+            refill: RadioQueue.refill(after: radio.tracks, seedIDs: radio.seedIDs, library: container.libraryService)
+        )
     }
 
     private func tracks(_ reference: MusicIntentID, context: Context) async throws -> [DisplayableSong] {
