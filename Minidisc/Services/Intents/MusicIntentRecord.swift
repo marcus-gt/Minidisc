@@ -91,7 +91,7 @@ nonisolated enum MusicIntentError: Error, CustomLocalizedStringResourceConvertib
         case .differentServer: "Select the server used by this shortcut in maekster, then try again."
         case .unavailable: "This music is unavailable. Check your connection or downloads in maekster."
         case .empty: "There are no playable tracks in this selection."
-        case .moodUnavailable: "This Mood playlist is unavailable. Open Discover in maekster to check your Moods."
+        case .moodUnavailable: "Mood radios need a connection to your server."
         case .nothingToResume: "There is no music to resume. Choose music in maekster first."
         }
     }

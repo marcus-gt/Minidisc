@@ -15,18 +15,9 @@ struct DiscoverView: View {
     @State private var allReleasesVM: AllFreshReleasesViewModel?
     /// The library feed's first result is still being prepared (#15): show the card as loading.
     @State private var isPreparingFreshReleases = false
-    @State private var availableMoods: [MoodPlaylist] = []
-    @State private var moodReloadID = 0
     @AppStorage(DiscoverLayoutConfiguration.storageKey) private var discoverLayout: DiscoverLayoutConfiguration = .default
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
-    private var visibleMoods: [MoodPlaylist] {
-        guard !isOnline else { return availableMoods }
-        return (container?.offlineLibrary.snapshot.playlists ?? []).compactMap { playlist in
-            guard let mood = Mood.forPlaylistName(playlist.name) else { return nil }
-            return MoodPlaylist(mood: mood, id: playlist.id, coverArtId: playlist.coverArt)
-        }
-    }
 
     var body: some View {
         ScrollView {
@@ -53,10 +44,8 @@ struct DiscoverView: View {
                                        recommendationService: container.recommendationService)
                 allReleasesVM = AllFreshReleasesViewModel(recommendationService: container.recommendationService)
                 radioStations = []
-                availableMoods = []
             }
             if isOnline { await refreshDiscover(forceRefresh: false) }
-            else if let serverID { await loadMoodPlaylists(serverId: serverID.uuidString) }
         }
         .refreshable { await refreshDiscover(forceRefresh: true) }
         // The library feed refreshes in the background and says when it has something new (#15).
@@ -66,16 +55,6 @@ struct DiscoverView: View {
                 await allReleasesVM?.loadReleases()
                 isPreparingFreshReleases = await container?.newReleasesService.isPreparing() ?? false
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscMoodPlaylistsChanged)) { _ in
-            moodReloadID += 1
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
-            moodReloadID += 1
-        }
-        .task(id: moodReloadID) {
-            guard let serverId = container?.serverState.activeServer?.id.uuidString else { return }
-            await loadMoodPlaylists(serverId: serverId)
         }
         .navigationDestination(for: AlbumRecommendation.self) { release in
             FreshReleaseDetailView(
@@ -126,9 +105,10 @@ struct DiscoverView: View {
 
     // MARK: - Moods
 
+    /// A radio per mood (#60). It needs the server, so the shelf is hidden offline.
     @ViewBuilder
     private var moodsSection: some View {
-        if !visibleMoods.isEmpty {
+        if isOnline {
             VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
                 Text("Moods")
                     .font(.minidiscShelfTitle)
@@ -136,44 +116,14 @@ struct DiscoverView: View {
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: MinidiscSpacing.s) {
-                        ForEach(visibleMoods, id: \.mood) { entry in
-                            MoodCard(mood: entry.mood, playlistId: entry.id, coverArtId: entry.coverArtId)
+                        ForEach(Mood.allCases) { mood in
+                            MoodCard(mood: mood)
                         }
                     }
                     .padding(.horizontal, MinidiscSpacing.l)
                 }
             }
         }
-    }
-
-    /// Await sync before reading the playlists, including the first run that creates them.
-    private func refreshMoods(serverId: String) async {
-        guard let service = container?.moodPlaylistService else { return }
-        _ = await BackgroundActivity.run("mood-playlists") {
-            await service.runWeeklySyncIfNeeded(serverId: serverId)
-        }
-        await loadMoodPlaylists(serverId: serverId)
-    }
-
-    private func loadMoodPlaylists(serverId: String) async {
-        guard let service = container?.moodPlaylistService else { return }
-        if !isOnline {
-            availableMoods = await service.cachedPlaylists(serverId: serverId)
-            return
-        }
-        let found: [MoodPlaylist]
-        do {
-            found = try await service.fetchPlaylists(serverId: serverId)
-        } catch is CancellationError {
-            return
-        } catch {
-            // Keep offline navigation on a cold launch without discarding a previously loaded cover.
-            guard availableMoods.isEmpty else { return }
-            found = await service.cachedPlaylists(serverId: serverId)
-        }
-        guard !Task.isCancelled,
-              container?.serverState.activeServer?.id.uuidString == serverId else { return }
-        availableMoods = found
     }
 
     // MARK: - Sections
@@ -240,11 +190,10 @@ struct DiscoverView: View {
     }
 
     private func refreshServerMixes() async {
-        guard let container, let serverID = container.serverState.activeServer?.id.uuidString else { return }
+        guard let container, container.serverState.activeServer != nil else { return }
         let firstYear = await container.wrappedDataSource.firstYear(calendar: .current)
         guard !Task.isCancelled else { return }
         wrappedFirstYear = firstYear
-        await refreshMoods(serverId: serverID)
     }
 
     private func triggerSmartShuffle() async {

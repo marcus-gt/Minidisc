@@ -20,10 +20,6 @@
 	</array>
 	<key>NSSiriUsageDescription</key>
 	<string>Allow Siri to search your mækster library and control music playback.</string>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>io.github.marcus-gt.maekster.wrapped.monthly-update</string>
-	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -45,7 +41,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
-		<string>processing</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

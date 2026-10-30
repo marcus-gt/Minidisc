@@ -3,16 +3,17 @@ import Foundation
 import SwiftSonic
 @testable import Minidisc
 
+// Moods play as radios (#60). The service only removes the playlists earlier versions created;
+// MoodRadioService builds the radios and RadioQueue keeps them going.
+
 // MARK: - Stubs
 
 private final class ProviderStub: MoodTrackProvider, @unchecked Sendable {
-    enum Outcome { case tracks(Int), empty, failure }
-
     private let lock = NSLock()
     private var _requested: [Mood] = []
     private var _prepares = 0
-    var outcomes: [Mood: Outcome] = [:]
-    var defaultOutcome: Outcome = .tracks(75)
+    var matches: [String] = []
+    var fails = false
     var kind: MoodSourceKind = .sonic
 
     var requested: [Mood] { lock.withLock { _requested } }
@@ -22,64 +23,16 @@ private final class ProviderStub: MoodTrackProvider, @unchecked Sendable {
 
     func trackIds(for mood: Mood, limit: Int) async throws -> [String] {
         lock.withLock { _requested.append(mood) }
-        switch outcomes[mood] ?? defaultOutcome {
-        case .tracks(let n): return (0..<n).map { "track-\($0)" }
-        case .empty:         return []
-        case .failure:       throw AudioMuseError.transport("stubbed failure")
-        }
-    }
-}
-
-private actor GatedMoodProvider: MoodTrackProvider {
-    nonisolated let kind: MoodSourceKind = .sonic
-    private var started = false
-    private var released = false
-    private var startedWaiters: [CheckedContinuation<Void, Never>] = []
-    private var releaseWaiter: CheckedContinuation<Void, Never>?
-
-    func prepare() async {}
-
-    func trackIds(for mood: Mood, limit: Int) async throws -> [String] {
-        if !released {
-            await withCheckedContinuation { continuation in
-                releaseWaiter = continuation
-                started = true
-                startedWaiters.forEach { $0.resume() }
-                startedWaiters.removeAll()
-            }
-        }
-        return ["track-1"]
-    }
-
-    func waitUntilSearchStarted() async {
-        if started { return }
-        await withCheckedContinuation { startedWaiters.append($0) }
-    }
-
-    func release() {
-        released = true
-        releaseWaiter?.resume()
-        releaseWaiter = nil
+        if fails { throw AudioMuseError.transport("stubbed failure") }
+        return Array(matches.prefix(limit))
     }
 }
 
 private final class PlaylistStub: MoodPlaylistClient, @unchecked Sendable {
-    private let lock = NSLock()
-    private var _replacements: [(playlistId: String, songIds: [String])] = []
-    private var _created: [String] = []
     var existing: [Playlist] = []
-    var failWrites = false
     var failReads = false
     var failDeletes: Set<String> = []
-    var failRenames = false
     private(set) var deleted: [String] = []
-    private(set) var renamed: [(id: String, name: String)] = []
-    /// Emulates a server that accepts the call but stores none of the ids — the failure mode a
-    /// foreign id format produces.
-    var storesNothing = false
-
-    var replacements: [(playlistId: String, songIds: [String])] { lock.withLock { _replacements } }
-    var created: [String] { lock.withLock { _created } }
 
     func getPlaylists(username: String?) async throws -> [Playlist] {
         if failReads { throw URLError(.notConnectedToInternet) }
@@ -92,513 +45,78 @@ private final class PlaylistStub: MoodPlaylistClient, @unchecked Sendable {
         existing.removeAll { $0.id == id }
     }
 
-    func renamePlaylist(id: String, to name: String) async throws {
-        if failRenames { throw URLError(.cannotConnectToHost) }
-        renamed.append((id, name))
-        existing = existing.map {
-            $0.id == id ? Playlist(id: $0.id, name: name, songCount: $0.songCount, duration: $0.duration, owner: $0.owner, coverArt: $0.coverArt) : $0
-        }
-    }
+    func renamePlaylist(id: String, to name: String) async throws {}
 
     func createPlaylist(name: String?, playlistId: String?, songIds: [String]) async throws -> PlaylistWithSongs {
-        if failWrites { throw URLError(.badServerResponse) }
-        let id = playlistId ?? "created-\(name ?? "?")"
-        lock.withLock {
-            if playlistId == nil { _created.append(name ?? "?") } else { _replacements.append((id, songIds)) }
-        }
-        let stored = storesNothing ? 0 : songIds.count
-        let playlistName = name ?? existing.first(where: { $0.id == id })?.name ?? ""
-        existing.removeAll { $0.id == id }
-        existing.append(Playlist(id: id, name: playlistName, songCount: stored, duration: 0))
-        return try JSONDecoder().decode(
-            PlaylistWithSongs.self,
-            from: Data(#"{"id":"\#(id)","name":"\#(name ?? "")","songCount":\#(stored),"duration":0}"#.utf8)
-        )
+        Issue.record("Moods no longer write playlists")
+        throw URLError(.badServerResponse)
     }
 }
 
-// MARK: - Harness
-
-private nonisolated final class CoverStub: @unchecked Sendable {
+private final class SimilarSongsStub: PlaybackQueueBuilding, @unchecked Sendable {
     private let lock = NSLock()
-    private var _applied: [(spec: PlaylistGradientSpec, playlistId: String)] = []
-    var applied: [(spec: PlaylistGradientSpec, playlistId: String)] { lock.withLock { _applied } }
+    private var _seeds: [String] = []
+    var similar: [DisplayableSong] = []
+    var seeds: [String] { lock.withLock { _seeds } }
 
-    func apply(_ spec: PlaylistGradientSpec, _ playlistId: String) {
-        lock.withLock { _applied.append((spec, playlistId)) }
+    func smartShuffleQueue(targetSize: Int) async throws -> [DisplayableSong] { [] }
+    func similarBackfillQueue(targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] { [] }
+    func endlessExtension(seedTrackId: String?, targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] { [] }
+    func instantMix(from seed: InstantMixSeed, count: Int) async throws -> [DisplayableSong] {
+        if case .song(let id) = seed { lock.withLock { _seeds.append(id) } }
+        return similar
     }
 }
 
-private struct Harness {
-    let provider = ProviderStub()
-    let playlists = PlaylistStub()
-    let covers = CoverStub()
-    let defaults: UserDefaults
-    let preferences: MoodPreferences
-    let service: MoodPlaylistService
-    let serverId = "server-1"
-
-    init() {
-        // Swift Testing runs suites in parallel — every harness needs its own defaults domain.
-        let name = "mood.tests.\(UUID().uuidString)"
-        defaults = UserDefaults(suiteName: name)!
-        preferences = MoodPreferences(userDefaults: defaults)
-        let provider = provider, playlists = playlists, covers = covers
-        service = MoodPlaylistService(
-            playlistClientFactory: { playlists },
-            providerFactory: { provider },
-            coverApplier: { spec, playlistId, _ in covers.apply(spec, playlistId) },
-            preferences: preferences
-        )
-    }
+private func song(_ id: String) -> DisplayableSong {
+    DisplayableSong(from: Song(id: id, title: id, artist: "Artist", duration: 200))
 }
 
-private func date(_ iso: String) -> Date {
-    let f = ISO8601DateFormatter()
-    f.timeZone = TimeZone(identifier: "UTC")
-    return f.date(from: iso)!
-}
-private var utc: Calendar {
-    var c = Calendar(identifier: .gregorian)
-    c.timeZone = TimeZone(identifier: "UTC")!
-    return c
+private func playlist(_ id: String, _ name: String, owner: String) -> Playlist {
+    Playlist(id: id, name: name, songCount: 4, duration: 100, owner: owner)
 }
 
-// MARK: - Cycle
+// MARK: - Old playlists
 
-@Suite("Mood playlists — weekly cycle")
-struct MoodCycleTests {
-
-    @Test("the cycle starts on the Wednesday of the current week")
-    func wednesdayIsTheAnchor() {
-        let wednesday = MoodCycle.start(for: date("2026-07-15T12:00:00Z"), calendar: utc)
-        #expect(MoodCycle.start(for: date("2026-07-16T09:00:00Z"), calendar: utc) == wednesday)
-        #expect(MoodCycle.start(for: date("2026-07-21T23:59:00Z"), calendar: utc) == wednesday)
-        #expect(MoodCycle.start(for: date("2026-07-22T00:01:00Z"), calendar: utc) > wednesday)
-    }
-
-    @Test("a Tuesday belongs to the previous Wednesday's cycle, not the coming one")
-    func tuesdayLooksBackward() {
-        let tuesday = MoodCycle.start(for: date("2026-07-21T10:00:00Z"), calendar: utc)
-        #expect(utc.component(.day, from: tuesday) == 15)
-    }
-
-    @Test("the cycle start is midnight, so a same-day second launch is up to date")
-    func startIsMidnight() {
-        let start = MoodCycle.start(for: date("2026-07-15T23:30:00Z"), calendar: utc)
-        #expect(utc.component(.hour, from: start) == 0)
-        #expect(utc.component(.minute, from: start) == 0)
-    }
-}
-
-// MARK: - Sync
-
-@Suite("Mood playlists — weekly sync")
+@Suite("Mood playlists — removing the old ones")
 struct MoodPlaylistServiceTests {
+    private let serverId = "server"
 
-    private let wednesday = date("2026-07-15T12:00:00Z")
-    private let nextWednesday = date("2026-07-22T12:00:00Z")
-
-    @Test("automatic generation defaults to on and persists when disabled")
-    func automaticGenerationPreferencePersists() {
-        let h = Harness()
-        #expect(h.preferences.automaticGenerationEnabled)
-        h.preferences.automaticGenerationEnabled = false
-        #expect(!MoodPreferences(userDefaults: h.defaults).automaticGenerationEnabled)
-        h.preferences.reset(serverId: h.serverId)
-        #expect(!h.preferences.automaticGenerationEnabled)
-    }
-
-    @Test("disabled automatic generation skips foreground, background and source-change work")
-    func disabledAutomaticGenerationDoesNoWork() async throws {
-        let h = Harness()
-        h.preferences.automaticGenerationEnabled = false
-        #expect(await h.service.runWeeklySyncIfNeeded(serverId: h.serverId) == .disabled)
-        #expect(try await h.service.runWeeklySyncIfNeededCancellable(serverId: h.serverId) == .disabled)
-        #expect(await h.service.rebuildAfterSourceChange(serverId: h.serverId) == .disabled)
-        #expect(h.provider.prepares == 0)
-        #expect(h.provider.requested.isEmpty)
-        #expect(h.playlists.created.isEmpty)
-        #expect(h.playlists.replacements.isEmpty)
-        #expect(h.preferences.lastAttempt(serverId: h.serverId) == nil)
-    }
-
-    @Test("manual regeneration works while automatic generation stays disabled")
-    func manualRegenerationWorksWhenDisabled() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        h.preferences.automaticGenerationEnabled = false
-        let outcome = await h.service.rebuildNow(serverId: h.serverId, calendar: utc, currentDate: wednesday.addingTimeInterval(60))
-        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
-        #expect(!h.preferences.automaticGenerationEnabled)
-        #expect(h.playlists.created.count == 5)
-        #expect(h.playlists.replacements.count == 10)
-    }
-
-    @Test("re-enabling automatic generation resumes the weekly cadence")
-    func reenableAutomaticGeneration() async {
-        let h = Harness()
-        h.preferences.automaticGenerationEnabled = false
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        h.preferences.automaticGenerationEnabled = true
-        #expect(await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-                == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
-    }
-
-    @Test("overlapping regeneration cannot reset markers, and disabling an active automatic run stops writes")
-    func concurrentRegenerationAndDisable() async {
-        let h = Harness()
-        let provider = GatedMoodProvider()
-        let playlists = h.playlists
-        let service = MoodPlaylistService(
-            playlistClientFactory: { playlists },
-            providerFactory: { provider },
-            preferences: h.preferences
-        )
-        // An old marker must survive a rejected forced rebuild.
-        let previous = wednesday.addingTimeInterval(-7 * 86400)
-        h.preferences.setSyncedCycle(previous, mood: .chill, serverId: h.serverId)
-        let serverId = h.serverId
-        let now = wednesday
-        let run = Task { await service.runWeeklySyncIfNeeded(serverId: serverId, calendar: utc, currentDate: now) }
-        await provider.waitUntilSearchStarted()
-        #expect(await service.rebuildNow(serverId: serverId) == .inProgress)
-        #expect(await service.deletePlaylists(serverId: serverId) == .inProgress)
-        #expect(h.preferences.syncedCycle(mood: .chill, serverId: serverId) == previous)
-        h.preferences.automaticGenerationEnabled = false
-        await provider.release()
-        #expect(await run.value == .cancelled)
-        #expect(playlists.created.isEmpty)
-        #expect(playlists.replacements.isEmpty)
-        #expect(h.preferences.lastAttempt(serverId: serverId) == nil)
-        #expect(await service.rebuildNow(serverId: serverId) == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
-    }
-
-    @Test("Discovery recovers server playlists despite stale ids, current markers and disabled generation")
-    func discoveryRecoversExistingPlaylists() async throws {
-        let h = Harness()
-        h.preferences.automaticGenerationEnabled = false
-        h.preferences.setPlaylistId("stale-night", mood: .night, serverId: h.serverId)
-        h.preferences.setSyncedCycle(wednesday, mood: .night, serverId: h.serverId)
-        h.preferences.setHasCover(mood: .night, serverId: h.serverId)
-        h.playlists.existing = [Playlist(id: "real-night", name: Mood.night.playlistName, songCount: 25, duration: 100, coverArt: "pl-cover-night")]
-
-        let found = try await h.service.fetchPlaylists(serverId: h.serverId)
-        #expect(found == [MoodPlaylist(mood: .night, id: "real-night", coverArtId: "pl-cover-night")])
-        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == "real-night")
-        #expect(!h.preferences.hasCover(mood: .night, serverId: h.serverId))
-        #expect(h.provider.requested.isEmpty)
-        #expect(h.playlists.replacements.isEmpty)
-    }
-
-    @Test("Discovery adopts playlists after reinstall without generating new contents")
-    func discoveryWithoutLocalState() async throws {
-        let h = Harness()
-        h.playlists.existing = [Playlist(id: "server-night", name: Mood.night.playlistName, songCount: 4, duration: 100)]
-        #expect(try await h.service.fetchPlaylists(serverId: h.serverId).map(\.id) == ["server-night"])
-        #expect(h.playlists.created.isEmpty)
-        #expect(h.provider.requested.isEmpty)
-    }
-
-    @Test("Only a successful server listing removes missing mood references")
-    func discoveryPreservesStateWhenOffline() async throws {
-        let h = Harness()
-        h.preferences.setPlaylistId("old-night", mood: .night, serverId: h.serverId)
-        h.playlists.failReads = true
-        await #expect(throws: URLError.self) { try await h.service.fetchPlaylists(serverId: h.serverId) }
-        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == "old-night")
-        #expect(await h.service.cachedPlaylists(serverId: h.serverId).map(\.id) == ["old-night"])
-        h.playlists.failReads = false
-        #expect(try await h.service.fetchPlaylists(serverId: h.serverId).isEmpty)
-        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == nil)
-    }
-
-    @Test("Regeneration validates stale ids and reuses the actual named playlist")
-    func regenerationRepairsStaleIds() async {
-        let h = Harness()
-        h.preferences.setPlaylistId("stale-night", mood: .night, serverId: h.serverId)
-        h.playlists.existing = [Playlist(id: "real-night", name: Mood.night.playlistName, songCount: 5, duration: 100)]
-        _ = await h.service.rebuildNow(serverId: h.serverId)
-        #expect(h.playlists.replacements.contains { $0.playlistId == "real-night" })
-        #expect(!h.playlists.replacements.contains { $0.playlistId == "stale-night" })
-        #expect(!h.playlists.created.contains(Mood.night.playlistName))
-    }
-
-    @Test("Deletion recovers mood playlists and preserves unrelated and other users' playlists")
-    func deletionTargetsOnlyOwnedMoods() async throws {
-        let h = Harness()
-        let playlists = h.playlists
-        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me", providerFactory: { nil }, preferences: h.preferences)
-        playlists.existing = [
-            Playlist(id: "night", name: Mood.night.playlistName, songCount: 4, duration: 100, owner: "me"),
-            Playlist(id: "duplicate-night", name: Mood.night.playlistName, songCount: 4, duration: 100, owner: "me"),
-            Playlist(id: "shared-night", name: Mood.night.playlistName, songCount: 4, duration: 100, owner: "someone-else"),
-            Playlist(id: "wrapped", name: "Minidisc Wrapped 2025", songCount: 4, duration: 100, owner: "me"),
-            Playlist(id: "custom", name: "Minidisc · My favourites", songCount: 4, duration: 100, owner: "me")
-        ]
-        h.preferences.setPlaylistId("custom", mood: .night, serverId: h.serverId)
-        #expect(await service.deletePlaylists(serverId: h.serverId) == .finished(deleted: 2, failed: 0))
-        #expect(Set(playlists.deleted) == ["night", "duplicate-night"])
-        #expect(!h.preferences.automaticGenerationEnabled)
-        #expect(try await service.fetchPlaylists(serverId: h.serverId).isEmpty)
-        #expect(await service.runWeeklySyncIfNeeded(serverId: h.serverId) == .disabled)
-    }
-
-    @Test("Partial deletion preserves failed playlists for retry")
-    func partialDeletionCanBeRetried() async {
-        let h = Harness()
-        _ = await h.service.rebuildNow(serverId: h.serverId)
-        let nightId = h.preferences.playlistId(mood: .night, serverId: h.serverId)!
-        h.playlists.failDeletes = [nightId]
-        #expect(await h.service.deletePlaylists(serverId: h.serverId) == .finished(deleted: 4, failed: 1))
-        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == nightId)
-        #expect(h.preferences.playlistId(mood: .chill, serverId: h.serverId) == nil)
-        h.playlists.failDeletes = []
-        #expect(await h.service.deletePlaylists(serverId: h.serverId) == .finished(deleted: 1, failed: 0))
-        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == nil)
-    }
-
-    @Test("An offline deletion does not forget playlists or report success")
-    func offlineDeletionKeepsReferences() async {
-        let h = Harness()
-        h.preferences.setPlaylistId("night", mood: .night, serverId: h.serverId)
-        h.playlists.failReads = true
-        #expect(await h.service.deletePlaylists(serverId: h.serverId) == .failed)
-        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == "night")
-        #expect(h.playlists.deleted.isEmpty)
-    }
-
-    @Test("a first run refreshes all five moods")
-    func firstRunRefreshesEverything() async {
-        let h = Harness()
-        let outcome = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
-        #expect(h.provider.requested.count == 5)
-        #expect(h.playlists.replacements.count == 5)
-        #expect(h.provider.prepares == 1, "prepare runs once per batch, not per mood")
-    }
-
-    @Test("a second run in the same week does nothing at all")
-    func secondRunSameWeekIsANoOp() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        let outcome = await h.service.runWeeklySyncIfNeeded(
-            serverId: h.serverId, calendar: utc, currentDate: date("2026-07-19T08:00:00Z"))
-
-        #expect(outcome == .upToDate)
-        #expect(h.provider.requested.count == 5, "no second round of searches")
-    }
-
-    @Test("the next Wednesday refreshes again")
-    func newCycleRefreshes() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        let outcome = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: nextWednesday)
-
-        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
-        #expect(h.playlists.replacements.count == 10)
-    }
-
-    @Test("a mood whose search fails keeps its playlist and is retried next launch")
-    func failedMoodKeepsItsPlaylist() async {
-        let h = Harness()
-        h.provider.outcomes[.workout] = .failure
-
-        let outcome = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases.filter { $0 != .workout }, kept: [.workout]))
-        #expect(h.playlists.replacements.count == 4)
-        #expect(h.preferences.syncedCycle(mood: .workout, serverId: h.serverId) == nil)
-        #expect(h.preferences.syncedCycle(mood: .chill, serverId: h.serverId) != nil)
-    }
-
-    @Test("an empty search result never empties the playlist")
-    func emptyResultIsNotWritten() async {
-        let h = Harness()
-        h.provider.outcomes[.night] = .empty
-
-        let outcome = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases.filter { $0 != .night }, kept: [.night]))
-        #expect(!h.playlists.replacements.contains { $0.songIds.isEmpty })
-    }
-
-    @Test("only the moods that failed are retried on the next launch")
-    func retryCoversOnlyTheFailures() async {
-        let h = Harness()
-        h.provider.outcomes[.workout] = .failure
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        h.provider.outcomes.removeValue(forKey: .workout)
-        // Past the throttle window, still inside the same week.
-        let outcome = await h.service.runWeeklySyncIfNeeded(
-            serverId: h.serverId, calendar: utc, currentDate: wednesday.addingTimeInterval(7200))
-
-        #expect(outcome == .finished(source: .sonic, refreshed: [.workout], kept: []))
-        #expect(h.provider.requested.filter { $0 == .chill }.count == 1, "a succeeded mood is not re-queried")
-    }
-
-    @Test("a failing sync is throttled rather than retried on every launch")
-    func failuresAreThrottled() async {
-        let h = Harness()
-        h.provider.defaultOutcome = .failure
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        let requestedAfterFirst = h.provider.requested.count
-
-        let outcome = await h.service.runWeeklySyncIfNeeded(
-            serverId: h.serverId, calendar: utc, currentDate: wednesday.addingTimeInterval(60))
-
-        #expect(outcome == .throttled)
-        #expect(h.provider.requested.count == requestedAfterFirst, "no calls made while throttled")
-    }
-
-    @Test("a failing playlist write leaves the mood's marker untouched")
-    func playlistWriteFailureKeepsMarker() async {
-        let h = Harness()
-        h.playlists.failWrites = true
-
-        let outcome = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(outcome == .finished(source: .sonic, refreshed: [], kept: Mood.allCases))
-        for mood in Mood.allCases {
-            #expect(h.preferences.syncedCycle(mood: mood, serverId: h.serverId) == nil)
-        }
-    }
-
-    @Test("a server that stores none of the ids counts as a failure, not a success")
-    func serverStoringNothingIsAFailure() async {
-        let h = Harness()
-        h.playlists.storesNothing = true
-
-        let outcome = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(outcome == .finished(source: .sonic, refreshed: [], kept: Mood.allCases))
-        for mood in Mood.allCases {
-            #expect(h.preferences.syncedCycle(mood: mood, serverId: h.serverId) == nil,
-                    "\(mood.rawValue) must be retried, not marked done")
-        }
-        #expect(h.covers.applied.isEmpty, "no cover for a playlist that was never written")
-    }
-
-    @Test("an existing server playlist is reused instead of creating a duplicate")
-    func existingPlaylistIsReused() async throws {
-        let h = Harness()
-        h.playlists.existing = try Mood.allCases.map { mood in
-            try JSONDecoder().decode(
-                Playlist.self,
-                from: Data(#"{"id":"existing-\#(mood.rawValue)","name":"\#(mood.playlistName)","songCount":0,"duration":0}"#.utf8)
-            )
-        }
-
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(h.playlists.created.isEmpty, "reinstalling must not leave a second copy of each playlist")
-        #expect(h.playlists.replacements.allSatisfy { $0.playlistId.hasPrefix("existing-") })
-    }
-
-    @Test("no AudioMuse configured means the feature is simply absent")
-    func notConfigured() async {
+    @Test("Deletion removes the user's current and pre-rebrand mood playlists, and nothing else")
+    func deletionTargetsOnlyOwnedMoods() async {
         let playlists = PlaylistStub()
-        let service = MoodPlaylistService(
-            playlistClientFactory: { playlists },
-            providerFactory: { nil },
-            preferences: MoodPreferences(userDefaults: UserDefaults(suiteName: "mood.tests.\(UUID().uuidString)")!)
-        )
-        let outcome = await service.runWeeklySyncIfNeeded(serverId: "s", calendar: utc, currentDate: wednesday)
-
-        #expect(outcome == .notConfigured)
-        #expect(playlists.replacements.isEmpty)
+        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me")
+        playlists.existing = [
+            playlist("night", Mood.night.playlistName, owner: "me"),
+            playlist("duplicate-night", Mood.night.playlistName, owner: "me"),
+            playlist("legacy-chill", Mood.chill.legacyPlaylistName, owner: "me"),
+            playlist("shared-night", Mood.night.playlistName, owner: "someone-else"),
+            playlist("wrapped", "Minidisc Wrapped 2025", owner: "me"),
+            playlist("custom", "Minidisc · My favourites", owner: "me")
+        ]
+        #expect(await service.deletePlaylists(serverId: serverId) == .finished(deleted: 3, failed: 0))
+        #expect(Set(playlists.deleted) == ["night", "duplicate-night", "legacy-chill"])
     }
 
-    @Test("each mood is requested exactly once")
-    func everyMoodRequestedOnce() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(Set(h.provider.requested) == Set(Mood.allCases))
-        #expect(h.provider.requested.count == 5)
+    @Test("Failed deletions are counted, and a second attempt finishes the job")
+    func partialDeletionCanBeRetried() async {
+        let playlists = PlaylistStub()
+        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me")
+        playlists.existing = Mood.allCases.map { playlist($0.rawValue, $0.playlistName, owner: "me") }
+        playlists.failDeletes = ["night"]
+        #expect(await service.deletePlaylists(serverId: serverId) == .finished(deleted: 4, failed: 1))
+        playlists.failDeletes = []
+        #expect(await service.deletePlaylists(serverId: serverId) == .finished(deleted: 1, failed: 0))
+        #expect(await service.deletePlaylists(serverId: serverId) == .finished(deleted: 0, failed: 0))
     }
 
-    @Test("the source that populated the playlists is recorded for the UI")
-    func sourceIsRecorded() async {
-        let h = Harness()
-        h.provider.kind = .tags
-        let outcome = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(outcome == .finished(source: .tags, refreshed: Mood.allCases, kept: []))
-        #expect(await h.service.lastSource(serverId: h.serverId) == .tags)
-    }
-
-    // MARK: - Covers
-
-    @Test("each playlist gets its generated cover on first build")
-    func coversAreAppliedOnce() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(h.covers.applied.count == 5)
-        let specs = h.covers.applied.map(\.spec)
-        for (i, spec) in specs.enumerated() {
-            #expect(!specs[(i + 1)...].contains(spec), "two moods share a cover design")
-        }
-    }
-
-    @Test("the cover is not re-uploaded on later refreshes")
-    func coversAreNotReapplied() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: nextWednesday)
-
-        #expect(h.covers.applied.count == 5, "the cover never changes — uploading it weekly is waste")
-    }
-
-    @Test("a mood that failed gets no cover")
-    func failedMoodGetsNoCover() async {
-        let h = Harness()
-        h.provider.outcomes[.workout] = .failure
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        #expect(h.covers.applied.count == 4)
-    }
-
-    // MARK: - Forced rebuild
-
-    @Test("a forced rebuild rewrites every playlist even mid-week")
-    func rebuildIgnoresTheCadence() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        #expect(h.playlists.replacements.count == 5)
-
-        let outcome = await h.service.rebuildNow(
-            serverId: h.serverId, calendar: utc, currentDate: date("2026-07-17T10:00:00Z"))
-
-        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
-        #expect(h.playlists.replacements.count == 10)
-    }
-
-    @Test("a forced rebuild bypasses the throttle")
-    func rebuildIgnoresTheThrottle() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-
-        // One minute later — well inside the throttle window, which a normal call would refuse.
-        let outcome = await h.service.rebuildNow(
-            serverId: h.serverId, calendar: utc, currentDate: wednesday.addingTimeInterval(60))
-
-        #expect(outcome != .throttled)
-        #expect(h.playlists.replacements.count == 10)
-    }
-
-    @Test("a forced rebuild reuses the existing playlists rather than creating new ones")
-    func rebuildKeepsPlaylistIds() async {
-        let h = Harness()
-        _ = await h.service.runWeeklySyncIfNeeded(serverId: h.serverId, calendar: utc, currentDate: wednesday)
-        let createdFirst = h.playlists.created.count
-
-        _ = await h.service.rebuildNow(serverId: h.serverId, calendar: utc, currentDate: wednesday.addingTimeInterval(60))
-
-        #expect(h.playlists.created.count == createdFirst, "rebuilding must not orphan the old playlists")
+    @Test("An unreachable server is a failure, not a success")
+    func offlineDeletionFails() async {
+        let playlists = PlaylistStub()
+        playlists.failReads = true
+        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me")
+        #expect(await service.deletePlaylists(serverId: serverId) == .failed)
+        #expect(playlists.deleted.isEmpty)
     }
 
     @Test("every mood carries a distinct English prompt for the sonic provider")
@@ -607,12 +125,6 @@ struct MoodPlaylistServiceTests {
         #expect(Set(queries).count == queries.count)
         #expect(queries.allSatisfy { $0.allSatisfy(\.isASCII) })
     }
-}
-
-// MARK: - Legacy names
-
-@Suite("Mood playlists — legacy Minidisc names")
-struct MoodLegacyPlaylistNameTests {
 
     @Test func names_currentAndLegacy_areRecognised() {
         #expect(Mood.night.playlistName == "maekster · Night")
@@ -623,86 +135,84 @@ struct MoodLegacyPlaylistNameTests {
         #expect(Mood.forPlaylistName("Night") == nil)
         #expect(MusicIntentService.matchesPlaylist("Minidisc · Night", term: "night"))
     }
+}
 
-    @Test func sync_legacyPlaylist_isRenamedInPlaceAndGetsANewCover() async {
-        let h = Harness()
-        h.playlists.existing = [Playlist(id: "legacy-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100)]
-        h.preferences.setPlaylistId("legacy-night", mood: .night, serverId: h.serverId)
-        h.preferences.setHasCover(mood: .night, serverId: h.serverId)
+// MARK: - Radio
 
-        _ = await h.service.rebuildNow(serverId: h.serverId)
-
-        #expect(h.playlists.renamed.map(\.id) == ["legacy-night"])
-        #expect(h.playlists.renamed.map(\.name) == [Mood.night.playlistName])
-        #expect(h.playlists.replacements.contains { $0.playlistId == "legacy-night" })
-        #expect(!h.playlists.created.contains(Mood.night.playlistName))
-        #expect(h.playlists.existing.filter { Mood.forPlaylistName($0.name) == .night }.map(\.id) == ["legacy-night"])
-        #expect(h.covers.applied.contains { $0.playlistId == "legacy-night" })
-        #expect(h.preferences.playlistId(mood: .night, serverId: h.serverId) == "legacy-night")
+@Suite("Mood radio (#60)")
+struct MoodRadioServiceTests {
+    private func service(_ provider: ProviderStub?, indexed: Set<String>? = nil) -> MoodRadioService {
+        MoodRadioService(
+            providerFactory: { provider },
+            songsByID: { ids in ids.filter { indexed?.contains($0) ?? true }.map { Song(id: $0, title: $0, duration: 200) } }
+        )
     }
 
-    @Test func sync_renameFails_stillReusesTheLegacyPlaylist() async {
-        let h = Harness()
-        h.playlists.failRenames = true
-        h.playlists.existing = [Playlist(id: "legacy-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100)]
-
-        let outcome = await h.service.rebuildNow(serverId: h.serverId)
-
-        #expect(outcome == .finished(source: .sonic, refreshed: Mood.allCases, kept: []))
-        #expect(h.playlists.replacements.contains { $0.playlistId == "legacy-night" })
-        #expect(!h.playlists.created.contains(Mood.night.playlistName))
+    @Test("A radio holds the mood's matches, warms the source up first and seeds from the best")
+    func radioHoldsTheMatches() async throws {
+        let provider = ProviderStub()
+        provider.matches = (0..<30).map { "m\($0)" }
+        let radio = try await service(provider).radio(for: .chill)
+        #expect(provider.requested == [.chill])
+        #expect(provider.prepares == 1)
+        #expect(Set(radio.tracks.map(\.id)) == Set(provider.matches))
+        #expect(radio.seedIDs == Array(provider.matches.prefix(MoodRadioService.seedCount)))
     }
 
-    @Test func sync_currentAndLegacyBothPresent_prefersCurrentAndRenamesNothing() async {
-        let h = Harness()
-        h.playlists.existing = [
-            Playlist(id: "a-legacy-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100),
-            Playlist(id: "b-current-night", name: Mood.night.playlistName, songCount: 5, duration: 100)
-        ]
-
-        _ = await h.service.rebuildNow(serverId: h.serverId)
-
-        #expect(h.playlists.replacements.contains { $0.playlistId == "b-current-night" })
-        #expect(!h.playlists.replacements.contains { $0.playlistId == "a-legacy-night" })
-        #expect(h.playlists.renamed.isEmpty)
+    @Test("Songs the library index doesn't know are left out, seeds included")
+    func unknownSongsAreSkipped() async throws {
+        let provider = ProviderStub()
+        provider.matches = ["a", "missing", "b"]
+        let radio = try await service(provider, indexed: ["a", "b"]).radio(for: .focus)
+        #expect(Set(radio.tracks.map(\.id)) == ["a", "b"])
+        #expect(radio.seedIDs == ["a", "b"])
     }
 
-    @Test func sync_otherUsersLegacyPlaylist_isNotRenamedOrReused() async {
-        let h = Harness()
-        let playlists = h.playlists
-        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me", providerFactory: { ProviderStub() }, preferences: h.preferences)
-        playlists.existing = [Playlist(id: "shared-night", name: Mood.night.legacyPlaylistName, songCount: 5, duration: 100, owner: "someone-else")]
-
-        _ = await service.rebuildNow(serverId: h.serverId)
-
-        #expect(playlists.renamed.isEmpty)
-        #expect(!playlists.replacements.contains { $0.playlistId == "shared-night" })
-        #expect(playlists.created.contains(Mood.night.playlistName))
+    @Test("No source means an empty radio; a failing source throws")
+    func emptyAndFailing() async throws {
+        #expect(try await service(nil).radio(for: .night).tracks.isEmpty)
+        let failing = ProviderStub()
+        failing.fails = true
+        await #expect(throws: AudioMuseError.self) { try await service(failing).radio(for: .night) }
     }
 
-    @Test func discovery_findsLegacyPlaylistWithoutWritingToTheServer() async throws {
-        let h = Harness()
-        h.preferences.automaticGenerationEnabled = false
-        h.playlists.existing = [Playlist(id: "legacy-focus", name: Mood.focus.legacyPlaylistName, songCount: 5, duration: 100, coverArt: "cover")]
-
-        let found = try await h.service.fetchPlaylists(serverId: h.serverId)
-
-        #expect(found == [MoodPlaylist(mood: .focus, id: "legacy-focus", coverArtId: "cover")])
-        #expect(h.playlists.renamed.isEmpty)
-        #expect(h.playlists.replacements.isEmpty)
+    /// The best match leads far more often than the last, yet the radio differs between starts.
+    @Test("The order favours the best matches without being fixed")
+    func orderFavoursTheBest() {
+        var generator = SystemRandomNumberGenerator()
+        let matches = (0..<50).map { "m\($0)" }
+        var bestFirst = 0, worstFirst = 0
+        var orders = Set<[String]>()
+        for _ in 0..<500 {
+            let order = MoodRadioService.order(matches, using: &generator)
+            #expect(Set(order) == Set(matches))
+            if order.first == "m0" { bestFirst += 1 }
+            if order.first == "m49" { worstFirst += 1 }
+            orders.insert(order)
+        }
+        #expect(bestFirst > worstFirst)
+        #expect(orders.count > 1)
     }
+}
 
-    @Test func deletion_removesOwnedLegacyPlaylistsToo() async {
-        let h = Harness()
-        let playlists = h.playlists
-        let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me", providerFactory: { nil }, preferences: h.preferences)
-        playlists.existing = [
-            Playlist(id: "current-night", name: Mood.night.playlistName, songCount: 4, duration: 100, owner: "me"),
-            Playlist(id: "legacy-chill", name: Mood.chill.legacyPlaylistName, songCount: 4, duration: 100, owner: "me"),
-            Playlist(id: "shared-legacy", name: Mood.chill.legacyPlaylistName, songCount: 4, duration: 100, owner: "someone-else")
-        ]
+// MARK: - Keeping a radio going
 
-        #expect(await service.deletePlaylists(serverId: h.serverId) == .finished(deleted: 2, failed: 0))
-        #expect(Set(playlists.deleted) == ["current-night", "legacy-chill"])
+@Suite("Radio queue (#60, #69)")
+struct RadioQueueTests {
+    @Test("The rest of the picks come first, skipping what's queued; then similar songs around the seeds")
+    func refillUsesPicksThenSimilarSongs() async throws {
+        let picks = (0..<(RadioQueue.initialCount + 3)).map { song("p\($0)") }
+        let library = SimilarSongsStub()
+        library.similar = [song("queued"), song("similar")]
+        let refill = RadioQueue.refill(after: picks, seedIDs: ["seed"], library: library)
+
+        #expect(RadioQueue.initialTracks(picks).count == RadioQueue.initialCount)
+        let queued = Set(picks.prefix(RadioQueue.initialCount).map(\.id) + ["p50"])
+        #expect(try await refill(queued, 10).map(\.id) == ["p51", "p52"])
+        #expect(library.seeds.isEmpty)
+
+        let all = Set(picks.map(\.id) + ["queued"])
+        #expect(try await refill(all, 10).map(\.id) == ["similar"])
+        #expect(library.seeds == ["seed"])
     }
 }

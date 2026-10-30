@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 import OSLog
 import Foundation
-import BackgroundTasks
 import AppIntents
 
 @main
@@ -14,50 +13,9 @@ struct MinidiscApp: App {
     private let runtime = MinidiscRuntime.shared
     private var playbackDiagnostics: PlaybackDiagnostics { runtime.diagnostics }
 
-    private nonisolated static let backgroundSyncCoordinator = BackgroundSyncCoordinator()
-
     init() {
         let intentRuntime = MinidiscRuntime.shared
         AppDependencyManager.shared.add(dependency: intentRuntime)
-        BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: "io.github.marcus-gt.maekster.wrapped.monthly-update",
-            using: nil,
-            launchHandler: Self.handleWrappedUpdateBackgroundTask
-        )
-    }
-
-    /// `BGTaskScheduler` invokes a handler registered with `queue: nil` on a framework-owned queue.
-    /// Keeping the handler outside the default-MainActor `App` context prevents Swift 6 from
-    /// inserting a main-executor precondition at the callback entry point.
-    private nonisolated static func handleWrappedUpdateBackgroundTask(_ task: BGTask) {
-        guard let processingTask = task as? BGProcessingTask else {
-            task.setTaskCompleted(success: false)
-            return
-        }
-        let completion = BackgroundTaskCompletion(task: processingTask)
-        let workTask = Task {
-            let syncSucceeded = await backgroundSyncCoordinator.run(calendar: .current)
-            let expired = Task.isCancelled
-            _ = completion.complete(success: syncSucceeded && !expired) {
-                if expired {
-                    Logger.wrapped.warning("BGTask expired — rescheduling for tomorrow")
-                }
-                scheduleWrappedUpdate()
-            }
-        }
-        processingTask.expirationHandler = {
-            // The work task completes the BGTask after its waiter has been removed
-            // from the coordinator. This preserves an in-flight cold-start waiter,
-            // while still cancelling the physical run when this was the last waiter.
-            workTask.cancel()
-        }
-    }
-
-    nonisolated static func scheduleWrappedUpdate() {
-        let request = BGProcessingTaskRequest(identifier: "io.github.marcus-gt.maekster.wrapped.monthly-update")
-        request.requiresNetworkConnectivity = true
-        request.earliestBeginDate = Date().addingTimeInterval(24 * 3600)
-        try? BGTaskScheduler.shared.submit(request)
     }
 
     var body: some Scene {
@@ -104,9 +62,6 @@ struct MinidiscApp: App {
                     activeContainer?.offlineFavoritesSync.revision += 1
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
-                    MinidiscShortcuts.updateAppShortcutParameters()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .minidiscMoodPlaylistsChanged)) { _ in
                     MinidiscShortcuts.updateAppShortcutParameters()
                 }
         }
@@ -222,17 +177,6 @@ struct MinidiscApp: App {
                 downloadService: downloadService
             )
         })
-        await MinidiscApp.backgroundSyncCoordinator.configure(
-            moodService: newContainer.moodPlaylistService,
-            serverState: newContainer.serverState
-        )
-        // Cold start and BGProcessing share one deduplicated coordinator run.
-        newContainer.retainLifecycleTask(Task {
-            _ = await BackgroundActivity.run("playlist-sync") {
-                await MinidiscApp.backgroundSyncCoordinator.run(calendar: .current)
-            }
-        })
-        MinidiscApp.scheduleWrappedUpdate()
         return newContainer
     }
 

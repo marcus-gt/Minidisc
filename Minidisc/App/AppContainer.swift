@@ -43,6 +43,7 @@ final class AppContainer {
     /// Wrapped's plays: ListenBrainz when an account is set, this phone's otherwise (#16).
     let wrappedDataSource: WrappedDataSource
     let moodPlaylistService: MoodPlaylistService
+    let moodRadioService: MoodRadioService
     let queueBuilderService: QueueBuilderService
     /// One Queue Builder state per server, shared by the Home and Discover cards and the full page,
     /// so a pick made in one place shows in the others.
@@ -169,13 +170,6 @@ final class AppContainer {
             store: favoritesStore, settings: cacheSettings, streamSettings: streamSettings,
             server: server, downloads: download, cache: cache, artwork: artworkImageCache
         )
-        let moodCovers: @Sendable (PlaylistGradientSpec, String, String) async -> Void = { [artworkImageCache] spec, playlistId, title in
-            let manager = await PlaylistCoverManager(
-                downloadService: download,
-                artworkImageCache: artworkImageCache
-            )
-            await manager.applyGradientCover(spec, playlistId: playlistId, title: title, coverArtId: nil)
-        }
         // One scorer, so the Queue Builder and Wrapped share its per-track cache.
         let moodScorer = AudioMuseMoodScorer(serverService: server)
         queueBuilderService = QueueBuilderService(
@@ -183,12 +177,12 @@ final class AppContainer {
             library: library,
             moodScorer: moodScorer
         )
-        moodPlaylistService = MoodPlaylistService(
+        moodPlaylistService = MoodPlaylistService(serverService: server, catalog: catalog)
+        moodRadioService = MoodRadioService(
             serverService: server,
             serverState: serverState,
             libraryService: library,
-            catalog: catalog,
-            coverApplier: moodCovers
+            catalog: catalog
         )
 
         let resolver = MediaResolver(

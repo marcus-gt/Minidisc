@@ -24,9 +24,9 @@ The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as r
   token and modifier names are still `Minidisc`. So are storage keys and paths that hold user data
   (`minidisc.*` defaults, `app.minidisc.*`, `Documents/app.minidisc/…`, SwiftData store names).
   Renaming those is a separate pass; don't change them piecemeal.
-- Server playlists created before the rebrand are named `Minidisc Wrapped <year>` and `Minidisc · <Mood>`.
-  `WrappedPlaylistService.year(fromPlaylistName:)` and `Mood.isPlaylistName(_:)` recognise both
-  names; match playlists through them, not by comparing strings.
+- Earlier versions created server playlists named `maekster Wrapped <year>` / `maekster · <Mood>` (and
+  `Minidisc …` before the rebrand). Nothing creates them now. `WrappedPlaylistService.year(fromPlaylistName:)`
+  and `Mood.isPlaylistName(_:)` recognise both names; match playlists through them, not by comparing strings.
 
 ## Toolchain facts that shape the code
 
@@ -248,8 +248,9 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   `DownloadActivityState`. Files live under `Documents/app.minidisc/downloads`.
 - **Artwork**: `ArtworkImageCache` (thumb/hero tiers, `@thumb` / `@hero` filename suffixes). The cache
   version in `AppContainer.currentCoverArtCacheVersion` must be bumped when the tiering changes.
-- **Background**: `BackgroundSyncCoordinator` deduplicates Wrapped and mood playlist sync between cold
-  start and the BGProcessing task `io.github.marcus-gt.maekster.wrapped.monthly-update`.
+- **Radios**: Wrapped years/months and moods play as radios, not server playlists. `RadioQueue` queues
+  the first picks, refills from the rest and then continues with Instant Mix around seed tracks.
+  Nothing runs in the background any more (no BGTask).
 - **Migrations** are one-shot, keyed by UserDefaults flags (`minidisc.*_vN`) in `AppContainer`
   extensions. Add a new flag; don't reuse an old one.
 

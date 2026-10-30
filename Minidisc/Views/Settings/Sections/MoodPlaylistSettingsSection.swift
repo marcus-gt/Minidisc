@@ -1,48 +1,27 @@
 import SwiftUI
 
+/// Moods are radios now (#60). Earlier versions kept a server playlist per mood; this removes them.
 struct MoodPlaylistSettingsSection: View {
     @Environment(\.appContainer) private var container
-    @AppStorage(MoodPreferences.automaticGenerationKey) private var automaticGeneration = true
-    @State private var request: PlaylistRequest?
-    @State private var outcome: MoodSyncOutcome?
-    @State private var deletionOutcome: MoodDeletionOutcome?
+    @State private var request: DeletionRequest?
+    @State private var outcome: MoodDeletionOutcome?
     @State private var showDeleteConfirmation = false
 
-    private enum Action { case regenerate, delete }
-
-    private struct PlaylistRequest: Equatable {
+    private struct DeletionRequest: Equatable {
         let id = UUID()
         let serverId: String
-        let action: Action
     }
 
     private var serverId: String? { container?.serverState.activeServer?.id.uuidString }
 
     var body: some View {
         Section {
-            Toggle("Automatic generation", isOn: $automaticGeneration)
-                .accessibilityIdentifier("mood-automatic-generation")
-                .disabled(request?.action == .delete)
-            Button {
-                start(.regenerate)
-            } label: {
-                HStack {
-                    Text("Regenerate playlists")
-                    if request?.action == .regenerate {
-                        Spacer()
-                        ProgressView()
-                            .controlSize(.small)
-                    }
-                }
-            }
-            .accessibilityIdentifier("mood-regenerate-playlists")
-            .disabled(request != nil || serverId == nil)
             Button(role: .destructive) {
                 showDeleteConfirmation = true
             } label: {
                 HStack {
-                    Text("Delete mood playlists")
-                    if request?.action == .delete {
+                    Text("Delete old mood playlists")
+                    if request != nil {
                         Spacer()
                         ProgressView().controlSize(.small)
                     }
@@ -50,13 +29,8 @@ struct MoodPlaylistSettingsSection: View {
             }
             .accessibilityIdentifier("mood-delete-playlists")
             .disabled(request != nil || serverId == nil)
-            if let deletionOutcome {
-                MoodDeletionResult(outcome: deletionOutcome)
-                    .font(.minidiscCaption)
-                    .foregroundStyle(.secondary)
-            }
             if let outcome {
-                MoodRegenerationResult(outcome: outcome)
+                MoodDeletionResult(outcome: outcome)
                     .font(.minidiscCaption)
                     .foregroundStyle(.secondary)
             }
@@ -65,63 +39,29 @@ struct MoodPlaylistSettingsSection: View {
                     .foregroundStyle(.secondary)
             }
         } header: {
-            Text("Mood playlists")
+            Text("Moods")
         } footer: {
-            Text("Automatically create and refresh mood playlists each week. Disabling this keeps existing playlists. You can regenerate them manually at any time.")
+            Text("Moods on Discover play as radios. Earlier versions saved a playlist per mood on your server; they are no longer updated and can be deleted here.")
         }
         .task(id: request) {
             guard let request, let service = container?.moodPlaylistService else { return }
-            switch request.action {
-            case .regenerate:
-                let result = await service.rebuildNow(serverId: request.serverId)
-                guard !Task.isCancelled, serverId == request.serverId else { return }
-                outcome = result
-            case .delete:
-                let result = await service.deletePlaylists(serverId: request.serverId)
-                guard !Task.isCancelled, serverId == request.serverId else { return }
-                deletionOutcome = result
-            }
+            let result = await service.deletePlaylists(serverId: request.serverId)
             self.request = nil
+            guard !Task.isCancelled, serverId == request.serverId else { return }
+            outcome = result
         }
         .onChange(of: serverId) {
             request = nil
             outcome = nil
-            deletionOutcome = nil
-            showDeleteConfirmation = false
         }
-        .onDisappear { request = nil }
-        .alert("Delete mood playlists?", isPresented: $showDeleteConfirmation) {
-            Button("Delete", role: .destructive) { start(.delete) }
-            Button("Cancel", role: .cancel) {}
+        .confirmationDialog("Delete old mood playlists?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                guard let serverId else { return }
+                outcome = nil
+                request = DeletionRequest(serverId: serverId)
+            }
         } message: {
-            Text("This deletes your maekster mood playlists from the current server and disables automatic generation. Other playlists and downloaded music are kept.")
-        }
-    }
-
-    private func start(_ action: Action) {
-        guard let serverId else { return }
-        outcome = nil
-        deletionOutcome = nil
-        request = PlaylistRequest(serverId: serverId, action: action)
-    }
-
-}
-
-private struct MoodRegenerationResult: View {
-    let outcome: MoodSyncOutcome
-
-    var body: some View {
-        switch outcome {
-        case .finished(_, let refreshed, let kept) where !refreshed.isEmpty && kept.isEmpty:
-            Text("Mood playlists regenerated.")
-        case .finished(_, let refreshed, _) where !refreshed.isEmpty:
-            Text("Some mood playlists could not be regenerated. Try again later.")
-        case .inProgress:
-            Text("Mood playlists are already being updated. Try again when the update is complete.")
-        case .cancelled:
-            Text("Regeneration cancelled.")
-        default:
-            Text("Could not regenerate mood playlists. Check your connection and music sources, then try again.")
+            Text("This removes the mood playlists from your server. Mood radios are not affected.")
         }
     }
 }
@@ -131,12 +71,14 @@ private struct MoodDeletionResult: View {
 
     var body: some View {
         switch outcome {
+        case .finished(0, 0):
+            Text("There were no mood playlists to delete.")
         case .finished(_, let failed) where failed == 0:
-            Text("Mood playlists deleted. Automatic generation is off.")
+            Text("Mood playlists deleted.")
         case .finished(let deleted, _) where deleted > 0:
-            Text("Some mood playlists could not be deleted. Automatic generation is off. Try again later.")
+            Text("Some mood playlists could not be deleted. Try again later.")
         case .inProgress:
-            Text("Mood playlists are already being updated. Try again when the update is complete.")
+            Text("Mood playlists are already being deleted.")
         case .cancelled:
             Text("Deletion cancelled.")
         default:
