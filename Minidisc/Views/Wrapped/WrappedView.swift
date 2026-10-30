@@ -7,7 +7,6 @@ struct WrappedView: View {
     @State private var selectedPeriod: WrappedPeriod = .currentMonth()
     @State private var data: WrappedData?
     @State private var isLoading = true
-    @State private var wrappedPlaylistId: String?
     @State private var appeared = false
     @State private var loadFailed = false
     /// Where the shown recap came from, and how far back the history goes (#16).
@@ -23,22 +22,19 @@ struct WrappedView: View {
         _selectedPeriod = State(initialValue: initialPeriod)
     }
 
-    /// The selected year's months (up to this month for the current year), then the year itself.
+    /// The selected year itself, then its months newest first (up to this month for the current year).
     private var availablePeriods: [WrappedPeriod] {
-        let calendar = Calendar.current
-        let now = Date()
-        let thisYear = calendar.component(.year, from: now)
-        let lastMonth = currentYear == thisYear ? calendar.component(.month, from: now) : 12
-        var periods: [WrappedPeriod] = (1...lastMonth).map { .month(year: currentYear, month: $0) }
-        periods.append(.year(currentYear))
-        return periods
+        Self.periods(inYear: currentYear, now: Date(), calendar: .current)
     }
 
-    private var thisYear: Int { Calendar.current.component(.year, from: Date()) }
+    static func periods(inYear year: Int, now: Date, calendar: Calendar) -> [WrappedPeriod] {
+        let lastMonth = year == calendar.component(.year, from: now) ? calendar.component(.month, from: now) : 12
+        return [.year(year)] + (1...lastMonth).reversed().map { .month(year: year, month: $0) }
+    }
 
     /// Every year with listens, newest first. Only the current one without a ListenBrainz history.
     private var selectableYears: [Int] {
-        Array((min(firstYear ?? thisYear, thisYear)...thisYear).reversed())
+        WrappedYears.years(firstYear: firstYear)
     }
 
     private var currentYear: Int {
@@ -77,15 +73,12 @@ struct WrappedView: View {
                         .cascadeAppear(order: 2, trigger: appeared)
                     WrappedTopAlbumsSection(albums: d.topAlbums)
                         .cascadeAppear(order: 3, trigger: appeared)
-                    if case .year = selectedPeriod {
-                        WrappedYearCard(
-                            year: currentYear,
-                            firstTrack: d.firstTrackOfPeriod,
-                            lastTrack: d.lastTrackOfPeriod,
-                            playlistId: wrappedPlaylistId
-                        )
-                        .cascadeAppear(order: 4, trigger: appeared)
-                    }
+                    WrappedRadioCard(
+                        period: selectedPeriod,
+                        firstTrack: d.firstTrackOfPeriod,
+                        lastTrack: d.lastTrackOfPeriod
+                    )
+                    .cascadeAppear(order: 4, trigger: appeared)
                 } else {
                     emptyState
                 }
@@ -114,12 +107,12 @@ struct WrappedView: View {
 
     // MARK: - Year and source
 
-    /// Picking a year shows that year's recap; its months are then in the picker below.
+    /// Picking a year shows that year's recap; its months follow in the picker below.
     private var yearMenu: some View {
         Menu {
             Picker("Year", selection: Binding(
                 get: { currentYear },
-                set: { year in selectedPeriod = year == thisYear ? .currentMonth() : .year(year) }
+                set: { year in selectedPeriod = .year(year) }
             )) {
                 ForEach(selectableYears, id: \.self) { year in
                     Text(verbatim: String(year)).tag(year)
@@ -198,7 +191,6 @@ struct WrappedView: View {
             data = restored
             isLoading = false
             loadFailed = false
-            if case .year = restored.period { wrappedPlaylistId = "debug-playlist" }
             appeared = true
             return
         }
@@ -213,16 +205,12 @@ struct WrappedView: View {
         appeared = false
         isLoading = true
         data = nil
-        wrappedPlaylistId = nil
         let result = await container.wrappedDataSource.wrappedData(
             for: selectedPeriod, serverId: serverId, calendar: .current, refresh: refresh
         )
         guard !Task.isCancelled else { return }
         source = result.source
         fellBack = result.fellBack
-        if case .year(let y) = selectedPeriod {
-            wrappedPlaylistId = await container.wrappedPlaylistService.playlistId(year: y, serverId: serverId)
-        }
         data = result.data
         isLoading = false
         appeared = true

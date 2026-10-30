@@ -40,7 +40,6 @@ final class AppContainer {
     let artworkImageCache: ArtworkImageCache
     let statsService: StatsService
     private let _player: PlayerService
-    let wrappedPlaylistService: WrappedPlaylistService
     /// Wrapped's plays: ListenBrainz when an account is set, this phone's otherwise (#16).
     let wrappedDataSource: WrappedDataSource
     let moodPlaylistService: MoodPlaylistService
@@ -222,15 +221,10 @@ final class AppContainer {
                    scrobbling.serverRootURL.contains("api.listenbrainz.org") { return user }
                 return nil
             },
-            librarySongs: { (try? await catalog.allIndexedSongs()) ?? nil }
+            librarySongs: { (try? await catalog.allIndexedSongs()) ?? nil },
+            songsByID: { (try? await catalog.indexedSongs(ids: $0)) ?? [] }
         )
         wrappedDataSource = wrappedSource
-        wrappedPlaylistService = WrappedPlaylistService(
-            serverService: server, statsService: stats,
-            topTracks: { year, serverId, limit, calendar in
-                await wrappedSource.topLibraryTracks(year: year, serverId: serverId, limit: limit, calendar: calendar)
-            }
-        )
 
         let audioEngine: AudioEngine = AVPlayerEngine()
         let player = PlayerService(

@@ -122,64 +122,6 @@ private func cancellationDate() -> Date {
 
 @Suite("Playlist sync cancellation")
 struct PlaylistSyncCancellationTests {
-    @Test("Wrapped propagates cancellation and leaves cadence markers untouched")
-    func wrappedCancellationDoesNotCommitMarkers() async throws {
-        let modelContainer = try ModelContainer.minidisc(inMemory: true)
-        let stats = StatsService(modelContainer: modelContainer)
-        let preferences = WrappedPreferences(
-            userDefaults: UserDefaults(suiteName: "wrapped.cancel.\(UUID().uuidString)")!
-        )
-        let client = CancellationBlockingPlaylistClient()
-        let service = WrappedPlaylistService(
-            clientFactory: { client },
-            statsService: stats,
-            preferences: preferences
-        )
-        let calendar = cancellationCalendar()
-        let now = cancellationDate()
-
-        preferences.setPlaylistId("pl-existing", year: 2026, serverId: "srv")
-        await stats.recordPlayback(
-            PlaybackEventDTO(
-                trackId: "track-1",
-                trackTitle: "Track",
-                albumId: nil,
-                albumTitle: nil,
-                artistId: nil,
-                artistName: "Artist",
-                genre: nil,
-                timestamp: now,
-                durationListened: 180,
-                trackDuration: 200,
-                wasCompleted: true,
-                serverId: "srv"
-            )
-        )
-
-        let sync = Task {
-            do {
-                _ = try await service.runYearlyPlaylistSyncIfNeededCancellable(
-                    serverId: "srv",
-                    calendar: calendar,
-                    currentDate: now
-                )
-                return false
-            } catch is CancellationError {
-                return true
-            } catch {
-                return false
-            }
-        }
-
-        await client.waitUntilWriteStarted()
-        sync.cancel()
-        let propagatedCancellation = await sync.value
-
-        #expect(propagatedCancellation)
-        #expect(preferences.lastUpdatedMonth(serverId: "srv") == nil)
-        #expect(preferences.lastWrappedYear(serverId: "srv") == nil)
-    }
-
     @Test("Mood propagates cancellation without attempt, source, or cycle markers")
     func moodCancellationDoesNotCommitMarkers() async {
         let provider = CancellationBlockingMoodProvider()

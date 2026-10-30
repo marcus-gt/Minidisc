@@ -29,34 +29,7 @@ struct WrappedTopTracksSection: View {
 
     private func trackRow(_ track: TopTrackEntry) -> some View {
         Button {
-            Task {
-                guard let container, WrappedIDs.isLibraryID(track.trackId) else { return }
-                let song = DisplayableSong(
-                    id: track.trackId,
-                    title: track.title,
-                    artist: track.artistName,
-                    albumId: nil,
-                    albumName: track.albumTitle,
-                    artistId: nil,
-                    genre: nil,
-                    duration: 0,
-                    trackNumber: nil,
-                    isDownloaded: false,
-                    coverArtId: track.trackId,
-                    audioFormat: nil,
-                    replayGainTrackGain: nil,
-                    replayGainTrackPeak: nil,
-                    replayGainAlbumGain: nil,
-                    replayGainAlbumPeak: nil,
-                    replayGainBaseGain: nil,
-                    replayGainFallbackGain: nil
-                )
-                do {
-                    try await container.playerService.play(tracks: [song], startIndex: 0)
-                } catch {
-                    Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
-                }
-            }
+            Task { await play(from: track) }
         } label: {
             HStack(spacing: MinidiscSpacing.m) {
                 ZStack {
@@ -87,6 +60,19 @@ struct WrappedTopTracksSection: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// Plays the list as the queue, starting at `track`, the way albums and playlists do (#69).
+    /// Rows outside the library can't be played and are left out of the queue.
+    private func play(from track: TopTrackEntry) async {
+        guard let container, WrappedIDs.isLibraryID(track.trackId) else { return }
+        let queue = await container.wrappedDataSource.songs(Array(tracks.prefix(10)))
+        guard let start = queue.firstIndex(where: { $0.id == track.trackId }) else { return }
+        do {
+            try await container.playerService.play(tracks: queue, startIndex: start)
+        } catch {
+            Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
+        }
     }
 
     private func medalColor(for rank: Int) -> Color {
