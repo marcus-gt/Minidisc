@@ -15,6 +15,18 @@ nonisolated struct WrappedPlay: Sendable, Equatable {
     var trackDuration: TimeInterval
 }
 
+/// A genre in the story's top five (#75).
+nonisolated struct TopGenreEntry: Sendable, Identifiable, Equatable {
+    let rank: Int
+    let name: String
+    let totalSecondsListened: TimeInterval
+    /// Of the time on plays with a genre.
+    let share: Double
+    /// The genre's most played library albums, for the slide's collage.
+    let albumIDs: [String]
+    var id: String { name }
+}
+
 /// Builds `WrappedData` from plays. Pure, so it can run anywhere.
 nonisolated enum WrappedAggregator {
 
@@ -171,6 +183,35 @@ nonisolated enum WrappedAggregator {
             if $0.value != $1.value { return $0.value < $1.value }
             return $0.key > $1.key
         }?.key
+    }
+
+    /// The top genres by listening time, as `buildDominantGenre` ranks them, each with its share of
+    /// the time on tagged plays and its most played library albums (#75's genre slide).
+    static func topGenres(from plays: [WrappedPlay], limit: Int, albumsPerGenre: Int = 9) -> [TopGenreEntry] {
+        var time: [String: TimeInterval] = [:]
+        var albumTime: [String: [String: TimeInterval]] = [:]
+        for play in plays {
+            guard let genre = play.genre else { continue }
+            let seconds = effectiveDuration(for: play)
+            time[genre, default: 0] += seconds
+            if let album = play.albumId, WrappedIDs.isLibraryID(album) {
+                albumTime[genre, default: [:]][album, default: 0] += seconds
+            }
+        }
+        let total = time.values.reduce(0, +)
+        guard total > 0 else { return [] }
+        return time
+            .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+            .prefix(limit)
+            .enumerated()
+            .map { index, entry in
+                let albums = (albumTime[entry.key] ?? [:])
+                    .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+                    .prefix(albumsPerGenre)
+                    .map(\.key)
+                return TopGenreEntry(rank: index + 1, name: entry.key, totalSecondsListened: entry.value,
+                                     share: entry.value / total, albumIDs: albums)
+            }
     }
 
     static func buildStreak(

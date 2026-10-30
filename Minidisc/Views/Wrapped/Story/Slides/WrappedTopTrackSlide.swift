@@ -4,63 +4,71 @@ struct WrappedTopTrackSlide: View {
     let data: WrappedData
     let palette: [Color]
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     private var topTrack: TopTrackEntry? { data.topTracks.first }
+    private var runnersUp: ArraySlice<TopTrackEntry> { data.topTracks.dropFirst().prefix(4) }
 
     var body: some View {
         ZStack {
-            MeshGradientBackground(palette: palette, animated: !reduceMotion)
+            WrappedArtBackdrop(artworkID: topTrack?.trackId, palette: palette)
 
             VStack(spacing: 0) {
                 Spacer(minLength: MinidiscSpacing.xxxxl)
-
-                Text("YOUR #1 TRACK")
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
-                    .tracking(2.5)
-                    .foregroundStyle(.white.opacity(0.7))
-
-                Spacer()
+                WrappedSlideLabel("YOUR #1 TRACK")
+                Spacer(minLength: MinidiscSpacing.l)
 
                 if let track = topTrack {
-                    CoverArtCard(id: track.trackId, size: 300, cornerRadius: MinidiscCornerRadius.large)
-
-                    Spacer(minLength: MinidiscSpacing.xl)
+                    WrappedSlideCover(artworkID: track.trackId)
 
                     VStack(spacing: MinidiscSpacing.xs) {
                         Text(track.title)
-                            .font(.system(size: 30, weight: .black, design: .rounded))
+                            .font(.system(size: 28, weight: .black, design: .rounded))
                             .kerning(-0.5)
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.center)
                             .lineLimit(2)
                             .minimumScaleFactor(0.7)
-
-                        Text(track.artistName)
-                            .font(.system(size: 20, weight: .medium, design: .rounded))
+                        Text(verbatim: "\(track.artistName) · \(track.playCount.plural("play", "plays"))")
+                            .font(.system(size: 17, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.8))
                             .lineLimit(1)
                     }
                     .padding(.horizontal, MinidiscSpacing.xl)
+                    .padding(.top, MinidiscSpacing.l)
 
                     Spacer(minLength: MinidiscSpacing.l)
 
-                    Text(track.playCount.plural("play", "plays"))
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, MinidiscSpacing.m)
-                        .padding(.vertical, MinidiscSpacing.s)
-                        .background(Color.white.opacity(0.2), in: Capsule())
+                    VStack(spacing: MinidiscSpacing.s) {
+                        ForEach(runnersUp) { entry in
+                            WrappedRunnerUpRow(rank: entry.rank, artworkID: entry.trackId, title: entry.title,
+                                               subtitle: entry.artistName, detail: entry.playCount.plural("play", "plays"))
+                        }
+                    }
+                    .padding(.horizontal, MinidiscSpacing.xl)
                 } else {
                     Text("No track data yet")
                         .font(.system(.title2, design: .rounded, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
 
-                Spacer()
+                Spacer(minLength: MinidiscSpacing.xxxxl)
             }
             .wrappedSlideEntrance()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// The #1's cover on a slide, with a shadow to lift it off its own blurred copy.
+struct WrappedSlideCover: View {
+    let artworkID: String
+    var isArtist = false
+
+    static let size: CGFloat = 220
+
+    var body: some View {
+        CoverArtCard(id: artworkID, size: Self.size, tier: .hero,
+                     cornerRadius: isArtist ? Self.size / 2 : MinidiscCornerRadius.large,
+                     placeholderSystemImage: isArtist ? "person.fill" : "music.note")
+            .shadow(color: .black.opacity(0.4), radius: 24, y: 12)
     }
 }

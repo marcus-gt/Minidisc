@@ -11,7 +11,7 @@ struct WrappedMinutesSlide: View {
 
     var body: some View {
         ZStack {
-            MeshGradientBackground(palette: palette, animated: !reduceMotion)
+            WrappedCoverMosaic(artworkIDs: data.topAlbums.map(\.albumId), palette: palette)
 
             VStack(alignment: .leading, spacing: 0) {
                 Spacer()
