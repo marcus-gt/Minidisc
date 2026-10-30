@@ -77,6 +77,40 @@ struct WrappedCoverMosaic: View {
     }
 }
 
+/// The maekster mark on the story (#75). The slides are colourful and photographic, so the brand
+/// rules call for the one-colour white mark rather than the full-colour one.
+struct WrappedBrandMark: View {
+    let width: CGFloat
+
+    /// The mark's own proportions (947 × 434).
+    static let aspectRatio: CGFloat = 947 / 434
+
+    var body: some View {
+        Image("BrandMarkMono")
+            .resizable()
+            .renderingMode(.template)
+            .foregroundStyle(.white)
+            .aspectRatio(Self.aspectRatio, contentMode: .fit)
+            .frame(width: max(width, 20))
+            .accessibilityHidden(true)
+    }
+}
+
+/// The mark and name at the foot of the middle slides (#75).
+struct WrappedBrandFooter: View {
+    let year: Int
+
+    var body: some View {
+        HStack(spacing: MinidiscSpacing.s) {
+            WrappedBrandMark(width: 28)
+            Text(verbatim: "maekster · \(year)")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.75))
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 /// One of #2–5 under a slide's #1 (#75).
 struct WrappedRunnerUpRow: View {
     let rank: Int
@@ -153,13 +187,25 @@ private enum WrappedStoryPreviewData {
             let artist = artists[(index * index) % 23 % artists.count]
             return WrappedPlay(timestamp: start.addingTimeInterval(Double(index) * 80_000), trackId: "\(artist)-\(index % 4)",
                                trackTitle: "Köln, January 24, 1975, Part \(index % 4 + 1)", albumId: "\(artist)-album",
-                               albumTitle: "The \(artist) Album", artistId: artist, artistName: artist, genre: "Jazz",
+                               albumTitle: "The \(artist) Album", artistId: artist, artistName: artist,
+                               genre: ["Jazz", "Jazz", "Electronic", "Ambient", "Rock", "Soul", "Jazz"][index % 7],
                                durationListened: 300, trackDuration: 300)
         }
         return WrappedAggregator.aggregate(plays: plays, period: .year(2026), serverId: "s",
                                            periodRange: WrappedPeriod.year(2026).dateRange(in: calendar), calendar: calendar)
     }()
     static let palette = WrappedYearPalette.colors(for: 2026)
+    static let genres: [TopGenreEntry] = {
+        let calendar = Calendar.current
+        let start = calendar.date(from: DateComponents(year: 2026, month: 1, day: 1))!
+        let plays = (0..<300).map { index in
+            WrappedPlay(timestamp: start.addingTimeInterval(Double(index) * 80_000), trackId: "t", trackTitle: "t",
+                        albumId: "a\(index % 5)", albumTitle: nil, artistId: nil, artistName: "a",
+                        genre: ["Jazz", "Jazz", "Jazz", "Electronic", "Electronic", "Ambient", "Rock", "Soul", "Hip-Hop"][index % 9],
+                        durationListened: 200, trackDuration: 200)
+        }
+        return WrappedAggregator.topGenres(from: plays, limit: 5)
+    }()
     static let container = try? AppContainer(inMemory: true, userDefaults: UserDefaults(suiteName: "wrapped-story-preview")!)
 }
 
@@ -184,5 +230,16 @@ private extension View {
 #Preview("Intro") {
     WrappedIntroSlide(year: 2026, palette: WrappedStoryPreviewData.palette,
                       artworkIDs: WrappedStoryPreviewData.data.topAlbums.map(\.albumId))
+        .wrappedStoryPreviewEnvironment()
+}
+
+#Preview("Genre") {
+    WrappedTopGenreSlide(data: WrappedStoryPreviewData.data, palette: WrappedStoryPreviewData.palette,
+                         genres: WrappedStoryPreviewData.genres)
+        .wrappedStoryPreviewEnvironment()
+}
+
+#Preview("Summary") {
+    WrappedClosingSlide(year: 2026, data: WrappedStoryPreviewData.data, palette: WrappedStoryPreviewData.palette)
         .wrappedStoryPreviewEnvironment()
 }

@@ -63,4 +63,30 @@ struct WrappedStoryTests {
         let picks = WrappedDataSource.soundtrack(plays: plays, data: data(plays))
         #expect(picks[.intro] == "only" && picks[.minutes] == "only" && picks[.discoveries] == "only")
     }
+
+    // MARK: Genres
+
+    /// Ranked by listening time like the dominant genre, so the slide's #1 is always the recap's.
+    @Test func topGenres_rankByTimeWithSharesAndAlbums() {
+        let plays = play("a", artist: "x", album: "jazz1", genre: "Jazz", times: 5)
+            + play("b", artist: "x", album: "jazz2", genre: "Jazz", times: 1)
+            + play("c", artist: "y", album: "rock1", genre: "Rock", times: 3)
+            + play("d", artist: "z", album: "lb:album:elsewhere", genre: "Soul", times: 2)
+            + play("e", artist: "z", album: "untagged", genre: nil, times: 9)
+        let genres = WrappedAggregator.topGenres(from: plays, limit: 5)
+        #expect(genres.map(\.name) == ["Jazz", "Rock", "Soul"])
+        #expect(genres.first?.name == data(plays).dominantGenre)
+        #expect(abs((genres.first?.share ?? 0) - 6.0 / 11.0) < 0.0001)
+        #expect(genres.first?.albumIDs == ["jazz1", "jazz2"])
+        // Albums outside the library can't be drawn.
+        #expect(genres.last?.albumIDs.isEmpty == true)
+    }
+
+    @Test func topGenres_keepsTheLimit() {
+        let plays = (0..<8).flatMap { play("t\($0)", artist: "a", album: "al", genre: "G\($0)", times: $0 + 1) }
+        let genres = WrappedAggregator.topGenres(from: plays, limit: 5)
+        #expect(genres.count == 5)
+        #expect(genres.map(\.rank) == [1, 2, 3, 4, 5])
+        #expect(genres.first?.name == "G7")
+    }
 }

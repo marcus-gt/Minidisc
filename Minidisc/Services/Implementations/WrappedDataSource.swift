@@ -334,21 +334,26 @@ actor WrappedDataSource {
         return WrappedMoodBuilder.build(plays: loaded.plays, scores: scores, period: period, buckets: buckets, calendar: calendar)
     }
 
-    /// The song behind each story slide (#75), and the songs themselves for their lengths.
-    nonisolated struct StorySoundtrack: Sendable {
+    /// What the story adds to the recap (#75): the song behind each slide, with the songs for their
+    /// lengths, and the top genres.
+    nonisolated struct StoryDetails: Sendable {
         let trackIDs: [WrappedStorySlideKind: String]
         let songs: [String: DisplayableSong]
+        let topGenres: [TopGenreEntry]
 
-        static let empty = StorySoundtrack(trackIDs: [:], songs: [:])
+        static let empty = StoryDetails(trackIDs: [:], songs: [:], topGenres: [])
     }
 
-    func storySoundtrack(for data: WrappedData, serverId: String, calendar: Calendar) async -> StorySoundtrack {
+    static let storyGenreCount = 5
+
+    func storyDetails(for data: WrappedData, serverId: String, calendar: Calendar) async -> StoryDetails {
         let plays = await plays(for: data.period, serverId: serverId, calendar: calendar).plays
         let picks = Self.soundtrack(plays: plays, data: data)
         let ids = Array(Set(picks.values))
         let indexed = await songsByID(ids)
         let songs = Dictionary(indexed.map { ($0.id, DisplayableSong(from: $0)) }, uniquingKeysWith: { first, _ in first })
-        return StorySoundtrack(trackIDs: picks.filter { songs[$0.value] != nil }, songs: songs)
+        return StoryDetails(trackIDs: picks.filter { songs[$0.value] != nil }, songs: songs,
+                            topGenres: WrappedAggregator.topGenres(from: plays, limit: Self.storyGenreCount))
     }
 
     /// Library tracks only, as only those can play: the #1 song on Top Track, the top artist's and

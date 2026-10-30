@@ -11,7 +11,8 @@ struct WrappedStoryPlayerView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let slides = WrappedStorySlideKind.allCases
-    private let slideDuration: Double = 5.0
+    /// Long enough for a song to fade in and be heard before the crossfade (#75).
+    private let slideDuration: Double = 10.0
     private let timerInterval: Double = 0.05
 
     @State private var currentIndex = 0
@@ -22,7 +23,7 @@ struct WrappedStoryPlayerView: View {
     @State private var wrappedData: WrappedData? = nil
     /// A song per slide (#75), on players of the story's own.
     @State private var audio: WrappedStoryAudio?
-    @State private var soundtrack: WrappedDataSource.StorySoundtrack = .empty
+    @State private var story: WrappedDataSource.StoryDetails = .empty
     /// The main player was playing when the story opened, so it picks up again on close.
     @State private var resumesMainPlayer = false
     /// Pausing the main player deactivates the audio session; the story's music starts after that.
@@ -43,6 +44,16 @@ struct WrappedStoryPlayerView: View {
                 .ignoresSafeArea()
                 .id(currentIndex)
                 .transition(.opacity)
+
+            if ![.intro, .closing].contains(slides[currentIndex]) {
+                // The intro and closing slides carry the mark large; the rest sign off at the foot.
+                VStack {
+                    Spacer()
+                    WrappedBrandFooter(year: year)
+                        .padding(.bottom, MinidiscSpacing.xl)
+                }
+                .allowsHitTesting(false)
+            }
 
             gestureLayer
 
@@ -82,7 +93,7 @@ struct WrappedStoryPlayerView: View {
             calendar: .current
         ).data
         wrappedData = data
-        soundtrack = await container.wrappedDataSource.storySoundtrack(for: data, serverId: serverId, calendar: .current)
+        story = await container.wrappedDataSource.storyDetails(for: data, serverId: serverId, calendar: .current)
         playSoundtrack()
     }
 
@@ -109,7 +120,7 @@ struct WrappedStoryPlayerView: View {
 
     private func playSoundtrack() {
         guard let audio else { return }
-        let song = soundtrack.trackIDs[slides[currentIndex]].flatMap { soundtrack.songs[$0] }
+        let song = story.trackIDs[slides[currentIndex]].flatMap { story.songs[$0] }
         let pause = mainPlayerPause
         Task {
             await pause?.value
@@ -134,7 +145,7 @@ struct WrappedStoryPlayerView: View {
                     currentIndex: currentIndex,
                     progress: progress
                 )
-                if let audio, !soundtrack.trackIDs.isEmpty {
+                if let audio, !story.trackIDs.isEmpty {
                     Button {
                         audio.toggleMute()
                     } label: {
@@ -246,7 +257,7 @@ struct WrappedStoryPlayerView: View {
             }
         case .topGenre:
             if let data = wrappedData {
-                WrappedTopGenreSlide(data: data, palette: palette)
+                WrappedTopGenreSlide(data: data, palette: palette, genres: story.topGenres)
             } else {
                 loadingSlide
             }

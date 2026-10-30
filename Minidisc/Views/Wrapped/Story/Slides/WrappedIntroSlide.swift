@@ -14,6 +14,8 @@ struct WrappedIntroSlide: View {
                 Spacer()
 
                 VStack(spacing: MinidiscSpacing.xs) {
+                    WrappedBrandMark(width: 120)
+                        .padding(.bottom, MinidiscSpacing.l)
                     Text("YOUR")
                         .font(.system(size: 16, weight: .heavy, design: .rounded))
                         .tracking(4)
