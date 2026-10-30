@@ -103,15 +103,18 @@ actor WrappedDataSource {
     private let history: ListenHistoryStore
     private let username: @Sendable () async -> String?
     private let librarySongs: @Sendable () async -> [Song]?
+    private let songsByID: @Sendable ([String]) async -> [Song]
     private var matcher: (serverId: String, matcher: WrappedLibraryMatcher)?
 
     init(stats: StatsService, history: ListenHistoryStore,
          username: @escaping @Sendable () async -> String?,
-         librarySongs: @escaping @Sendable () async -> [Song]?) {
+         librarySongs: @escaping @Sendable () async -> [Song]?,
+         songsByID: @escaping @Sendable ([String]) async -> [Song] = { _ in [] }) {
         self.stats = stats
         self.history = history
         self.username = username
         self.librarySongs = librarySongs
+        self.songsByID = songsByID
     }
 
     func source() async -> WrappedSourceKind {
@@ -132,10 +135,14 @@ actor WrappedDataSource {
         return Result(data: data, source: .device, fellBack: fellBack)
     }
 
-    /// The most played library tracks of a year, for the yearly Wrapped playlist. Listens that don't
-    /// match a library song can't go into a server playlist, so they are left out.
-    func topLibraryTracks(year: Int, serverId: String, limit: Int, calendar: Calendar) async -> [TopTrackEntry] {
-        let period = WrappedPeriod.year(year)
+    /// How many tracks a Wrapped radio starts with in Top Tracks order before it shuffles (#69).
+    static let radioTopCount = 10
+    /// A year can hold thousands of tracks; the radio is long enough without queueing all of them.
+    static let radioLimit = 500
+
+    /// The period's most played library tracks, most listened first. Listens that don't match a
+    /// library song can't be played, so they are left out.
+    func topLibraryTracks(for period: WrappedPeriod, serverId: String, limit: Int, calendar: Calendar) async -> [TopTrackEntry] {
         let range = period.dateRange(in: calendar)
         // `??` can't take an async right-hand side.
         let plays: [WrappedPlay]
@@ -146,6 +153,40 @@ actor WrappedDataSource {
         }
         let libraryPlays = plays.filter { WrappedIDs.isLibraryID($0.trackId) }
         return WrappedAggregator.topTracks(from: libraryPlays, limit: limit)
+    }
+
+    /// The period's radio: its top tracks in order, then the rest of its library tracks shuffled.
+    func radioQueue(for period: WrappedPeriod, serverId: String, calendar: Calendar) async -> [DisplayableSong] {
+        let ranked = await topLibraryTracks(for: period, serverId: serverId, limit: .max, calendar: calendar)
+        let order = Self.radioOrder(ranked.map(\.trackId), topCount: Self.radioTopCount, limit: Self.radioLimit)
+        let byID = Dictionary(ranked.map { ($0.trackId, $0) }, uniquingKeysWith: { first, _ in first })
+        return await songs(order.compactMap { byID[$0] })
+    }
+
+    /// Top Tracks rows as a queue, in the order shown. Entries outside the library are skipped.
+    func songs(_ entries: [TopTrackEntry]) async -> [DisplayableSong] {
+        let library = entries.filter { WrappedIDs.isLibraryID($0.trackId) }
+        let indexed = Dictionary(await songsByID(library.map(\.trackId)).map { ($0.id, $0) },
+                                 uniquingKeysWith: { first, _ in first })
+        return library.map { entry in
+            indexed[entry.trackId].map { DisplayableSong(from: $0) } ?? Self.basicSong(entry)
+        }
+    }
+
+    /// The first `topCount` IDs as they are, the rest shuffled, capped at `limit`.
+    nonisolated static func radioOrder(_ ranked: [String], topCount: Int, limit: Int) -> [String] {
+        Array((ranked.prefix(topCount) + ranked.dropFirst(topCount).shuffled()).prefix(limit))
+    }
+
+    /// A song the index doesn't know yet; the player resolves the stream from the ID alone.
+    private nonisolated static func basicSong(_ entry: TopTrackEntry) -> DisplayableSong {
+        DisplayableSong(
+            id: entry.trackId, title: entry.title, artist: entry.artistName, albumId: nil,
+            albumName: entry.albumTitle, artistId: nil, genre: nil, duration: 0, trackNumber: nil,
+            isDownloaded: false, coverArtId: entry.trackId, audioFormat: nil,
+            replayGainTrackGain: nil, replayGainTrackPeak: nil, replayGainAlbumGain: nil,
+            replayGainAlbumPeak: nil, replayGainBaseGain: nil, replayGainFallbackGain: nil
+        )
     }
 
     /// The first year with listens: the ListenBrainz history's, or the current year for the phone.

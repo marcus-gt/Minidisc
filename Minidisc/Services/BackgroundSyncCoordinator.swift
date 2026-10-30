@@ -30,7 +30,6 @@ actor BackgroundSyncCoordinator {
     }
 
     func configure(
-        wrappedService: WrappedPlaylistService,
         moodService: MoodPlaylistService,
         serverState: ServerState
     ) {
@@ -42,19 +41,6 @@ actor BackgroundSyncCoordinator {
             try Task.checkCancellation()
             guard let serverId else { return false }
 
-            try await wrappedService.handleYearTransitionIfNeededCancellable(
-                serverId: serverId,
-                calendar: calendar
-            )
-            let wrappedResult = try await wrappedService.runYearlyPlaylistSyncIfNeededCancellable(
-                serverId: serverId,
-                calendar: calendar
-            )
-            Logger.wrapped.info(
-                "Playlist sync result: \(String(describing: wrappedResult), privacy: .public)"
-            )
-
-            try Task.checkCancellation()
             let moodResult = try await moodService.runWeeklySyncIfNeededCancellable(
                 serverId: serverId,
                 calendar: calendar
@@ -63,10 +49,6 @@ actor BackgroundSyncCoordinator {
                 "Playlist sync result: \(String(describing: moodResult), privacy: .public)"
             )
             try Task.checkCancellation()
-
-            if case .serverError = wrappedResult {
-                return false
-            }
             return true
         }
     }

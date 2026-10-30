@@ -7,7 +7,8 @@ struct DiscoverView: View {
     @State private var loadedServerID: UUID?
     @State private var isStartingShuffle = false
     @State private var startingStationID: String?
-    @State private var yearlyPlaylists: [WrappedYearlyPlaylist] = []
+    /// The first year with listens, for the Wrapped carousel (#69).
+    @State private var wrappedFirstYear: Int?
     @State private var radioStations: [InternetRadioStation] = []
     @Namespace private var freshReleaseZoomNamespace
     @State private var showAllFreshReleases = false
@@ -52,7 +53,6 @@ struct DiscoverView: View {
                                        recommendationService: container.recommendationService)
                 allReleasesVM = AllFreshReleasesViewModel(recommendationService: container.recommendationService)
                 radioStations = []
-                yearlyPlaylists = []
                 availableMoods = []
             }
             if isOnline { await refreshDiscover(forceRefresh: false) }
@@ -241,9 +241,9 @@ struct DiscoverView: View {
 
     private func refreshServerMixes() async {
         guard let container, let serverID = container.serverState.activeServer?.id.uuidString else { return }
-        let playlists = await container.wrappedPlaylistService.fetchYearlyPlaylists(serverId: serverID)
+        let firstYear = await container.wrappedDataSource.firstYear(calendar: .current)
         guard !Task.isCancelled else { return }
-        yearlyPlaylists = playlists
+        wrappedFirstYear = firstYear
         await refreshMoods(serverId: serverID)
     }
 
@@ -272,7 +272,7 @@ struct DiscoverView: View {
         VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
             MinidiscCarouselHeaderLink(
                 "Wrapped",
-                itemCount: wrappedItems.count,
+                itemCount: wrappedYears.count,
                 hasMore: true
             ) {
                 WrappedYearlyListView()
@@ -280,15 +280,8 @@ struct DiscoverView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: MinidiscSpacing.s) {
-                    ForEach(Array(wrappedItems.prefix(MinidiscCarouselMetrics.previewLimit))) { item in
-                        switch item {
-                        case .yearly(let playlist):
-                            WrappedYearlyCard(playlist: playlist)
-                        case .currentYear(let year):
-                            WrappedCurrentYearCard(year: year)
-                        case .month(let year, let month):
-                            WrappedRecapMonthCard(period: .month(year: year, month: month))
-                        }
+                    ForEach(wrappedYears.prefix(MinidiscCarouselMetrics.previewLimit), id: \.self) { year in
+                        WrappedYearTile(year: year)
                     }
                 }
                 .padding(.horizontal, MinidiscSpacing.l)
@@ -296,28 +289,9 @@ struct DiscoverView: View {
         }
     }
 
-    private var wrappedItems: [WrappedCarouselItem] {
-        let playlists = isOnline ? yearlyPlaylists : (container?.offlineLibrary.snapshot.playlists ?? []).compactMap { playlist -> WrappedYearlyPlaylist? in
-            guard let year = WrappedPlaylistService.year(fromPlaylistName: playlist.name) else { return nil }
-            return WrappedYearlyPlaylist(id: playlist.id, year: year, name: playlist.name, coverArtId: playlist.coverArt)
-        }
-        var items = playlists.map(WrappedCarouselItem.yearly)
-        let year = Calendar.current.component(.year, from: Date())
-        if !playlists.contains(where: { $0.year == year }) {
-            items.append(.currentYear(year))
-        }
-        items.append(contentsOf: currentYearMonths.map {
-            .month(year: $0.year, month: $0.month)
-        })
-        return items
-    }
-
-    private var currentYearMonths: [(year: Int, month: Int)] {
-        let cal = Calendar.current
-        let now = Date()
-        let year = cal.component(.year, from: now)
-        let currentMonth = cal.component(.month, from: now)
-        return (1...currentMonth).reversed().map { (year, $0) }
+    /// One tile per year, newest first (#69).
+    private var wrappedYears: [Int] {
+        WrappedYears.years(firstYear: wrappedFirstYear)
     }
 
     private var internetRadioSection: some View {
@@ -377,21 +351,4 @@ struct DiscoverView: View {
         }
     }
 
-}
-
-private enum WrappedCarouselItem: Identifiable {
-    case yearly(WrappedYearlyPlaylist)
-    case currentYear(Int)
-    case month(year: Int, month: Int)
-
-    var id: String {
-        switch self {
-        case .yearly(let playlist):
-            "yearly-\(playlist.id)"
-        case .currentYear(let year):
-            "current-\(year)"
-        case .month(let year, let month):
-            "month-\(year)-\(month)"
-        }
-    }
 }

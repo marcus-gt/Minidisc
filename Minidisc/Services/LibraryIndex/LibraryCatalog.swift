@@ -420,6 +420,14 @@ actor LibraryCatalog {
         return try await store.songs(serverID: serverID, offset: 0, count: 1_000_000)
     }
 
+    /// Indexed songs for `ids`, in the order given; IDs not in the index are left out (#69).
+    func indexedSongs(ids: [String]) async throws -> [Song] {
+        let serverID = try await source.activeServerID()
+        let byID = Dictionary(try await store.songs(ids: Set(ids), serverID: serverID).map { ($0.id, $0) },
+                              uniquingKeysWith: { first, _ in first })
+        return ids.compactMap { byID[$0] }
+    }
+
     /// `nil` means the index is not complete enough to build an authoritative queue.
     func songs(artistID: String) async throws -> [Song]? {
         let serverID = try await source.activeServerID()
