@@ -166,13 +166,14 @@ struct PlaylistDetailView: View {
     private func playSongs(_ requested: [DisplayableSong], startIndex: Int) async {
         guard requested.indices.contains(startIndex), let vm = viewModel, let container else { return }
         let selectedID = requested[startIndex].id
+        let source = QueueSource.playlist(id: playlistId, name: vm.name)
         do {
             try await container.playerService.play(preparingQueue: {
                 let refreshed = await vm.playbackSongs(from: requested)
                 guard let index = refreshed.firstIndex(where: { $0.id == selectedID }) else {
                     throw UserFacingError.contentRemoved
                 }
-                return PreparedPlaybackQueue(tracks: refreshed, startIndex: index)
+                return PreparedPlaybackQueue(tracks: refreshed, startIndex: index, source: source)
             })
             container.recordPlaylistUse(playlistId)
         } catch {

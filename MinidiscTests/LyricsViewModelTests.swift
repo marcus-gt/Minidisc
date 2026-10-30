@@ -11,7 +11,7 @@ final class MockPlayerService: PlayerServiceProtocol {
     let state: PlayerState = PlayerState()
     var seekCalledWith: TimeInterval?
 
-    func play(tracks: [DisplayableSong], startIndex: Int) async throws {}
+    func play(tracks: [DisplayableSong], startIndex: Int, source: QueueSource?) async throws {}
     func resume() async {}
     func pause() async {}
     func stop() async {}
@@ -35,7 +35,7 @@ final class MockPlayerService: PlayerServiceProtocol {
     func handleNetworkPathChanged(_ event: NetworkPathEvent) async {}
     func playRadio(_ station: InternetRadioStation) async throws {}
     func playSmartShuffle() async throws {}
-    func playInstantMix(from seed: InstantMixSeed, startingWith seedTrack: DisplayableSong?) async throws {}
+    func playInstantMix(from seed: InstantMixSeed, startingWith seedTrack: DisplayableSong?, source: QueueSource?) async throws {}
     func setAutoExtendEnabled(_ enabled: Bool) async {}
     func setVolume(_ volume: Float) async {}
     func togglePlayPause() async {}

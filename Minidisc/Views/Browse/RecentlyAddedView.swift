@@ -137,7 +137,7 @@ struct RecentlyAddedView: View {
             HStack(spacing: MinidiscSpacing.l) {
                 Button {
                     let shuffled = songs.shuffled()
-                    Task { await container?.toastService.perform { try await container?.playerService.play(tracks: shuffled, startIndex: 0) } }
+                    Task { await container?.toastService.perform { try await container?.playerService.play(tracks: shuffled, startIndex: 0, source: .recentlyAdded) } }
                 } label: {
                     Image(systemName: "shuffle")
                         .font(.system(size: 16, weight: .semibold))
@@ -202,6 +202,6 @@ struct RecentlyAddedView: View {
     private func play(from index: Int) {
         let tracks = songs
         guard tracks.indices.contains(index) else { return }
-        Task { await container?.toastService.perform { try await container?.playerService.play(tracks: tracks, startIndex: index) } }
+        Task { await container?.toastService.perform { try await container?.playerService.play(tracks: tracks, startIndex: index, source: .recentlyAdded) } }
     }
 }

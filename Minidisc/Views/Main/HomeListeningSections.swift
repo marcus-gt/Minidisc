@@ -24,7 +24,7 @@ struct HomeFavoriteSongsSection: View {
                             onAddToPlaylist: playlistAddition.present, onTap: {
                         Task {
                             await container?.toastService.perform {
-                                try await container?.playerService.play(tracks: tracks, startIndex: index)
+                                try await container?.playerService.play(tracks: tracks, startIndex: index, source: .favorites)
                             }
                         }
                     })

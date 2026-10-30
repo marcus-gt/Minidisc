@@ -78,6 +78,18 @@ final class PlayerState {
     var isAutoExtendEnabled: Bool
     /// Index separating requested tracks from the auto-extended tail; nil means no extension.
     var originalQueueEndIndex: Int?
+    /// What started the queue (#71); nil when unknown.
+    var queueSource: QueueSource?
+
+    /// "Playing from …" for the current track.
+    var playingFromLabel: QueueSourceLabel? {
+        QueueSourceLabel(source: queueSource, index: currentIndex, extensionStart: originalQueueEndIndex)
+    }
+
+    /// "Next from …" for the track after it.
+    var nextFromLabel: QueueSourceLabel? {
+        QueueSourceLabel(source: queueSource, index: currentIndex + 1, extensionStart: originalQueueEndIndex)
+    }
 
     init(isAutoExtendEnabled: Bool = false, waitingMessageDelay: Duration = .milliseconds(700)) {
         self.isAutoExtendEnabled = isAutoExtendEnabled

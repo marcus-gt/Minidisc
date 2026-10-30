@@ -85,7 +85,7 @@ private struct QueueRow: View {
             Button {
                 Task {
                     do {
-                        try await container?.playerService.play(tracks: [song], startIndex: 0)
+                        try await container?.playerService.play(tracks: [song], startIndex: 0, source: .album(of: song))
                     } catch {
                         Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                         if !UserFacingError.isCancellation(error) {
@@ -158,6 +158,23 @@ struct InlineQueueList: View {
 
     var body: some View {
         let entries = QueueRowSnapshot.capture(playerState)
+        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            if !entries.isEmpty, let label = playerState.nextFromLabel {
+                // "Next from: Kind of Blue", like Spotify's header (#71).
+                Text("Next from: \(label.title)")
+                    .font(.minidiscCellTitle.weight(.bold))
+                    .foregroundStyle(contentColor)
+                    .lineLimit(1)
+                    .padding(.horizontal, MinidiscSpacing.l)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("queue.nextFrom")
+            }
+            queueList(entries)
+        }
+    }
+
+    @ViewBuilder
+    private func queueList(_ entries: [QueueRowSnapshot]) -> some View {
         if entries.isEmpty {
             EmptyStateView(systemImage: "list.bullet", title: "Nothing up next",
                            subtitle: "Tracks you add to the queue appear here.")

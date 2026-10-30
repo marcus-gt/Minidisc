@@ -463,13 +463,26 @@ actor PlayerService: PlayerServiceProtocol {
 
     // MARK: - Play
 
-    func play(tracks: [DisplayableSong], startIndex: Int) async throws {
+    func play(tracks: [DisplayableSong], startIndex: Int, source: QueueSource?) async throws {
         try await play(
             tracks: tracks,
             startIndex: startIndex,
             preparedPlayback: nil,
-            engineTransition: nil
+            engineTransition: nil,
+            sourceUpdate: .set(source)
         )
+    }
+
+    /// Internal plays (skips, restarts, re-plays of the same queue) keep the queue's source.
+    private func play(tracks: [DisplayableSong], startIndex: Int) async throws {
+        try await play(tracks: tracks, startIndex: startIndex, preparedPlayback: nil, engineTransition: nil)
+    }
+
+    /// Whether a play replaces the queue's source (#71).
+    private enum QueueSourceUpdate {
+        /// The same queue continuing; a new queue without a source shows none.
+        case keep
+        case set(QueueSource?)
     }
 
     private func play(
@@ -477,7 +490,8 @@ actor PlayerService: PlayerServiceProtocol {
         startIndex: Int,
         preparedPlayback: PreparedNextPlayback?,
         engineTransition: AudioEngineTrackEnd?,
-        skippingUnavailableTracks: Bool = false
+        skippingUnavailableTracks: Bool = false,
+        sourceUpdate: QueueSourceUpdate = .keep
     ) async throws {
         guard tracks.indices.contains(startIndex) else { return }
         playbackDiagnostics.record(.command(.play(queueCount: tracks.count, startIndex: startIndex)))
@@ -603,7 +617,8 @@ actor PlayerService: PlayerServiceProtocol {
             isNewQueue: isNewQueue,
             generation: generation,
             transportGeneration: transportGeneration,
-            engineTransition: engineTransition
+            engineTransition: engineTransition,
+            sourceUpdate: sourceUpdate
         )
     }
 
@@ -616,7 +631,8 @@ actor PlayerService: PlayerServiceProtocol {
         isNewQueue: Bool,
         generation: UInt64,
         transportGeneration: UInt64,
-        engineTransition: AudioEngineTrackEnd?
+        engineTransition: AudioEngineTrackEnd?,
+        sourceUpdate: QueueSourceUpdate
     ) async {
         await waitForTransitionCommit()
         guard isCurrentPlaybackIntent(
@@ -658,6 +674,11 @@ actor PlayerService: PlayerServiceProtocol {
             }
             // Moving within an unchanged queue must keep an outstanding removal's Undo valid.
             if state.queue != tracks { state.queue = tracks }
+            switch sourceUpdate {
+            case .set(let source): state.queueSource = source
+            case .keep where isNewQueue: state.queueSource = nil
+            case .keep: break
+            }
             state.queueGeneration = committedQueueGeneration
             state.currentIndex = startIndex
             state.currentRadio = nil
@@ -1140,7 +1161,7 @@ actor PlayerService: PlayerServiceProtocol {
         // play(tracks:) resets isSmartShuffleActive via the new-queue check, so set the flag after.
         let expectedPlayGeneration = playbackGeneration &+ 1
         let expectedBuildGeneration = queueBuildGeneration &+ 1
-        try await play(tracks: tracks, startIndex: 0)
+        try await play(tracks: tracks, startIndex: 0, source: .smartShuffle)
         guard expectedPlayGeneration == playbackGeneration,
               expectedBuildGeneration == queueBuildGeneration
         else { return }
@@ -1164,12 +1185,12 @@ actor PlayerService: PlayerServiceProtocol {
 
     // MARK: - Queue Builder
 
-    func playBuiltQueue(_ tracks: [DisplayableSong], refill: @escaping QueueRefill) async throws {
+    func playBuiltQueue(_ tracks: [DisplayableSong], source: QueueSource?, refill: @escaping QueueRefill) async throws {
         guard !tracks.isEmpty else { throw MinidiscError.smartShuffleEmpty }
         cancelPendingInstantMix()
         let expectedPlayGeneration = playbackGeneration &+ 1
         let expectedBuildGeneration = queueBuildGeneration &+ 1
-        try await play(tracks: tracks, startIndex: 0)
+        try await play(tracks: tracks, startIndex: 0, source: source)
         guard expectedPlayGeneration == playbackGeneration,
               expectedBuildGeneration == queueBuildGeneration
         else { return }
@@ -1197,7 +1218,7 @@ actor PlayerService: PlayerServiceProtocol {
 
     // MARK: - Instant Mix
 
-    func playInstantMix(from seed: InstantMixSeed, startingWith seedTrack: DisplayableSong?) async throws {
+    func playInstantMix(from seed: InstantMixSeed, startingWith seedTrack: DisplayableSong?, source: QueueSource?) async throws {
         // Like Smart Shuffle, claim before resolving the seed: the result of an
         // older, slower request must never replace a newer playback intent.
         queueBuildGeneration &+= 1
@@ -1205,7 +1226,7 @@ actor PlayerService: PlayerServiceProtocol {
         cancelPendingInstantMix()
 
         if case .song(let seedID) = seed, let playing = await trackPlayingInPlace(id: seedID) {
-            try await remixAroundPlayingTrack(playing, seed: seed, requestGeneration: requestGeneration)
+            try await remixAroundPlayingTrack(playing, seed: seed, requestGeneration: requestGeneration, source: source)
             return
         }
 
@@ -1221,7 +1242,8 @@ actor PlayerService: PlayerServiceProtocol {
         guard let starter = resolved else {
             try await buildThenPlayInstantMix(
                 from: seed,
-                requestGeneration: requestGeneration
+                requestGeneration: requestGeneration,
+                source: source
             )
             return
         }
@@ -1230,7 +1252,7 @@ actor PlayerService: PlayerServiceProtocol {
         // Claimed before play(): its track-start auto-extend check runs before instantMixTask exists.
         instantMixPendingPlaybackGeneration = expectedPlayGeneration
         do {
-            try await play(tracks: [starter], startIndex: 0)
+            try await play(tracks: [starter], startIndex: 0, source: source)
         } catch {
             clearInstantMixPending(generation: expectedPlayGeneration)
             throw error
@@ -1289,7 +1311,8 @@ actor PlayerService: PlayerServiceProtocol {
     private func remixAroundPlayingTrack(
         _ seedTrack: DisplayableSong,
         seed: InstantMixSeed,
-        requestGeneration: UInt64
+        requestGeneration: UInt64,
+        source: QueueSource?
     ) async throws {
         let generation = playbackGeneration
         let expectedQueueGeneration = queueGeneration
@@ -1326,6 +1349,7 @@ actor PlayerService: PlayerServiceProtocol {
             state.queueGeneration = mixQueueGeneration
             guard state.currentTrack?.id == seedTrack.id else { return false }
             state.queue = [state.currentTrack ?? seedTrack] + fresh
+            state.queueSource = source
             state.currentIndex = 0
             state.repeatMode = .off
             state.isShuffled = false
@@ -1463,7 +1487,8 @@ actor PlayerService: PlayerServiceProtocol {
 
     private func buildThenPlayInstantMix(
         from seed: InstantMixSeed,
-        requestGeneration: UInt64
+        requestGeneration: UInt64,
+        source: QueueSource?
     ) async throws {
         let tStart = Date()
         let tracks = try await libraryService.instantMix(from: seed, count: 100)
@@ -1477,7 +1502,7 @@ actor PlayerService: PlayerServiceProtocol {
         let tPlay = Date()
         let expectedPlayGeneration = playbackGeneration &+ 1
         let expectedBuildGeneration = queueBuildGeneration &+ 1
-        try await play(tracks: tracks, startIndex: 0)
+        try await play(tracks: tracks, startIndex: 0, source: source)
         guard expectedPlayGeneration == playbackGeneration,
               expectedBuildGeneration == queueBuildGeneration
         else { return }
@@ -1940,7 +1965,7 @@ actor PlayerService: PlayerServiceProtocol {
             guard request == queueBuildGeneration, transport == transportIntentGeneration,
                   !Task.isCancelled else { return }
         }
-        try await play(tracks: queue.tracks, startIndex: queue.startIndex)
+        try await play(tracks: queue.tracks, startIndex: queue.startIndex, source: queue.source)
     }
 
     func togglePlayPause() async {
@@ -2016,6 +2041,7 @@ actor PlayerService: PlayerServiceProtocol {
             state.isSmartShuffleActive = false
             state.originalQueueEndIndex = nil
             state.queue = []
+            state.queueSource = nil
             state.position = 0
             state.duration = 0
         }
@@ -2510,7 +2536,9 @@ actor PlayerService: PlayerServiceProtocol {
                 currentPosition: state.position,
                 queue: state.queue,
                 currentTrack: state.currentTrack,
-                repeatMode: state.repeatMode
+                repeatMode: state.repeatMode,
+                queueSource: state.queueSource,
+                originalQueueEndIndex: state.originalQueueEndIndex
             )
         }
         await sessionService.save(playerState: snapshot)
@@ -2541,6 +2569,8 @@ actor PlayerService: PlayerServiceProtocol {
         await MainActor.run {
             state.queueGeneration = restoredQueueGeneration
             state.queue = data.queue
+            state.queueSource = data.queueSource
+            state.originalQueueEndIndex = data.originalQueueEndIndex
             state.currentIndex = data.currentIndex
             state.currentTrack = track
             state.currentRadio = nil

@@ -39,6 +39,9 @@ struct ArtistDetailView: View {
         _artistFavoriteMatches = Query(filter: #Predicate<FavoriteRecord> { $0.id == cid })
     }
 
+    /// What "Playing from" shows for this page's playback (#71).
+    private var artistSource: QueueSource { .artist(id: artist.id, name: artist.name) }
+
     init(artistId: String, artistName: String, coverArtId: String?) {
         self.init(artist: ArtistID3(id: artistId, name: artistName, coverArt: coverArtId))
     }
@@ -114,7 +117,7 @@ struct ArtistDetailView: View {
                                         SongRow(song: song, index: index + 1, showCoverArt: true)
                                             .onTapGesture {
                                                 Task { await container?.toastService.perform {
-                                                    try await container?.playerService.play(tracks: localTracks, startIndex: index)
+                                                    try await container?.playerService.play(tracks: localTracks, startIndex: index, source: artistSource)
                                                 } }
                                             }
                                     }
@@ -128,6 +131,7 @@ struct ArtistDetailView: View {
                                     ArtistTopSongsSkeleton()
                                 } else if isOnline && !vm.topSongs.isEmpty {
                                     ArtistTopSongsSection(
+                                        artistId: artist.id,
                                         artistName: artist.name,
                                         songs: vm.topSongs,
                                         titleColor: headerTextColor,
@@ -348,7 +352,7 @@ struct ArtistDetailView: View {
         guard canStartArtistAutomix else { return }
         Task {
             isGeneratingMix = true
-            await runInstantMix(from: .artist(id: artist.id), using: container)
+            await runInstantMix(from: .artist(id: artist.id), using: container, titled: artist.name)
             isGeneratingMix = false
         }
     }
@@ -486,7 +490,7 @@ struct ArtistDetailView: View {
                 sectionHeader("Liked Songs")
                 Spacer()
                 Button {
-                    Task { await container?.toastService.perform { try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0) } }
+                    Task { await container?.toastService.perform { try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0, source: artistSource) } }
                 } label: {
                     Image(systemName: "shuffle")
                         .font(.minidiscSectionTitle)
@@ -499,7 +503,7 @@ struct ArtistDetailView: View {
             VStack(spacing: 0) {
                 ForEach(Array(songs.enumerated()), id: \.element.id) { index, song in
                     Button {
-                        Task { await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: index) } }
+                        Task { await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: index, source: artistSource) } }
                     } label: {
                         SongRow(
                             song: song,
@@ -550,19 +554,19 @@ struct ArtistDetailView: View {
         defer { viewModel?.isPlayLoading = false }
         if let offline = viewModel?.offlineTracks, viewModel?.isOffline == true, !offline.isEmpty {
             await c.toastService.perform {
-                try await c.playerService.play(tracks: shuffled ? offline.shuffled() : offline, startIndex: 0)
+                try await c.playerService.play(tracks: shuffled ? offline.shuffled() : offline, startIndex: 0, source: artistSource)
             }
             return
         }
         if viewModel?.isCreditOnly == true, let credited = viewModel?.appearanceSongs, !credited.isEmpty {
             await c.toastService.perform {
-                try await c.playerService.play(tracks: shuffled ? credited.shuffled() : credited, startIndex: 0)
+                try await c.playerService.play(tracks: shuffled ? credited.shuffled() : credited, startIndex: 0, source: artistSource)
             }
             return
         }
         do {
             let tracks = try await c.libraryService.fetchAllTracks(forArtistID: artist.id)
-            try await c.playerService.play(tracks: shuffled ? tracks.shuffled() : tracks, startIndex: 0)
+            try await c.playerService.play(tracks: shuffled ? tracks.shuffled() : tracks, startIndex: 0, source: artistSource)
         } catch MinidiscError.artistTracksUnavailable {
             c.toastService.showError("Unable to load artist tracks. Please check your connection and try again.")
         } catch {
@@ -621,7 +625,7 @@ struct ArtistDetailView: View {
             return
         }
         if shuffled { tracks.shuffle() }
-        await c.toastService.perform { try await c.playerService.play(tracks: tracks, startIndex: 0) }
+        await c.toastService.perform { try await c.playerService.play(tracks: tracks, startIndex: 0, source: artistSource) }
     }
 
     private var skeletonGrid: some View {
@@ -645,6 +649,7 @@ private enum ArtistDetailMetrics {
 }
 
 private struct ArtistTopSongsSection: View {
+    let artistId: String
     let artistName: String
     let songs: [DisplayableSong]
     let titleColor: Color
@@ -660,10 +665,11 @@ private struct ArtistTopSongsSection: View {
                 visibleLimit: 5
             ) {
                 // Passed explicitly: a pushed destination need not inherit the page's environment.
-                ArtistTopSongsCollectionView(artistName: artistName, songs: songs)
+                ArtistTopSongsCollectionView(artistId: artistId, artistName: artistName, songs: songs)
                     .environment(\.minidiscSongMenuContext, menuContext)
             }
             ArtistTopSongsList(
+                artistId: artistId,
                 artistName: artistName,
                 displayedSongs: Array(songs.prefix(5)),
                 playbackSongs: songs,
@@ -711,6 +717,7 @@ private struct ArtistTopSongAlbumDestination: Identifiable {
 }
 
 private struct ArtistTopSongsList: View {
+    let artistId: String
     let artistName: String
     let displayedSongs: [DisplayableSong]
     let playbackSongs: [DisplayableSong]
@@ -782,17 +789,19 @@ private struct ArtistTopSongsList: View {
 
     private func play(_ song: DisplayableSong) {
         guard let index = playbackSongs.firstIndex(where: { $0.id == song.id }) else { return }
-        Task { await container?.toastService.perform { try await container?.playerService.play(tracks: playbackSongs, startIndex: index) } }
+        Task { await container?.toastService.perform { try await container?.playerService.play(tracks: playbackSongs, startIndex: index, source: .artist(id: artistId, name: artistName)) } }
     }
 }
 
 private struct ArtistTopSongsCollectionView: View {
+    let artistId: String
     let artistName: String
     let songs: [DisplayableSong]
 
     var body: some View {
         ScrollView {
             ArtistTopSongsList(
+                artistId: artistId,
                 artistName: artistName,
                 displayedSongs: songs,
                 playbackSongs: songs

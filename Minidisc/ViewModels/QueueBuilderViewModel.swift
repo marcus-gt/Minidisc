@@ -280,7 +280,7 @@ final class QueueBuilderViewModel {
                 toastService.show(String(localized: "No songs match these picks. Try a broader selection."), style: .info)
                 return
             }
-            try await playerService.playBuiltQueue(result.songs.map { DisplayableSong(from: $0) }) { excluded, refillCount in
+            try await playerService.playBuiltQueue(result.songs.map { DisplayableSong(from: $0) }, source: .queueBuilder) { excluded, refillCount in
                 try await service.buildQueue(selection, count: refillCount, excluding: excluded)
                     .songs.map { DisplayableSong(from: $0) }
             }

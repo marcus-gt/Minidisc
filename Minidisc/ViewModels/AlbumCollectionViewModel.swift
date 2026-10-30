@@ -9,6 +9,14 @@ nonisolated enum AlbumCollectionKind: Hashable, Sendable {
     case recordLabel(String)
     case genreGroup(name: String, tags: [String])
 
+    /// What "Playing from" shows (#71).
+    var queueSource: QueueSource {
+        switch self {
+        case .genre(let name), .genreGroup(let name, _): .genre(name: name)
+        case .recordLabel(let name): .recordLabel(name: name)
+        }
+    }
+
     var name: String {
         switch self {
         case .genre(let name), .recordLabel(let name), .genreGroup(let name, _): name

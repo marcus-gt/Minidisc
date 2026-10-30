@@ -144,7 +144,7 @@ struct AlbumCollectionView: View {
             return
         }
         if shuffled { tracks.shuffle() }
-        await container.toastService.perform { try await container.playerService.play(tracks: tracks, startIndex: 0) }
+        await container.toastService.perform { try await container.playerService.play(tracks: tracks, startIndex: 0, source: kind.queueSource) }
     }
 }
 

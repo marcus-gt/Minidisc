@@ -199,6 +199,7 @@ struct MusicIntentService {
         guard !radio.tracks.isEmpty else { throw MusicIntentError.empty }
         try await container.playerService.playBuiltQueue(
             RadioQueue.initialTracks(radio.tracks),
+            source: .moodRadio(mood),
             refill: RadioQueue.refill(after: radio.tracks, seedIDs: radio.seedIDs, library: container.libraryService)
         )
     }

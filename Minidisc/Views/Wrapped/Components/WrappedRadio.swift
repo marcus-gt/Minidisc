@@ -19,6 +19,7 @@ enum WrappedRadio {
         do {
             try await container.playerService.playBuiltQueue(
                 RadioQueue.initialTracks(radio.tracks),
+                source: .wrappedRadio(period),
                 refill: RadioQueue.refill(after: radio.tracks, seedIDs: radio.seedIDs, library: container.libraryService)
             )
         } catch {

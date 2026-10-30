@@ -275,7 +275,7 @@ private struct RecoveryHarness {
                 "{\"id\":\"\(id)\",\"title\":\"Test\",\"isDir\":false,\"duration\":120}".utf8
             )))
         }
-        try await player.play(tracks: tracks, startIndex: 0)
+        try await player.play(tracks: tracks, startIndex: 0, source: nil)
     }
 
     var report: String {
@@ -981,7 +981,7 @@ struct InstantMixAutoExtendTests {
         await library.holdMixes()
         h.state.isAutoExtendEnabled = true
 
-        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"), source: nil)
         try await h.waitUntil { await library.isHoldingMix }
         // A competing auto-extend fetch would run as its own task; give it time to show up.
         try await Task.sleep(for: .milliseconds(200))
@@ -1000,10 +1000,10 @@ struct InstantMixAutoExtendTests {
         let h = try RecoveryHarness(library: library)
         await library.setMix(try mix(20))
 
-        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"), source: nil)
         try await h.waitUntil { h.state.queue.count == 21 }
         await library.setMix([])
-        try await h.player.play(tracks: h.state.queue, startIndex: 10)
+        try await h.player.play(tracks: h.state.queue, startIndex: 10, source: nil)
 
         try await h.waitUntil { await library.calls.count == 2 }
         #expect(h.state.currentTrack?.id == "m10")
@@ -1015,7 +1015,7 @@ struct InstantMixAutoExtendTests {
         let library = InstantMixRecordingLibrary()
         let h = try RecoveryHarness(library: library)
 
-        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"), source: nil)
 
         try await h.waitUntil { await library.calls.count == 2 }
         #expect(await library.calls[1] == InstantMixCall(seedID: "seed", count: 50 + 1))
@@ -1027,10 +1027,10 @@ struct InstantMixAutoExtendTests {
         let h = try RecoveryHarness(library: library)
         await library.setMix(try mix(20))
 
-        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"))
+        try await h.player.playInstantMix(from: .song(id: "seed"), startingWith: try track("seed"), source: nil)
         try await h.waitUntil { h.state.queue.count == 21 }
         await library.setMix([])
-        try await h.player.play(tracks: [try track("x"), try track("y")], startIndex: 0)
+        try await h.player.play(tracks: [try track("x"), try track("y")], startIndex: 0, source: nil)
 
         try await h.waitUntil { await library.calls.count == 2 }
         #expect(await library.calls[1] == InstantMixCall(seedID: "x", count: 50 + 2))
@@ -1046,7 +1046,7 @@ struct InstantMixAutoExtendTests {
         try await h.play(["a", "b", "c"])
         let playsBefore = h.engine.playCount
 
-        try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"))
+        try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"), source: nil)
 
         #expect(h.engine.playCount == playsBefore)
         #expect(h.state.currentTrack?.id == "a")
@@ -1063,7 +1063,7 @@ struct InstantMixAutoExtendTests {
         await library.holdMixes()
         try await h.play(["a", "b", "c"])
 
-        let mixTask = Task { try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a")) }
+        let mixTask = Task { try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"), source: nil) }
         try await h.waitUntil { await library.isHoldingMix }
         #expect(h.state.queue.map(\.id) == ["a", "b", "c"])
 
@@ -1081,7 +1081,7 @@ struct InstantMixAutoExtendTests {
         let playsBefore = h.engine.playCount
 
         let error = await #expect(throws: MinidiscError.self) {
-            try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"))
+            try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"), source: nil)
         }
         guard case .instantMixEmpty = error else {
             Issue.record("Expected instantMixEmpty, got \(String(describing: error))")
@@ -1100,7 +1100,7 @@ struct InstantMixAutoExtendTests {
         try await h.play(["a", "b"])
         let playsBefore = h.engine.playCount
 
-        try await h.player.playInstantMix(from: .song(id: "x"), startingWith: try track("x"))
+        try await h.player.playInstantMix(from: .song(id: "x"), startingWith: try track("x"), source: nil)
         try await h.waitUntil { h.state.queue.count == 21 }
 
         #expect(h.engine.playCount == playsBefore + 1)
@@ -1123,7 +1123,7 @@ struct LocalMusicPlaybackTests {
         try await store.add([folder])
         let songs = try await store.refresh().tracks.map(\.song)
         let harness = try RecoveryHarness(localMusicStore: store, configureServer: false)
-        try await harness.player.play(tracks: songs, startIndex: 0)
+        try await harness.player.play(tracks: songs, startIndex: 0, source: nil)
         #expect(harness.engine.sourceURL?.lastPathComponent == "First.wav")
         #expect(harness.state.currentTrack?.isLocalFile == true)
         try await harness.player.skipToNext()
@@ -1170,7 +1170,7 @@ struct QueueBuilderPlaybackTests {
         let h = try RecoveryHarness(library: library)
         let refill = RecordingRefill(songs: try tracks("b", 5) + tracks("r", 30))
 
-        try await h.player.playBuiltQueue(try tracks("b", 5), refill: refill.refill)
+        try await h.player.playBuiltQueue(try tracks("b", 5), source: nil, refill: refill.refill)
 
         try await h.waitUntil { h.state.queue.count > 5 }
         #expect(h.state.isAutoExtendEnabled)
@@ -1188,7 +1188,7 @@ struct QueueBuilderPlaybackTests {
         let h = try RecoveryHarness(library: library)
         let refill = RecordingRefill(songs: [])
 
-        try await h.player.playBuiltQueue(try tracks("b", 3), refill: refill.refill)
+        try await h.player.playBuiltQueue(try tracks("b", 3), source: nil, refill: refill.refill)
 
         try await h.waitUntil { await library.calls.count == 1 }
         #expect(refill.callCount == 1)
@@ -1201,12 +1201,78 @@ struct QueueBuilderPlaybackTests {
         let h = try RecoveryHarness(library: library)
         let refill = RecordingRefill(songs: try tracks("r", 60))
 
-        try await h.player.playBuiltQueue(try tracks("b", 30), refill: refill.refill)
-        try await h.player.play(tracks: try tracks("x", 2), startIndex: 0)
+        try await h.player.playBuiltQueue(try tracks("b", 30), source: nil, refill: refill.refill)
+        try await h.player.play(tracks: try tracks("x", 2), startIndex: 0, source: nil)
 
         try await h.waitUntil { await library.calls.count == 1 }
         #expect(refill.callCount == 0)
         #expect(await library.calls.first?.seedID == "x1")
+        await h.player.stop()
+    }
+}
+
+@Suite("Queue source playback (#71)", .serialized)
+@MainActor
+struct QueueSourcePlaybackTests {
+    private func tracks(_ prefix: String, _ count: Int) throws -> [DisplayableSong] {
+        try (1...count).map { index in
+            DisplayableSong(from: try JSONDecoder().decode(Song.self, from: Data(
+                "{\"id\":\"\(prefix)\(index)\",\"title\":\"t\",\"isDir\":false,\"duration\":120}".utf8
+            )))
+        }
+    }
+
+    private let album = QueueSource.album(id: "al", name: "Kind of Blue")
+
+    @Test func source_isSetByPlay_keptBySkips_andClearedByANewQueueWithoutOneOrStop() async throws {
+        let h = try RecoveryHarness(library: InstantMixRecordingLibrary())
+        try await h.player.play(tracks: try tracks("a", 3), startIndex: 0, source: album)
+        #expect(h.state.queueSource == album)
+        #expect(h.state.playingFromLabel?.title == "Kind of Blue")
+
+        try await h.player.skipToNext()
+        #expect(h.state.queueSource == album)
+
+        try await h.player.play(tracks: try tracks("b", 2), startIndex: 0, source: nil)
+        #expect(h.state.queueSource == nil)
+        #expect(h.state.playingFromLabel == nil)
+
+        try await h.player.play(tracks: try tracks("c", 2), startIndex: 0, source: .smartShuffle)
+        await h.player.stop()
+        #expect(h.state.queueSource == nil)
+    }
+
+    /// A radio refills with its own picks, so it keeps its name past the first batch.
+    @Test func radio_keepsItsNameWhenItRefills() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        let refill = RecordingRefill(songs: try tracks("r", 30))
+
+        try await h.player.playBuiltQueue(try tracks("b", 5), source: .moodRadio(.chill), refill: refill.refill)
+        try await h.waitUntil { h.state.queue.count > 5 }
+
+        #expect(h.state.originalQueueEndIndex == 5)
+        let afterRefill = QueueSourceLabel(source: h.state.queueSource, index: 7, extensionStart: h.state.originalQueueEndIndex)
+        #expect(afterRefill?.title == QueueSource.moodRadio(.chill).title)
+        await h.player.stop()
+    }
+
+    /// An album that runs out continues with similar songs, and only those are labelled so.
+    @Test func album_turnsToSimilarSongsOnlyWhereAutoExtendBegins() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try tracks("m", 20))
+        h.state.isAutoExtendEnabled = true
+
+        try await h.player.play(tracks: try tracks("a", 3), startIndex: 0, source: album)
+        try await h.waitUntil { h.state.queue.count > 3 }
+
+        #expect(h.state.originalQueueEndIndex == 3)
+        #expect(h.state.playingFromLabel?.title == "Kind of Blue")
+        #expect(h.state.nextFromLabel?.title == "Kind of Blue")
+        let extended = QueueSourceLabel(source: h.state.queueSource, index: 3, extensionStart: h.state.originalQueueEndIndex)
+        #expect(extended?.title == album.similarTitle)
+        #expect(extended?.opensSource == false)
         await h.player.stop()
     }
 }

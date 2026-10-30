@@ -3,6 +3,8 @@ import OSLog
 
 struct WrappedTopTracksSection: View {
     let tracks: [TopTrackEntry]
+    /// The recap's period, which "Playing from" names (#71).
+    let period: WrappedPeriod
 
     @Environment(\.appContainer) private var container
 
@@ -69,7 +71,7 @@ struct WrappedTopTracksSection: View {
         let queue = await container.wrappedDataSource.songs(Array(tracks.prefix(10)))
         guard let start = queue.firstIndex(where: { $0.id == track.trackId }) else { return }
         do {
-            try await container.playerService.play(tracks: queue, startIndex: start)
+            try await container.playerService.play(tracks: queue, startIndex: start, source: .wrapped(period))
         } catch {
             Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
         }

@@ -90,9 +90,9 @@ struct LocalMusicBrowseView: View {
                 AlphabetIndexedContent(entries: alphabetEntries, prepareJump: { sort = .name }) {
                     if category == .songs {
                         List {
-                            LocalMusicPlaybackControls(tracks: songs)
+                            LocalMusicPlaybackControls(tracks: songs, source: .localFolder(name: String(localized: "Local Files")))
                                 .listRowSeparator(.hidden)
-                            LocalMusicTrackRows(tracks: songs)
+                            LocalMusicTrackRows(tracks: songs, source: .localFolder(name: String(localized: "Local Files")))
                         }
                         .listStyle(.plain)
                         .refreshable { await container?.localMusic.refresh() }

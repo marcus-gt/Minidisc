@@ -34,6 +34,8 @@ struct SearchScopeBar: View {
 
 struct SearchResultsContent: View {
     let matches: [LibrarySearchMatch]
+    /// What was searched for, which "Playing from" names (#71).
+    let query: String
     @Binding var scope: LibrarySearchScope
     let onAddToPlaylist: (DisplayableSong) -> Void
     let canSelectSongs: Bool
@@ -54,7 +56,7 @@ struct SearchResultsContent: View {
         let best = scope == .all ? matches.first : nil
         if let best {
             Section {
-                SearchMatchRow(match: best, songs: songs, isFavorite: favoriteIds.contains(best.id),
+                SearchMatchRow(match: best, songs: songs, query: query, isFavorite: favoriteIds.contains(best.id),
                                onAddToPlaylist: onAddToPlaylist)
                     .accessibilityIdentifier("search.topResult.\(best.id)")
             } header: {
@@ -67,7 +69,7 @@ struct SearchResultsContent: View {
             if !values.isEmpty {
                 Section {
                     ForEach(scope == .all ? Array(values.prefix(5)) : values) { match in
-                        SearchMatchRow(match: match, songs: songs, isFavorite: favoriteIds.contains(match.id),
+                        SearchMatchRow(match: match, songs: songs, query: query, isFavorite: favoriteIds.contains(match.id),
                                        onAddToPlaylist: onAddToPlaylist)
                             .accessibilityIdentifier("search.result.\(match.id)")
                     }
@@ -121,6 +123,7 @@ private struct SearchResultsHeader: View {
 private struct SearchMatchRow: View {
     let match: LibrarySearchMatch
     let songs: [DisplayableSong]
+    let query: String
     let isFavorite: Bool
     let onAddToPlaylist: (DisplayableSong) -> Void
     @Environment(\.appContainer) private var container
@@ -132,7 +135,8 @@ private struct SearchMatchRow: View {
                     trailingAccessory: .favorite, onAddToPlaylist: onAddToPlaylist, onTap: {
                 Task {
                     await container?.toastService.perform {
-                        try await container?.playerService.play(tracks: songs, startIndex: songs.firstIndex { $0.id == song.id } ?? 0)
+                        try await container?.playerService.play(tracks: songs, startIndex: songs.firstIndex { $0.id == song.id } ?? 0,
+                                                                source: .search(query: query))
                     }
                 }
             })

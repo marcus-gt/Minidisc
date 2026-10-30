@@ -18,7 +18,9 @@ actor PlaybackSessionService {
             currentPosition: playerState.currentPosition,
             queue: playerState.queue,
             currentTrack: playerState.currentTrack,
-            repeatMode: playerState.repeatMode
+            repeatMode: playerState.repeatMode,
+            queueSource: playerState.queueSource,
+            originalQueueEndIndex: playerState.originalQueueEndIndex
         )
         do {
             try modelContext.save()
@@ -61,7 +63,10 @@ actor PlaybackSessionService {
             currentIndex: safeIndex,
             currentPosition: safePosition,
             currentTrackDuration: safeDuration,
-            repeatMode: session.decodedRepeatMode()
+            repeatMode: session.decodedRepeatMode(),
+            queueSource: session.decodedQueueSource(),
+            // A boundary past the end would mislabel the queue; drop it rather than guess.
+            originalQueueEndIndex: session.originalQueueEndIndex.flatMap { (0...queue.count).contains($0) ? $0 : nil }
         )
     }
 
@@ -112,6 +117,8 @@ nonisolated struct SessionPayload: Sendable {
     let queue: [DisplayableSong]
     let currentTrack: DisplayableSong?
     let repeatMode: RepeatMode
+    var queueSource: QueueSource? = nil
+    var originalQueueEndIndex: Int? = nil
 }
 
 // MARK: - RestoredSession
@@ -122,4 +129,6 @@ nonisolated struct RestoredSession: Sendable {
     let currentPosition: TimeInterval
     let currentTrackDuration: TimeInterval
     let repeatMode: RepeatMode
+    var queueSource: QueueSource? = nil
+    var originalQueueEndIndex: Int? = nil
 }
