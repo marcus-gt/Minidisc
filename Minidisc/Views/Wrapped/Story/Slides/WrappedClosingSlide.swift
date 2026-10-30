@@ -5,11 +5,9 @@ struct WrappedClosingSlide: View {
     let data: WrappedData
     let palette: [Color]
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
         ZStack {
-            MeshGradientBackground(palette: palette, animated: !reduceMotion)
+            WrappedCoverMosaic(artworkIDs: data.topAlbums.map(\.albumId), palette: palette)
 
             VStack(spacing: 0) {
                 Spacer()
@@ -25,7 +23,7 @@ struct WrappedClosingSlide: View {
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
 
-                    Text("Your \(year) Wrapped")
+                    Text(verbatim: String(localized: "Your \(year) Wrapped"))
                         .font(.system(size: 20, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.75))
                 }

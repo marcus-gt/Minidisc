@@ -1470,37 +1470,19 @@
     },
     "%lld plays" : {
       "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld plays"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld play"
-                }
-              }
-            }
-          }
-        },
         "de" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Wiedergaben"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld Wiedergabe"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Wiedergaben"
                 }
               }
             }
@@ -1509,16 +1491,34 @@
         "el" : {
           "variations" : {
             "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld αναπαραγωγή"
+                }
+              },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld αναπαραγωγές"
                 }
-              },
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld αναπαραγωγή"
+                  "value" : "%lld play"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld plays"
                 }
               }
             }
@@ -1527,16 +1527,16 @@
         "es" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld reproducciones"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld reproducción"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld reproducciones"
                 }
               }
             }
@@ -1545,16 +1545,16 @@
         "fr" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld écoutes"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld écoute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld écoutes"
                 }
               }
             }
@@ -1563,16 +1563,16 @@
         "it" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld ascolti"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld ascolto"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ascolti"
                 }
               }
             }
@@ -1618,37 +1618,19 @@
     },
     "%lld plays, none in %@" : {
       "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld plays, none in %@"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld play, none in %@"
-                }
-              }
-            }
-          }
-        },
         "de" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Wiedergaben, keine in %@"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld Wiedergabe, keine in %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Wiedergaben, keine in %@"
                 }
               }
             }
@@ -1657,16 +1639,34 @@
         "el" : {
           "variations" : {
             "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld αναπαραγωγή, καμία το %@"
+                }
+              },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld αναπαραγωγές, καμία το %@"
                 }
-              },
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld αναπαραγωγή, καμία το %@"
+                  "value" : "%lld play, none in %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld plays, none in %@"
                 }
               }
             }
@@ -1675,16 +1675,16 @@
         "es" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld reproducciones, ninguna en %@"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld reproducción, ninguna en %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld reproducciones, ninguna en %@"
                 }
               }
             }
@@ -1693,16 +1693,16 @@
         "fr" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld écoutes, aucune en %@"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld écoute, aucune en %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld écoutes, aucune en %@"
                 }
               }
             }
@@ -1711,16 +1711,16 @@
         "it" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld ascolti, nessuno nel %@"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld ascolto, nessuno nel %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ascolti, nessuno nel %@"
                 }
               }
             }
@@ -23206,37 +23206,19 @@
     },
     "Loading your listening history… %lld listens" : {
       "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Loading your listening history… %lld listens"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Loading your listening history… %lld listen"
-                }
-              }
-            }
-          }
-        },
         "de" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Hörverlauf wird geladen … %lld Wiedergaben"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Hörverlauf wird geladen … %lld Wiedergabe"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Hörverlauf wird geladen … %lld Wiedergaben"
                 }
               }
             }
@@ -23245,16 +23227,34 @@
         "el" : {
           "variations" : {
             "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Φόρτωση ιστορικού ακρόασης… %lld ακρόαση"
+                }
+              },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Φόρτωση ιστορικού ακρόασης… %lld ακροάσεις"
                 }
-              },
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Φόρτωση ιστορικού ακρόασης… %lld ακρόαση"
+                  "value" : "Loading your listening history… %lld listen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Loading your listening history… %lld listens"
                 }
               }
             }
@@ -23263,16 +23263,16 @@
         "es" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Cargando tu historial… %lld escuchas"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Cargando tu historial… %lld escucha"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Cargando tu historial… %lld escuchas"
                 }
               }
             }
@@ -23281,16 +23281,16 @@
         "fr" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Chargement de votre historique… %lld écoutes"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Chargement de votre historique… %lld écoute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Chargement de votre historique… %lld écoutes"
                 }
               }
             }
@@ -23299,16 +23299,16 @@
         "it" : {
           "variations" : {
             "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Caricamento della cronologia… %lld ascolti"
-                }
-              },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Caricamento della cronologia… %lld ascolto"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Caricamento della cronologia… %lld ascolti"
                 }
               }
             }
@@ -25611,6 +25611,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "音樂"
+          }
+        }
+      }
+    },
+    "Mute" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stummschalten"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Σίγαση"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silenciar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couper le son"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattiva audio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "消音"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "静音"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "靜音"
           }
         }
       }
@@ -47034,6 +47086,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未知"
+          }
+        }
+      }
+    },
+    "Unmute" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton einschalten"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Κατάργηση σίγασης"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar sonido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réactiver le son"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riattiva audio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "消音を解除"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消静音"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消靜音"
           }
         }
       }

@@ -334,6 +334,45 @@ actor WrappedDataSource {
         return WrappedMoodBuilder.build(plays: loaded.plays, scores: scores, period: period, buckets: buckets, calendar: calendar)
     }
 
+    /// The song behind each story slide (#75), and the songs themselves for their lengths.
+    nonisolated struct StorySoundtrack: Sendable {
+        let trackIDs: [WrappedStorySlideKind: String]
+        let songs: [String: DisplayableSong]
+
+        static let empty = StorySoundtrack(trackIDs: [:], songs: [:])
+    }
+
+    func storySoundtrack(for data: WrappedData, serverId: String, calendar: Calendar) async -> StorySoundtrack {
+        let plays = await plays(for: data.period, serverId: serverId, calendar: calendar).plays
+        let picks = Self.soundtrack(plays: plays, data: data)
+        let ids = Array(Set(picks.values))
+        let indexed = await songsByID(ids)
+        let songs = Dictionary(indexed.map { ($0.id, DisplayableSong(from: $0)) }, uniquingKeysWith: { first, _ in first })
+        return StorySoundtrack(trackIDs: picks.filter { songs[$0.value] != nil }, songs: songs)
+    }
+
+    /// Library tracks only, as only those can play: the #1 song on Top Track, the top artist's and
+    /// album's most played songs on theirs, the dominant genre's on Top Genre, the next top songs on
+    /// the other slides, and the #1 again to close.
+    nonisolated static func soundtrack(plays: [WrappedPlay], data: WrappedData) -> [WrappedStorySlideKind: String] {
+        let library = plays.filter { WrappedIDs.isLibraryID($0.trackId) }
+        let ranked = WrappedAggregator.topTracks(from: library, limit: .max).map(\.trackId)
+        guard let first = ranked.first else { return [:] }
+        func top(where include: (WrappedPlay) -> Bool) -> String? {
+            WrappedAggregator.topTracks(from: library.filter(include), limit: 1).first?.trackId
+        }
+        var picks: [WrappedStorySlideKind: String] = [.topTrack: first, .closing: first]
+        if let artist = data.topArtists.first?.artistId { picks[.topArtist] = top { $0.artistId == artist } }
+        if let album = data.topAlbums.first?.albumId { picks[.topAlbum] = top { $0.albumId == album } }
+        if let genre = data.dominantGenre { picks[.topGenre] = top { $0.genre == genre } }
+        let used = Set(picks.values)
+        var spare = ranked.filter { !used.contains($0) }.makeIterator()
+        for kind in [WrappedStorySlideKind.intro, .minutes, .discoveries] {
+            picks[kind] = spare.next() ?? first
+        }
+        return picks
+    }
+
     /// A Wrapped radio: the period's library tracks in a play-count-weighted shuffle, and the
     /// period's top tracks as seeds for similar songs once those run out (#69).
     nonisolated struct Radio: Sendable {
