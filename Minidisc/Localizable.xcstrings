@@ -47332,6 +47332,58 @@
         }
       }
     },
+    "What you played most, shuffled, then similar songs." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das, was du am meisten gehört hast, gemischt, danach ähnliche Songs."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ό,τι ακούσατε περισσότερο, ανακατεμένο, και μετά παρόμοια τραγούδια."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que más escuchaste, en orden aleatorio, y después canciones similares."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que vous avez le plus écouté, en aléatoire, puis des titres similaires."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quello che hai ascoltato di più, in ordine casuale, poi brani simili."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "よく聴いた曲をシャッフル再生し、その後は似た曲を再生します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "随机播放你最常听的歌曲，然后播放相似歌曲。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隨機播放你最常聽的歌曲，然後播放相似歌曲。"
+          }
+        }
+      }
+    },
     "Whether to ignore the download, or remove it and its files from the download client." : {
       "localizations" : {
         "de" : {
@@ -48958,58 +49010,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的 token 將被移除，並停用記錄播放。你隨時都能重新連線。"
-          }
-        }
-      }
-    },
-    "Your top tracks first, then the rest shuffled." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zuerst deine Top-Titel, dann der Rest in zufälliger Reihenfolge."
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Πρώτα τα κορυφαία σας κομμάτια, μετά τα υπόλοιπα με τυχαία σειρά."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Primero tus canciones principales y luego el resto en orden aleatorio."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "D’abord vos titres préférés, puis le reste en aléatoire."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prima i tuoi brani più ascoltati, poi il resto in ordine casuale."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まずトップトラック、その後は残りをシャッフル。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先播放你的热门歌曲，然后随机播放其余歌曲。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先播放你的熱門歌曲，然後隨機播放其餘歌曲。"
           }
         }
       }
