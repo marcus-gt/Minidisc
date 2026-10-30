@@ -7,7 +7,8 @@ struct ArtistStationCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var side: CGFloat { dynamicTypeSize.isAccessibilitySize ? 260 : 160 }
-    private var title: String { String(localized: "\(station.artist.name) & Similar artists") }
+    /// The artist alone (#73); "Radio Station" underneath says what the card plays.
+    private var title: String { station.artist.name }
     private var palette: [Color] {
         switch station.id.utf8.reduce(0, { ($0 + Int($1)) % 3 }) {
         case 0: [Color(red: 0.26, green: 0.12, blue: 0.34), Color(red: 0.72, green: 0.30, blue: 0.38)]
