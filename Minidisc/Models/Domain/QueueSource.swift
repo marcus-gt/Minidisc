@@ -59,6 +59,12 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
         }
     }
 
+    /// An album needs no label: the player already names the playing track's album.
+    var isSelfEvident: Bool {
+        if case .album = self { return true }
+        return false
+    }
+
     /// "PLAYING FROM ALBUM": what kind of thing the source is.
     var kind: String {
         switch self {
@@ -126,7 +132,7 @@ nonisolated struct QueueSourceLabel: Sendable, Equatable {
     let opensSource: Bool
 
     /// `index` is the track the label is for; tracks at `extensionStart` and after were added by
-    /// auto-extend.
+    /// auto-extend. A plain album shows nothing until auto-extend takes over from it.
     init?(source: QueueSource?, index: Int, extensionStart: Int?) {
         guard let source else { return nil }
         if !source.isEndless, let extensionStart, index >= extensionStart {
@@ -134,6 +140,7 @@ nonisolated struct QueueSourceLabel: Sendable, Equatable {
             title = source.similarTitle
             opensSource = false
         } else {
+            guard !source.isSelfEvident else { return nil }
             kind = source.kind
             title = source.title
             opensSource = source.destination != nil

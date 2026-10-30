@@ -1228,7 +1228,8 @@ struct QueueSourcePlaybackTests {
         let h = try RecoveryHarness(library: InstantMixRecordingLibrary())
         try await h.player.play(tracks: try tracks("a", 3), startIndex: 0, source: album)
         #expect(h.state.queueSource == album)
-        #expect(h.state.playingFromLabel?.title == "Kind of Blue")
+        // An album needs no label; the source is still kept for when auto-extend takes over.
+        #expect(h.state.playingFromLabel == nil)
 
         try await h.player.skipToNext()
         #expect(h.state.queueSource == album)
@@ -1268,8 +1269,8 @@ struct QueueSourcePlaybackTests {
         try await h.waitUntil { h.state.queue.count > 3 }
 
         #expect(h.state.originalQueueEndIndex == 3)
-        #expect(h.state.playingFromLabel?.title == "Kind of Blue")
-        #expect(h.state.nextFromLabel?.title == "Kind of Blue")
+        #expect(h.state.playingFromLabel == nil)
+        #expect(h.state.nextFromLabel == nil)
         let extended = QueueSourceLabel(source: h.state.queueSource, index: 3, extensionStart: h.state.originalQueueEndIndex)
         #expect(extended?.title == album.similarTitle)
         #expect(extended?.opensSource == false)
