@@ -13,6 +13,12 @@ struct WrappedView: View {
     @State private var source: WrappedSourceKind?
     @State private var fellBack = false
     @State private var firstYear: Int?
+    /// The stat cards (#70), loaded after the recap so it shows first.
+    @State private var insights: WrappedInsights?
+    @State private var mood: WrappedMoodProfile?
+    @State private var isLoadingMood = false
+    /// Listens fetched so far on a long first load (All Time).
+    @State private var fetchedListens: Int?
     #if DEBUG
     @AppStorage("debug.wrappedFakeDataActive") private var overrideWithFakeData = false
     @AppStorage("debug.wrappedFakeDataJSON") private var persistedFakeDataJSON = ""
@@ -24,7 +30,16 @@ struct WrappedView: View {
 
     /// The selected year itself, then its months newest first (up to this month for the current year).
     private var availablePeriods: [WrappedPeriod] {
-        Self.periods(inYear: currentYear, now: Date(), calendar: .current)
+        if case .allTime = selectedPeriod { return [] }
+        return Self.periods(inYear: currentYear, now: Date(), calendar: .current)
+    }
+
+    /// The year menu's tag for All Time; real years are never 0.
+    private static let allTimeTag = 0
+
+    private var isAllTime: Bool {
+        if case .allTime = selectedPeriod { return true }
+        return false
     }
 
     static func periods(inYear year: Int, now: Date, calendar: Calendar) -> [WrappedPeriod] {
@@ -41,22 +56,31 @@ struct WrappedView: View {
         switch selectedPeriod {
         case .month(let year, _): return year
         case .year(let year): return year
+        case .allTime: return Calendar.current.component(.year, from: Date())
         }
     }
 
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: MinidiscSpacing.xl) {
-                if selectableYears.count > 1 {
-                    yearMenu
+                yearMenu
+                if !availablePeriods.isEmpty {
+                    WrappedPeriodPicker(selectedPeriod: $selectedPeriod, availablePeriods: availablePeriods)
                 }
-                WrappedPeriodPicker(selectedPeriod: $selectedPeriod, availablePeriods: availablePeriods)
                 sourceCaption
 
                 if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, MinidiscSpacing.xxxxl)
+                    VStack(spacing: MinidiscSpacing.s) {
+                        ProgressView()
+                        if let fetchedListens, fetchedListens > 0 {
+                            Text("Loading your listening history… \(fetchedListens) listens")
+                                .font(.minidiscCaption)
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, MinidiscSpacing.xxxxl)
                 } else if loadFailed {
                     EmptyStateView(
                         systemImage: "exclamationmark.triangle",
@@ -65,8 +89,13 @@ struct WrappedView: View {
                         action: .init(label: "Retry") { Task { await loadData() } }
                     )
                 } else if let d = data, d.totalTracksPlayed > 0 {
-                    WrappedStatHero(data: d)
-                        .cascadeAppear(order: 0, trigger: appeared)
+                    WrappedInsightsCarousel(
+                        insights: insights, mood: mood, isLoadingMood: isLoadingMood,
+                        accent: WrappedYearPalette.colors(for: d.period.calendarYear)[0]
+                    ) {
+                        WrappedStatHero(data: d)
+                    }
+                    .cascadeAppear(order: 0, trigger: appeared)
                     WrappedTopArtistsSection(artists: d.topArtists)
                         .cascadeAppear(order: 1, trigger: appeared)
                     WrappedTopTracksSection(tracks: d.topTracks)
@@ -91,6 +120,7 @@ struct WrappedView: View {
         .navigationTitle("")
         .task(id: selectedPeriod) {
             await loadData()
+            await loadInsights()
         }
         .task {
             guard let container, firstYear == nil else { return }
@@ -111,16 +141,17 @@ struct WrappedView: View {
     private var yearMenu: some View {
         Menu {
             Picker("Year", selection: Binding(
-                get: { currentYear },
-                set: { year in selectedPeriod = .year(year) }
+                get: { isAllTime ? Self.allTimeTag : currentYear },
+                set: { year in selectedPeriod = year == Self.allTimeTag ? .allTime : .year(year) }
             )) {
+                Text("All Time").tag(Self.allTimeTag)
                 ForEach(selectableYears, id: \.self) { year in
                     Text(verbatim: String(year)).tag(year)
                 }
             }
         } label: {
             HStack(spacing: MinidiscSpacing.xs) {
-                Text(verbatim: String(currentYear))
+                Text(verbatim: isAllTime ? WrappedPeriod.allTime.displayName : String(currentYear))
                     .font(.minidiscDetailTitle)
                 Image(systemName: "chevron.down")
                     .font(.minidiscCaption.weight(.semibold))
@@ -128,7 +159,7 @@ struct WrappedView: View {
             .foregroundStyle(.primary)
         }
         .accessibilityLabel(Text("Year"))
-        .accessibilityValue(Text(verbatim: String(currentYear)))
+        .accessibilityValue(Text(verbatim: isAllTime ? WrappedPeriod.allTime.displayName : String(currentYear)))
     }
 
     @ViewBuilder
@@ -205,8 +236,13 @@ struct WrappedView: View {
         appeared = false
         isLoading = true
         data = nil
+        insights = nil
+        mood = nil
+        isLoadingMood = false
+        fetchedListens = nil
         let result = await container.wrappedDataSource.wrappedData(
-            for: selectedPeriod, serverId: serverId, calendar: .current, refresh: refresh
+            for: selectedPeriod, serverId: serverId, calendar: .current, refresh: refresh,
+            progress: { count in Task { @MainActor in fetchedListens = count } }
         )
         guard !Task.isCancelled else { return }
         source = result.source
@@ -215,6 +251,23 @@ struct WrappedView: View {
         isLoading = false
         appeared = true
         Logger.wrapped.debug("[WRAPPED-VIEW] fetch done totalPlays=\(result.data.totalTracksPlayed, privacy: .public)")
+    }
+}
+
+extension WrappedView {
+    /// The stat cards, then the mood, which waits on AudioMuse.
+    fileprivate func loadInsights() async {
+        guard let container, let serverId = container.serverState.activeServer?.id.uuidString,
+              let data, data.totalTracksPlayed > 0 else { return }
+        let period = selectedPeriod
+        let loaded = await container.wrappedDataSource.insights(for: period, serverId: serverId, calendar: .current)
+        guard !Task.isCancelled, period == selectedPeriod else { return }
+        withAnimation { insights = loaded }
+        isLoadingMood = true
+        let profile = await container.wrappedDataSource.moodProfile(for: period, serverId: serverId, calendar: .current)
+        guard !Task.isCancelled, period == selectedPeriod else { return }
+        isLoadingMood = false
+        withAnimation { mood = profile }
     }
 }
 

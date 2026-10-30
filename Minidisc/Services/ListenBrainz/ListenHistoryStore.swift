@@ -9,6 +9,8 @@ import OSLog
 actor ListenHistoryStore {
     typealias PageFetch = @Sendable (_ user: String, _ maxTs: Int) async throws -> [LBListen]
     typealias OldestFetch = @Sendable (_ user: String) async throws -> LBListen?
+    /// Listens fetched so far in the current request, for the first load of a long range.
+    typealias Progress = @Sendable (_ fetched: Int) -> Void
 
     /// Listens can arrive after the fact (offline players, imports); a month counts as final after this.
     static let lateSubmissionGrace: TimeInterval = 2 * 86_400
@@ -50,7 +52,8 @@ actor ListenHistoryStore {
     // MARK: - Reading
 
     /// Every listen in `[start, end)`, newest first. `refresh` refetches months already held as final.
-    func listens(user: String, from start: Date, to end: Date, calendar: Calendar, refresh: Bool = false) async throws -> [LBListen] {
+    func listens(user: String, from start: Date, to end: Date, calendar: Calendar, refresh: Bool = false,
+                 progress: Progress? = nil) async throws -> [LBListen] {
         let months = Self.months(from: start, to: min(end, now()), calendar: calendar)
         guard !months.isEmpty else { return [] }
         let cached = Dictionary(uniqueKeysWithValues: months.map { ($0, load(user: user, month: $0)) })
@@ -63,7 +66,7 @@ actor ListenHistoryStore {
             let stopAt = missing.count == 1 && !refresh
                 ? cached[newest]??.listens.map(\.listenedAt).max()
                 : nil
-            let fetched = try await walk(user: user, upper: upper, lower: lower, stopAt: stopAt)
+            let fetched = try await walk(user: user, upper: upper, lower: lower, stopAt: stopAt, progress: progress)
             for month in missing {
                 let range = (Self.start(of: month, calendar: calendar), Self.end(of: month, calendar: calendar))
                 let inMonth = fetched.filter { Self.contains(range, $0) }
@@ -96,7 +99,7 @@ actor ListenHistoryStore {
     // MARK: - Fetching
 
     /// Listens from `upper` back to `lower`, stopping early at `stopAt` (exclusive), newest first.
-    private func walk(user: String, upper: Date, lower: Date, stopAt: Int?) async throws -> [LBListen] {
+    private func walk(user: String, upper: Date, lower: Date, stopAt: Int?, progress: Progress?) async throws -> [LBListen] {
         var collected: [LBListen] = []
         var maxTs = Int(upper.timeIntervalSince1970) + 1
         let floor = Int(lower.timeIntervalSince1970)
@@ -124,6 +127,7 @@ actor ListenHistoryStore {
                 }
                 collected.append(listen)
             }
+            progress?(collected.count)
             guard !reachedEnd, let last = page.last, last.listenedAt < maxTs else { break }
             maxTs = last.listenedAt
         }

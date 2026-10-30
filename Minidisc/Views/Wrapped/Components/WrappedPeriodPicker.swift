@@ -36,6 +36,8 @@ struct WrappedPeriodPicker: View {
             return "\(year)"
         case .month(_, let month):
             return Calendar.current.shortMonthSymbols[month - 1]
+        case .allTime:
+            return period.displayName
         }
     }
 }

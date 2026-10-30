@@ -272,7 +272,7 @@ struct DiscoverView: View {
         VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
             MinidiscCarouselHeaderLink(
                 "Wrapped",
-                itemCount: wrappedYears.count,
+                itemCount: wrappedYears.count + 1,
                 hasMore: true
             ) {
                 WrappedYearlyListView()
@@ -280,7 +280,8 @@ struct DiscoverView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: MinidiscSpacing.s) {
-                    ForEach(wrappedYears.prefix(MinidiscCarouselMetrics.previewLimit), id: \.self) { year in
+                    WrappedYearTile(period: .allTime)
+                    ForEach(wrappedYears.prefix(MinidiscCarouselMetrics.previewLimit - 1), id: \.self) { year in
                         WrappedYearTile(year: year)
                     }
                 }

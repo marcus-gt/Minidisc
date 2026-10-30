@@ -5,6 +5,8 @@ import Foundation
 nonisolated enum WrappedPeriod: Sendable, Hashable, Codable {
     case month(year: Int, month: Int)
     case year(Int)
+    /// The whole history (#70). The ListenBrainz source narrows the range to its first listen.
+    case allTime
 
     func dateRange(in calendar: Calendar) -> (start: Date, end: Date) {
         switch self {
@@ -34,6 +36,9 @@ nonisolated enum WrappedPeriod: Sendable, Hashable, Codable {
                 return (Date(), Date())
             }
             return (start, end)
+        case .allTime:
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) ?? Date()
+            return (Date(timeIntervalSince1970: 0), tomorrow)
         }
     }
 
@@ -49,6 +54,8 @@ nonisolated enum WrappedPeriod: Sendable, Hashable, Codable {
             return formatter.string(from: date)
         case let .year(year):
             return "\(year)"
+        case .allTime:
+            return String(localized: "All Time")
         }
     }
 
@@ -84,6 +91,7 @@ nonisolated enum WrappedPeriod: Sendable, Hashable, Codable {
         switch self {
         case let .month(year, _): return year
         case let .year(year): return year
+        case .allTime: return Calendar.current.component(.year, from: Date())
         }
     }
 }
