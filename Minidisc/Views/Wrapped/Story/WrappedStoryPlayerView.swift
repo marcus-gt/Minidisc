@@ -11,7 +11,8 @@ struct WrappedStoryPlayerView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let slides = WrappedStorySlideKind.allCases
-    private let slideDuration: Double = 5.0
+    /// Long enough for a song to fade in and be heard before the crossfade (#75).
+    private let slideDuration: Double = 10.0
     private let timerInterval: Double = 0.05
 
     @State private var currentIndex = 0
@@ -20,6 +21,13 @@ struct WrappedStoryPlayerView: View {
     @State private var timerTask: Task<Void, Never>? = nil
     @State private var longPressTask: Task<Void, Never>? = nil
     @State private var wrappedData: WrappedData? = nil
+    /// A song per slide (#75), on players of the story's own.
+    @State private var audio: WrappedStoryAudio?
+    @State private var story: WrappedDataSource.StoryDetails = .empty
+    /// The main player was playing when the story opened, so it picks up again on close.
+    @State private var resumesMainPlayer = false
+    /// Pausing the main player deactivates the audio session; the story's music starts after that.
+    @State private var mainPlayerPause: Task<Void, Never>?
 
     @State private var renderedImage: UIImage? = nil
     @State private var showShareSheet = false
@@ -37,6 +45,16 @@ struct WrappedStoryPlayerView: View {
                 .id(currentIndex)
                 .transition(.opacity)
 
+            if ![.intro, .closing].contains(slides[currentIndex]) {
+                // The intro and closing slides carry the mark large; the rest sign off at the foot.
+                VStack {
+                    Spacer()
+                    WrappedBrandFooter(year: year)
+                        .padding(.bottom, MinidiscSpacing.xl)
+                }
+                .allowsHitTesting(false)
+            }
+
             gestureLayer
 
             overlayControls
@@ -47,9 +65,19 @@ struct WrappedStoryPlayerView: View {
         }
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
-        .onAppear { startTimer() }
-        .onDisappear { timerTask?.cancel() }
+        .onAppear {
+            startTimer()
+            startAudio()
+        }
+        .onDisappear {
+            timerTask?.cancel()
+            stopAudio()
+        }
         .task { await loadWrappedData() }
+        .onChange(of: currentIndex) { _, _ in playSoundtrack() }
+        .onChange(of: isPaused) { _, paused in
+            if paused { audio?.pause() } else { audio?.resume() }
+        }
         .sheet(isPresented: $showShareSheet) {
             if let image = renderedImage { SystemShareSheet(item: image) }
         }
@@ -59,11 +87,52 @@ struct WrappedStoryPlayerView: View {
     private func loadWrappedData() async {
         guard let container,
               let serverId = container.serverState.activeServer?.id.uuidString else { return }
-        wrappedData = await container.wrappedDataSource.wrappedData(
+        let data = await container.wrappedDataSource.wrappedData(
             for: .year(year),
             serverId: serverId,
             calendar: .current
         ).data
+        wrappedData = data
+        story = await container.wrappedDataSource.storyDetails(for: data, serverId: serverId, calendar: .current)
+        playSoundtrack()
+    }
+
+    // MARK: - Soundtrack
+
+    private func startAudio() {
+        guard let container, audio == nil else { return }
+        let resolver = container.mediaResolver
+        let serverID = container.serverState.activeServer?.id
+        audio = WrappedStoryAudio { songID in
+            guard let serverID, let source = try? await resolver.resolve(songId: songID, serverId: serverID) else { return nil }
+            switch source {
+            case .downloaded(let url), .cached(let url): return (url, [:])
+            case .stream(let url, let headers): return (url, headers)
+            case .localFile, .liveStream: return nil
+            }
+        }
+        if container.playerState.playbackState == .playing {
+            resumesMainPlayer = true
+            let player = container.playerService
+            mainPlayerPause = Task { await player.pause() }
+        }
+    }
+
+    private func playSoundtrack() {
+        guard let audio else { return }
+        let song = story.trackIDs[slides[currentIndex]].flatMap { story.songs[$0] }
+        let pause = mainPlayerPause
+        Task {
+            await pause?.value
+            await audio.play(song)
+        }
+    }
+
+    private func stopAudio() {
+        audio?.stop()
+        guard resumesMainPlayer, let container else { return }
+        resumesMainPlayer = false
+        Task { await container.playerService.resume() }
     }
 
     // MARK: - Overlay (progress bar + close button)
@@ -76,6 +145,20 @@ struct WrappedStoryPlayerView: View {
                     currentIndex: currentIndex,
                     progress: progress
                 )
+                if let audio, !story.trackIDs.isEmpty {
+                    Button {
+                        audio.toggleMute()
+                    } label: {
+                        Image(systemName: audio.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 16, height: 16)
+                            .padding(8)
+                            .background(Color.white.opacity(0.2), in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text(audio.isMuted ? "Unmute" : "Mute"))
+                }
                 Button {
                     Logger.wrappedStory.debug("[STORY] dismissed via X button at slide=\(currentIndex, privacy: .public)")
                     dismiss()
@@ -147,7 +230,7 @@ struct WrappedStoryPlayerView: View {
     private func slideContent(for kind: WrappedStorySlideKind) -> some View {
         switch kind {
         case .intro:
-            WrappedIntroSlide(year: year, palette: palette)
+            WrappedIntroSlide(year: year, palette: palette, artworkIDs: wrappedData?.topAlbums.map(\.albumId) ?? [])
         case .minutes:
             if let data = wrappedData {
                 WrappedMinutesSlide(data: data, palette: palette)
@@ -174,7 +257,7 @@ struct WrappedStoryPlayerView: View {
             }
         case .topGenre:
             if let data = wrappedData {
-                WrappedTopGenreSlide(data: data, palette: palette)
+                WrappedTopGenreSlide(data: data, palette: palette, genres: story.topGenres)
             } else {
                 loadingSlide
             }

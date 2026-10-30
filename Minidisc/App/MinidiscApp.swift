@@ -223,7 +223,6 @@ struct MinidiscApp: App {
             )
         })
         await MinidiscApp.backgroundSyncCoordinator.configure(
-            wrappedService: newContainer.wrappedPlaylistService,
             moodService: newContainer.moodPlaylistService,
             serverState: newContainer.serverState
         )

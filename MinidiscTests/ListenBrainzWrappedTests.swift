@@ -197,14 +197,14 @@ nonisolated private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
         #expect(result.fellBack)
     }
 
-    /// The yearly playlist can only hold library songs.
+    /// Only library songs can be played, so the radio and the queue leave the rest out.
     @Test @MainActor func topLibraryTracks_leaveOutMusicOutsideTheLibrary() async throws {
         let fake = FakeListenHistory([listen(date(2026, 3, 2), "In library", mbid: "rec-1"), listen(date(2026, 3, 3), "Not in library")])
         let container = try ModelContainer.minidisc(inMemory: true)
         let librarySong = Song(id: "s1", title: "In library", artist: "Bill Evans", duration: 240, musicBrainzId: "rec-1")
         let source = WrappedDataSource(stats: StatsService(modelContainer: container), history: store(fake, now: date(2026, 10, 29)),
                                        username: { "u" }, librarySongs: { [librarySong] })
-        let top = await source.topLibraryTracks(year: 2026, serverId: "s", limit: 10, calendar: utc)
+        let top = await source.topLibraryTracks(for: .year(2026), serverId: "s", limit: 10, calendar: utc)
         #expect(top.map(\.trackId) == ["s1"])
     }
 }

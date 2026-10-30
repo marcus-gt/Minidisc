@@ -19,7 +19,7 @@ struct WrappedShareCardView: View {
                         .tracking(3.5)
                         .foregroundStyle(.white.opacity(0.7))
 
-                    Text("\(year)")
+                    Text(verbatim: String(year))
                         .font(.system(size: 96, weight: .black, design: .rounded))
                         .kerning(-2.5)
                         .foregroundStyle(.white)

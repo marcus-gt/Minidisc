@@ -1,116 +1,58 @@
 import SwiftUI
-import SwiftSonic
 
+/// Every Wrapped year, newest first (#69), and the way into the monthly breakdowns.
 struct WrappedYearlyListView: View {
     @Environment(\.appContainer) private var container
-    @State private var playlists: [WrappedYearlyPlaylist] = []
-    @State private var isLoading = true
+    @State private var firstYear: Int?
 
-    private var visiblePlaylists: [WrappedYearlyPlaylist] {
-        guard container?.serverState.isOnline == false else { return playlists }
-        return (container?.offlineLibrary.snapshot.playlists ?? []).compactMap { playlist in
-            guard let year = WrappedPlaylistService.year(fromPlaylistName: playlist.name) else { return nil }
-            return WrappedYearlyPlaylist(id: playlist.id, year: year, name: playlist.name, coverArtId: playlist.coverArt)
-        }
-    }
-
-    private var currentYear: Int {
-        Calendar.current.component(.year, from: Date())
-    }
-
-    private var hasCurrentYearPlaylist: Bool {
-        visiblePlaylists.contains { $0.year == currentYear }
-    }
-
-    private var currentYearMonths: [(year: Int, month: Int)] {
-        let calendar = Calendar.current
-        let month = calendar.component(.month, from: Date())
-        return (1...month).reversed().map { (currentYear, $0) }
-    }
+    private var years: [Int] { WrappedYears.years(firstYear: firstYear) }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: MinidiscSpacing.l) {
-                if isLoading && container?.serverState.isOnline != false {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, MinidiscSpacing.xxxxl)
-                } else if playlists.isEmpty && hasCurrentYearPlaylist {
-                    emptyState
-                } else {
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: 140, maximum: 200), spacing: MinidiscSpacing.s)],
-                        spacing: MinidiscSpacing.s
-                    ) {
-                        if !hasCurrentYearPlaylist {
-                            WrappedRecapMonthCard(period: .year(currentYear))
-                        }
-                        ForEach(visiblePlaylists) { playlist in
-                            WrappedYearlyCard(playlist: playlist)
-                        }
-                        ForEach(currentYearMonths, id: \.month) { item in
-                            WrappedRecapMonthCard(
-                                period: .month(year: item.year, month: item.month)
-                            )
-                        }
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 140, maximum: 200), spacing: MinidiscSpacing.s)],
+                    spacing: MinidiscSpacing.s
+                ) {
+                    WrappedYearTile(period: .allTime)
+                    ForEach(years, id: \.self) { year in
+                        WrappedYearTile(year: year)
                     }
+                }
 
-                    NavigationLink {
-                        WrappedView()
-                    } label: {
-                        HStack(spacing: MinidiscSpacing.s) {
-                            Image(systemName: "chart.bar.fill")
-                                .font(.title2)
-                                .foregroundStyle(Color.minidiscAccent)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("View Listening Stats")
-                                    .font(.minidiscCellTitle)
-                                    .foregroundStyle(.primary)
-                                Text("Monthly and annual breakdowns")
-                                    .font(.minidiscCaption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer(minLength: 0)
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
+                NavigationLink {
+                    WrappedView()
+                } label: {
+                    HStack(spacing: MinidiscSpacing.s) {
+                        Image(systemName: "chart.bar.fill")
+                            .font(.title2)
+                            .foregroundStyle(Color.minidiscAccent)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("View Listening Stats")
+                                .font(.minidiscCellTitle)
+                                .foregroundStyle(.primary)
+                            Text("Monthly and annual breakdowns")
+                                .font(.minidiscCaption)
                                 .foregroundStyle(.secondary)
                         }
-                        .padding(MinidiscSpacing.m)
-                        .background(Color.minidiscAccent.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    .buttonStyle(.plain)
+                    .padding(MinidiscSpacing.m)
+                    .background(Color.minidiscAccent.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
                 }
+                .buttonStyle(.plain)
             }
             .padding(MinidiscSpacing.l)
         }
         .minidiscContentWidth()
         .navigationTitle("Wrapped")
-        .task(id: container?.serverState.accessSnapshot) {
-            guard let container,
-                  let serverId = container.serverState.activeServer?.id.uuidString else {
-                isLoading = false
-                return
-            }
-            guard container.serverState.isOnline else { isLoading = false; return }
-            playlists = await container.wrappedPlaylistService.fetchYearlyPlaylists(serverId: serverId)
-            isLoading = false
+        .task {
+            guard let container else { return }
+            firstYear = await container.wrappedDataSource.firstYear(calendar: .current)
         }
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: MinidiscSpacing.s) {
-            Image(systemName: "waveform")
-                .font(.largeTitle)
-                .foregroundStyle(Color.minidiscAccent.opacity(0.5))
-            Text("No Wrapped playlists yet.")
-                .font(.minidiscCellTitle)
-            Text("Your Wrapped \(currentYear) will be available on December 28.")
-                .font(.minidiscCaption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, MinidiscSpacing.xxxxl)
     }
 }

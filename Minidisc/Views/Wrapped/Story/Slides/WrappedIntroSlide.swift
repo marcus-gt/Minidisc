@@ -3,23 +3,25 @@ import SwiftUI
 struct WrappedIntroSlide: View {
     let year: Int
     let palette: [Color]
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The year's top album covers for the mosaic behind; empty until the recap has loaded.
+    var artworkIDs: [String] = []
 
     var body: some View {
         ZStack {
-            MeshGradientBackground(palette: palette, animated: !reduceMotion)
+            WrappedCoverMosaic(artworkIDs: artworkIDs, palette: palette)
 
             VStack(spacing: 0) {
                 Spacer()
 
                 VStack(spacing: MinidiscSpacing.xs) {
+                    WrappedBrandMark(width: 120)
+                        .padding(.bottom, MinidiscSpacing.l)
                     Text("YOUR")
                         .font(.system(size: 16, weight: .heavy, design: .rounded))
                         .tracking(4)
                         .foregroundStyle(.white.opacity(0.7))
 
-                    Text("\(year)")
+                    Text(verbatim: String(year))
                         .font(.system(size: 120, weight: .black, design: .rounded))
                         .kerning(-3)
                         .foregroundStyle(.white)

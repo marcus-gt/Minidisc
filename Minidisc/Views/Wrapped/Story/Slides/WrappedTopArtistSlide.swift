@@ -4,47 +4,56 @@ struct WrappedTopArtistSlide: View {
     let data: WrappedData
     let palette: [Color]
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     private var topArtist: TopArtistEntry? { data.topArtists.first }
+    private var runnersUp: ArraySlice<TopArtistEntry> { data.topArtists.dropFirst().prefix(4) }
 
     var body: some View {
         ZStack {
-            MeshGradientBackground(palette: palette, animated: !reduceMotion)
+            WrappedArtBackdrop(artworkID: topArtist?.artistId, palette: palette)
 
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(spacing: 0) {
                 Spacer(minLength: MinidiscSpacing.xxxxl)
-
-                Text("TOP ARTIST")
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
-                    .tracking(2.5)
-                    .foregroundStyle(.white.opacity(0.7))
-
-                Spacer()
+                WrappedSlideLabel("TOP ARTIST")
+                Spacer(minLength: MinidiscSpacing.l)
 
                 if let artist = topArtist {
-                    Text(artist.name)
-                        .font(.system(size: 60, weight: .black, design: .rounded))
-                        .kerning(-1.5)
-                        .foregroundStyle(.white)
-                        .lineLimit(3)
-                        .minimumScaleFactor(0.5)
+                    if WrappedIDs.isLibraryID(artist.artistId) {
+                        WrappedSlideCover(artworkID: artist.artistId, isArtist: true)
+                    }
+
+                    VStack(spacing: MinidiscSpacing.s) {
+                        Text(artist.name)
+                            .font(.system(size: 44, weight: .black, design: .rounded))
+                            .kerning(-1)
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.5)
+                        HStack(spacing: MinidiscSpacing.s) {
+                            statBadge(artist.playCount.plural("play", "plays"))
+                            statBadge(artist.uniqueTracks.plural("track", "tracks"))
+                        }
+                    }
+                    .padding(.horizontal, MinidiscSpacing.xl)
+                    .padding(.top, MinidiscSpacing.l)
 
                     Spacer(minLength: MinidiscSpacing.l)
 
-                    HStack(spacing: MinidiscSpacing.s) {
-                        statBadge(artist.playCount.plural("play", "plays"))
-                        statBadge(artist.uniqueTracks.plural("track", "tracks"))
+                    VStack(spacing: MinidiscSpacing.s) {
+                        ForEach(runnersUp) { entry in
+                            WrappedRunnerUpRow(rank: entry.rank, artworkID: entry.artistId, title: entry.name,
+                                               subtitle: nil, detail: entry.playCount.plural("play", "plays"), isArtist: true)
+                        }
                     }
+                    .padding(.horizontal, MinidiscSpacing.xl)
                 } else {
                     Text("No artist data yet")
                         .font(.system(.title2, design: .rounded, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
 
-                Spacer()
+                Spacer(minLength: MinidiscSpacing.xxxxl)
             }
-            .padding(.horizontal, MinidiscSpacing.xl)
             .wrappedSlideEntrance()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

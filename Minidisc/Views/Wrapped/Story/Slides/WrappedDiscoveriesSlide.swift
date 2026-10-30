@@ -4,11 +4,10 @@ struct WrappedDiscoveriesSlide: View {
     let data: WrappedData
     let palette: [Color]
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
-            MeshGradientBackground(palette: palette, animated: !reduceMotion)
+            WrappedCoverMosaic(artworkIDs: data.topAlbums.reversed().map(\.albumId), palette: palette)
 
             VStack(alignment: .leading, spacing: 0) {
                 Spacer(minLength: MinidiscSpacing.xxxxl)
