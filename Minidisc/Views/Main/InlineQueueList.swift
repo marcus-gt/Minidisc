@@ -160,8 +160,8 @@ struct InlineQueueList: View {
         let entries = QueueRowSnapshot.capture(playerState)
         VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
             if !entries.isEmpty, let label = playerState.nextFromLabel {
-                // "Next from: Kind of Blue", like Spotify's header (#71).
-                Text("Next from: \(label.title)")
+                // The same line as the player's: "Playlist: Jazz tunes" (#71).
+                Text(label.title)
                     .font(.minidiscCellTitle.weight(.bold))
                     .foregroundStyle(contentColor)
                     .lineLimit(1)

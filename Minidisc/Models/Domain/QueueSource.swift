@@ -65,28 +65,26 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
         return false
     }
 
-    /// "PLAYING FROM ALBUM": what kind of thing the source is.
-    var kind: String {
-        switch self {
-        case .album: String(localized: "Album")
-        case .playlist: String(localized: "Playlist")
-        case .artist: String(localized: "Artist")
-        case .artistRadio, .moodRadio, .wrappedRadio: String(localized: "Radio")
-        case .instantMix, .smartShuffle, .queueBuilder: String(localized: "Mix")
-        case .wrapped: String(localized: "Wrapped")
-        case .genre: String(localized: "Genre")
-        case .recordLabel: String(localized: "Label")
-        case .search: String(localized: "Search")
-        case .favorites, .downloads, .recentlyAdded, .songs, .localFolder: String(localized: "Library")
-        }
-    }
-
-    /// The source's own name: "Kind of Blue", "Chill radio", "Bill Evans radio".
-    var title: String {
+    /// The source's own name, without what kind it is: "Jazz tunes", "Bill Evans".
+    var name: String {
         switch self {
         case .album(_, let name), .playlist(_, let name), .artist(_, let name), .genre(let name),
              .recordLabel(let name), .localFolder(let name):
             name
+        default:
+            title
+        }
+    }
+
+    /// One line that says what kind it is and which (#71): "Playlist: Jazz tunes",
+    /// "Instant Mix: Peace Piece", "Chill radio".
+    var title: String {
+        switch self {
+        case .album(_, let name), .localFolder(let name): name
+        case .playlist(_, let name): String(localized: "Playlist: \(name)")
+        case .artist(_, let name): String(localized: "Artist: \(name)")
+        case .genre(let name): String(localized: "Genre: \(name)")
+        case .recordLabel(let name): String(localized: "Label: \(name)")
         case .artistRadio(_, let name): String(localized: "\(name) radio")
         case .instantMix(let title): String(localized: "Instant Mix: \(title)")
         case .smartShuffle: String(localized: "Smart Shuffle")
@@ -95,7 +93,7 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
             Mood(rawValue: raw).map { String(localized: "\(String(localized: $0.title)) radio") } ?? String(localized: "Mood radio")
         case .wrappedRadio(let period): String(localized: "Wrapped \(period.displayName) radio")
         case .wrapped(let period): String(localized: "Wrapped \(period.displayName)")
-        case .search(let query): String(localized: "“\(query)”")
+        case .search(let query): String(localized: "Search: \(query)")
         case .favorites: String(localized: "Favorites")
         case .downloads: String(localized: "Downloads")
         case .recentlyAdded: String(localized: "Recently Added")
@@ -104,7 +102,7 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
     }
 
     /// The label once auto-extend has taken over from a source that ended (#71, 3a).
-    var similarTitle: String { String(localized: "Similar to \(title)") }
+    var similarTitle: String { String(localized: "Similar to \(name)") }
 
     /// What tapping "Playing from" opens; nil when the source has no page.
     var destination: Destination? {
@@ -126,7 +124,6 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
 /// What the player shows for the playing track and the next one, given the queue's source and
 /// where auto-extended tracks begin.
 nonisolated struct QueueSourceLabel: Sendable, Equatable {
-    let kind: String
     let title: String
     /// False once the label describes auto-extended tracks: those aren't the source's page.
     let opensSource: Bool
@@ -136,12 +133,10 @@ nonisolated struct QueueSourceLabel: Sendable, Equatable {
     init?(source: QueueSource?, index: Int, extensionStart: Int?) {
         guard let source else { return nil }
         if !source.isEndless, let extensionStart, index >= extensionStart {
-            kind = String(localized: "Autoplay")
             title = source.similarTitle
             opensSource = false
         } else {
             guard !source.isSelfEvident else { return nil }
-            kind = source.kind
             title = source.title
             opensSource = source.destination != nil
         }

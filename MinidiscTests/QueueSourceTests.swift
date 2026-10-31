@@ -12,13 +12,13 @@ struct QueueSourceTests {
         let playlist = QueueSource.playlist(id: "p", name: "Techno – chill")
         #expect(QueueSourceLabel(source: nil, index: 0, extensionStart: nil) == nil)
         let before = QueueSourceLabel(source: playlist, index: 2, extensionStart: 3)
-        #expect(before?.title == "Techno – chill")
+        #expect(before?.title == "Playlist: Techno – chill")
         #expect(before?.opensSource == true)
         let after = QueueSourceLabel(source: playlist, index: 3, extensionStart: 3)
         #expect(after?.title == playlist.similarTitle)
         #expect(after?.opensSource == false)
         // No boundary: nothing was auto-extended.
-        #expect(QueueSourceLabel(source: playlist, index: 40, extensionStart: nil)?.title == "Techno – chill")
+        #expect(QueueSourceLabel(source: playlist, index: 40, extensionStart: nil)?.title == "Playlist: Techno – chill")
     }
 
     /// The player already names the track's album, so an album alone gets no label, until
@@ -36,6 +36,16 @@ struct QueueSourceTests {
             #expect(QueueSourceLabel(source: source, index: 99, extensionStart: 1)?.title == source.title)
         }
         #expect(!album.isEndless)
+    }
+
+    /// One line names both the kind and the source; "Similar to" uses the bare name.
+    @Test func titles_areOneLineWithTheKindBuiltIn() {
+        #expect(QueueSource.playlist(id: "p", name: "Jazz tunes").title == "Playlist: Jazz tunes")
+        #expect(QueueSource.instantMix(title: "Peace Piece").title == "Instant Mix: Peace Piece")
+        #expect(QueueSource.artistRadio(id: "a", name: "Bill Evans").title == "Bill Evans radio")
+        #expect(QueueSource.genre(name: "Jazz").title == "Genre: Jazz")
+        #expect(QueueSource.playlist(id: "p", name: "Jazz tunes").similarTitle == "Similar to Jazz tunes")
+        #expect(album.similarTitle == "Similar to Kind of Blue")
     }
 
     @Test func destinations_coverThePagesThatExist() {

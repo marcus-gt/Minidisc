@@ -52,8 +52,6 @@ struct FullPlayerView: View {
     private static let playerCoverHPadding: CGFloat = MinidiscSpacing.xxxl
     private static let playerHorizontalPadding: CGFloat = MinidiscSpacing.xxxl
     private static let playerTopGap: CGFloat = 36
-    /// Room for "Playing from" under the grabber (#71).
-    private static let playingFromHeight: CGFloat = 32
     private static let playerCoverToTitleGap: CGFloat = MinidiscSpacing.xl
     private static let playerControlsSpacing: CGFloat = MinidiscSpacing.xl
 
@@ -143,8 +141,7 @@ struct FullPlayerView: View {
     ) -> some View {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
-                flowGap((showLyrics || showingQueue) ? 44
-                        : Self.playerTopGap + (playerState.playingFromLabel == nil ? 0 : Self.playingFromHeight))
+                flowGap((showLyrics || showingQueue) ? 44 : Self.playerTopGap)
 
                 ZStack {
                     if showLyrics, let lyricsVM = lyricsViewModel {
@@ -369,7 +366,9 @@ struct FullPlayerView: View {
     }
 
     private var topBar: some View {
-        VStack(spacing: 0) {
+        // The source line sits just under the grabber, inside the gap above the cover, so the
+        // cover keeps its size (#71).
+        ZStack(alignment: .top) {
             Button {
                 dismissAction()
             } label: {
@@ -384,8 +383,8 @@ struct FullPlayerView: View {
 
             if surface != .queue, !showLyrics, let playerState = container?.playerState,
                let label = playerState.playingFromLabel {
-                PlayingFromLabel(label: label, source: playerState.queueSource,
-                                 contentColor: vm.contentColor, secondaryContentColor: vm.secondaryContentColor)
+                PlayingFromLabel(label: label, source: playerState.queueSource, contentColor: vm.contentColor)
+                    .padding(.top, 11)
                     .padding(.horizontal, Self.playerHorizontalPadding)
             }
         }
@@ -1177,32 +1176,25 @@ private struct VolumeSection: View {
 }
 #endif
 
-/// "PLAYING FROM ALBUM / Kind of Blue" under the grabber (#71). Opens the album, playlist or artist
-/// it names; auto-extended tracks ("Similar to …") have no page of their own.
+/// "Playlist: Jazz tunes" under the grabber (#71). Opens the album, playlist or artist it names;
+/// auto-extended tracks ("Similar to …") have no page of their own.
 private struct PlayingFromLabel: View {
     let label: QueueSourceLabel
     let source: QueueSource?
     let contentColor: Color
-    let secondaryContentColor: Color
 
     var body: some View {
         Button(action: open) {
-            VStack(spacing: 1) {
-                Text("Playing from \(label.kind)")
-                    .font(.minidiscCaption.weight(.semibold))
-                    .textCase(.uppercase)
-                    .foregroundStyle(secondaryContentColor)
-                Text(label.title)
-                    .font(.minidiscCaption.weight(.bold))
-                    .foregroundStyle(contentColor)
-            }
-            .lineLimit(1)
-            .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
+            Text(label.title)
+                .font(.minidiscCaption.weight(.semibold))
+                .foregroundStyle(contentColor.opacity(0.8))
+                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!label.opensSource)
-        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Playing from \(label.title)"))
         .accessibilityHint(label.opensSource ? Text("Opens it") : Text(verbatim: ""))
         .accessibilityIdentifier("player.playingFrom")
     }
@@ -1213,7 +1205,7 @@ private struct PlayingFromLabel: View {
         switch destination {
         case .album(let id):
             NotificationCenter.default.post(name: .minidiscNavigateToAlbum, object: nil,
-                                            userInfo: ["albumId": id, "albumName": source.title])
+                                            userInfo: ["albumId": id, "albumName": source.name])
         case .playlist(let id, let name):
             NotificationCenter.default.post(name: .minidiscNavigateToPlaylist, object: nil,
                                             userInfo: ["playlistId": id, "name": name])
