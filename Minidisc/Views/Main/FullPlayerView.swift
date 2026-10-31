@@ -366,28 +366,17 @@ struct FullPlayerView: View {
     }
 
     private var topBar: some View {
-        // The source line sits just under the grabber, inside the gap above the cover, so the
-        // cover keeps its size (#71).
-        ZStack(alignment: .top) {
-            Button {
-                dismissAction()
-            } label: {
-                Capsule()
-                    .fill(vm.contentColor.opacity(0.4))
-                    .frame(width: 60, height: 5)
-                    .frame(maxWidth: .infinity, minHeight: 28, alignment: .top)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Close player")
-
-            if surface != .queue, !showLyrics, let playerState = container?.playerState,
-               let label = playerState.playingFromLabel {
-                PlayingFromLabel(label: label, source: playerState.queueSource, contentColor: vm.contentColor)
-                    .padding(.top, 11)
-                    .padding(.horizontal, Self.playerHorizontalPadding)
-            }
+        Button {
+            dismissAction()
+        } label: {
+            Capsule()
+                .fill(vm.contentColor.opacity(0.4))
+                .frame(width: 60, height: 5)
+                .frame(maxWidth: .infinity, minHeight: 28, alignment: .top)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Close player")
     }
 
 }
@@ -1175,47 +1164,3 @@ private struct VolumeSection: View {
     }
 }
 #endif
-
-/// "Playlist: Jazz tunes" under the grabber (#71). Opens the album, playlist or artist it names;
-/// auto-extended tracks ("Similar to …") have no page of their own.
-private struct PlayingFromLabel: View {
-    let label: QueueSourceLabel
-    let source: QueueSource?
-    let contentColor: Color
-
-    var body: some View {
-        Button(action: open) {
-            Text(label.title)
-                .font(.minidiscCaption.weight(.semibold))
-                .foregroundStyle(contentColor.opacity(0.8))
-                .lineLimit(1)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!label.opensSource)
-        .accessibilityLabel(Text("Playing from \(label.title)"))
-        .accessibilityHint(label.opensSource ? Text("Opens it") : Text(verbatim: ""))
-        .accessibilityIdentifier("player.playingFrom")
-    }
-
-    private func open() {
-        guard label.opensSource, let source, let destination = source.destination else { return }
-        HapticFeedback.light.trigger()
-        switch destination {
-        case .album(let id):
-            NotificationCenter.default.post(name: .minidiscNavigateToAlbum, object: nil,
-                                            userInfo: ["albumId": id, "albumName": source.name])
-        case .playlist(let id, let name):
-            NotificationCenter.default.post(name: .minidiscNavigateToPlaylist, object: nil,
-                                            userInfo: ["playlistId": id, "name": name])
-        case .artist(let id):
-            let name: String = switch source {
-            case .artist(_, let name), .artistRadio(_, let name): name
-            default: source.title
-            }
-            NotificationCenter.default.post(name: .minidiscNavigateToArtist, object: nil,
-                                            userInfo: ["artistId": id, "artistName": name])
-        }
-    }
-}

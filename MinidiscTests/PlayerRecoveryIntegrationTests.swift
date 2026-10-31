@@ -1270,10 +1270,8 @@ struct QueueSourcePlaybackTests {
 
         #expect(h.state.originalQueueEndIndex == 3)
         #expect(h.state.playingFromLabel == nil)
-        #expect(h.state.nextFromLabel == nil)
         let extended = QueueSourceLabel(source: h.state.queueSource, index: 3, extensionStart: h.state.originalQueueEndIndex)
         #expect(extended?.title == album.similarTitle)
-        #expect(extended?.opensSource == false)
         await h.player.stop()
     }
 }

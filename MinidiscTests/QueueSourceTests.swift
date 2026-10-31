@@ -13,10 +13,8 @@ struct QueueSourceTests {
         #expect(QueueSourceLabel(source: nil, index: 0, extensionStart: nil) == nil)
         let before = QueueSourceLabel(source: playlist, index: 2, extensionStart: 3)
         #expect(before?.title == "Playlist: Techno – chill")
-        #expect(before?.opensSource == true)
         let after = QueueSourceLabel(source: playlist, index: 3, extensionStart: 3)
         #expect(after?.title == playlist.similarTitle)
-        #expect(after?.opensSource == false)
         // No boundary: nothing was auto-extended.
         #expect(QueueSourceLabel(source: playlist, index: 40, extensionStart: nil)?.title == "Playlist: Techno – chill")
     }
@@ -46,14 +44,6 @@ struct QueueSourceTests {
         #expect(QueueSource.genre(name: "Jazz").title == "Genre: Jazz")
         #expect(QueueSource.playlist(id: "p", name: "Jazz tunes").similarTitle == "Similar to Jazz tunes")
         #expect(album.similarTitle == "Similar to Kind of Blue")
-    }
-
-    @Test func destinations_coverThePagesThatExist() {
-        #expect(album.destination == .album(id: "al"))
-        #expect(QueueSource.playlist(id: "p", name: "Techno – chill").destination == .playlist(id: "p", name: "Techno – chill"))
-        #expect(QueueSource.artistRadio(id: "a", name: "Bill Evans").destination == .artist(id: "a"))
-        #expect(QueueSource.moodRadio(.chill).destination == nil)
-        #expect(QueueSource.search(query: "jarrett").destination == nil)
     }
 
     @Test func instantMix_isAnArtistsRadioOrNamedAfterItsSeed() {

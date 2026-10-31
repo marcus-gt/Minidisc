@@ -81,14 +81,9 @@ final class PlayerState {
     /// What started the queue (#71); nil when unknown.
     var queueSource: QueueSource?
 
-    /// "Playing from …" for the current track.
+    /// Where the playing track comes from, for the queue's "Now playing" line.
     var playingFromLabel: QueueSourceLabel? {
         QueueSourceLabel(source: queueSource, index: currentIndex, extensionStart: originalQueueEndIndex)
-    }
-
-    /// "Next from …" for the track after it.
-    var nextFromLabel: QueueSourceLabel? {
-        QueueSourceLabel(source: queueSource, index: currentIndex + 1, extensionStart: originalQueueEndIndex)
     }
 
     init(isAutoExtendEnabled: Bool = false, waitingMessageDelay: Duration = .milliseconds(700)) {

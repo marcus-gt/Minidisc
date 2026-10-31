@@ -1,7 +1,7 @@
 import Foundation
 
-/// Where the queue came from (#71), shown as "Playing from" in the player and "Next from" above the
-/// queue. Set by whatever started playback and saved with the session.
+/// Where the queue came from (#71), shown above the queue as "Now playing: …". Set by whatever
+/// started playback and saved with the session.
 nonisolated enum QueueSource: Codable, Sendable, Hashable {
     case album(id: String, name: String)
     case playlist(id: String, name: String)
@@ -103,30 +103,11 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
 
     /// The label once auto-extend has taken over from a source that ended (#71, 3a).
     var similarTitle: String { String(localized: "Similar to \(name)") }
-
-    /// What tapping "Playing from" opens; nil when the source has no page.
-    var destination: Destination? {
-        switch self {
-        case .album(let id, _): .album(id: id)
-        case .playlist(let id, let name): .playlist(id: id, name: name)
-        case .artist(let id, _), .artistRadio(let id, _): .artist(id: id)
-        default: nil
-        }
-    }
-
-    nonisolated enum Destination: Sendable, Hashable {
-        case album(id: String)
-        case playlist(id: String, name: String)
-        case artist(id: String)
-    }
 }
 
-/// What the player shows for the playing track and the next one, given the queue's source and
-/// where auto-extended tracks begin.
+/// What the queue shows for a track, given the queue's source and where auto-extended tracks begin.
 nonisolated struct QueueSourceLabel: Sendable, Equatable {
     let title: String
-    /// False once the label describes auto-extended tracks: those aren't the source's page.
-    let opensSource: Bool
 
     /// `index` is the track the label is for; tracks at `extensionStart` and after were added by
     /// auto-extend. A plain album shows nothing until auto-extend takes over from it.
@@ -134,11 +115,9 @@ nonisolated struct QueueSourceLabel: Sendable, Equatable {
         guard let source else { return nil }
         if !source.isEndless, let extensionStart, index >= extensionStart {
             title = source.similarTitle
-            opensSource = false
         } else {
             guard !source.isSelfEvident else { return nil }
             title = source.title
-            opensSource = source.destination != nil
         }
     }
 }

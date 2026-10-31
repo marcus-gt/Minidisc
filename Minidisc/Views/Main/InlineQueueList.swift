@@ -159,9 +159,9 @@ struct InlineQueueList: View {
     var body: some View {
         let entries = QueueRowSnapshot.capture(playerState)
         VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-            if !entries.isEmpty, let label = playerState.nextFromLabel {
-                // The same line as the player's: "Playlist: Jazz tunes" (#71).
-                Text(label.title)
+            if let label = playerState.playingFromLabel {
+                // Where the playing song comes from: "Now playing: Playlist: Jazz tunes" (#71).
+                Text("Now playing: \(label.title)")
                     .font(.minidiscCellTitle.weight(.bold))
                     .foregroundStyle(contentColor)
                     .lineLimit(1)
