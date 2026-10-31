@@ -61,6 +61,8 @@ final class AppContainer {
     let searchHistoryService: SearchHistoryService
     /// When each playlist was last added to or played; the Playlists list sorts by it.
     let playlistUsage: PlaylistUsageStore
+    /// Playlists offered by a long-press on a heart (#68).
+    let quickPlaylists: QuickPlaylists
     let replayGainSettings: ReplayGainSettings
     let crossfadeSettings: CrossfadeSettings
     let streamSettings: StreamSettings
@@ -288,6 +290,7 @@ final class AppContainer {
 
         searchHistoryService = SearchHistoryService(container: modelContainer)
         playlistUsage = PlaylistUsageStore(defaults: userDefaults)
+        quickPlaylists = QuickPlaylists(defaults: userDefaults)
 
         lifecycleTasks = [
             Task { [download, downloadActivity, offlineLibrary] in

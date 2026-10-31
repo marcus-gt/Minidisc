@@ -253,8 +253,9 @@ struct SongRow: View {
                     .frame(width: 16, height: 16)
             }
             if trailingAccessory == .favorite, !song.isLocalFile {
-                Button {
-                    SongActions.toggleFavorite(song: song, isFavorite: isFavorite, container: container)
+                // Tap likes; a long-press offers the quick playlists (#68).
+                Menu {
+                    QuickPlaylistMenuItems(song: song, onAddToPlaylist: onAddToPlaylist)
                 } label: {
                     Image(systemName: isFavorite ? "heart.fill" : "heart")
                         .font(.body)
@@ -262,10 +263,15 @@ struct SongRow: View {
                         .contentTransition(.symbolEffect(.replace))
                         .frame(width: MinidiscControlSize.regular, height: MinidiscControlSize.regular)
                         .contentShape(Rectangle())
+                } primaryAction: {
+                    SongActions.toggleFavorite(song: song, isFavorite: isFavorite, container: container)
                 }
+                .menuStyle(.button)
+                .menuIndicator(.hidden)
                 .buttonStyle(.plain)
                 .disabled(container?.serverState.isOnline != true)
                 .accessibilityLabel(isFavorite ? "Remove from Favorites" : "Add to Favorites")
+                .accessibilityHint("Touch and hold to add to a quick playlist")
             }
             if song.duration > 0 {
                 Text(Duration.seconds(song.duration).formatted(.time(pattern: .minuteSecond)))

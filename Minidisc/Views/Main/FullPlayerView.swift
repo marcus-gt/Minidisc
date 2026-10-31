@@ -426,16 +426,24 @@ private struct TrackInfoSection: View {
 
             HStack(spacing: MinidiscSpacing.s) {
                 if !playerState.isLiveStream {
-                    Button {
-                        toggleFavorite()
+                    // Tap likes; a long-press offers the quick playlists (#68).
+                    Menu {
+                        if let track = playerState.currentTrack {
+                            QuickPlaylistMenuItems(song: track, onAddToPlaylist: { playlistAddition.present($0) })
+                        }
                     } label: {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
                             .foregroundStyle(contentColor)
                             .contentTransition(.symbolEffect(.replace))
+                    } primaryAction: {
+                        toggleFavorite()
                     }
+                    .menuStyle(.button)
+                    .menuIndicator(.hidden)
                     .buttonStyle(.minidiscCircle(diameter: compact ? MinidiscControlSize.compact : MinidiscControlSize.regular))
                     .disabled(!isOnline || playerState.currentTrack == nil || playerState.currentTrack?.isLocalFile == true)
                     .accessibilityLabel(isFavorite ? "Remove from Favorites" : "Add to Favorites")
+                    .accessibilityHint("Touch and hold to add to a quick playlist")
                 }
 
                 Menu {

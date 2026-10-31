@@ -959,6 +959,19 @@ private struct ApplicationSettingsView: View {
             } footer: {
                 Text("Choose which sections appear on Discover and their order.")
             }
+            Section {
+                NavigationLink {
+                    QuickPlaylistsSettingsView()
+                } label: {
+                    Label("Quick Playlists", systemImage: "bolt")
+                        .foregroundStyle(.primary)
+                }
+                .accessibilityIdentifier("settings.quickPlaylists")
+            } header: {
+                Text("Playlists")
+            } footer: {
+                Text("Choose the playlists a long-press on a heart adds to.")
+            }
             MoodPlaylistSettingsSection()
             if SiriSettingsSection.isAvailable {
                 SiriSettingsSection()
