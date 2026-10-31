@@ -527,6 +527,7 @@ struct PlaylistDetailView: View {
                         }
                         Divider()
                         pinMenuButton
+                        quickPlaylistButton
                         Divider()
                         Button("Theme colour", systemImage: "paintpalette") {
                             showThemeColorSheet = true
@@ -545,6 +546,24 @@ struct PlaylistDetailView: View {
     }
 
     // MARK: - Pin
+
+    /// Puts the playlist in, or takes it out of, the heart's long-press menu (#68).
+    @ViewBuilder
+    private var quickPlaylistButton: some View {
+        if let container, let serverID = container.serverState.activeServer?.id.uuidString {
+            let isQuick = container.quickPlaylists.contains(playlistId, serverID: serverID)
+            Button(isQuick ? "Remove from Quick Playlists" : "Add to Quick Playlists",
+                   systemImage: isQuick ? "bolt.slash" : "bolt") {
+                HapticFeedback.light.trigger()
+                container.quickPlaylists.toggle(id: playlistId, name: viewModel?.name ?? initialName, serverID: serverID)
+                container.toastService.showConfirmation(
+                    isQuick ? String(localized: "Removed from Quick Playlists")
+                            : String(localized: "Added to Quick Playlists"),
+                    subtitle: isQuick ? nil : String(localized: "Touch and hold a heart to add songs to it.")
+                )
+            }
+        }
+    }
 
     @ViewBuilder
     private var pinMenuButton: some View {
