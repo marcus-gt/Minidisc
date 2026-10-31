@@ -78,6 +78,13 @@ final class PlayerState {
     var isAutoExtendEnabled: Bool
     /// Index separating requested tracks from the auto-extended tail; nil means no extension.
     var originalQueueEndIndex: Int?
+    /// What started the queue (#71); nil when unknown.
+    var queueSource: QueueSource?
+
+    /// Where the playing track comes from, for the queue's "Now playing" line.
+    var playingFromLabel: QueueSourceLabel? {
+        QueueSourceLabel(source: queueSource, index: currentIndex, extensionStart: originalQueueEndIndex)
+    }
 
     init(isAutoExtendEnabled: Bool = false, waitingMessageDelay: Duration = .milliseconds(700)) {
         self.isAutoExtendEnabled = isAutoExtendEnabled

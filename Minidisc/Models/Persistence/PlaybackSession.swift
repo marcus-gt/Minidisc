@@ -19,6 +19,10 @@ final class PlaybackSession {
 
     var lastUpdated: Date
     var repeatModeRaw: String = RepeatMode.off.rawValue
+    /// The queue's source as JSON (#71); nil for sessions saved before it existed.
+    var queueSourceData: Data?
+    /// Where auto-extended tracks begin, so "Similar to" survives a relaunch.
+    var originalQueueEndIndex: Int?
 
     init(
         currentIndex: Int = 0,
@@ -49,13 +53,21 @@ final class PlaybackSession {
         RepeatMode(rawValue: repeatModeRaw) ?? .off
     }
 
+    func decodedQueueSource() -> QueueSource? {
+        queueSourceData.flatMap { try? JSONDecoder().decode(QueueSource.self, from: $0) }
+    }
+
     func update(
         currentIndex: Int,
         currentPosition: TimeInterval,
         queue: [DisplayableSong],
         currentTrack: DisplayableSong?,
-        repeatMode: RepeatMode
+        repeatMode: RepeatMode,
+        queueSource: QueueSource?,
+        originalQueueEndIndex: Int?
     ) {
+        self.queueSourceData = queueSource.flatMap { try? JSONEncoder().encode($0) }
+        self.originalQueueEndIndex = originalQueueEndIndex
         self.currentIndex = currentIndex
         self.currentPosition = currentPosition
         self.queueData = (try? JSONEncoder().encode(queue)) ?? Data()

@@ -117,7 +117,7 @@ struct SongContextMenuModifier: ViewModifier {
             Button {
                 Task {
                     do {
-                        try await container?.playerService.play(tracks: [song], startIndex: 0)
+                        try await container?.playerService.play(tracks: [song], startIndex: 0, source: .album(of: song))
                     } catch {
                         Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                     }
@@ -210,7 +210,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                     Button {
                         Task {
                             do {
-                                try await container?.playerService.play(tracks: songs, startIndex: 0)
+                                try await container?.playerService.play(tracks: songs, startIndex: 0, source: .collection(itemType, id: itemId, name: displayName))
                                 if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                             } catch {
                                 Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
@@ -224,7 +224,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                         let shuffled = songs.shuffled()
                         Task {
                             do {
-                                try await container?.playerService.play(tracks: shuffled, startIndex: 0)
+                                try await container?.playerService.play(tracks: shuffled, startIndex: 0, source: .collection(itemType, id: itemId, name: displayName))
                                 if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                             } catch {
                                 Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
@@ -252,7 +252,7 @@ struct CollectionContextMenuModifier: ViewModifier {
                 // Instant Mix seeds from the album itself (similarity), so only albums — not playlists.
                 if itemType == .album {
                     Button {
-                        startInstantMix(from: .album(id: itemId), using: container)
+                        startInstantMix(from: .album(id: itemId), using: container, titled: displayName)
                     } label: {
                         Label("Instant Mix", systemImage: instantMixSymbol)
                     }
@@ -381,7 +381,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     Task {
                         guard let songs = try? await playableSongs(), !songs.isEmpty else { return }
                         do {
-                            try await container?.playerService.play(tracks: songs, startIndex: 0)
+                            try await container?.playerService.play(tracks: songs, startIndex: 0, source: .collection(itemType, id: itemId, name: displayName))
                             if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                         } catch {
                             Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
@@ -395,7 +395,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                     Task {
                         guard let songs = try? await playableSongs(), !songs.isEmpty else { return }
                         do {
-                            try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0)
+                            try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0, source: .collection(itemType, id: itemId, name: displayName))
                             if itemType == .playlist { container?.recordPlaylistUse(itemId) }
                         } catch {
                             Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
@@ -428,7 +428,7 @@ struct LazyCollectionContextMenuModifier: ViewModifier {
                 // Instant Mix seeds from the album itself (similarity), so only albums — not playlists.
                 if itemType == .album {
                     Button {
-                        startInstantMix(from: .album(id: itemId), using: container)
+                        startInstantMix(from: .album(id: itemId), using: container, titled: displayName)
                     } label: {
                         Label("Instant Mix", systemImage: instantMixSymbol)
                     }

@@ -59,6 +59,7 @@ enum MoodRadio {
             }
             try await container.playerService.playBuiltQueue(
                 RadioQueue.initialTracks(radio.tracks),
+                source: .moodRadio(mood),
                 refill: RadioQueue.refill(after: radio.tracks, seedIDs: radio.seedIDs, library: container.libraryService)
             )
         } catch is CancellationError {

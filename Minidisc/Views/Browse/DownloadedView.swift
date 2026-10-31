@@ -120,7 +120,7 @@ private struct DownloadedContent: View {
                             Button {
                                 guard let index = songs.firstIndex(where: { $0.id == song.id }) else { return }
                                 Task { await container?.toastService.perform {
-                                    try await container?.playerService.play(tracks: songs, startIndex: index)
+                                    try await container?.playerService.play(tracks: songs, startIndex: index, source: .downloads)
                                 } }
                             } label: {
                                 VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {

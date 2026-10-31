@@ -174,7 +174,7 @@ struct SearchView: View {
     private func activeSearchContent(_ vm: SearchViewModel) -> some View {
         let matches = container?.serverState.isOnline == false ? offlineMatches : vm.matches
         if !matches.isEmpty {
-            SearchResultsContent(matches: matches, scope: $scope,
+            SearchResultsContent(matches: matches, query: searchQuery.trimmingCharacters(in: .whitespaces), scope: $scope,
                                  onAddToPlaylist: playlistAddition.present,
                                  canSelectSongs: container?.serverState.isOnline == true && !selectableSongs.isEmpty,
                                  onSelectSongs: { songSelection = SongSelectionRequest(songs: selectableSongs) })
@@ -314,7 +314,7 @@ struct SearchView: View {
                     }
                 }
                 if scope == .all || scope == .songs {
-                    SearchSongResultsSection(songs: songs, onAddToPlaylist: onAddToPlaylist)
+                    SearchSongResultsSection(songs: songs, query: query, onAddToPlaylist: onAddToPlaylist)
                 }
             }
         }
@@ -324,6 +324,7 @@ struct SearchView: View {
 
     private struct SearchSongResultsSection: View {
         let songs: [DisplayableSong]
+        let query: String
         let onAddToPlaylist: (DisplayableSong) -> Void
 
         @Environment(\.appContainer) private var container
@@ -348,7 +349,7 @@ struct SearchView: View {
                         .onTapGesture {
                             Task {
                                 do {
-                                    try await container?.playerService.play(tracks: songs, startIndex: index)
+                                    try await container?.playerService.play(tracks: songs, startIndex: index, source: .search(query: query))
                                 } catch {
                                     Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                 if !UserFacingError.isCancellation(error) {

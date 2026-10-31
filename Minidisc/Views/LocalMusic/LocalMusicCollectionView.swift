@@ -39,7 +39,7 @@ struct LocalMusicCollectionView: View {
                         .padding(.horizontal, MinidiscSpacing.l)
                 }
 
-                LocalMusicPlaybackControls(tracks: tracks, foregroundColor: palette.contentColor)
+                LocalMusicPlaybackControls(tracks: tracks, source: .localFolder(name: group.name), foregroundColor: palette.contentColor)
                     .padding(.horizontal, MinidiscSpacing.l)
 
                 if category == .artists {
@@ -55,7 +55,7 @@ struct LocalMusicCollectionView: View {
                         Text("Songs").font(.minidiscShelfTitle)
                             .padding(.bottom, MinidiscSpacing.m)
                     }
-                    LocalMusicTrackRows(tracks: tracks, showCoverArt: category == .artists,
+                    LocalMusicTrackRows(tracks: tracks, source: .localFolder(name: group.name), showCoverArt: category == .artists,
                                         titleColor: palette.contentColor, secondaryColor: palette.secondaryContentColor,
                                         showsDividers: true)
                 }
@@ -89,6 +89,8 @@ struct LocalMusicCollectionView: View {
 
 struct LocalMusicPlaybackControls: View {
     let tracks: [LocalMusicTrack]
+    /// What "Playing from" shows (#71).
+    let source: QueueSource?
     var foregroundColor: Color = .minidiscAccent
     @Environment(\.appContainer) private var container
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -118,7 +120,7 @@ struct LocalMusicPlaybackControls: View {
         HapticFeedback.medium.trigger()
         Task {
             await container?.toastService.perform {
-                try await container?.playerService.play(tracks: shuffled ? songs.shuffled() : songs, startIndex: 0)
+                try await container?.playerService.play(tracks: shuffled ? songs.shuffled() : songs, startIndex: 0, source: source)
             }
         }
     }
@@ -126,6 +128,8 @@ struct LocalMusicPlaybackControls: View {
 
 struct LocalMusicTrackRows: View {
     let tracks: [LocalMusicTrack]
+    /// What "Playing from" shows (#71).
+    let source: QueueSource?
     var showCoverArt = true
     var titleColor: Color = .primary
     var secondaryColor: Color = .secondary
@@ -154,7 +158,7 @@ struct LocalMusicTrackRows: View {
         guard let index = queue.firstIndex(where: { $0.id == track.id }) else { return }
         Task {
             await container?.toastService.perform {
-                try await container?.playerService.play(tracks: queue, startIndex: index)
+                try await container?.playerService.play(tracks: queue, startIndex: index, source: source)
             }
         }
     }

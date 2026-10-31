@@ -98,7 +98,7 @@ struct WrappedView: View {
                     .cascadeAppear(order: 0, trigger: appeared)
                     WrappedTopArtistsSection(artists: d.topArtists)
                         .cascadeAppear(order: 1, trigger: appeared)
-                    WrappedTopTracksSection(tracks: d.topTracks)
+                    WrappedTopTracksSection(tracks: d.topTracks, period: d.period)
                         .cascadeAppear(order: 2, trigger: appeared)
                     WrappedTopAlbumsSection(albums: d.topAlbums)
                         .cascadeAppear(order: 3, trigger: appeared)

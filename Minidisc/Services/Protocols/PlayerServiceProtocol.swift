@@ -5,7 +5,8 @@ protocol PlayerServiceProtocol: AnyObject, Sendable {
     /// MainActor playback state shared by views and system Now Playing.
     var state: PlayerState { get }
 
-    func play(tracks: [DisplayableSong], startIndex: Int) async throws
+    /// `source` is what started the queue, shown as "Playing from" (#71).
+    func play(tracks: [DisplayableSong], startIndex: Int, source: QueueSource?) async throws
     /// Resolves a fresh queue without allowing a late result to override Pause, Next or another Play.
     func play(preparingQueue: @escaping @Sendable () async throws -> PreparedPlaybackQueue) async throws
     func resume() async
@@ -41,10 +42,10 @@ protocol PlayerServiceProtocol: AnyObject, Sendable {
     func playSmartShuffle() async throws
     /// A supplied seedTrack starts immediately while similarity queries build the queue.
     /// Without it, waits for the mix and throws instantMixEmpty if none is available.
-    func playInstantMix(from seed: InstantMixSeed, startingWith seedTrack: DisplayableSong?) async throws
+    func playInstantMix(from seed: InstantMixSeed, startingWith seedTrack: DisplayableSong?, source: QueueSource?) async throws
     /// Plays a ready-made queue (Queue Builder) and keeps auto-extend refilling it from `refill`,
     /// which receives the queued song IDs to skip and how many songs to add.
-    func playBuiltQueue(_ tracks: [DisplayableSong], refill: @escaping QueueRefill) async throws
+    func playBuiltQueue(_ tracks: [DisplayableSong], source: QueueSource?, refill: @escaping QueueRefill) async throws
     /// Toggles the auto-extend preference and persists it to UserDefaults.
     /// When enabled and ≤15 tracks remain, the player appends a fresh smart shuffle batch automatically.
     func setAutoExtendEnabled(_ enabled: Bool) async
@@ -66,19 +67,20 @@ nonisolated struct PreparedPlaybackQueue: Sendable {
     let tracks: [DisplayableSong]
     let startIndex: Int
     var repeatMode: RepeatMode? = nil
+    var source: QueueSource? = nil
 }
 
 /// More songs for a built queue: `excluded` are already queued, `count` is how many to return.
 typealias QueueRefill = @Sendable (_ excluded: Set<String>, _ count: Int) async throws -> [DisplayableSong]
 
 extension PlayerServiceProtocol {
-    nonisolated func playBuiltQueue(_ tracks: [DisplayableSong], refill: @escaping QueueRefill) async throws {
-        try await play(tracks: tracks, startIndex: 0)
+    nonisolated func playBuiltQueue(_ tracks: [DisplayableSong], source: QueueSource?, refill: @escaping QueueRefill) async throws {
+        try await play(tracks: tracks, startIndex: 0, source: source)
     }
 
     nonisolated func play(preparingQueue: @escaping @Sendable () async throws -> PreparedPlaybackQueue) async throws {
         let queue = try await preparingQueue()
         if let repeatMode = queue.repeatMode { await setRepeatMode(repeatMode) }
-        try await play(tracks: queue.tracks, startIndex: queue.startIndex)
+        try await play(tracks: queue.tracks, startIndex: queue.startIndex, source: queue.source)
     }
 }

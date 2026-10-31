@@ -291,7 +291,8 @@ struct AlbumDetailView: View {
                             onTap: { index in
                                 Task {
                                     do {
-                                        try await container?.playerService.play(tracks: songs, startIndex: index)
+                                        try await container?.playerService.play(tracks: songs, startIndex: index,
+                                                                                source: .album(id: albumId, name: vm.albumName))
                                     } catch {
                                         Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                 if !UserFacingError.isCancellation(error) {
@@ -374,7 +375,7 @@ struct AlbumDetailView: View {
                     Group {
                         Button("Instant Mix", systemImage: instantMixSymbol) {
                             HapticFeedback.medium.trigger()
-                            startInstantMix(from: .album(id: albumId), using: container)
+                            startInstantMix(from: .album(id: albumId), using: container, titled: viewModel?.albumName)
                         }
                         .disabled(displaySongs().isEmpty || !isOnline)
                         Divider()
@@ -770,6 +771,8 @@ private struct AlbumPlaybackActions: View {
 
     @Environment(\.appContainer) private var container
 
+    private var albumSource: QueueSource { .album(id: albumId, name: viewModel?.albumName ?? "") }
+
     var body: some View {
         VStack(spacing: MinidiscSpacing.m) {
             HStack(spacing: MinidiscSpacing.xl) {
@@ -785,7 +788,7 @@ private struct AlbumPlaybackActions: View {
                     HapticFeedback.medium.trigger()
                     Task {
                         guard !songs.isEmpty else { return }
-                        await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: 0) }
+                        await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: 0, source: albumSource) }
                     }
                 }
                 .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large, isProminent: true))
@@ -796,7 +799,7 @@ private struct AlbumPlaybackActions: View {
                     HapticFeedback.medium.trigger()
                     Task {
                         guard !songs.isEmpty else { return }
-                        await container?.toastService.perform { try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0) }
+                        await container?.toastService.perform { try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0, source: albumSource) }
                     }
                 }
                 .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))

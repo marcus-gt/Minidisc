@@ -180,7 +180,7 @@ struct SongsListView: View {
                 HapticFeedback.medium.trigger()
                 Task {
                     guard !songs.isEmpty else { return }
-                    await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: 0) }
+                    await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: 0, source: .songs) }
                 }
             } label: {
                 Label("Play", systemImage: "play.fill")
@@ -193,7 +193,7 @@ struct SongsListView: View {
                 Task {
                     guard !songs.isEmpty else { return }
                     let idx = Int.random(in: 0..<songs.count)
-                    await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: idx) }
+                    await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: idx, source: .songs) }
                     if container?.playerState.isShuffled != true {
                         await container?.playerService.toggleShuffle()
                     }
@@ -219,7 +219,7 @@ struct SongsListView: View {
     private func play(_ songs: [DisplayableSong], at index: Int) {
         Task {
             do {
-                try await container?.playerService.play(tracks: songs, startIndex: index)
+                try await container?.playerService.play(tracks: songs, startIndex: index, source: .songs)
             } catch {
                 Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                 if !UserFacingError.isCancellation(error) {

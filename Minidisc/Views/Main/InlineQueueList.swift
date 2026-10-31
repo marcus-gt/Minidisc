@@ -85,7 +85,7 @@ private struct QueueRow: View {
             Button {
                 Task {
                     do {
-                        try await container?.playerService.play(tracks: [song], startIndex: 0)
+                        try await container?.playerService.play(tracks: [song], startIndex: 0, source: .album(of: song))
                     } catch {
                         Logger.player.error("[PLAYBACK] play failed: \(error, privacy: .public)")
                         if !UserFacingError.isCancellation(error) {
@@ -158,6 +158,29 @@ struct InlineQueueList: View {
 
     var body: some View {
         let entries = QueueRowSnapshot.capture(playerState)
+        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            if let label = playerState.playingFromLabel {
+                // Where the playing song comes from, laid out like Apple Music's "Continue Playing" (#71).
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Now playing")
+                        .font(.minidiscCellTitle.weight(.bold))
+                        .foregroundStyle(contentColor)
+                    Text(label.title)
+                        .font(.minidiscCaption)
+                        .foregroundStyle(secondaryContentColor)
+                }
+                .lineLimit(1)
+                .padding(.horizontal, MinidiscSpacing.l)
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("queue.nowPlaying")
+            }
+            queueList(entries)
+        }
+    }
+
+    @ViewBuilder
+    private func queueList(_ entries: [QueueRowSnapshot]) -> some View {
         if entries.isEmpty {
             EmptyStateView(systemImage: "list.bullet", title: "Nothing up next",
                            subtitle: "Tracks you add to the queue appear here.")
@@ -217,12 +240,16 @@ private struct QueueEntryRow: View {
     var showsReorderHint = false
     @Environment(\.appContainer) private var container
 
+    /// Snug like Apple Music's queue: the List's default insets left ~82 pt per row.
+    static let rowInsets = EdgeInsets(top: 2, leading: MinidiscSpacing.l, bottom: 2, trailing: MinidiscSpacing.l)
+
     var body: some View {
         QueueRow(song: entry.song, isCurrent: false, onRemove: remove,
                  contentColor: contentColor, secondaryContentColor: secondaryContentColor,
                  loadArtwork: loadArtwork, showsReorderHint: showsReorderHint)
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
+            .listRowInsets(QueueEntryRow.rowInsets)
             .contentShape(Rectangle())
             .accessibilityIdentifier("queue.track.\(entry.song.id).\(entry.id.occurrence)")
             .onTapGesture {
@@ -266,6 +293,7 @@ private struct ReorderableQueueList: View {
             // Apply row traits outside the reorderable wrapper so List receives them.
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
+            .listRowInsets(QueueEntryRow.rowInsets)
         }
         .reorderContainer(for: QueueRowSnapshot.self) { difference in
             guard difference.sources.count == 1,
@@ -285,6 +313,7 @@ private struct ReorderableQueueList: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .environment(\.defaultMinListRowHeight, 0)
     }
 }
 
@@ -314,6 +343,7 @@ private struct LegacyQueueList: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .environment(\.defaultMinListRowHeight, 0)
         .environment(\.editMode, .constant(.active))
     }
 }

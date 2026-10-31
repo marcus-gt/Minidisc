@@ -73,7 +73,7 @@ struct LocalMusicView: View {
                         VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
                             sectionHeader(.songs)
                             LazyVStack(spacing: 0) {
-                                LocalMusicTrackRows(tracks: Array(tracks.prefix(5)), showsDividers: true)
+                                LocalMusicTrackRows(tracks: Array(tracks.prefix(5)), source: .localFolder(name: String(localized: "Local Files")), showsDividers: true)
                             }
                             .padding(.horizontal, MinidiscSpacing.l)
                             .minidiscSongSwipeContainer()
