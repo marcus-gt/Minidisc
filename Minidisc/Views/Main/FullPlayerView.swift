@@ -107,6 +107,8 @@ struct FullPlayerView: View {
                 .sheet(item: $playlistAddition.request) { request in
                     AddToPlaylistSheet(request: request)
                 }
+                .quickPlaylistPicker(.player, container: container)
+                .environment(\.quickPlaylistHost, .player)
                 .environment(playlistAddition)
         }
     }

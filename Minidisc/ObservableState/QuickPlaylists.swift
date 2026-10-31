@@ -19,6 +19,13 @@ final class QuickPlaylists {
         didSet { defaults.set(alsoLikes, forKey: Self.alsoLikesKey) }
     }
 
+    /// Where the playlist picker is shown when a heart's menu asks for it: over the tabs or over
+    /// the full player, which covers them.
+    enum Host: Sendable { case main, player }
+
+    /// Set by "Choose Quick Playlists…" in a heart's menu; the matching host presents the picker.
+    var choosingIn: Host?
+
     private let defaults: UserDefaults
     private var byServer: [String: [Entry]] = [:]
 

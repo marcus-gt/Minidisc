@@ -41,6 +41,7 @@ struct MainTabView: View {
             .sheet(item: $playlistAddition.request) { request in
                 AddToPlaylistSheet(request: request)
             }
+            .quickPlaylistPicker(.main, container: container)
             .environment(playlistAddition)
     }
 

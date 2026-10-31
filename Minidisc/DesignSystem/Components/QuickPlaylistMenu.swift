@@ -9,6 +9,7 @@ struct QuickPlaylistMenuItems: View {
     let onAddToPlaylist: ((DisplayableSong) -> Void)?
 
     @Environment(\.appContainer) private var container
+    @Environment(\.quickPlaylistHost) private var host
 
     private var entries: [QuickPlaylists.Entry] {
         guard let container, let serverID = container.serverState.activeServer?.id.uuidString else { return [] }
@@ -23,9 +24,11 @@ struct QuickPlaylistMenuItems: View {
                     Task { await QuickPlaylistAction.add(song, to: entry, container: container) }
                 }
             }
-        } header: {
             if entries.isEmpty {
-                Text("Mark playlists as quick playlists from their ⋯ menu.")
+                // No quick playlists yet: offer to choose some right here.
+                Button("Choose Quick Playlists…", systemImage: "bolt") {
+                    container?.quickPlaylists.choosingIn = host
+                }
             }
         }
         if let onAddToPlaylist {
@@ -62,6 +65,25 @@ enum QuickPlaylistAction {
             guard !UserFacingError.isCancellation(error) else { return }
             Logger.library.error("[QUICK-PLAYLIST] add failed: \(error, privacy: .public)")
             container.toastService.showError(UserFacingError.from(error).displayMessage)
+        }
+    }
+}
+
+extension EnvironmentValues {
+    /// Which presenter shows the quick playlist picker for menus below: the full player sets `.player`.
+    @Entry var quickPlaylistHost: QuickPlaylists.Host = .main
+}
+
+extension View {
+    /// Presents the quick playlist picker when a heart's menu asks this host for it.
+    func quickPlaylistPicker(_ host: QuickPlaylists.Host, container: AppContainer?) -> some View {
+        sheet(isPresented: Binding(
+            get: { container?.quickPlaylists.choosingIn == host },
+            set: { if !$0 { container?.quickPlaylists.choosingIn = nil } }
+        )) {
+            if let container, let serverID = container.serverState.activeServer?.id.uuidString {
+                QuickPlaylistPicker(quick: container.quickPlaylists, serverID: serverID)
+            }
         }
     }
 }

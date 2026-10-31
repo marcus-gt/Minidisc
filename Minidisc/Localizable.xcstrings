@@ -10014,6 +10014,58 @@
         }
       }
     },
+    "Choose Quick Playlists…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schnell-Playlists wählen …"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Επιλογή γρήγορων λιστών…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir listas rápidas…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir des playlists rapides…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli playlist rapide…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クイックプレイリストを選択…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择快捷播放列表…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇快速播放列表…"
+          }
+        }
+      }
+    },
     "Choose the playlists a long-press on a heart adds to." : {
       "localizations" : {
         "de" : {
@@ -12894,6 +12946,58 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "封面會依需求重新下載。關閉快取後，封面僅保留在記憶體中。"
+          }
+        }
+      }
+    },
+    "Create a playlist first, then mark it here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstelle zuerst eine Playlist und markiere sie dann hier."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Δημιουργήστε πρώτα μια λίστα και μετά επιλέξτε τη εδώ."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea primero una lista y luego márcala aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créez d’abord une playlist, puis cochez-la ici."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea prima una playlist, poi selezionala qui."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずプレイリストを作成してから、ここで選択してください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先创建播放列表，然后在此勾选。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請先建立播放列表，然後在此勾選。"
           }
         }
       }
@@ -25356,58 +25460,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手動匯入"
-          }
-        }
-      }
-    },
-    "Mark playlists as quick playlists from their ⋯ menu." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Markiere Playlists über ihr ⋯-Menü als Schnell-Playlists."
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ορίστε λίστες ως γρήγορες από το μενού ⋯ τους."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Marca listas como rápidas desde su menú ⋯."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Marquez des playlists comme rapides depuis leur menu ⋯."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segna le playlist come rapide dal loro menu ⋯."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "プレイリストの⋯メニューからクイックプレイリストに設定できます。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可在播放列表的 ⋯ 菜单中将其设为快捷播放列表。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可在播放列表的 ⋯ 選單中將其設為快速播放列表。"
           }
         }
       }

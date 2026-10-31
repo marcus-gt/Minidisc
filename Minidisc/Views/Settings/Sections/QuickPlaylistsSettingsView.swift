@@ -4,7 +4,6 @@ import SwiftUI
 /// The playlists a long-press on a heart offers (#68), and whether adding there also likes the song.
 struct QuickPlaylistsSettingsView: View {
     @Environment(\.appContainer) private var container
-    @State private var allPlaylists: [Playlist] = []
     @State private var isPicking = false
 
     private var serverID: String? { container?.serverState.activeServer?.id.uuidString }
@@ -43,55 +42,87 @@ struct QuickPlaylistsSettingsView: View {
         .navigationTitle("Quick Playlists")
         .navigationBarTitleDisplayModeInline()
         .toolbar { EditButton() }
-        .task { await loadPlaylists() }
+        .task { await reconcileNames() }
         .sheet(isPresented: $isPicking) {
             if let container, let serverID {
-                QuickPlaylistPicker(playlists: allPlaylists, quick: container.quickPlaylists, serverID: serverID)
+                QuickPlaylistPicker(quick: container.quickPlaylists, serverID: serverID)
             }
         }
     }
 
-    /// Also brings renamed playlists' names up to date and drops deleted ones.
-    private func loadPlaylists() async {
+    /// Brings renamed playlists' names up to date and drops deleted ones.
+    private func reconcileNames() async {
         guard let container, let serverID, container.serverState.isOnline,
               let playlists = try? await container.playlistService.listPlaylists() else { return }
-        allPlaylists = playlists.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         container.quickPlaylists.reconcile(with: playlists.map { ($0.id, $0.name) }, serverID: serverID)
     }
 }
 
-/// Every playlist, ticked when it's a quick playlist.
-private struct QuickPlaylistPicker: View {
-    let playlists: [Playlist]
+/// Every playlist, ticked when it's a quick playlist (#68). Loads the server's playlists itself.
+struct QuickPlaylistPicker: View {
     let quick: QuickPlaylists
     let serverID: String
+    @Environment(\.appContainer) private var container
     @Environment(\.dismiss) private var dismiss
+    @State private var playlists: [Playlist]?
+    @State private var error: UserFacingError?
 
     var body: some View {
         NavigationStack {
-            List(playlists, id: \.id) { playlist in
-                Button {
-                    quick.toggle(id: playlist.id, name: playlist.name, serverID: serverID)
-                } label: {
-                    HStack {
-                        Text(playlist.name).foregroundStyle(.primary)
-                        Spacer()
-                        if quick.contains(playlist.id, serverID: serverID) {
-                            Image(systemName: "checkmark").foregroundStyle(Color.minidiscAccent)
-                        }
+            Group {
+                if let playlists, playlists.isEmpty {
+                    EmptyStateView(systemImage: "music.note.list", title: "No Playlists",
+                                   subtitle: "Create a playlist first, then mark it here.")
+                } else if let playlists {
+                    List(playlists, id: \.id) { playlist in
+                        row(playlist)
                     }
-                    .contentShape(Rectangle())
+                } else if let error {
+                    EmptyStateView(systemImage: "exclamationmark.triangle", title: "Unable to Load Playlists",
+                                   subtitle: LocalizedStringKey(error.displayMessage),
+                                   action: .init(label: "Retry") { Task { await load() } })
+                } else {
+                    ProgressView()
                 }
-                .accessibilityAddTraits(quick.contains(playlist.id, serverID: serverID) ? .isSelected : [])
             }
-            .overlay {
-                if playlists.isEmpty { ProgressView() }
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Choose Playlists")
             .navigationBarTitleDisplayModeInline()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
+        }
+        .task { await load() }
+    }
+
+    private func row(_ playlist: Playlist) -> some View {
+        let isQuick = quick.contains(playlist.id, serverID: serverID)
+        return Button {
+            HapticFeedback.light.trigger()
+            quick.toggle(id: playlist.id, name: playlist.name, serverID: serverID)
+        } label: {
+            HStack {
+                Text(playlist.name).foregroundStyle(.primary)
+                Spacer()
+                if isQuick {
+                    Image(systemName: "checkmark").foregroundStyle(Color.minidiscAccent)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityAddTraits(isQuick ? .isSelected : [])
+    }
+
+    private func load() async {
+        guard let container else { return }
+        error = nil
+        do {
+            let loaded = try await container.playlistService.listPlaylists()
+            playlists = loaded.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            quick.reconcile(with: loaded.map { ($0.id, $0.name) }, serverID: serverID)
+        } catch {
+            guard !UserFacingError.isCancellation(error) else { return }
+            self.error = UserFacingError.from(error)
         }
     }
 }
