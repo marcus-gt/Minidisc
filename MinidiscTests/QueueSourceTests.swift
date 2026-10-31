@@ -19,12 +19,9 @@ struct QueueSourceTests {
         #expect(QueueSourceLabel(source: playlist, index: 40, extensionStart: nil)?.title == "Playlist · Techno – chill")
     }
 
-    /// The player already names the track's album, so an album alone gets no label, until
-    /// auto-extend takes over and "Similar to" is news.
-    @Test func album_isLabelledOnlyOnceAutoExtendTakesOver() {
-        #expect(QueueSourceLabel(source: album, index: 0, extensionStart: nil) == nil)
-        #expect(QueueSourceLabel(source: album, index: 2, extensionStart: 3) == nil)
-        #expect(QueueSourceLabel(source: album, index: 3, extensionStart: 3)?.title == album.similarTitle)
+    @Test func album_isLabelledAndTurnsToSimilarSongsAfterIt() {
+        #expect(QueueSourceLabel(source: album, index: 0, extensionStart: nil)?.title == "Album · Kind of Blue")
+        #expect(QueueSourceLabel(source: album, index: 3, extensionStart: 3)?.title == "Similar to Kind of Blue")
     }
 
     @Test func endlessSources_neverTurnIntoSimilarSongs() {

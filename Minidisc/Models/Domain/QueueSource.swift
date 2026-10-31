@@ -59,12 +59,6 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
         }
     }
 
-    /// An album needs no label: the player already names the playing track's album.
-    var isSelfEvident: Bool {
-        if case .album = self { return true }
-        return false
-    }
-
     /// The source's own name, without what kind it is: "Jazz tunes", "Bill Evans".
     var name: String {
         switch self {
@@ -81,7 +75,8 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
     /// "Now playing:".
     var title: String {
         switch self {
-        case .album(_, let name), .localFolder(let name): name
+        case .localFolder(let name): name
+        case .album(_, let name): String(localized: "Album · \(name)")
         case .playlist(_, let name): String(localized: "Playlist · \(name)")
         case .artist(_, let name): String(localized: "Artist · \(name)")
         case .genre(let name): String(localized: "Genre · \(name)")
@@ -111,13 +106,12 @@ nonisolated struct QueueSourceLabel: Sendable, Equatable {
     let title: String
 
     /// `index` is the track the label is for; tracks at `extensionStart` and after were added by
-    /// auto-extend. A plain album shows nothing until auto-extend takes over from it.
+    /// auto-extend.
     init?(source: QueueSource?, index: Int, extensionStart: Int?) {
         guard let source else { return nil }
         if !source.isEndless, let extensionStart, index >= extensionStart {
             title = source.similarTitle
         } else {
-            guard !source.isSelfEvident else { return nil }
             title = source.title
         }
     }
