@@ -76,24 +76,25 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
         }
     }
 
-    /// One line that says what kind it is and which (#71): "Playlist: Jazz tunes",
-    /// "Instant Mix: Peace Piece", "Chill radio".
+    /// One line that says what kind it is and which (#71): "Playlist · Jazz tunes",
+    /// "Instant Mix · Peace Piece", "Chill radio". A dot, not a colon: the queue shows it after
+    /// "Now playing:".
     var title: String {
         switch self {
         case .album(_, let name), .localFolder(let name): name
-        case .playlist(_, let name): String(localized: "Playlist: \(name)")
-        case .artist(_, let name): String(localized: "Artist: \(name)")
-        case .genre(let name): String(localized: "Genre: \(name)")
-        case .recordLabel(let name): String(localized: "Label: \(name)")
+        case .playlist(_, let name): String(localized: "Playlist · \(name)")
+        case .artist(_, let name): String(localized: "Artist · \(name)")
+        case .genre(let name): String(localized: "Genre · \(name)")
+        case .recordLabel(let name): String(localized: "Label · \(name)")
         case .artistRadio(_, let name): String(localized: "\(name) radio")
-        case .instantMix(let title): String(localized: "Instant Mix: \(title)")
+        case .instantMix(let title): String(localized: "Instant Mix · \(title)")
         case .smartShuffle: String(localized: "Smart Shuffle")
         case .queueBuilder: String(localized: "Queue Builder")
         case .moodRadio(let raw):
             Mood(rawValue: raw).map { String(localized: "\(String(localized: $0.title)) radio") } ?? String(localized: "Mood radio")
         case .wrappedRadio(let period): String(localized: "Wrapped \(period.displayName) radio")
         case .wrapped(let period): String(localized: "Wrapped \(period.displayName)")
-        case .search(let query): String(localized: "Search: \(query)")
+        case .search(let query): String(localized: "Search · \(query)")
         case .favorites: String(localized: "Favorites")
         case .downloads: String(localized: "Downloads")
         case .recentlyAdded: String(localized: "Recently Added")

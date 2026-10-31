@@ -160,7 +160,7 @@ struct InlineQueueList: View {
         let entries = QueueRowSnapshot.capture(playerState)
         VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
             if let label = playerState.playingFromLabel {
-                // Where the playing song comes from: "Now playing: Playlist: Jazz tunes" (#71).
+                // Where the playing song comes from: "Now playing: Playlist · Jazz tunes" (#71).
                 Text("Now playing: \(label.title)")
                     .font(.minidiscCellTitle.weight(.bold))
                     .foregroundStyle(contentColor)
