@@ -59,7 +59,8 @@ struct SmartShuffleCard: View {
                     Text("Rediscover Your Library")
                         .font(.title2.bold())
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("A new mix, every time")
+                    // What the mix is made of (#66).
+                    Text("Favourites, recent taste and a few surprises")
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.85))
                     HStack(spacing: MinidiscSpacing.s) {
