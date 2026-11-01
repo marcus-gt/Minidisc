@@ -415,20 +415,160 @@ actor LibraryService: LibraryServiceProtocol {
         try await client().getRandomSongs(size: size)
     }
 
+    // MARK: - Smart Shuffle (#66)
+
+    /// Smart Shuffle mixes three sources about equally: favourites, recent taste and rediscovery.
+    /// Each costs a handful of requests at most, never one per favourite.
+    nonisolated static let smartShuffleMaxPerArtist = 3
+    nonisolated static let smartShuffleStarredAlbums = 2
+    nonisolated static let smartShuffleStarredArtists = 2
+    nonisolated static let smartShuffleSeedArtists = 3
+    nonisolated static let smartShuffleSeedGenres = 2
+    nonisolated static let smartShuffleGenreFetchCount = 50
+    /// Songs among the last this many plays are left out, so the mix doesn't repeat what was just on.
+    nonisolated static let smartShuffleRecentPlays = 50
+
     func smartShuffleQueue(targetSize: Int) async throws -> [DisplayableSong] {
-        let isOnline = await MainActor.run { serverService.state.isOnline }
-        if isOnline {
-            return try await onlineSmartShuffle(targetSize: targetSize)
-        } else {
-            return await offlineSmartShuffle(targetSize: targetSize)
+        try Task.checkCancellation()
+        let (isOnline, serverID) = await MainActor.run {
+            (serverService.state.isOnline, serverService.state.activeServer?.id)
         }
+        guard let serverID else { return [] }
+        let recent = await statsService.recentEvents(limit: Self.smartShuffleRecentPlays, serverId: serverID.uuidString)
+        try Task.checkCancellation()
+        let starred = await smartShuffleStarred()
+        try Task.checkCancellation()
+
+        let sources: SmartShuffleSources
+        if isOnline {
+            sources = try await onlineSmartShuffleSources(recent: recent, starred: starred, targetSize: targetSize)
+        } else {
+            sources = await offlineSmartShuffleSources(recent: recent, starred: starred)
+        }
+        try Task.checkCancellation()
+        var generator = SystemRandomNumberGenerator()
+        let queue = Self.blendSmartShuffle(
+            sources: [sources.favorites, sources.recentTaste, sources.rediscovery],
+            excludedIds: Set(recent.map(\.trackId)),
+            targetSize: targetSize,
+            maxPerArtist: Self.smartShuffleMaxPerArtist,
+            using: &generator
+        )
+        Logger.library.info("[SMART-SHUFFLE] \(isOnline ? "online" : "offline", privacy: .public): \(queue.count, privacy: .public)/\(targetSize, privacy: .public) from \(sources.favorites.count, privacy: .public) favourites, \(sources.recentTaste.count, privacy: .public) recent taste, \(sources.rediscovery.count, privacy: .public) rediscovery")
+        return queue
     }
 
-    private func onlineSmartShuffle(targetSize: Int) async throws -> [DisplayableSong] {
-        // Rediscovery uses server-random songs without recency weighting.
-        let songs = try await client().getRandomSongs(size: targetSize)
-        Logger.library.debug("Smart shuffle online: \(songs.count) random tracks (target \(targetSize))")
-        return songs.map { DisplayableSong(from: $0) }
+    nonisolated struct SmartShuffleSources: Sendable {
+        var favorites: [DisplayableSong] = []
+        var recentTaste: [DisplayableSong] = []
+        var rediscovery: [DisplayableSong] = []
+    }
+
+    /// Deals from each source in turn (favourites, recent taste, rediscovery), each shuffled, so the
+    /// queue mixes them evenly. Songs played recently are skipped, no artist gets more than
+    /// `maxPerArtist`, and a source that runs dry leaves its turns to the others. If skipping recent
+    /// plays leaves nothing at all (a tiny library), they're allowed back rather than playing nothing.
+    nonisolated static func blendSmartShuffle(
+        sources: [[DisplayableSong]],
+        excludedIds: Set<String>,
+        targetSize: Int,
+        maxPerArtist: Int,
+        using generator: inout some RandomNumberGenerator
+    ) -> [DisplayableSong] {
+        let shuffled = sources.map { $0.shuffled(using: &generator) }
+        func deal(skipping excluded: Set<String>) -> [DisplayableSong] {
+            var seen = excluded
+            var perArtist: [String: Int] = [:]
+            var cursors = Array(repeating: 0, count: shuffled.count)
+            var result: [DisplayableSong] = []
+            while result.count < targetSize {
+                var progressed = false
+                for index in shuffled.indices where result.count < targetSize {
+                    while cursors[index] < shuffled[index].count {
+                        let song = shuffled[index][cursors[index]]
+                        cursors[index] += 1
+                        let artist = song.artistId ?? song.artist ?? song.id
+                        guard !seen.contains(song.id), perArtist[artist, default: 0] < maxPerArtist else { continue }
+                        seen.insert(song.id)
+                        perArtist[artist, default: 0] += 1
+                        result.append(song)
+                        progressed = true
+                        break
+                    }
+                }
+                if !progressed { break }
+            }
+            return result
+        }
+        let queue = deal(skipping: excludedIds)
+        return queue.isEmpty && !excludedIds.isEmpty ? deal(skipping: []) : queue
+    }
+
+    /// Favourites, from the server or the offline snapshot; nil when neither is available.
+    private func smartShuffleStarred() async -> Starred2? {
+        do { return try await getStarred2() } catch { return nil }
+    }
+
+    private func onlineSmartShuffleSources(recent: [PlaybackEventDTO], starred: Starred2?,
+                                           targetSize: Int) async throws -> SmartShuffleSources {
+        var sources = SmartShuffleSources()
+        // Favourites: starred songs, and the songs of a couple of starred albums and artists.
+        sources.favorites = (starred?.song ?? []).map { DisplayableSong(from: $0) }
+        for album in (starred?.album ?? []).shuffled().prefix(Self.smartShuffleStarredAlbums) {
+            try Task.checkCancellation()
+            if let detail = try? await self.album(id: album.id) {
+                sources.favorites += (detail.song ?? []).map { DisplayableSong(from: $0) }
+            }
+        }
+        for artist in (starred?.artist ?? []).shuffled().prefix(Self.smartShuffleStarredArtists) {
+            try Task.checkCancellation()
+            sources.favorites += (try? await fetchAllTracks(forArtistID: artist.id)) ?? []
+        }
+        // Recent taste: the artists and genres played lately, as the auto-extend backfill seeds them.
+        let seeds = Self.similaritySeeds(from: recent, maxArtists: Self.smartShuffleSeedArtists,
+                                         maxGenres: Self.smartShuffleSeedGenres)
+        for artistID in seeds.artistIds {
+            try Task.checkCancellation()
+            sources.recentTaste += (try? await fetchAllTracks(forArtistID: artistID)) ?? []
+        }
+        for genre in seeds.genres {
+            try Task.checkCancellation()
+            if let songs = try? await client().getSongsByGenre(genre, count: Self.smartShuffleGenreFetchCount) {
+                sources.recentTaste += songs.map { DisplayableSong(from: $0) }
+            }
+        }
+        // Rediscovery: what Smart Shuffle used to be, so there's still some surprise.
+        try Task.checkCancellation()
+        do {
+            sources.rediscovery = try await client().getRandomSongs(size: targetSize).map { DisplayableSong(from: $0) }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            // With favourites or history the other sources can still fill the queue.
+            if sources.favorites.isEmpty && sources.recentTaste.isEmpty { throw error }
+        }
+        return sources
+    }
+
+    /// The same three sources, drawn from the downloads.
+    private func offlineSmartShuffleSources(recent: [PlaybackEventDTO], starred: Starred2?) async -> SmartShuffleSources {
+        let downloads = await downloadedSongs()
+        let starredSongs = Set((starred?.song ?? []).map(\.id))
+        let starredAlbums = Set((starred?.album ?? []).map(\.id))
+        let starredArtists = Set((starred?.artist ?? []).map(\.id))
+        let seeds = Self.similaritySeeds(from: recent, maxArtists: Self.smartShuffleSeedArtists,
+                                         maxGenres: Self.smartShuffleSeedGenres)
+        var sources = SmartShuffleSources()
+        sources.favorites = downloads.filter { song in
+            starredSongs.contains(song.id)
+                || song.albumId.map(starredAlbums.contains) == true
+                || song.artistId.map(starredArtists.contains) == true
+        }
+        sources.recentTaste = downloads.filter { song in
+            song.artistId.map(seeds.artistIds.contains) == true || song.genre.map(seeds.genres.contains) == true
+        }
+        sources.rediscovery = downloads
+        return sources
     }
 
     // MARK: - Auto-extend similar backfill
@@ -477,7 +617,7 @@ actor LibraryService: LibraryServiceProtocol {
         let isOnline = await MainActor.run { serverService.state.isOnline }
         try Task.checkCancellation()
         guard isOnline else {
-            let downloads = await offlineSmartShuffle(targetSize: targetSize + excludedIds.count)
+            let downloads = Array(await downloadedSongs().shuffled().prefix(targetSize + excludedIds.count))
             try Task.checkCancellation()
             return Self.assembleBackfill(pool: downloads, excludedIds: excludedIds, targetSize: targetSize)
         }
@@ -1068,31 +1208,23 @@ actor LibraryService: LibraryServiceProtocol {
         LibraryIndexText.normalized(name)
     }
 
-    private func offlineSmartShuffle(targetSize: Int) async -> [DisplayableSong] {
+    /// Every downloaded song on the active server.
+    private func downloadedSongs() async -> [DisplayableSong] {
         guard let activeServerId = await MainActor.run(body: { serverService.state.activeServer?.id }) else {
-            Logger.library.debug("Smart shuffle offline: no active server, returning empty")
+            Logger.library.debug("Downloaded songs: no active server")
             return []
         }
-
         if let offlineReader, let snapshot = try? await offlineReader.read(serverID: activeServerId) {
-            return Array(snapshot.songs.shuffled().prefix(targetSize))
+            return snapshot.songs
         }
-        let songs: [DisplayableSong] = await MainActor.run {
+        return await MainActor.run {
             let context = ModelContext(modelContainer)
             let descriptor = FetchDescriptor<DownloadedTrack>(
                 predicate: #Predicate<DownloadedTrack> { $0.serverId == activeServerId }
             )
             let downloads = (try? context.fetch(descriptor)) ?? []
-            guard !downloads.isEmpty else {
-                Logger.library.debug("Smart shuffle offline: no downloads available")
-                return []
-            }
-            let selected = Array(downloads.shuffled().prefix(targetSize))
-            Logger.library.debug("Smart shuffle offline: \(selected.count) tracks from \(downloads.count) downloads")
-            return selected.map { DisplayableSong(from: $0) }
+            return downloads.map { DisplayableSong(from: $0) }
         }
-
-        return songs
     }
 }
 
