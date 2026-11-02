@@ -3516,9 +3516,10 @@ actor PlayerService: PlayerServiceProtocol {
     }
 
     private func cancelNextTrackCache(settingAside: Bool = false) {
-        if settingAside, let running = nextTrackCache {
-            setAsideNextTrackCache?.task.cancel()
-            setAsideNextTrackCache = running
+        if settingAside {
+            let outcome = Self.settingAside(running: nextTrackCache, alreadySetAside: setAsideNextTrackCache)
+            outcome.cancel?.task.cancel()
+            setAsideNextTrackCache = outcome.keep
         } else {
             nextTrackCache?.task.cancel()
             setAsideNextTrackCache?.task.cancel()
@@ -3526,6 +3527,15 @@ actor PlayerService: PlayerServiceProtocol {
         }
         nextTrackCache = nil
         nextTrackCacheSongID = nil
+    }
+
+    /// Which download stays set aside when a skip or queue edit sets the running one aside. A skip
+    /// does this twice (`play` and then `startPlayback`); the second call finds nothing running
+    /// and must keep what the first set aside, not cancel it.
+    nonisolated static func settingAside<Download>(running: Download?, alreadySetAside: Download?)
+        -> (keep: Download?, cancel: Download?) {
+        guard let running else { return (alreadySetAside, nil) }
+        return (running, alreadySetAside)
     }
 
     /// Any ahead download still running, attached or not.

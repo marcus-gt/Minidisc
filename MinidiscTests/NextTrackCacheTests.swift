@@ -65,6 +65,21 @@ struct AheadCacheOutcomeTests {
         #expect(PlayerService.aheadCacheOutcome(downloading: "b", current: "a", next: "b") == .staysNext)
     }
 
+    /// A skip sets the download aside twice; the second time nothing is running and the first
+    /// one must survive (device log: Livstid's download was cancelled at the skip).
+    @Test func settingAsideAgain_keepsWhatIsAlreadyAside() {
+        let again = PlayerService.settingAside(running: nil as String?, alreadySetAside: "b")
+        #expect(again.keep == "b")
+        #expect(again.cancel == nil)
+    }
+
+    /// A newer running download replaces an older one set aside before it.
+    @Test func settingAsideANewDownload_replacesTheOlderOne() {
+        let outcome = PlayerService.settingAside(running: "c" as String?, alreadySetAside: "b")
+        #expect(outcome.keep == "c")
+        #expect(outcome.cancel == "b")
+    }
+
     @Test func songNoLongerPlayingOrNext_isCancelled() {
         #expect(PlayerService.aheadCacheOutcome(downloading: "b", current: "x", next: "y") == .cancel)
         #expect(PlayerService.aheadCacheOutcome(downloading: "b", current: nil, next: nil) == .cancel)
