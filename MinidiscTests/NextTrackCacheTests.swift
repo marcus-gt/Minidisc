@@ -97,3 +97,13 @@ struct PlaybackClockTests {
         #expect(PlaybackClock.shownElapsed(12, duration: 0) == 12)
     }
 }
+
+/// A new stream's opening wait isn't logged as a stall (#6 log noise).
+@Suite("PlayerService.isStartupWait")
+struct StartupWaitTests {
+    @Test func waitBeforeThePlayheadMoves_isTheStreamOpening() {
+        #expect(PlayerService.isStartupWait(progress: 0))
+        #expect(PlayerService.isStartupWait(progress: 0.3))
+        #expect(!PlayerService.isStartupWait(progress: 42))
+    }
+}
