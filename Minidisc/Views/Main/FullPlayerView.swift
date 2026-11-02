@@ -757,7 +757,7 @@ private struct ScrubberView: View {
     // Keep the requested position visible until AVPlayer confirms the seek.
     private var positionBinding: Binding<TimeInterval> {
         Binding(
-            get: { (isDragging || isSeeking) ? displayPosition : playerState.position },
+            get: { (isDragging || isSeeking) ? displayPosition : PlaybackClock.shownElapsed(playerState.position, duration: effectiveDuration) },
             set: { newValue in displayPosition = newValue }
         )
     }
@@ -839,7 +839,7 @@ private struct ScrubberTimeLabels: View {
     let color: Color
 
     var body: some View {
-        let shown = overridePosition ?? playerState.position
+        let shown = overridePosition ?? PlaybackClock.shownElapsed(playerState.position, duration: effectiveDuration)
         HStack {
             Text(Duration.seconds(shown).formatted(.time(pattern: .minuteSecond)))
                 .font(.minidiscCaption)

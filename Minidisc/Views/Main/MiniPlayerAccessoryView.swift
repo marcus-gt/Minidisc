@@ -94,7 +94,7 @@ struct MiniPlayerAccessoryView: View {
         // Avoid observing progress while the full player covers the accessory.
         let progress = showingFullPlayer || playerState.duration <= 0
             ? 0.0
-            : playerState.position / playerState.duration
+            : PlaybackClock.shownElapsed(playerState.position, duration: playerState.duration) / playerState.duration
         return VStack(spacing: 0) {
             HStack(alignment: .center, spacing: MinidiscSpacing.m) {
                 miniArtwork(coverArtId)

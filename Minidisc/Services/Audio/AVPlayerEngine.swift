@@ -553,6 +553,20 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
         return currentItem?.seekableTimeRanges.isEmpty == false
     }
 
+    var bufferedUntil: Double {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let item = currentItem else { return 0 }
+        // The loaded range the playhead is in (or the furthest one when it's between ranges).
+        let now = CMTimeGetSeconds(activePlayer.currentTime())
+        let ends = item.loadedTimeRanges.map(\.timeRangeValue).compactMap { range -> (start: Double, end: Double)? in
+            let start = CMTimeGetSeconds(range.start)
+            let end = CMTimeGetSeconds(CMTimeRangeGetEnd(range))
+            return start.isFinite && end.isFinite ? (start, end) : nil
+        }
+        return ends.first { $0.start <= now + 0.5 && now <= $0.end }?.end ?? ends.map(\.end).max() ?? 0
+    }
+
     var isReady: Bool {
         lock.lock()
         defer { lock.unlock() }

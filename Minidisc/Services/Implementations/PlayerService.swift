@@ -176,6 +176,8 @@ actor PlayerService: PlayerServiceProtocol {
     private var nextTrackCacheTask: Task<Void, Never>?
     /// The upcoming song the next-item cache last tried, so each one is tried once.
     private var nextTrackCacheSongID: String?
+    /// The current track plays from a remote stream rather than a file (#9).
+    private var currentTrackStreams = false
     private let cacheSession: URLSession
     private var prefetchScheduled = false
     /// Invalidates a preload resolution already suspended in MediaResolver when its context changes.
@@ -812,6 +814,7 @@ actor PlayerService: PlayerServiceProtocol {
             await listenBrainzService.notifyTrackStarted(song: song)
         }
 
+        if case .stream = source { currentTrackStreams = true } else { currentTrackStreams = false }
         if case .stream(let streamURL, let customHeaders) = source, let serverId {
             let (allowCellular, cacheFormat) = await MainActor.run {
                 (cacheSettings.cacheOverCellular, cacheSettings.cacheFormat)
@@ -3563,10 +3566,14 @@ actor PlayerService: PlayerServiceProtocol {
         nextSongID: String?,
         lastTriedSongID: String?,
         isRepeatOne: Bool,
-        isBusy: Bool
+        isBusy: Bool,
+        streamsOnCellular: Bool = false,
+        bufferedUntil: Double = 0
     ) -> Bool {
         guard let nextSongID, nextSongID != lastTriedSongID, !isRepeatOne, !isBusy, duration > 0,
               position >= nextTrackCacheDelay else { return false }
+        // On cellular, a stream that's still loading keeps the connection to itself (#9).
+        if streamsOnCellular && bufferedUntil < duration - 1 { return false }
         return !shouldProtectTransitionFromCaching(crossfadeDuration: crossfadeDuration, remaining: duration - position)
     }
 
@@ -4214,12 +4221,13 @@ actor PlayerService: PlayerServiceProtocol {
 
     /// Starts the next queue item's cache download when `shouldCacheNextTrack` allows it (#56).
     private func checkNextTrackCache() async {
-        let snapshot = await MainActor.run { () -> (position: Double, duration: Double, next: DisplayableSong?, isRepeatOne: Bool, isLive: Bool) in
+        let snapshot = await MainActor.run { () -> (position: Double, duration: Double, next: DisplayableSong?, isRepeatOne: Bool, isLive: Bool, isExpensive: Bool) in
             let nextIndex = state.currentIndex + 1
             return (state.position, state.duration,
                     state.queue.indices.contains(nextIndex) ? state.queue[nextIndex] : nil,
-                    state.repeatMode == .one, state.isLiveStream)
+                    state.repeatMode == .one, state.isLiveStream, serverService.state.isExpensive)
         }
+        let streamsOnCellular = currentTrackStreams && snapshot.isExpensive
         guard !snapshot.isLive, let next = snapshot.next, !next.isLocalFile,
               Self.shouldCacheNextTrack(
                   position: snapshot.position,
@@ -4228,7 +4236,9 @@ actor PlayerService: PlayerServiceProtocol {
                   nextSongID: next.id,
                   lastTriedSongID: nextTrackCacheSongID,
                   isRepeatOne: snapshot.isRepeatOne,
-                  isBusy: cacheDownloadTask != nil || nextTrackCacheTask != nil
+                  isBusy: cacheDownloadTask != nil || nextTrackCacheTask != nil,
+                  streamsOnCellular: streamsOnCellular,
+                  bufferedUntil: streamsOnCellular ? engine.bufferedUntil : 0
               ) else { return }
         guard let serverId = await MainActor.run(body: { serverService.state.isOnline ? serverService.state.activeServer?.id : nil })
         else { return }
@@ -4306,10 +4316,12 @@ actor PlayerService: PlayerServiceProtocol {
             return
         }
 
+        // On cellular a second download of the song that's streaming competes with the stream
+        // itself (#9). The next song is cached ahead instead, once this stream has fully loaded.
         let isExpensive = await MainActor.run { serverService.state.isExpensive }
-        if isExpensive && !allowCellular {
+        if isExpensive {
             playbackDiagnostics.record(.cache(.skippedCellular))
-            Logger.player.debug("Cache skipped — cellular for '\(songId, privacy: .public)'")
+            Logger.player.debug("Cache skipped — cellular, '\(songId, privacy: .public)' is streaming")
             return
         }
 

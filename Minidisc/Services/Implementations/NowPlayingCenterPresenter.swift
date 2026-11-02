@@ -117,7 +117,7 @@ final class NowPlayingCenterPresenter {
     ) {
         guard generation == contentGeneration else { return }
         var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = elapsed
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = PlaybackClock.shownElapsed(elapsed, duration: duration)
         info[MPNowPlayingInfoPropertyPlaybackRate] = rate
         info[MPMediaItemPropertyPlaybackDuration] = duration
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
@@ -127,7 +127,7 @@ final class NowPlayingCenterPresenter {
         guard generation == contentGeneration else { return }
         var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
         info[MPMediaItemPropertyTitle] = snapshot.title
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = snapshot.position
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = PlaybackClock.shownElapsed(snapshot.position, duration: snapshot.duration)
         info[MPMediaItemPropertyPlaybackDuration] = snapshot.duration
         info[MPNowPlayingInfoPropertyPlaybackRate] = snapshot.playbackRate
         info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
@@ -198,7 +198,7 @@ final class NowPlayingCenterPresenter {
 
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: snapshot.title,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: snapshot.position,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: PlaybackClock.shownElapsed(snapshot.position, duration: snapshot.duration),
             MPMediaItemPropertyPlaybackDuration: snapshot.duration,
             MPNowPlayingInfoPropertyPlaybackRate: snapshot.playbackRate,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,

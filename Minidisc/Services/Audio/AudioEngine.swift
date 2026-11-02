@@ -128,6 +128,9 @@ nonisolated protocol AudioEngine: AnyObject, Sendable {
     var progress: Double { get }
     var duration: Double { get }
     var isSeekable: Bool { get }
+    /// How far the current item has loaded, in seconds from its start (#9). Local files report
+    /// their length; a stream reports what has arrived so far.
+    var bufferedUntil: Double { get }
     /// True when idle and ready to start a source (the cold-restore path checks this).
     var isReady: Bool { get }
 
@@ -159,4 +162,9 @@ nonisolated protocol AudioEngine: AnyObject, Sendable {
     /// The authoritative length of the current track from library metadata, for engines whose own
     /// duration estimate drifts (transcoded/VBR streams) and would mistime transitions.
     func setTrackDuration(_ seconds: Double)
+}
+
+extension AudioEngine {
+    /// Engines that can't tell report nothing loaded, which only holds back caching ahead on cellular.
+    nonisolated var bufferedUntil: Double { 0 }
 }
