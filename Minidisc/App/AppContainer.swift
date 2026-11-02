@@ -65,6 +65,7 @@ final class AppContainer {
     let quickPlaylists: QuickPlaylists
     /// Song paths through AudioMuse, and the launcher that opens their sheet (#65).
     let songPathService: SongPathService
+    let artistShelfService: ArtistShelfService
     let songPathLauncher = SongPathLauncher()
     let replayGainSettings: ReplayGainSettings
     let crossfadeSettings: CrossfadeSettings
@@ -185,6 +186,7 @@ final class AppContainer {
         moodPlaylistService = MoodPlaylistService(serverService: server, catalog: catalog)
         songPathService = SongPathService(serverService: server, serverState: serverState,
                                           libraryService: library, catalog: catalog, statsService: stats)
+        artistShelfService = ArtistShelfService(libraryService: library)
         moodRadioService = MoodRadioService(
             serverService: server,
             serverState: serverState,

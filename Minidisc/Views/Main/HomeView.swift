@@ -161,6 +161,8 @@ struct HomeView: View {
             albumSection(section, albums: container?.visibleAlbums(vm.recentlyPlayed) ?? [])
         case .heavyRotation:
             albumSection(section, albums: container?.visibleAlbums(vm.heavyRotation) ?? [])
+        case .artists:
+            if isOnline { ArtistShelf() }
         case .rediscover:
             albumSection(section, albums: container?.visibleAlbums(vm.rediscovery) ?? [])
         case .relevantAdditions:
