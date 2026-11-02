@@ -171,6 +171,11 @@ actor PlayerService: PlayerServiceProtocol {
     /// How long a track must have been audible before "now playing" is reported anywhere.
     private let playingNowDelay: TimeInterval
     private var cacheDownloadTask: Task<Void, Never>?
+    /// The next queue item's cache download (#56). It runs after the current track's own and is
+    /// cancelled with the standby preload whenever the queue or the current track changes.
+    private var nextTrackCacheTask: Task<Void, Never>?
+    /// The upcoming song the next-item cache last tried, so each one is tried once.
+    private var nextTrackCacheSongID: String?
     private let cacheSession: URLSession
     private var prefetchScheduled = false
     /// Invalidates a preload resolution already suspended in MediaResolver when its context changes.
@@ -816,20 +821,11 @@ actor PlayerService: PlayerServiceProtocol {
                 transportIntentGeneration: transportGeneration
             ) else { return }
 
-            let cacheStreamURL: URL?
-            if cacheFormat == .matchStream {
-                cacheStreamURL = streamURL
-            } else {
-                cacheStreamURL = (try? await serverService.activeConnection())?.makeSwiftSonicClient().streamURL(
-                    id: songId,
-                    maxBitRate: cacheFormat.subsonicMaxBitRate,
-                    format: cacheFormat.subsonicFormat
-                )
-                guard isCurrentPlaybackIntent(
-                    playbackGeneration: generation,
-                    transportIntentGeneration: transportGeneration
-                ) else { return }
-            }
+            let cacheStreamURL = await cacheURL(songId: songId, streamURL: streamURL, format: cacheFormat)
+            guard isCurrentPlaybackIntent(
+                playbackGeneration: generation,
+                transportIntentGeneration: transportGeneration
+            ) else { return }
 
             if let cacheStreamURL {
                 playbackDiagnostics.record(.cache(.scheduled(format: cacheFormat, allowsCellular: allowCellular)))
@@ -3435,6 +3431,7 @@ actor PlayerService: PlayerServiceProtocol {
         await accumulatePlaybackProgress(progress)
         await periodicNowPlayingPush(elapsed: progress)
         await checkScrobbleThreshold()
+        await checkNextTrackCache()
         await checkPrefetchThreshold()
     }
 
@@ -3497,6 +3494,13 @@ actor PlayerService: PlayerServiceProtocol {
         prefetchGeneration &+= 1
         prefetchScheduled = false
         preparedNextPlayback = nil
+        cancelNextTrackCache()
+    }
+
+    private func cancelNextTrackCache() {
+        nextTrackCacheTask?.cancel()
+        nextTrackCacheTask = nil
+        nextTrackCacheSongID = nil
     }
 
     private func invalidateStandbyPreload(reason: String) {
@@ -3545,6 +3549,27 @@ actor PlayerService: PlayerServiceProtocol {
         remaining <= max(0, crossfadeDuration) + 30.0
     }
 
+    /// How long the current track plays before the next one starts caching, so skipping through
+    /// a queue doesn't download every song passed over.
+    nonisolated static let nextTrackCacheDelay: Double = 30
+
+    /// Whether to start caching the next queue item now (#56): once the current track has played
+    /// a while and its own cache download is done (or it never needed one), one song at a time,
+    /// and never inside the window that protects the hand-off.
+    nonisolated static func shouldCacheNextTrack(
+        position: Double,
+        duration: Double,
+        crossfadeDuration: Double,
+        nextSongID: String?,
+        lastTriedSongID: String?,
+        isRepeatOne: Bool,
+        isBusy: Bool
+    ) -> Bool {
+        guard let nextSongID, nextSongID != lastTriedSongID, !isRepeatOne, !isBusy, duration > 0,
+              position >= nextTrackCacheDelay else { return false }
+        return !shouldProtectTransitionFromCaching(crossfadeDuration: crossfadeDuration, remaining: duration - position)
+    }
+
     nonisolated static func effectiveCrossfadeOverlap(
         duration: Double,
         disableForGapless: Bool,
@@ -3569,7 +3594,7 @@ actor PlayerService: PlayerServiceProtocol {
         }
         guard duration > 0, hasNextTrack, repeatMode != .one else { return }
         let remaining = duration - position
-        if cacheDownloadTask != nil,
+        if cacheDownloadTask != nil || nextTrackCacheTask != nil,
            PlayerService.shouldProtectTransitionFromCaching(
                crossfadeDuration: crossfadeConfig.duration,
                remaining: remaining
@@ -3578,6 +3603,9 @@ actor PlayerService: PlayerServiceProtocol {
                 "[CACHE] cancelling background download before standby preload (remaining=\(String(format: "%.1f", remaining))s)"
             )
             cancelPendingCacheDownload()
+            // Keeps the song ID, so it isn't tried again before this hand-off.
+            nextTrackCacheTask?.cancel()
+            nextTrackCacheTask = nil
         }
         guard PlayerService.shouldSchedulePrefetch(crossfadeDuration: crossfadeConfig.duration, remaining: remaining) else { return }
 
@@ -4173,6 +4201,84 @@ actor PlayerService: PlayerServiceProtocol {
     }
 
     // MARK: - Cache download helpers
+
+    /// The URL a cache download fetches: the stream itself, or the format chosen for the cache.
+    private func cacheURL(songId: String, streamURL: URL, format: CacheFormat) async -> URL? {
+        guard format != .matchStream else { return streamURL }
+        return (try? await serverService.activeConnection())?.makeSwiftSonicClient().streamURL(
+            id: songId,
+            maxBitRate: format.subsonicMaxBitRate,
+            format: format.subsonicFormat
+        )
+    }
+
+    /// Starts the next queue item's cache download when `shouldCacheNextTrack` allows it (#56).
+    private func checkNextTrackCache() async {
+        let snapshot = await MainActor.run { () -> (position: Double, duration: Double, next: DisplayableSong?, isRepeatOne: Bool, isLive: Bool) in
+            let nextIndex = state.currentIndex + 1
+            return (state.position, state.duration,
+                    state.queue.indices.contains(nextIndex) ? state.queue[nextIndex] : nil,
+                    state.repeatMode == .one, state.isLiveStream)
+        }
+        guard !snapshot.isLive, let next = snapshot.next, !next.isLocalFile,
+              Self.shouldCacheNextTrack(
+                  position: snapshot.position,
+                  duration: snapshot.duration,
+                  crossfadeDuration: crossfadeConfig.duration,
+                  nextSongID: next.id,
+                  lastTriedSongID: nextTrackCacheSongID,
+                  isRepeatOne: snapshot.isRepeatOne,
+                  isBusy: cacheDownloadTask != nil || nextTrackCacheTask != nil
+              ) else { return }
+        guard let serverId = await MainActor.run(body: { serverService.state.isOnline ? serverService.state.activeServer?.id : nil })
+        else { return }
+        // The snapshot may be stale after the hop; another tick may have started it meanwhile.
+        guard nextTrackCacheTask == nil, nextTrackCacheSongID != next.id else { return }
+        nextTrackCacheSongID = next.id
+        let generation = playbackGeneration
+        let prefetch = prefetchGeneration
+        nextTrackCacheTask = Task { [weak self] in
+            await self?.cacheNextTrack(songId: next.id, serverId: serverId, generation: generation, prefetchGeneration: prefetch)
+        }
+    }
+
+    private func cacheNextTrack(songId: String, serverId: UUID, generation: UInt64, prefetchGeneration: UInt64) async {
+        func isCurrent() -> Bool {
+            !Task.isCancelled && generation == playbackGeneration && prefetchGeneration == self.prefetchGeneration
+        }
+        defer {
+            if generation == playbackGeneration && prefetchGeneration == self.prefetchGeneration {
+                nextTrackCacheTask = nil
+            }
+        }
+        if await mediaResolver.localSource(songId: songId, serverId: serverId) != nil {
+            Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' is already on disk")
+            return
+        }
+        let (allowCellular, cacheFormat, isExpensive) = await MainActor.run {
+            (cacheSettings.cacheOverCellular, cacheSettings.cacheFormat, serverService.state.isExpensive)
+        }
+        guard !isExpensive || allowCellular else {
+            Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' skipped on cellular")
+            return
+        }
+        guard isCurrent(),
+              case .stream(let streamURL, let customHeaders)? = try? await mediaResolver.resolve(songId: songId, serverId: serverId),
+              isCurrent(),
+              let url = await cacheURL(songId: songId, streamURL: streamURL, format: cacheFormat),
+              isCurrent() else { return }
+        Logger.player.info("[CACHE] caching next '\(songId, privacy: .public)' ahead")
+        do {
+            try await downloadAndCache(songId: songId, serverId: serverId, streamURL: url, customHeaders: customHeaders,
+                                       allowCellular: allowCellular, using: cacheSession)
+        } catch {
+            if Task.isCancelled {
+                Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' cancelled")
+            } else {
+                Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' failed: \(error, privacy: .public)")
+            }
+        }
+    }
 
     private func cacheStreamAfterDelay(
         songId: String,
