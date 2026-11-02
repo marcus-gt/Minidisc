@@ -22,6 +22,12 @@ final class SongPathLauncher {
 
     var request: Request?
 
+    /// The path set up on the Discover and Home cards; both show the same one. Without a chosen
+    /// start the card starts from what's playing.
+    var cardFrom: SongPathService.End?
+    var cardTo: SongPathService.End?
+    var cardLength = Double(SongPathService.defaultLength)
+
     func open(from: SongPathService.End? = nil, in host: SheetHost) {
         request = Request(host: host, from: from)
     }

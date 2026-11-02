@@ -11,47 +11,168 @@ enum SongPathAvailability {
     }
 }
 
-/// The Discover (and optional Home) entry point (#65).
+/// The Discover (and optional Home) card (#65): the path itself. Tap From or To to choose an end,
+/// set the length and play, without opening a sheet.
 struct SongPathCard: View {
     @Environment(\.appContainer) private var container
+    @State private var editing: Side?
+    @State private var isBuilding = false
+
+    private enum Side: String, Identifiable {
+        case from, to
+        var id: String { rawValue }
+    }
+
+    private var launcher: SongPathLauncher? { container?.songPathLauncher }
+    /// The chosen start, or what's playing.
+    private var from: SongPathService.End? { launcher?.cardFrom ?? Self.nowPlaying(container) }
+    private var to: SongPathService.End? { launcher?.cardTo }
+    private var length: Binding<Double> {
+        Binding(get: { launcher?.cardLength ?? Double(SongPathService.defaultLength) },
+                set: { launcher?.cardLength = $0 })
+    }
 
     var body: some View {
-        Button {
-            container?.songPathLauncher.open(from: Self.nowPlaying(container), in: .main)
-        } label: {
-            HStack(spacing: MinidiscSpacing.m) {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-                    Label("Song Path", systemImage: SongPathSheet.symbol)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.85))
-                    Text("From One Song to Another")
-                        .font(.title2.bold())
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("Pick two songs or a mood, and AudioMuse finds the way between them")
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.85))
-                        .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: MinidiscSpacing.m) {
+            Label("Song Path", systemImage: SongPathSheet.symbol)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.85))
+            VStack(spacing: MinidiscSpacing.xs) {
+                endTile(.from, end: from)
+                HStack {
+                    Image(systemName: "arrow.down")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .frame(width: Self.tileArt)
+                        .padding(.leading, MinidiscSpacing.s)
+                        .accessibilityHidden(true)
+                    Spacer()
+                    Button("Swap", systemImage: "arrow.up.arrow.down") {
+                        let (oldFrom, oldTo) = (from, to)
+                        launcher?.cardFrom = oldTo
+                        launcher?.cardTo = oldFrom
+                    }
+                    .labelStyle(.iconOnly)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .disabled(from == nil && to == nil)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: SongPathSheet.symbol)
-                    .font(.system(size: 52, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .accessibilityHidden(true)
+                endTile(.to, end: to)
             }
-            .foregroundStyle(.white)
-            .padding(MinidiscSpacing.l)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(LinearGradient(colors: [Color(red: 0.07, green: 0.20, blue: 0.36),
-                                                 Color(red: 0.16, green: 0.52, blue: 0.58)],
-                                       startPoint: .leading, endPoint: .trailing))
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+                Text("\(Int(length.wrappedValue)) songs")
+                    .font(.footnote.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.white.opacity(0.85))
+                Slider(value: length,
+                       in: Double(SongPathService.lengthRange.lowerBound)...Double(SongPathService.lengthRange.upperBound),
+                       step: 1)
+                    .tint(.white)
+                    .accessibilityLabel(Text("Length"))
+                    .accessibilityValue(Text("\(Int(length.wrappedValue)) songs"))
+            }
+            Button {
+                Task { await play() }
+            } label: {
+                Group {
+                    if isBuilding {
+                        ProgressView().tint(Self.gradientStart)
+                    } else {
+                        Label("Play", systemImage: "play.fill")
+                    }
+                }
+                .font(.body.weight(.semibold))
+                .frame(maxWidth: .infinity, minHeight: 22)
+                .padding(.vertical, MinidiscSpacing.s)
+                .foregroundStyle(Self.gradientStart)
+                .background(.white, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(!SongPathService.canBuild(from: from, to: to) || isBuilding)
+            .opacity(SongPathService.canBuild(from: from, to: to) ? 1 : 0.5)
+            .accessibilityHint("Play a path of songs from one song or mood to another")
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Song Path")
-        .accessibilityHint("Play a path of songs from one song or mood to another")
+        .foregroundStyle(.white)
+        .padding(MinidiscSpacing.l)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(LinearGradient(colors: [Self.gradientStart, Color(red: 0.16, green: 0.52, blue: 0.58)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing))
+        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
         .accessibilityIdentifier("discover.songPath")
         .padding(.horizontal, MinidiscSpacing.l)
+        .sheet(item: $editing) { side in
+            NavigationStack {
+                SongPathEndPicker(selection: binding(for: side),
+                                  moodAllowed: (side == .from ? to : from)?.isMood != true)
+            }
+        }
+    }
+
+    private static let tileArt: CGFloat = 40
+    private static let gradientStart = Color(red: 0.07, green: 0.20, blue: 0.36)
+
+    private func binding(for side: Side) -> Binding<SongPathService.End?> {
+        Binding(get: { side == .from ? from : to },
+                set: { if side == .from { launcher?.cardFrom = $0 } else { launcher?.cardTo = $0 } })
+    }
+
+    /// An end as a tappable row: cover or mood, and what it is.
+    private func endTile(_ side: Side, end: SongPathService.End?) -> some View {
+        Button { editing = side } label: {
+            HStack(spacing: MinidiscSpacing.m) {
+                Group {
+                    switch end {
+                    case .song(let song):
+                        CoverArtCard(id: song.coverArtId ?? song.id, size: Self.tileArt, cornerRadius: MinidiscCornerRadius.xs)
+                    case .mood(let mood):
+                        Image(systemName: mood.wrappedSymbol)
+                            .font(.title3.weight(.semibold))
+                            .frame(width: Self.tileArt, height: Self.tileArt)
+                            .background(mood.wrappedColor.opacity(0.85), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.xs))
+                    case nil:
+                        Image(systemName: "plus")
+                            .font(.title3.weight(.semibold))
+                            .frame(width: Self.tileArt, height: Self.tileArt)
+                            .background(.white.opacity(0.15), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.xs))
+                    }
+                }
+                .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(side == .from ? "From" : "To")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text(end.map { $0.name } ?? String(localized: "Choose a song or mood"))
+                        .font(.body.weight(.semibold))
+                        .lineLimit(1)
+                    if case .song(let song) = end, let artist = song.artist {
+                        Text(artist)
+                            .font(.footnote)
+                            .foregroundStyle(.white.opacity(0.75))
+                            .lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .accessibilityHidden(true)
+            }
+            .padding(MinidiscSpacing.s)
+            .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.s))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func play() async {
+        guard let container, let from, let to else { return }
+        isBuilding = true
+        defer { isBuilding = false }
+        if let message = await SongPathSheet.play(from: from, to: to, length: Int(length.wrappedValue), container: container) {
+            container.toastService.showError(message)
+        } else {
+            HapticFeedback.medium.trigger()
+        }
     }
 
     /// The path starts from what's playing, when something is.
@@ -148,19 +269,29 @@ struct SongPathSheet: View {
         isBuilding = true
         message = nil
         defer { isBuilding = false }
-        do {
-            let songs = try await container.songPathService.path(from: from, to: to, length: Int(length))
-            try await container.playerService.playUntilEnd(songs, source: .songPath(from: from.name, to: to.name))
+        message = await Self.play(from: from, to: to, length: Int(length), container: container)
+        if message == nil {
             HapticFeedback.medium.trigger()
             dismiss()
+        }
+    }
+
+    /// Builds and plays the path. Returns what went wrong for the user, or nil when it plays
+    /// (or was cancelled).
+    static func play(from: SongPathService.End, to: SongPathService.End, length: Int,
+                     container: AppContainer) async -> String? {
+        do {
+            let songs = try await container.songPathService.path(from: from, to: to, length: length)
+            try await container.playerService.playUntilEnd(songs, source: .songPath(from: from.name, to: to.name))
+            return nil
         } catch SongPathService.PathError.noPath {
-            message = String(localized: "AudioMuse found no path between these. Try other ends or a longer path.")
+            return String(localized: "AudioMuse found no path between these. Try other ends or a longer path.")
         } catch SongPathService.PathError.unavailable {
-            message = String(localized: "Song Path needs AudioMuse. Set it up in Settings › Integrations.")
+            return String(localized: "Song Path needs AudioMuse. Set it up in Settings › Integrations.")
         } catch {
-            guard !UserFacingError.isCancellation(error) else { return }
+            guard !UserFacingError.isCancellation(error) else { return nil }
             Logger.moodPlaylists.error("[SONG-PATH] failed: \(error, privacy: .public)")
-            message = String(localized: "Couldn't build the path. Check that AudioMuse is reachable and try again.")
+            return String(localized: "Couldn't build the path. Check that AudioMuse is reachable and try again.")
         }
     }
 }
@@ -270,4 +401,14 @@ extension View {
             SongPathSheet(from: request.from)
         }
     }
+}
+
+#Preview("Card") {
+    let container = try? AppContainer(inMemory: true, userDefaults: UserDefaults(suiteName: "song-path-preview")!)
+    container?.songPathLauncher.cardFrom = .song(DisplayableSong(from: Song(id: "1", title: "Peace Piece", artist: "Bill Evans")))
+    container?.songPathLauncher.cardTo = .mood(.relaxed)
+    return ScrollView { SongPathCard() }
+        .environment(\.appContainer, container)
+        .environment(container!.artworkImageCache)
+        .environment(container!.dominantColorExtractor)
 }

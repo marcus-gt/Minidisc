@@ -9899,6 +9899,58 @@
         }
       }
     },
+    "Choose a song or mood" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Song oder Stimmung wählen"
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Επίλεξε τραγούδι ή διάθεση"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige una canción o un estado de ánimo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir un morceau ou une humeur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli un brano o un mood"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "曲またはムードを選択"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择歌曲或心情"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇歌曲或心情"
+          }
+        }
+      }
+    },
     "Choose an artist to open" : {
 
     },
@@ -19263,58 +19315,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "起點"
-          }
-        }
-      }
-    },
-    "From One Song to Another" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Von einem Song zum anderen"
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Από ένα τραγούδι σε άλλο"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De una canción a otra"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "D’un morceau à l’autre"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Da un brano all’altro"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ある曲から別の曲へ"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从一首歌到另一首"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "從一首歌到另一首"
           }
         }
       }
@@ -33226,58 +33226,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "照片"
-          }
-        }
-      }
-    },
-    "Pick two songs or a mood, and AudioMuse finds the way between them" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle zwei Songs oder eine Stimmung, und AudioMuse findet den Weg dazwischen"
-          }
-        },
-        "el" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Διάλεξε δύο τραγούδια ή μια διάθεση και το AudioMuse βρίσκει τη διαδρομή ανάμεσά τους"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elige dos canciones o un estado de ánimo, y AudioMuse encuentra el camino entre ellos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez deux morceaux ou une humeur, et AudioMuse trouve le chemin entre les deux"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scegli due brani o un mood e AudioMuse trova la strada tra loro"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2曲またはムードを選ぶと、AudioMuseがその間の道のりを見つけます"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择两首歌或一种心情，AudioMuse 会找到它们之间的路径"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇兩首歌或一種心情，AudioMuse 會找到它們之間的路徑"
           }
         }
       }
