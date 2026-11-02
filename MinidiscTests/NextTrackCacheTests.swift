@@ -52,6 +52,25 @@ struct NextTrackCacheTests {
     }
 }
 
+/// What a skip or queue edit does to a running ahead download.
+@Suite("PlayerService.aheadCacheOutcome")
+struct AheadCacheOutcomeTests {
+    /// Skipping onto the song being fetched keeps the download: it's that song's cache now.
+    @Test func skipOntoTheSong_keepsItAsTheCurrentSongsCache() {
+        #expect(PlayerService.aheadCacheOutcome(downloading: "b", current: "b", next: "c") == .becomesCurrent)
+    }
+
+    /// Editing the queue around a song that is still next keeps it going.
+    @Test func songStillNext_keepsDownloading() {
+        #expect(PlayerService.aheadCacheOutcome(downloading: "b", current: "a", next: "b") == .staysNext)
+    }
+
+    @Test func songNoLongerPlayingOrNext_isCancelled() {
+        #expect(PlayerService.aheadCacheOutcome(downloading: "b", current: "x", next: "y") == .cancel)
+        #expect(PlayerService.aheadCacheOutcome(downloading: "b", current: nil, next: nil) == .cancel)
+    }
+}
+
 /// The shown elapsed time stops at the song's length (#4).
 @Suite("PlaybackClock")
 struct PlaybackClockTests {
