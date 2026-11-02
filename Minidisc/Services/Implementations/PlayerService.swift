@@ -2966,7 +2966,7 @@ actor PlayerService: PlayerServiceProtocol {
                 .networkRecovery(.progressValidated(pathGeneration: pathGeneration))
             )
             Logger.player.info(
-                "[NETWORK-RECOVERY] rebuilt item validated by progress track='\(trackID, privacy: .public)'"
+                "[NETWORK-RECOVERY] playback moving again, stall cleared track='\(trackID, privacy: .public)'"
             )
             return
         case .deferToEndOfTrack:
@@ -4163,6 +4163,11 @@ actor PlayerService: PlayerServiceProtocol {
         )
     }
 
+    /// A wait before the playhead has moved is the stream opening, not a stall.
+    nonisolated static func isStartupWait(progress: Double) -> Bool {
+        progress < 0.5
+    }
+
     private func armRecoveryForUnexpectedEngineStall(
         playbackToken: AudioEnginePlaybackToken
     ) async {
@@ -4188,9 +4193,15 @@ actor PlayerService: PlayerServiceProtocol {
                     .marked(pathGeneration: latestNetworkPathEvent.generation, automatic: true)
                 )
             )
-            Logger.player.warning(
-                "[NETWORK-RECOVERY] remote item stalled without a path change track='\(trackID, privacy: .public)'"
-            )
+            // Every new stream waits while it opens; that is only a stall once the song has played.
+            // The probe still covers a stream that never starts (after the startup grace).
+            if Self.isStartupWait(progress: engine.progress) {
+                Logger.player.notice("[NETWORK-RECOVERY] waiting for the stream to start track='\(trackID, privacy: .public)'")
+            } else {
+                Logger.player.warning(
+                    "[NETWORK-RECOVERY] remote item stalled without a path change track='\(trackID, privacy: .public)'"
+                )
+            }
         }
 
         // A later `.playing` callback must be validated by real playhead movement. AVPlayer can
