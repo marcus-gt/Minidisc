@@ -45,6 +45,24 @@ final class ToastService {
     private(set) var current: Toast?
     private var dismissTask: Task<Void, Never>?
 
+    /// The toast overlays on screen, oldest first (#82). The root's is always there and the full
+    /// player adds its own on top, so only the newest shows the toast; otherwise both draw it.
+    private(set) var overlayHosts: [UUID] = []
+
+    func overlayDidAppear(_ id: UUID) {
+        overlayHosts.removeAll { $0 == id }
+        overlayHosts.append(id)
+    }
+
+    func overlayDidDisappear(_ id: UUID) {
+        overlayHosts.removeAll { $0 == id }
+    }
+
+    /// Whether the overlay `id` is the one that shows toasts.
+    func isActiveOverlay(_ id: UUID) -> Bool {
+        overlayHosts.last == id
+    }
+
     func show(_ message: String, subtitle: String? = nil, style: Style = .info, duration: TimeInterval = 3.0, coverArtId: String? = nil, action: ToastAction? = nil) {
         dismissTask?.cancel()
         current = Toast(message: message, subtitle: subtitle, style: style, duration: duration, coverArtId: coverArtId, action: action)

@@ -63,6 +63,7 @@ struct ToastOverlay: ViewModifier {
     @Environment(ToastService.self) private var toastService
     @Environment(\.appContainer) private var container
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hostID = UUID()
 
     private var miniPlayerVisible: Bool {
         container?.playerState.currentTrack != nil || container?.playerState.isLiveStream == true
@@ -75,12 +76,14 @@ struct ToastOverlay: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .bottom) {
-                if let toast = toastService.current {
+                if let toast = toastService.current, toastService.isActiveOverlay(hostID) {
                     toastContent(toast)
                         .padding(.bottom, bottomInset)
                         .id(toast.id)
                 }
             }
+            .onAppear { toastService.overlayDidAppear(hostID) }
+            .onDisappear { toastService.overlayDidDisappear(hostID) }
             .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: toastService.current)
     }
 
