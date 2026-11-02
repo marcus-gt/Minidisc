@@ -7,15 +7,15 @@ struct CopyableCodeLabel: View {
     @State private var feedbackTask: Task<Void, Never>?
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.xs) {
+        HStack(spacing: MaeksterSpacing.xs) {
             Text(code)
                 .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(isCopied ? MinidiscColors.accent : MinidiscColors.textTertiary)
+                .foregroundStyle(isCopied ? MaeksterColors.accent : MaeksterColors.textTertiary)
 
             if isCopied {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption)
-                    .foregroundStyle(MinidiscColors.accent)
+                    .foregroundStyle(MaeksterColors.accent)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
             }
         }

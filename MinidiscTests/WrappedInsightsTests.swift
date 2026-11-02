@@ -146,7 +146,7 @@ struct WrappedInsightsTests {
             now: { date(2026, 10, 30) },
             sleep: { _ in }
         )
-        return WrappedDataSource(stats: StatsService(modelContainer: try ModelContainer.minidisc(inMemory: true)),
+        return WrappedDataSource(stats: StatsService(modelContainer: try ModelContainer.maekster(inMemory: true)),
                                  history: history, username: { "u" }, librarySongs: { [] }, now: { date(2026, 10, 30) })
     }
 

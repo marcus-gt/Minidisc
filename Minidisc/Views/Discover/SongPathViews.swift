@@ -33,7 +33,7 @@ struct SongPathCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             HStack {
                 Label("Song Path", systemImage: SongPathSheet.symbol)
                     .font(.subheadline.weight(.semibold))
@@ -50,11 +50,11 @@ struct SongPathCard: View {
             .foregroundStyle(.white.opacity(0.85))
             VStack(spacing: 0) {
                 endRow(.from, end: from)
-                Divider().overlay(.white.opacity(0.2)).padding(.leading, Self.tileArt + MinidiscSpacing.s * 2)
+                Divider().overlay(.white.opacity(0.2)).padding(.leading, Self.tileArt + MaeksterSpacing.s * 2)
                 endRow(.to, end: to)
             }
-            .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.s))
-            HStack(spacing: MinidiscSpacing.m) {
+            .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.s))
+            HStack(spacing: MaeksterSpacing.m) {
                 Text("\(Int(length.wrappedValue)) songs")
                     .font(.footnote.weight(.semibold))
                     .monospacedDigit()
@@ -70,13 +70,13 @@ struct SongPathCard: View {
             }
         }
         .foregroundStyle(.white)
-        .padding(MinidiscSpacing.m)
+        .padding(MaeksterSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(LinearGradient(colors: [Self.gradientStart, Color(red: 0.16, green: 0.52, blue: 0.58)],
                                    startPoint: .topLeading, endPoint: .bottomTrailing))
-        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+        .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
         .accessibilityIdentifier("discover.songPath")
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
         .sheet(item: $editing) { side in
             NavigationStack {
                 SongPathEndPicker(selection: binding(for: side), other: side == .from ? to : from)
@@ -121,21 +121,21 @@ struct SongPathCard: View {
     /// An end as a tappable row: cover or mood, its name, and "From · artist" underneath.
     private func endRow(_ side: Side, end: SongPathService.End?) -> some View {
         Button { editing = side } label: {
-            HStack(spacing: MinidiscSpacing.s) {
+            HStack(spacing: MaeksterSpacing.s) {
                 Group {
                     switch end {
                     case .song(let song):
-                        CoverArtCard(id: song.coverArtId ?? song.id, size: Self.tileArt, cornerRadius: MinidiscCornerRadius.xs)
+                        CoverArtCard(id: song.coverArtId ?? song.id, size: Self.tileArt, cornerRadius: MaeksterCornerRadius.xs)
                     case .mood(let mood):
                         Image(systemName: mood.wrappedSymbol)
                             .font(.subheadline.weight(.semibold))
                             .frame(width: Self.tileArt, height: Self.tileArt)
-                            .background(mood.wrappedColor.opacity(0.85), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.xs))
+                            .background(mood.wrappedColor.opacity(0.85), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.xs))
                     case nil:
                         Image(systemName: "plus")
                             .font(.subheadline.weight(.semibold))
                             .frame(width: Self.tileArt, height: Self.tileArt)
-                            .background(.white.opacity(0.15), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.xs))
+                            .background(.white.opacity(0.15), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.xs))
                     }
                 }
                 .accessibilityHidden(true)
@@ -154,8 +154,8 @@ struct SongPathCard: View {
                     .foregroundStyle(.white.opacity(0.6))
                     .accessibilityHidden(true)
             }
-            .padding(.horizontal, MinidiscSpacing.s)
-            .padding(.vertical, MinidiscSpacing.xs)
+            .padding(.horizontal, MaeksterSpacing.s)
+            .padding(.vertical, MaeksterSpacing.xs)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -218,7 +218,7 @@ struct SongPathSheet: View {
                     Text("Either end can be a mood, but not both.")
                 }
                 Section {
-                    VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                    VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                         Text("\(Int(length)) songs")
                             .monospacedDigit()
                         Slider(value: $length, in: Double(SongPathService.lengthRange.lowerBound)...Double(SongPathService.lengthRange.upperBound), step: 1)
@@ -310,8 +310,8 @@ private struct SongPathEndLabel: View {
     var body: some View {
         switch end {
         case .song(let song):
-            HStack(spacing: MinidiscSpacing.s) {
-                CoverArtCard(id: song.coverArtId ?? song.id, size: 28, cornerRadius: MinidiscCornerRadius.xs)
+            HStack(spacing: MaeksterSpacing.s) {
+                CoverArtCard(id: song.coverArtId ?? song.id, size: 28, cornerRadius: MaeksterCornerRadius.xs)
                 Text(song.title).lineLimit(1)
             }
         case .mood(let mood):
@@ -424,12 +424,12 @@ private struct SongPathEndPicker: View {
 
     private func songRow(_ song: DisplayableSong) -> some View {
         Button { choose(.song(song)) } label: {
-            HStack(spacing: MinidiscSpacing.m) {
-                CoverArtCard(id: song.coverArtId ?? song.id, size: 40, cornerRadius: MinidiscCornerRadius.xs)
+            HStack(spacing: MaeksterSpacing.m) {
+                CoverArtCard(id: song.coverArtId ?? song.id, size: 40, cornerRadius: MaeksterCornerRadius.xs)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(song.title).foregroundStyle(.primary).lineLimit(1)
                     if let artist = song.artist {
-                        Text(artist).font(.minidiscCaption).foregroundStyle(.secondary).lineLimit(1)
+                        Text(artist).font(.maeksterCaption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
             }

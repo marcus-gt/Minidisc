@@ -85,7 +85,7 @@ private struct PlaylistDestinationsList: View {
         List {
             Section {
                 Button("New Playlist", systemImage: "plus.circle", action: onCreate)
-                    .foregroundStyle(Color.minidiscAccent)
+                    .foregroundStyle(Color.maeksterAccent)
                     .accessibilityIdentifier("playlist.destination.new")
             } footer: {
                 Text("\(vm.songs.count) songs selected")
@@ -109,7 +109,7 @@ private struct PlaylistDestinationsList: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .minidiscSheetListStyle()
+        .maeksterSheetListStyle()
         .disabled(vm.isSaving)
         .refreshable { await vm.load() }
     }
@@ -117,12 +117,12 @@ private struct PlaylistDestinationsList: View {
     private func destination(_ playlist: Playlist) -> some View {
         let membership = vm.membership(of: playlist)
         return Button { onSelect(playlist) } label: {
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 PlaylistCoverThumbnail(playlistId: playlist.id, serverId: nil,
                     coverArtId: playlist.coverArt ?? playlist.id, title: playlist.name, size: 44)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(playlist.name).font(.minidiscCellTitle).lineLimit(2)
-                    Text("\(playlist.songCount) tracks").font(.minidiscCaption).foregroundStyle(.secondary)
+                    Text(playlist.name).font(.maeksterCellTitle).lineLimit(2)
+                    Text("\(playlist.songCount) tracks").font(.maeksterCaption).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
                 if vm.addingToPlaylistIds.contains(playlist.id) {
@@ -131,7 +131,7 @@ private struct PlaylistDestinationsList: View {
                     membershipMark(membership)
                 }
             }
-            .padding(.vertical, MinidiscSpacing.xs)
+            .padding(.vertical, MaeksterSpacing.xs)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -153,11 +153,11 @@ private struct PlaylistDestinationsList: View {
         case .partial:
             Image(systemName: "minus.circle.fill")
                 .font(.title3)
-                .foregroundStyle(Color.minidiscAccent.opacity(0.6))
+                .foregroundStyle(Color.maeksterAccent.opacity(0.6))
         case .all:
             Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
-                .foregroundStyle(Color.minidiscAccent)
+                .foregroundStyle(Color.maeksterAccent)
         }
     }
 

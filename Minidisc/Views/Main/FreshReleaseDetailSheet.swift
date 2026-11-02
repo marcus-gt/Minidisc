@@ -17,7 +17,7 @@ struct FreshReleaseDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.l) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
                 Color.clear
                     .aspectRatio(1, contentMode: .fit)
                     .overlay {
@@ -25,21 +25,21 @@ struct FreshReleaseDetailView: View {
                             Color.secondary.opacity(0.2)
                         }
                     }
-                    .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.large)
+                    .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.large)
                     .frame(maxWidth: 280)
                     .frame(maxWidth: .infinity, alignment: .center)
 
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                     Text(release.title)
                         .font(.title2.bold())
 
                     Text(release.artistName)
-                        .font(.minidiscCellTitle)
+                        .font(.maeksterCellTitle)
                         .foregroundStyle(.secondary)
 
                     if let details = detailsLine {
                         Text(verbatim: details)
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -47,7 +47,7 @@ struct FreshReleaseDetailView: View {
                 storeSection
                 externalLinksSection
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
         .navigationTitle(release.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -73,7 +73,7 @@ struct FreshReleaseDetailView: View {
     private var storeSection: some View {
         if let storeLinks {
             if !storeLinks.isEmpty {
-                VStack(spacing: MinidiscSpacing.s) {
+                VStack(spacing: MaeksterSpacing.s) {
                     ForEach(storeLinks) { link in
                         externalLinkButton(
                             title: link.isSearch ? Text("Search on \(link.store.name)") : Text("Open on \(link.store.name)"),
@@ -85,7 +85,7 @@ struct FreshReleaseDetailView: View {
         } else {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
         }
     }
 
@@ -107,7 +107,7 @@ struct FreshReleaseDetailView: View {
 
     @ViewBuilder
     private var externalLinksSection: some View {
-        VStack(spacing: MinidiscSpacing.s) {
+        VStack(spacing: MaeksterSpacing.s) {
             ForEach(providers) { provider in
                 if let url = provider.buildURL(artistName: release.artistName, albumTitle: release.title) {
                     externalLinkButton(title: Text("View on \(provider.name)"), url: url)
@@ -128,12 +128,12 @@ struct FreshReleaseDetailView: View {
                 Spacer(minLength: 0)
                 Image(systemName: "arrow.up.right")
             }
-            .font(.minidiscCellTitle)
-            .padding(MinidiscSpacing.m)
+            .font(.maeksterCellTitle)
+            .padding(MaeksterSpacing.m)
             .frame(maxWidth: .infinity)
-            .background(Color.minidiscAccent.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
-            .foregroundStyle(Color.minidiscAccent)
+            .background(Color.maeksterAccent.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous))
+            .foregroundStyle(Color.maeksterAccent)
         }
         .buttonStyle(.plain)
     }

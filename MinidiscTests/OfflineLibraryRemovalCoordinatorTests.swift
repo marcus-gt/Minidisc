@@ -12,7 +12,7 @@ struct OfflineLibraryRemovalCoordinatorTests {
         downloadsDirectory: URL,
         serverId: UUID
     ) {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let downloadsDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("minidisc-offline-removal-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(

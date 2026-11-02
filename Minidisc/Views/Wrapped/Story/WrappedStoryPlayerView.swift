@@ -50,7 +50,7 @@ struct WrappedStoryPlayerView: View {
                 VStack {
                     Spacer()
                     WrappedBrandFooter(year: year)
-                        .padding(.bottom, MinidiscSpacing.xl)
+                        .padding(.bottom, MaeksterSpacing.xl)
                 }
                 .allowsHitTesting(false)
             }
@@ -139,7 +139,7 @@ struct WrappedStoryPlayerView: View {
 
     private var overlayControls: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: MinidiscSpacing.s) {
+            HStack(alignment: .center, spacing: MaeksterSpacing.s) {
                 WrappedStoryProgressBar(
                     totalSlides: slides.count,
                     currentIndex: currentIndex,
@@ -171,8 +171,8 @@ struct WrappedStoryPlayerView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.top, MinidiscSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.top, MaeksterSpacing.s)
             Spacer()
         }
     }
@@ -332,7 +332,7 @@ struct WrappedStoryPlayerView: View {
                 guard !isRendering else { return }
                 Task { await renderAndShare(data: data) }
             } label: {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     if isRendering {
                         ProgressView()
                             .tint(.white)
@@ -345,12 +345,12 @@ struct WrappedStoryPlayerView: View {
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.m)
-                .background(Color.white.opacity(0.2), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+                .padding(.vertical, MaeksterSpacing.m)
+                .background(Color.white.opacity(0.2), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, MinidiscSpacing.xl)
-            .padding(.bottom, MinidiscSpacing.xl)
+            .padding(.horizontal, MaeksterSpacing.xl)
+            .padding(.bottom, MaeksterSpacing.xl)
         }
     }
 

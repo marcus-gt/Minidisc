@@ -4,9 +4,9 @@ import Foundation
 /// The name is always lowercase. See `Branding/README.md`.
 nonisolated enum MaeksterBrand {
     static let name = "maekster"
-    static let repositoryURL = "https://github.com/marcus-gt/Minidisc"
+    static let repositoryURL = "https://github.com/marcus-gt/maekster"
 
-    /// `maekster/<version> (https://github.com/marcus-gt/Minidisc)`, sent as the User-Agent.
+    /// `maekster/<version> (https://github.com/marcus-gt/maekster)`, sent as the User-Agent.
     static let userAgent = userAgent(
         version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "development"
     )

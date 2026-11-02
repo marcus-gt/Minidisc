@@ -4,7 +4,7 @@ import SwiftUI
 // detail pages carry More. Building them here keeps the icon, label and placement identical.
 
 /// The ⋯ menu for a screen's secondary actions and view options.
-struct MinidiscMoreMenu<Content: View>: View {
+struct MaeksterMoreMenu<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -31,7 +31,7 @@ private struct SettingsToolbarModifier: ViewModifier {
 
 extension View {
     /// Adds the Settings button every tab root shares.
-    func minidiscSettingsToolbar() -> some View {
+    func maeksterSettingsToolbar() -> some View {
         modifier(SettingsToolbarModifier())
     }
 }

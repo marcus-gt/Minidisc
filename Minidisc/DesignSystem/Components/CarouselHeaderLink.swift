@@ -1,30 +1,30 @@
 import SwiftUI
 
-enum MinidiscCarouselMetrics {
+enum MaeksterCarouselMetrics {
     static let previewLimit = 10
     static let artistArtwork: CGFloat = 104
 }
 
-struct MinidiscShelf<Header: View, Content: View>: View {
+struct MaeksterShelf<Header: View, Content: View>: View {
     @ViewBuilder let header: () -> Header
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header()
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: MinidiscSpacing.m) {
+                LazyHStack(alignment: .top, spacing: MaeksterSpacing.m) {
                     content()
                 }
                 .scrollTargetLayout()
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             }
             .scrollTargetBehavior(.viewAligned)
         }
     }
 }
 
-struct MinidiscCarouselHeader: View {
+struct MaeksterCarouselHeader: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     private let title: Text
     private let showsChevron: Bool
@@ -33,7 +33,7 @@ struct MinidiscCarouselHeader: View {
     init(
         _ title: LocalizedStringResource,
         showsChevron: Bool,
-        horizontalPadding: CGFloat = MinidiscSpacing.l
+        horizontalPadding: CGFloat = MaeksterSpacing.l
     ) {
         self.title = Text(title)
         self.showsChevron = showsChevron
@@ -51,14 +51,14 @@ struct MinidiscCarouselHeader: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: MinidiscSpacing.s) {
+        HStack(alignment: .center, spacing: MaeksterSpacing.s) {
             title
-                .font(.minidiscShelfTitle)
+                .font(.maeksterShelfTitle)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.leading)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
 
-            Spacer(minLength: MinidiscSpacing.s)
+            Spacer(minLength: MaeksterSpacing.s)
 
             if showsChevron {
                 Image(systemName: "chevron.forward")
@@ -70,12 +70,12 @@ struct MinidiscCarouselHeader: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .padding(.horizontal, horizontalPadding)
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
     }
 }
 
 /// A shelf title that becomes a full-width navigation link when the shelf has hidden content.
-struct MinidiscCarouselHeaderLink<Destination: View>: View {
+struct MaeksterCarouselHeaderLink<Destination: View>: View {
     private let title: Text
     private let horizontalPadding: CGFloat
     private let destination: Destination
@@ -84,9 +84,9 @@ struct MinidiscCarouselHeaderLink<Destination: View>: View {
     init(
         _ title: LocalizedStringResource,
         itemCount: Int,
-        visibleLimit: Int = MinidiscCarouselMetrics.previewLimit,
+        visibleLimit: Int = MaeksterCarouselMetrics.previewLimit,
         hasMore: Bool = false,
-        horizontalPadding: CGFloat = MinidiscSpacing.l,
+        horizontalPadding: CGFloat = MaeksterSpacing.l,
         @ViewBuilder destination: () -> Destination
     ) {
         self.title = Text(title)
@@ -98,9 +98,9 @@ struct MinidiscCarouselHeaderLink<Destination: View>: View {
     init(
         verbatim title: String,
         itemCount: Int,
-        visibleLimit: Int = MinidiscCarouselMetrics.previewLimit,
+        visibleLimit: Int = MaeksterCarouselMetrics.previewLimit,
         hasMore: Bool = false,
-        horizontalPadding: CGFloat = MinidiscSpacing.l,
+        horizontalPadding: CGFloat = MaeksterSpacing.l,
         @ViewBuilder destination: () -> Destination
     ) {
         self.title = Text(verbatim: title)
@@ -127,7 +127,7 @@ struct MinidiscCarouselHeaderLink<Destination: View>: View {
     }
 
     private func header(showsChevron: Bool) -> some View {
-        MinidiscCarouselHeader(
+        MaeksterCarouselHeader(
             title: title,
             showsChevron: showsChevron,
             horizontalPadding: horizontalPadding

@@ -93,7 +93,7 @@ actor ServerService: ServerServiceProtocol {
                 predicate: #Predicate { $0.id == id }
             )
             guard let config = try context.fetch(descriptor).first else {
-                throw MinidiscError.serverNotFound(id: id)
+                throw MaeksterError.serverNotFound(id: id)
             }
             context.delete(config)
             try context.save()
@@ -133,7 +133,7 @@ actor ServerService: ServerServiceProtocol {
             let context = ModelContext(modelContainer)
             let all = try context.fetch(FetchDescriptor<ServerConfig>())
             guard let target = all.first(where: { $0.id == id }) else {
-                throw MinidiscError.serverNotFound(id: id)
+                throw MaeksterError.serverNotFound(id: id)
             }
             for config in all { config.isActive = false }
             target.isActive = true
@@ -164,7 +164,7 @@ actor ServerService: ServerServiceProtocol {
         try validateHeaders(headers)
         let credKey = ServerCredentials.keychainKey(for: id)
         guard let existing = try await keychain.retrieve(ServerCredentials.self, forKey: credKey) else {
-            throw MinidiscError.serverNotFound(id: id)
+            throw MaeksterError.serverNotFound(id: id)
         }
         let updated = ServerCredentials(
             password: existing.password,
@@ -203,7 +203,7 @@ actor ServerService: ServerServiceProtocol {
                 let context = ModelContext(modelContainer)
                 let descriptor = FetchDescriptor<ServerConfig>(predicate: #Predicate { $0.id == id })
                 guard let config = try context.fetch(descriptor).first else {
-                    throw MinidiscError.serverNotFound(id: id)
+                    throw MaeksterError.serverNotFound(id: id)
                 }
                 let libraryIdentityChanged = config.baseURL != baseURL || config.username != username
                 config.displayName = displayName
@@ -327,7 +327,7 @@ actor ServerService: ServerServiceProtocol {
 
     func activeConnection() async throws -> ServerConnection {
         guard let activeConnectionSnapshot else {
-            throw MinidiscError.serverNotConfigured
+            throw MaeksterError.serverNotConfigured
         }
         return activeConnectionSnapshot
     }
@@ -343,7 +343,7 @@ actor ServerService: ServerServiceProtocol {
 
         let credKey = ServerCredentials.keychainKey(for: serverId)
         guard let existing = try await keychain.retrieve(ServerCredentials.self, forKey: credKey) else {
-            throw MinidiscError.serverNotConfigured
+            throw MaeksterError.serverNotConfigured
         }
         // Keychain first, mirroring updateServer's rollback strategy: a failure here leaves both
         // stores on the old value rather than the URL pointing at an instance with no token.
@@ -357,7 +357,7 @@ actor ServerService: ServerServiceProtocol {
                 let context = ModelContext(modelContainer)
                 let descriptor = FetchDescriptor<ServerConfig>(predicate: #Predicate { $0.id == serverId })
                 guard let config = try context.fetch(descriptor).first else {
-                    throw MinidiscError.serverNotFound(id: serverId)
+                    throw MaeksterError.serverNotFound(id: serverId)
                 }
                 config.audioMuseURL = resolvedURL
                 try context.save()
@@ -507,10 +507,10 @@ actor ServerService: ServerServiceProtocol {
     private func validateHeaders(_ headers: [String: String]) throws {
         for (key, value) in headers {
             guard HeaderValidator.isValidName(key) else {
-                throw MinidiscError.invalidHeaderName(key: key)
+                throw MaeksterError.invalidHeaderName(key: key)
             }
             guard HeaderValidator.isValidValue(value) else {
-                throw MinidiscError.invalidHeaderValue(key: key)
+                throw MaeksterError.invalidHeaderValue(key: key)
             }
         }
     }

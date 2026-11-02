@@ -37,7 +37,7 @@ struct WrappedRadioTests {
             sleep: { _ in }
         )
         return WrappedDataSource(
-            stats: StatsService(modelContainer: try ModelContainer.minidisc(inMemory: true)),
+            stats: StatsService(modelContainer: try ModelContainer.maekster(inMemory: true)),
             history: history,
             username: { "u" },
             librarySongs: { library },

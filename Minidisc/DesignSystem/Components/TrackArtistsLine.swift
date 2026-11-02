@@ -11,8 +11,8 @@ struct TrackArtistsLine: View {
         // The button hugs the text so only the names themselves are a link; the rest of the row plays.
         Button(action: onTap) {
             Text(verbatim: credits.map(\.name).formatted(.list(type: .and, width: .narrow)))
-                .font(.minidiscCellSubtitle)
-                .foregroundStyle(Color.minidiscAccent)
+                .font(.maeksterCellSubtitle)
+                .foregroundStyle(Color.maeksterAccent)
                 .lineLimit(1)
                 .truncationMode(.tail)
         }

@@ -20,7 +20,7 @@ struct MoodCard: View {
                 isStarting = false
             }
         } label: {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 MoodArtwork(mood: mood)
                     .frame(width: cardSize, height: cardSize)
                     .overlay(alignment: .bottomTrailing) {
@@ -29,13 +29,13 @@ struct MoodCard: View {
                                 ProgressView().tint(.white)
                             } else {
                                 Image(systemName: "dot.radiowaves.left.and.right")
-                                    .font(.minidiscCaption.weight(.bold))
+                                    .font(.maeksterCaption.weight(.bold))
                                     .foregroundStyle(.white)
                             }
                         }
-                        .padding(MinidiscSpacing.s)
+                        .padding(MaeksterSpacing.s)
                     }
-                    .minidiscCoverStyle()
+                    .maeksterCoverStyle()
                 CoverCardMetadata(title: String(localized: mood.title), subtitle: String(localized: "Mood radio"))
             }
             .frame(width: cardSize, alignment: .leading)

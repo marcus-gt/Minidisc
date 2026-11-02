@@ -105,7 +105,7 @@ actor SwiftSonicLibrarySource: LibraryRemoteSource {
     private func client(for expectedServerID: UUID) async throws -> SwiftSonicClient {
         let connection = try await serverService.activeConnection()
         guard connection.version.serverID == expectedServerID else {
-            throw MinidiscError.serverNotConfigured
+            throw MaeksterError.serverNotConfigured
         }
         if cachedVersion == connection.version, let cachedClient {
             return cachedClient

@@ -1,9 +1,9 @@
 import AppIntents
 import Foundation
 
-struct MinidiscMusicEntity: AppEntity {
+struct MaeksterMusicEntity: AppEntity {
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Music"
-    static let defaultQuery = MinidiscMusicQuery()
+    static let defaultQuery = MaeksterMusicQuery()
     let id: String
     @Property(title: "Title") var title: String
     @Property(title: "Artist") var artist: String
@@ -28,25 +28,25 @@ struct MinidiscMusicEntity: AppEntity {
     }
 }
 
-struct MinidiscMusicQuery: EntityStringQuery {
-    @Dependency private var runtime: MinidiscRuntime
+struct MaeksterMusicQuery: EntityStringQuery {
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
-    func entities(for identifiers: [String]) async throws -> [MinidiscMusicEntity] {
+    func entities(for identifiers: [String]) async throws -> [MaeksterMusicEntity] {
         let service = MusicIntentService(container: try await runtime.container())
-        return try await service.resolve(identifiers).map(MinidiscMusicEntity.init)
+        return try await service.resolve(identifiers).map(MaeksterMusicEntity.init)
     }
 
     @MainActor
-    func entities(matching string: String) async throws -> [MinidiscMusicEntity] {
+    func entities(matching string: String) async throws -> [MaeksterMusicEntity] {
         let service = MusicIntentService(container: try await runtime.container())
-        return try await service.search(string).map(MinidiscMusicEntity.init)
+        return try await service.search(string).map(MaeksterMusicEntity.init)
     }
 
     @MainActor
-    func suggestedEntities() async throws -> [MinidiscMusicEntity] {
+    func suggestedEntities() async throws -> [MaeksterMusicEntity] {
         let service = MusicIntentService(container: try await runtime.container())
-        return try await service.suggestions().map(MinidiscMusicEntity.init)
+        return try await service.suggestions().map(MaeksterMusicEntity.init)
     }
 }
 

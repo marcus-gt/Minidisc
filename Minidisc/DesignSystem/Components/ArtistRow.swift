@@ -5,7 +5,7 @@ struct ArtistRow: View {
     let artist: ArtistID3
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             CoverArtView(
                 id: artist.coverArt ?? artist.id,
                 size: 88,
@@ -16,19 +16,19 @@ struct ArtistRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(artist.name)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 if let count = artist.albumCount {
                     Text("\(count) albums")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                 }
             }
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
     }
 }

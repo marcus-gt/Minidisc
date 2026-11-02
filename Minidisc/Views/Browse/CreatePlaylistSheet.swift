@@ -65,7 +65,7 @@ struct CreatePlaylistSheet: View {
 
 #if DEBUG
 #Preview {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         Color.clear.sheet(isPresented: .constant(true)) { CreatePlaylistSheet() }
     }
 }

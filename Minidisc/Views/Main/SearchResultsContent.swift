@@ -7,7 +7,7 @@ struct SearchScopeBar: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MinidiscSpacing.s) {
+            HStack(spacing: MaeksterSpacing.s) {
                 ForEach(LibrarySearchScope.allCases) { scope in
                     Button {
                         selection = scope
@@ -15,20 +15,20 @@ struct SearchScopeBar: View {
                     } label: {
                         Text(scope.title)
                             .font(.subheadline.weight(.semibold))
-                            .padding(.horizontal, MinidiscSpacing.l)
+                            .padding(.horizontal, MaeksterSpacing.l)
                             .frame(minHeight: 44)
                             .foregroundStyle(selection == scope ? Color.white : .primary)
-                            .background(selection == scope ? Color.minidiscAccent : Color.primary.opacity(0.06), in: Capsule())
+                            .background(selection == scope ? Color.maeksterAccent : Color.primary.opacity(0.06), in: Capsule())
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(selection == scope ? [.isSelected] : [])
                     .accessibilityIdentifier("search.scope.\(scope.rawValue)")
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
         }
         .clipped()
-        .padding(.vertical, MinidiscSpacing.s)
+        .padding(.vertical, MaeksterSpacing.s)
     }
 }
 
@@ -94,8 +94,8 @@ private struct SearchResultsHeader: View {
 
     private var layout: AnyLayout {
         dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: MinidiscSpacing.s))
-            : AnyLayout(HStackLayout(spacing: MinidiscSpacing.s))
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: MaeksterSpacing.s))
+            : AnyLayout(HStackLayout(spacing: MaeksterSpacing.s))
     }
 
     var body: some View {
@@ -106,7 +106,7 @@ private struct SearchResultsHeader: View {
             if let onSelectSongs {
                 Button("Select", action: onSelectSongs)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.minidiscAccent)
+                    .foregroundStyle(Color.maeksterAccent)
                     .fixedSize(horizontal: true, vertical: false)
                     .frame(minWidth: 44, minHeight: 44)
                     .buttonStyle(.plain)
@@ -158,18 +158,18 @@ private struct SearchMatchRow: View {
 struct SearchPlaylistRow: View {
     let playlist: Playlist
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             PlaylistCoverThumbnail(playlistId: playlist.id, serverId: nil,
                                    coverArtId: playlist.coverArt ?? playlist.id,
                                    title: playlist.name, size: 56)
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-                Text(playlist.name).font(.minidiscCellTitle).lineLimit(2)
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
+                Text(playlist.name).font(.maeksterCellTitle).lineLimit(2)
                 Text("\(playlist.songCount) tracks")
-                    .font(.minidiscCellSubtitle).foregroundStyle(.secondary)
+                    .font(.maeksterCellSubtitle).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .collectionContextMenu(itemType: .playlist, itemId: playlist.id, displayName: playlist.name,
                                displaySubtitle: playlist.owner ?? "", coverArtId: playlist.coverArt)
     }
@@ -179,7 +179,7 @@ struct SearchRetryRow: View {
     let message: String
     let retry: () -> Void
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Text(message).font(.subheadline).foregroundStyle(.secondary)
             Spacer(minLength: 0)
             Button("Retry", action: retry).frame(minHeight: 44)

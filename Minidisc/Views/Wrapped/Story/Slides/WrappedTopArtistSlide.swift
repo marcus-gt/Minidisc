@@ -12,16 +12,16 @@ struct WrappedTopArtistSlide: View {
             WrappedArtBackdrop(artworkID: topArtist?.artistId, palette: palette)
 
             VStack(spacing: 0) {
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
                 WrappedSlideLabel("TOP ARTIST")
-                Spacer(minLength: MinidiscSpacing.l)
+                Spacer(minLength: MaeksterSpacing.l)
 
                 if let artist = topArtist {
                     if WrappedIDs.isLibraryID(artist.artistId) {
                         WrappedSlideCover(artworkID: artist.artistId, isArtist: true)
                     }
 
-                    VStack(spacing: MinidiscSpacing.s) {
+                    VStack(spacing: MaeksterSpacing.s) {
                         Text(artist.name)
                             .font(.system(size: 44, weight: .black, design: .rounded))
                             .kerning(-1)
@@ -29,30 +29,30 @@ struct WrappedTopArtistSlide: View {
                             .multilineTextAlignment(.center)
                             .lineLimit(2)
                             .minimumScaleFactor(0.5)
-                        HStack(spacing: MinidiscSpacing.s) {
+                        HStack(spacing: MaeksterSpacing.s) {
                             statBadge(artist.playCount.plural("play", "plays"))
                             statBadge(artist.uniqueTracks.plural("track", "tracks"))
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.xl)
-                    .padding(.top, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.xl)
+                    .padding(.top, MaeksterSpacing.l)
 
-                    Spacer(minLength: MinidiscSpacing.l)
+                    Spacer(minLength: MaeksterSpacing.l)
 
-                    VStack(spacing: MinidiscSpacing.s) {
+                    VStack(spacing: MaeksterSpacing.s) {
                         ForEach(runnersUp) { entry in
                             WrappedRunnerUpRow(rank: entry.rank, artworkID: entry.artistId, title: entry.name,
                                                subtitle: nil, detail: entry.playCount.plural("play", "plays"), isArtist: true)
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.xl)
+                    .padding(.horizontal, MaeksterSpacing.xl)
                 } else {
                     Text("No artist data yet")
                         .font(.system(.title2, design: .rounded, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
 
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
             }
             .wrappedSlideEntrance()
         }
@@ -63,8 +63,8 @@ struct WrappedTopArtistSlide: View {
         Text(text)
             .font(.system(size: 15, weight: .semibold, design: .rounded))
             .foregroundStyle(.white)
-            .padding(.horizontal, MinidiscSpacing.m)
-            .padding(.vertical, MinidiscSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.m)
+            .padding(.vertical, MaeksterSpacing.s)
             .background(Color.white.opacity(0.2), in: Capsule())
     }
 }

@@ -21,20 +21,20 @@ struct DiscoverView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: MinidiscSpacing.section) {
+            LazyVStack(alignment: .leading, spacing: MaeksterSpacing.section) {
                 if let vm {
                     ForEach(discoverLayout.visibleSections) { section in
                         discoverSection(section, vm: vm)
                     }
                 }
             }
-            .padding(.top, MinidiscSpacing.m)
-            .padding(.bottom, MinidiscSpacing.miniPlayerBottomMargin)
+            .padding(.top, MaeksterSpacing.m)
+            .padding(.bottom, MaeksterSpacing.miniPlayerBottomMargin)
         }
         .navigationTitle("Discover")
         .toolbarTitleDisplayMode(.inlineLarge)
-        .minidiscSettingsToolbar()
-        .minidiscContentWidth()
+        .maeksterSettingsToolbar()
+        .maeksterContentWidth()
         .task(id: container?.serverState.accessSnapshot) {
             guard let container else { return }
             let serverID = container.serverState.activeServer?.id
@@ -49,7 +49,7 @@ struct DiscoverView: View {
         }
         .refreshable { await refreshDiscover(forceRefresh: true) }
         // The library feed refreshes in the background and says when it has something new (#15).
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscFreshReleasesChanged)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterFreshReleasesChanged)) { _ in
             Task {
                 await vm?.loadFreshReleases()
                 await allReleasesVM?.loadReleases()
@@ -61,7 +61,7 @@ struct DiscoverView: View {
                 release: release,
                 providers: container?.externalProvidersStore.load() ?? []
             )
-            .minidiscZoomTransition(
+            .maeksterZoomTransition(
                 sourceID: release.id ?? "\(release.artistName)-\(release.title)",
                 in: freshReleaseZoomNamespace
             )
@@ -111,18 +111,18 @@ struct DiscoverView: View {
     @ViewBuilder
     private var moodsSection: some View {
         if isOnline {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 Text("Moods")
-                    .font(.minidiscShelfTitle)
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .font(.maeksterShelfTitle)
+                    .padding(.horizontal, MaeksterSpacing.l)
 
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: MinidiscSpacing.s) {
+                    LazyHStack(spacing: MaeksterSpacing.s) {
                         ForEach(Mood.allCases) { mood in
                             MoodCard(mood: mood)
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.l)
                 }
             }
         }
@@ -146,8 +146,8 @@ struct DiscoverView: View {
     @ViewBuilder
     private func stationsSection(_ vm: DiscoverViewModel) -> some View {
         if !vm.stations.isEmpty {
-            MinidiscShelf {
-                MinidiscCarouselHeader("Stations for You", showsChevron: false)
+            MaeksterShelf {
+                MaeksterCarouselHeader("Stations for You", showsChevron: false)
                     .accessibilityIdentifier("discover.stations")
             } content: {
                 ForEach(vm.stations) { station in
@@ -214,15 +214,15 @@ struct DiscoverView: View {
     }
 
     private func smartShuffleErrorMessage(from error: Error) -> String {
-        if case MinidiscError.smartShuffleEmpty = error {
+        if case MaeksterError.smartShuffleEmpty = error {
             return String(localized: "Smart Shuffle unavailable — try playing some tracks first or download more music for offline use.")
         }
         return String(localized: "Smart Shuffle failed. Please try again.")
     }
 
     private var wrappedSection: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            MinidiscCarouselHeaderLink(
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            MaeksterCarouselHeaderLink(
                 "Wrapped",
                 itemCount: wrappedYears.count + 1,
                 hasMore: true
@@ -231,13 +231,13 @@ struct DiscoverView: View {
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: MinidiscSpacing.s) {
+                LazyHStack(spacing: MaeksterSpacing.s) {
                     WrappedYearTile(period: .allTime)
-                    ForEach(wrappedYears.prefix(MinidiscCarouselMetrics.previewLimit - 1), id: \.self) { year in
+                    ForEach(wrappedYears.prefix(MaeksterCarouselMetrics.previewLimit - 1), id: \.self) { year in
                         WrappedYearTile(year: year)
                     }
                 }
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             }
         }
     }
@@ -248,8 +248,8 @@ struct DiscoverView: View {
     }
 
     private var internetRadioSection: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            MinidiscCarouselHeaderLink(
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            MaeksterCarouselHeaderLink(
                 "Internet Radio",
                 itemCount: radioStations.count,
                 hasMore: true
@@ -261,36 +261,36 @@ struct DiscoverView: View {
                 NavigationLink {
                     RadioListView()
                 } label: {
-                    HStack(spacing: MinidiscSpacing.s) {
+                    HStack(spacing: MaeksterSpacing.s) {
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .font(.title2)
-                            .foregroundStyle(Color.minidiscAccent)
+                            .foregroundStyle(Color.maeksterAccent)
                         Text("Browse Stations")
-                            .font(.minidiscCellTitle)
+                            .font(.maeksterCellTitle)
                             .foregroundStyle(.primary)
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    .padding(MinidiscSpacing.l)
+                    .padding(MaeksterSpacing.l)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.minidiscAccent.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
+                    .background(Color.maeksterAccent.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: MinidiscSpacing.s) {
+                    LazyHStack(spacing: MaeksterSpacing.s) {
                         ForEach(
-                            Array(radioStations.prefix(MinidiscCarouselMetrics.previewLimit)),
+                            Array(radioStations.prefix(MaeksterCarouselMetrics.previewLimit)),
                             id: \.id
                         ) { station in
                             RadioCard(station: station)
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.l)
                 }
             }
         }

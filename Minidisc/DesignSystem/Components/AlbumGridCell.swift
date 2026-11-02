@@ -10,14 +10,14 @@ struct AlbumGridCell: View {
     @State private var isHovered = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             GeometryReader { geo in
                 CoverArtView(id: album.coverArt ?? album.id, size: Int(geo.size.width * 2))
                     .frame(width: geo.size.width, height: geo.size.width)
-                    .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
+                    .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.standard)
             }
             .aspectRatio(1, contentMode: .fit)
-            .minidiscMatchedTransitionSource(id: zoomSourceId, in: zoomNamespace)
+            .maeksterMatchedTransitionSource(id: zoomSourceId, in: zoomNamespace)
 
             CoverCardMetadata(title: album.name, subtitle: album.artist)
         }

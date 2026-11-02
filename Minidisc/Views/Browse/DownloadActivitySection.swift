@@ -33,8 +33,8 @@ private struct DownloadActivityRow: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: MinidiscSpacing.m) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        HStack(alignment: .center, spacing: MaeksterSpacing.m) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 Text(transfer.title ?? String(localized: "Song"))
                     .font(.body).lineLimit(2)
                 if let error = transfer.error {
@@ -68,6 +68,6 @@ private struct DownloadActivityRow: View {
             .frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.borderless)
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
     }
 }

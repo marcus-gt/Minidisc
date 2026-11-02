@@ -24,24 +24,24 @@ struct SearchHistoryEntryRow: View, Equatable {
     let data: SearchHistoryRowData
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             CoverArtView(id: data.coverArtId ?? data.itemId, size: 88)
                 .frame(width: 44, height: 44)
                 .clipShape(
                     data.itemType == "artist"
                         ? AnyShape(Circle())
-                        : AnyShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+                        : AnyShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
                 )
             Text(data.displayName)
-                .font(.minidiscCellTitle)
+                .font(.maeksterCellTitle)
                 .lineLimit(1)
             Spacer(minLength: 0)
             Image(systemName: "arrow.up.left")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
-        .padding(.horizontal, MinidiscSpacing.m)
+        .padding(.vertical, MaeksterSpacing.xs)
+        .padding(.horizontal, MaeksterSpacing.m)
         .contentShape(Rectangle())
     }
 }

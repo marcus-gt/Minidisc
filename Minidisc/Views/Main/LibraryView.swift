@@ -12,20 +12,20 @@ struct LibraryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xl) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xl) {
                 if !isOnline && container?.offlineLibrary.snapshot.songs.isEmpty != false
                     && container?.localMusic.snapshot.tracks.contains(where: \.isAvailable) != true {
                     OfflineBrowsingEmptyView()
                 }
                 librarySection
             }
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.top, MinidiscSpacing.m)
-            .padding(.bottom, MinidiscSpacing.xl)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.top, MaeksterSpacing.m)
+            .padding(.bottom, MaeksterSpacing.xl)
         }
         .navigationTitle("Library")
         .toolbarTitleDisplayMode(.inlineLarge)
-        .minidiscSettingsToolbar()
+        .maeksterSettingsToolbar()
         .navigationDestination(for: HomeDestination.self) { destination in
             switch destination {
             case .libraryAlbums:
@@ -101,7 +101,7 @@ struct LibraryView: View {
 
     private var librarySection: some View {
         let local = container?.offlineLibrary.snapshot ?? OfflineBrowsingSnapshot()
-        return VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        return VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             VStack(spacing: 0) {
                 if container?.localMusic.snapshot.folders.isEmpty == false {
                     NavigationLink { LocalMusicView() } label: {
@@ -177,10 +177,10 @@ private struct HomeLibraryRowLabel: View {
     var tableName: String? = nil
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             ZStack {
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color.minidiscAccent)
+                    .fill(Color.maeksterAccent)
                     .frame(width: 30, height: 30)
                 Image(systemName: systemImage)
                     .font(.caption)
@@ -188,7 +188,7 @@ private struct HomeLibraryRowLabel: View {
                     .foregroundStyle(.white)
             }
             Text(title, tableName: tableName)
-                .font(.minidiscCellTitle)
+                .font(.maeksterCellTitle)
                 .foregroundStyle(.primary)
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
@@ -196,8 +196,8 @@ private struct HomeLibraryRowLabel: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, MinidiscSpacing.m)
-        .padding(.vertical, MinidiscSpacing.m)
+        .padding(.horizontal, MaeksterSpacing.m)
+        .padding(.vertical, MaeksterSpacing.m)
         .contentShape(Rectangle())
     }
 }

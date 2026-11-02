@@ -41,7 +41,7 @@ struct SongQuickActions: ViewModifier {
                     } label: {
                         Label("Add to Playlist...", systemImage: "music.note.list")
                     }
-                    .tint(Color.minidiscAccent)
+                    .tint(Color.maeksterAccent)
                     .disabled(container?.serverState.isOnline != true || (onAddToPlaylist == nil && playlistAddition == nil))
                 }
             }
@@ -65,5 +65,5 @@ private struct SongSwipeContainer: ViewModifier {
 }
 
 extension View {
-    func minidiscSongSwipeContainer() -> some View { modifier(SongSwipeContainer()) }
+    func maeksterSongSwipeContainer() -> some View { modifier(SongSwipeContainer()) }
 }

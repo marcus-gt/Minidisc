@@ -157,7 +157,7 @@ nonisolated private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
     // MARK: Source
 
     private func source(username: String?, fake: FakeListenHistory, now: Date = date(2026, 10, 29)) throws -> WrappedDataSource {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         return WrappedDataSource(
             stats: StatsService(modelContainer: container),
             history: store(fake, now: now),
@@ -184,7 +184,7 @@ nonisolated private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
 
     /// Unreachable ListenBrainz falls back to the phone's plays, and says so.
     @Test @MainActor func source_fallsBackWhenListenBrainzFails() async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let failing = ListenHistoryStore(
             directory: URL.temporaryDirectory.appendingPathComponent("lb-history-\(UUID())"),
             fetchPage: { _, _ in throw ListenBrainzError.httpError(statusCode: 503) },
@@ -200,7 +200,7 @@ nonisolated private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
     /// Only library songs can be played, so the radio and the queue leave the rest out.
     @Test @MainActor func topLibraryTracks_leaveOutMusicOutsideTheLibrary() async throws {
         let fake = FakeListenHistory([listen(date(2026, 3, 2), "In library", mbid: "rec-1"), listen(date(2026, 3, 3), "Not in library")])
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let librarySong = Song(id: "s1", title: "In library", artist: "Bill Evans", duration: 240, musicBrainzId: "rec-1")
         let source = WrappedDataSource(stats: StatsService(modelContainer: container), history: store(fake, now: date(2026, 10, 29)),
                                        username: { "u" }, librarySongs: { [librarySong] })

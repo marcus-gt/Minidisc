@@ -20,10 +20,10 @@ struct RecordLabelListView: View {
                 LoadingStateView()
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Labels")
         .toolbarTitleDisplayMode(.inline)
-        .minidiscFilterable(text: $filterText, prompt: "Filter labels")
+        .maeksterFilterable(text: $filterText, prompt: "Filter labels")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 LibrarySortMenu(sort: $sort)
@@ -98,29 +98,29 @@ private struct RecordLabelRow: View {
     let label: RecordLabelSummary
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             if let coverArtId = label.coverArtId {
                 CoverArtCard(id: coverArtId, size: 56)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: label.name)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 Text("\(label.albumCount) albums")
-                    .font(.minidiscCellSubtitle)
+                    .font(.maeksterCellSubtitle)
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
     }
 }
 
 #if DEBUG
 #Preview {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         NavigationStack {
             RecordLabelListView(viewModel: RecordLabelListViewModel(library: PreviewLibraryService()))
         }

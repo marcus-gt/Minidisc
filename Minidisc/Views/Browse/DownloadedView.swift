@@ -18,10 +18,10 @@ struct DownloadedView: View {
                 )
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Downloads")
         .toolbarTitleDisplayMode(.inline)
-        .minidiscFilterable(text: $filterText, prompt: "Filter downloads")
+        .maeksterFilterable(text: $filterText, prompt: "Filter downloads")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 LibrarySortMenu(sort: $sort)
@@ -123,7 +123,7 @@ private struct DownloadedContent: View {
                                     try await container?.playerService.play(tracks: songs, startIndex: index, source: .downloads)
                                 } }
                             } label: {
-                                VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+                                VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                                     Text(song.title).foregroundStyle(.primary)
                                     if let artist = song.artist {
                                         Text(artist).font(.subheadline).foregroundStyle(.secondary)
@@ -147,25 +147,25 @@ private struct DownloadedContent: View {
                     Section("Albums") {
                         ForEach(albums, id: \.downloadScrollID) { display in
                             NavigationLink(value: HomeDestination.downloadedAlbum(display)) {
-                                HStack(spacing: MinidiscSpacing.m) {
+                                HStack(spacing: MaeksterSpacing.m) {
                                     CoverArtCard(id: display.coverArtId ?? display.albumId, size: 56)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(display.name)
-                                            .font(.minidiscCellTitle)
+                                            .font(.maeksterCellTitle)
                                             .lineLimit(1)
                                         if let artist = display.artist {
                                             Text(artist)
-                                                .font(.minidiscCellSubtitle)
+                                                .font(.maeksterCellSubtitle)
                                                 .foregroundStyle(.secondary)
                                                 .lineLimit(1)
                                         }
                                         Text("\(display.downloadedTracksCount) tracks")
-                                            .font(.minidiscCaption)
+                                            .font(.maeksterCaption)
                                             .foregroundStyle(.tertiary)
                                     }
                                     Spacer(minLength: 0)
                                 }
-                                .padding(.vertical, MinidiscSpacing.xs)
+                                .padding(.vertical, MaeksterSpacing.xs)
                             }
                             .id(display.downloadScrollID)
                             .accessibilityIdentifier("downloads.album.\(display.albumId)")
@@ -177,19 +177,19 @@ private struct DownloadedContent: View {
                     Section("Playlists") {
                         ForEach(orderedPlaylists, id: \.downloadScrollID) { playlist in
                             NavigationLink(value: HomeDestination.playlistById(id: playlist.playlistId, name: playlist.name, coverArtId: playlist.coverArtId)) {
-                                HStack(spacing: MinidiscSpacing.m) {
+                                HStack(spacing: MaeksterSpacing.m) {
                                     CoverArtCard(id: playlist.coverArtId ?? playlist.playlistId, size: 56)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(playlist.name)
-                                            .font(.minidiscCellTitle)
+                                            .font(.maeksterCellTitle)
                                             .lineLimit(1)
                                         Text("\(playlist.tracksCount) tracks\(playlist.isComplete ? "" : " (incomplete)")")
-                                            .font(.minidiscCaption)
+                                            .font(.maeksterCaption)
                                             .foregroundStyle(.secondary)
                                     }
                                     Spacer(minLength: 0)
                                 }
-                                .padding(.vertical, MinidiscSpacing.xs)
+                                .padding(.vertical, MaeksterSpacing.xs)
                             }
                             .id(playlist.downloadScrollID)
                             .accessibilityIdentifier("downloads.playlist.\(playlist.playlistId)")

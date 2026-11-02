@@ -16,7 +16,7 @@ struct WrappedStatHero: View {
             .overlay(alignment: .bottomLeading) {
                 heroContent
             }
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.hero, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.hero, style: .continuous))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(accessibilityDescription)
             .onAppear { triggerAnimation() }
@@ -30,9 +30,9 @@ struct WrappedStatHero: View {
             Color.white.opacity(0.2)
                 .frame(maxWidth: .infinity)
                 .frame(height: 1)
-                .padding(.vertical, MinidiscSpacing.m)
+                .padding(.vertical, MaeksterSpacing.m)
 
-            HStack(spacing: MinidiscSpacing.xs) {
+            HStack(spacing: MaeksterSpacing.xs) {
                 Text(data.totalTracksPlayed.plural("play", "plays"))
                 Text("·").foregroundStyle(.white.opacity(0.4))
                 Text(data.totalUniqueArtists.plural("artist", "artists"))
@@ -42,8 +42,8 @@ struct WrappedStatHero: View {
             .font(.system(size: 14, weight: .regular))
             .foregroundStyle(.white.opacity(0.7))
         }
-        .padding(.horizontal, MinidiscSpacing.xl)
-        .padding(.vertical, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.xl)
+        .padding(.vertical, MaeksterSpacing.l)
     }
 
     private var accessibilityDescription: String {
@@ -88,7 +88,7 @@ private struct AnimatedHeroText: View, Animatable {
 
     var body: some View {
         let (number, unit) = seconds.wrappedHeroMinutesFormat()
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             Text(number)
                 .font(.system(size: 96, weight: .black, design: .rounded))
                 .kerning(-2)

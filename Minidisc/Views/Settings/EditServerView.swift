@@ -83,7 +83,7 @@ struct EditServerView: View {
         .controlSize(.large)
         .disabled(!viewModel.canSave || viewModel.isSaving)
         .padding(.horizontal)
-        .padding(.vertical, MinidiscSpacing.m)
+        .padding(.vertical, MaeksterSpacing.m)
         .background(.regularMaterial)
     }
 
@@ -153,7 +153,7 @@ struct EditServerView: View {
         if let error = viewModel.connectionError, error != .invalidURL {
             Section {
                 ConnectionErrorView(error: error)
-                    .padding(.vertical, MinidiscSpacing.xs)
+                    .padding(.vertical, MaeksterSpacing.xs)
             }
         }
         if let error = viewModel.saveError {

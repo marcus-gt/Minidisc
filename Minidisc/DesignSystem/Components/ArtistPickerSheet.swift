@@ -67,13 +67,13 @@ struct ArtistPickerSheet: View {
             dismiss()
             onSelect(ArtistCredit(id: entry.artist?.id ?? entry.credit.id, name: entry.artist?.name ?? entry.credit.name))
         } label: {
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 avatar(for: entry)
                 Text(verbatim: entry.credit.name)
-                    .font(.minidiscBody)
+                    .font(.maeksterBody)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
-                Spacer(minLength: MinidiscSpacing.s)
+                Spacer(minLength: MaeksterSpacing.s)
                 if isResolving && entry.albumCount == nil {
                     ProgressView()
                         .controlSize(.small)
@@ -81,7 +81,7 @@ struct ArtistPickerSheet: View {
                     MetadataChip(text: String(localized: "\(count) albums"))
                 }
                 Image(systemName: "chevron.right")
-                    .font(.minidiscCaption.weight(.semibold))
+                    .font(.maeksterCaption.weight(.semibold))
                     .foregroundStyle(.tertiary)
                     .accessibilityHidden(true)
             }
@@ -108,7 +108,7 @@ struct ArtistPickerSheet: View {
 }
 
 #Preview {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         ArtistPickerSheet(
             request: ArtistPickerRequest(
                 trackTitle: "Salt in the Static",

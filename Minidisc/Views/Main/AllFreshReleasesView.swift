@@ -47,7 +47,7 @@ struct AllFreshReleasesView: View {
                                 release: release,
                                 providers: container?.externalProvidersStore.load() ?? []
                             )
-                            .minidiscZoomTransition(
+                            .maeksterZoomTransition(
                                 sourceID: release.id ?? "\(release.artistName)-\(release.title)",
                                 in: releaseZoomNamespace
                             )
@@ -80,7 +80,7 @@ struct AllFreshReleasesView: View {
         }()
 
         var body: some View {
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 Color.clear
                     .aspectRatio(1, contentMode: .fit)
                     .overlay {
@@ -88,21 +88,21 @@ struct AllFreshReleasesView: View {
                             Color.secondary.opacity(0.2)
                         }
                     }
-                    .minidiscCoverStyle()
+                    .maeksterCoverStyle()
                     .frame(width: 52, height: 52)
-                    .minidiscMatchedTransitionSource(id: zoomSourceId, in: zoomNamespace)
+                    .maeksterMatchedTransitionSource(id: zoomSourceId, in: zoomNamespace)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(release.title)
-                        .font(.minidiscCellTitle)
+                        .font(.maeksterCellTitle)
                         .lineLimit(1)
                     Text(release.artistName)
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                     if let date = release.releaseDate {
                         Text(Self.relativeFormatter.localizedString(for: date, relativeTo: Date()))
-                            .font(.minidiscCaption2)
+                            .font(.maeksterCaption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }

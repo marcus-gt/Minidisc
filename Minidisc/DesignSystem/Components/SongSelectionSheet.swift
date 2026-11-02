@@ -53,7 +53,7 @@ struct SongSelectionSheet: View {
                     .accessibilityAddTraits(selectedIDs.contains(song.id) ? .isSelected : [])
                 }
             }
-            .minidiscSheetListStyle()
+            .maeksterSheetListStyle()
             .searchable(text: $query, prompt: "Find a song")
             .navigationTitle("Select Songs")
             .navigationBarTitleDisplayModeInline()
@@ -79,23 +79,23 @@ private struct SongSelectionRow: View {
     let selected: Bool
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                 .font(.title3)
-                .foregroundStyle(selected ? Color.minidiscAccent : .secondary)
+                .foregroundStyle(selected ? Color.maeksterAccent : .secondary)
                 .accessibilityHidden(true)
             CoverArtView(id: song.coverArtId ?? song.id, size: 88)
                 .frame(width: 44, height: 44)
-                .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.xs)
+                .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.xs)
             VStack(alignment: .leading, spacing: 2) {
-                Text(song.title).font(.minidiscCellTitle).lineLimit(2)
+                Text(song.title).font(.maeksterCellTitle).lineLimit(2)
                 if let artist = song.artist {
-                    Text(artist).font(.minidiscCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
+                    Text(artist).font(.maeksterCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }

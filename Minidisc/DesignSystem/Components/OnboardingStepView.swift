@@ -17,7 +17,7 @@ struct OnboardingStepView<Content: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             headerView
-                .background(MinidiscColors.backgroundPrimary)
+                .background(MaeksterColors.backgroundPrimary)
             content()
                 .safeAreaInset(edge: .bottom) {
                     bottomActions
@@ -28,43 +28,43 @@ struct OnboardingStepView<Content: View>: View {
     // MARK: - Header
 
     private var headerView: some View {
-        VStack(spacing: MinidiscSpacing.m) {
+        VStack(spacing: MaeksterSpacing.m) {
             ZStack {
                 Circle()
-                    .fill(MinidiscColors.accentBackground)
+                    .fill(MaeksterColors.accentBackground)
                     .frame(width: 60, height: 60)
                 Image(systemName: icon)
                     .font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(MinidiscColors.accent)
+                    .foregroundStyle(MaeksterColors.accent)
             }
 
-            VStack(spacing: MinidiscSpacing.xs) {
+            VStack(spacing: MaeksterSpacing.xs) {
                 Text(title)
                     .font(.system(.title3, weight: .bold))
-                    .foregroundStyle(MinidiscColors.textPrimary)
+                    .foregroundStyle(MaeksterColors.textPrimary)
                     .multilineTextAlignment(.center)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(MinidiscColors.textSecondary)
+                    .foregroundStyle(MaeksterColors.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
             }
-            .padding(.horizontal, MinidiscSpacing.xxxl)
+            .padding(.horizontal, MaeksterSpacing.xxxl)
 
             progressDots
         }
-        .padding(.top, MinidiscSpacing.xxl)
-        .padding(.bottom, MinidiscSpacing.l)
+        .padding(.top, MaeksterSpacing.xxl)
+        .padding(.bottom, MaeksterSpacing.l)
     }
 
     // MARK: - Progress dots
 
     private var progressDots: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             ForEach(0..<totalSteps, id: \.self) { i in
                 Capsule()
-                    .fill(i == stepIndex ? MinidiscColors.accent : Color.secondary.opacity(0.3))
+                    .fill(i == stepIndex ? MaeksterColors.accent : Color.secondary.opacity(0.3))
                     .frame(width: i == stepIndex ? 20 : 6, height: 6)
                     .animation(.easeInOut(duration: 0.25), value: stepIndex)
             }
@@ -74,7 +74,7 @@ struct OnboardingStepView<Content: View>: View {
     // MARK: - Bottom actions
 
     private var bottomActions: some View {
-        VStack(spacing: MinidiscSpacing.m) {
+        VStack(spacing: MaeksterSpacing.m) {
             Button(action: onContinue) {
                 Text(continueLabel)
                     .font(.system(.body, design: .default, weight: .semibold))
@@ -82,15 +82,15 @@ struct OnboardingStepView<Content: View>: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .tint(MinidiscColors.accent)
+            .tint(MaeksterColors.accent)
 
             Button("Skip", action: onSkip)
                 .font(.subheadline)
-                .foregroundStyle(MinidiscColors.textSecondary)
+                .foregroundStyle(MaeksterColors.textSecondary)
         }
-        .padding(.horizontal, MinidiscSpacing.xxxl)
-        .padding(.top, MinidiscSpacing.l)
-        .padding(.bottom, MinidiscSpacing.xxl)
+        .padding(.horizontal, MaeksterSpacing.xxxl)
+        .padding(.top, MaeksterSpacing.l)
+        .padding(.bottom, MaeksterSpacing.xxl)
         .background(.regularMaterial)
     }
 }

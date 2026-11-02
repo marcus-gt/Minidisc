@@ -6,23 +6,23 @@ struct DiscHeader: View {
     var title: String?
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             Image(systemName: "opticaldisc")
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
             Text("Disc \(discNumber)")
-                .font(.minidiscSectionTitle)
+                .font(.maeksterSectionTitle)
             if let title, !title.isEmpty {
                 Text(verbatim: title)
-                    .font(.minidiscCellSubtitle)
+                    .font(.maeksterCellSubtitle)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, MinidiscSpacing.l)
-        .padding(.top, MinidiscSpacing.l)
-        .padding(.bottom, MinidiscSpacing.xs)
+        .padding(.horizontal, MaeksterSpacing.l)
+        .padding(.top, MaeksterSpacing.l)
+        .padding(.bottom, MaeksterSpacing.xs)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }

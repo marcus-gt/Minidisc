@@ -14,7 +14,7 @@ private struct QueueRow: View {
 
     @Environment(\.appContainer) private var container
     @Environment(PlaylistAddition.self) private var playlistAddition
-    @Environment(\.minidiscPlayingAccent) private var playingAccent
+    @Environment(\.maeksterPlayingAccent) private var playingAccent
     @Query private var favoriteMatches: [FavoriteRecord]
 
     init(song: DisplayableSong, isCurrent: Bool, onRemove: (() -> Void)? = nil,
@@ -53,24 +53,24 @@ private struct QueueRow: View {
                     .accessibilityIdentifier("queue.reorder.\(song.id)")
             }
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .modifier(SongQuickActions(song: song, onAddToPlaylist: playlistAddition.present, onRemove: onRemove))
     }
 
     private var titleAndArtwork: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             CoverArtView(id: song.coverArtId ?? song.id, size: 88, loadingEnabled: loadArtwork)
                 .frame(width: 44, height: 44)
-                .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.xs)
+                .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.xs)
 
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 Text(song.title)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(isCurrent ? playingAccent : contentColor)
                     .lineLimit(1)
                 if let artist = song.artist {
                     Text(artist)
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(secondaryContentColor)
                         .lineLimit(1)
                 }
@@ -158,19 +158,19 @@ struct InlineQueueList: View {
 
     var body: some View {
         let entries = QueueRowSnapshot.capture(playerState)
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             if let label = playerState.playingFromLabel {
                 // Where the playing song comes from, laid out like Apple Music's "Continue Playing" (#71).
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Now playing")
-                        .font(.minidiscCellTitle.weight(.bold))
+                        .font(.maeksterCellTitle.weight(.bold))
                         .foregroundStyle(contentColor)
                     Text(label.title)
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(secondaryContentColor)
                 }
                 .lineLimit(1)
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
                 .accessibilityElement(children: .combine)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("queue.nowPlaying")
@@ -241,7 +241,7 @@ private struct QueueEntryRow: View {
     @Environment(\.appContainer) private var container
 
     /// Snug like Apple Music's queue: the List's default insets left ~82 pt per row.
-    static let rowInsets = EdgeInsets(top: 2, leading: MinidiscSpacing.l, bottom: 2, trailing: MinidiscSpacing.l)
+    static let rowInsets = EdgeInsets(top: 2, leading: MaeksterSpacing.l, bottom: 2, trailing: MaeksterSpacing.l)
 
     var body: some View {
         QueueRow(song: entry.song, isCurrent: false, onRemove: remove,
@@ -351,7 +351,7 @@ private struct LegacyQueueList: View {
 #if DEBUG
 #Preview("Queue") {
     let container = AppContainer.preview()
-    MinidiscPreview(container: container) {
+    MaeksterPreview(container: container) {
         InlineQueueList(
             playerState: container.playerState,
             contentColor: .white,
@@ -366,7 +366,7 @@ private struct LegacyQueueList: View {
 /// The iOS 26 list. The iOS 27 reorderable list above renders empty in the iOS 27 preview simulator.
 #Preview("Queue, iOS 26 list") {
     let container = AppContainer.preview()
-    MinidiscPreview(container: container) {
+    MaeksterPreview(container: container) {
         LegacyQueueList(
             entries: QueueRowSnapshot.capture(container.playerState),
             queueCount: container.playerState.queue.count,

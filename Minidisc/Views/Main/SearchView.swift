@@ -134,14 +134,14 @@ struct SearchView: View {
             }
             if container.serverState.isOnline { await viewModel?.loadPlaylists() }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterPlaylistsChanged)) { _ in
             Task { await viewModel?.loadPlaylists() }
         }
         .task(id: SearchRequest(serverId: loadedServerId, query: searchQuery, online: container?.serverState.isOnline == true)) {
             if container?.serverState.isOnline == true { await viewModel?.search(query: searchQuery) }
         }
         .sheet(item: $songSelection) { SongSelectionSheet(request: $0) }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
     }
 
     private var offlineMatches: [LibrarySearchMatch] {
@@ -185,7 +185,7 @@ struct SearchView: View {
             }
         } else if vm.isSearching || (scope == .playlists && vm.isLoadingPlaylists) {
             let title: LocalizedStringResource = matches.isEmpty ? "Searching…" : "Updating results…"
-            HStack(spacing: MinidiscSpacing.s) {
+            HStack(spacing: MaeksterSpacing.s) {
                 ProgressView()
                 Text(title)
                     .font(.subheadline).foregroundStyle(.secondary)
@@ -439,14 +439,14 @@ struct SearchView: View {
                     } header: {
                         HStack {
                             Text("Recent")
-                                .font(.minidiscSectionTitle)
+                                .font(.maeksterSectionTitle)
                                 .foregroundStyle(.primary)
                             Spacer()
                             Button("Clear") {
                                 showClearConfirm = true
                             }
-                            .font(.minidiscBody)
-                            .foregroundStyle(Color.minidiscAccent)
+                            .font(.maeksterBody)
+                            .foregroundStyle(Color.maeksterAccent)
                         }
                         .textCase(nil)
                     }

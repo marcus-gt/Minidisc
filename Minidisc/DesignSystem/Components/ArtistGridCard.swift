@@ -5,7 +5,7 @@ struct ArtistGridCard: View {
     let artist: ArtistID3
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             GeometryReader { geo in
                 CoverArtView(
                     id: artist.coverArt ?? artist.id,
@@ -13,7 +13,7 @@ struct ArtistGridCard: View {
                     placeholderSystemImage: "person.fill"
                 )
                 .frame(width: geo.size.width, height: geo.size.width)
-                .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
+                .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.standard)
             }
             .aspectRatio(1, contentMode: .fit)
 

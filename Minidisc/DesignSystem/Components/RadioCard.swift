@@ -11,10 +11,10 @@ struct RadioCard: View {
         Button {
             Task { await play() }
         } label: {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 cardBackground
                     .frame(width: 140, height: 140)
-                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
                 CoverCardMetadata(title: station.name)
             }
             .frame(width: 140, alignment: .leading)

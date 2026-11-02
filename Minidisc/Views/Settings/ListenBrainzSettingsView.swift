@@ -41,7 +41,7 @@ struct ListenBrainzSettingsView: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Button("Visit ListenBrainz →") {
-                ExternalLinkOpener.open(MinidiscURLs.listenBrainz)
+                ExternalLinkOpener.open(MaeksterURLs.listenBrainz)
             }
             .buttonStyle(.plain)
             .foregroundStyle(Color.accentColor)
@@ -79,7 +79,7 @@ struct ListenBrainzSettingsView: View {
             Button {
                 Task { await vm.connect() }
             } label: {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     if vm.isProcessing {
                         ProgressView().scaleEffect(0.8)
                     }
@@ -88,7 +88,7 @@ struct ListenBrainzSettingsView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(MinidiscColors.accent)
+            .tint(MaeksterColors.accent)
             .disabled(vm.usernameInput.isEmpty || vm.usernameInputValidationError != nil || vm.isProcessing)
 
             if let error = vm.userFacingError {
@@ -124,7 +124,7 @@ struct ListenBrainzSettingsView: View {
                 Button {
                     Task { await vm.revalidate() }
                 } label: {
-                    HStack(spacing: MinidiscSpacing.s) {
+                    HStack(spacing: MaeksterSpacing.s) {
                         if vm.isProcessing { ProgressView().scaleEffect(0.8) }
                         Text("Retry connection")
                     }
@@ -142,7 +142,7 @@ struct ListenBrainzSettingsView: View {
             Button {
                 Task { await vm.disconnect() }
             } label: {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     if vm.isProcessing { ProgressView().scaleEffect(0.8) }
                     Text("Disconnect")
                 }
@@ -172,14 +172,14 @@ struct ListenBrainzSettingsView: View {
                 vm.usernameInput = username
                 Task { await vm.connect() }
             } label: {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     if vm.isProcessing { ProgressView().scaleEffect(0.8) }
                     Text("Reconnect")
                 }
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(MinidiscColors.accent)
+            .tint(MaeksterColors.accent)
             .disabled(vm.isProcessing)
 
             Button("Forget username", role: .destructive) {
@@ -242,7 +242,7 @@ struct ListenBrainzSettingsView: View {
             Button {
                 Task { await vm.validateScrobblingToken() }
             } label: {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     if case .validating = vm.scrobblingConnectionState {
                         ProgressView().scaleEffect(0.8)
                     }
@@ -251,7 +251,7 @@ struct ListenBrainzSettingsView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(MinidiscColors.accent)
+            .tint(MaeksterColors.accent)
             .disabled(vm.tokenInput.isEmpty || vm.isScrobblingProcessing)
 
             if case .failed(let message) = vm.scrobblingConnectionState {

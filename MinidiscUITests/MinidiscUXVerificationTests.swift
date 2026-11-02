@@ -23,12 +23,12 @@ final class MinidiscUXVerificationTests: XCTestCase {
         let definitions = IntentDefinitions(bundleIdentifier: "io.github.marcus-gt.maekster")
         app.terminate()
 
-        let songs = try await definitions.entities["MinidiscMusicEntity"].entities(matching: firstTitle)
+        let songs = try await definitions.entities["MaeksterMusicEntity"].entities(matching: firstTitle)
         let song = try XCTUnwrap(songs.first)
         let title: String = try song.title
         XCTAssertEqual(title, firstTitle)
         let songID = try XCTUnwrap(song.identifier.instanceIdentifier)
-        let restored = try await definitions.entities["MinidiscMusicEntity"].entities(identifiers: [songID])
+        let restored = try await definitions.entities["MaeksterMusicEntity"].entities(identifiers: [songID])
         XCTAssertEqual(restored.count, 1)
 
         let siriMatches = try await definitions.entities["SiriSongEntity"].entities(matching: firstTitle)
@@ -58,7 +58,7 @@ final class MinidiscUXVerificationTests: XCTestCase {
         let playlists = try await definitions.entities["SiriPlaylistEntity"].entities(matching: "Discover Weekly")
         XCTAssertEqual(playlists.count, 1)
         XCTAssertEqual(try playlists[0].title, "Discover Weekly")
-        let music = try await definitions.entities["MinidiscMusicEntity"].entities(matching: "Discover Weekly")
+        let music = try await definitions.entities["MaeksterMusicEntity"].entities(matching: "Discover Weekly")
         let playlist = try XCTUnwrap(music.first)
         XCTAssertEqual(try playlist.title, "Discover Weekly")
         try await definitions.intents["PlayMinidiscMusicIntent"].makeIntent(music: playlist, shuffle: false).run()

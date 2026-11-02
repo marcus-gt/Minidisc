@@ -19,7 +19,7 @@ private actor FailingFavoriteEditor: FavoriteEditing {
 @Suite @MainActor
 struct FavoritesFailureTests {
     @Test func failedFavoriteActionsRestoreThePersistedState() async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let state = ServerState()
         state.activeServer = ServerSnapshot(from: ServerConfig(displayName: "Test", baseURL: "https://example.invalid", username: "test"))
         let editor = FailingFavoriteEditor()
@@ -37,10 +37,10 @@ struct FavoritesFailureTests {
     }
 
     @Test func missingServerCannotReportFavoriteSuccess() async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let service = FavoritesService(libraryService: FailingFavoriteEditor(), serverState: ServerState(), modelContainer: container)
         do { try await service.star(itemType: .song, itemId: "track"); Issue.record("Expected missing server") }
-        catch MinidiscError.serverNotConfigured { }
+        catch MaeksterError.serverNotConfigured { }
         #expect(try ModelContext(container).fetchCount(FetchDescriptor<FavoriteRecord>()) == 0)
     }
 }

@@ -136,7 +136,7 @@ struct PlaylistDetailView: View {
     private var bodyColor: Color { PlaylistArtworkPalette.background(for: dominantColor) }
     private var headerTextColor: Color { .white }
     private var headerSecondaryColor: Color { .white.opacity(0.7) }
-    private var heroIconColor: Color { .minidiscAccentSecondary }
+    private var heroIconColor: Color { .maeksterAccentSecondary }
 
     private var isLoadingSkeleton: Bool {
         viewModel == nil || (viewModel?.isLoading == true && viewModel?.songs.isEmpty == true)
@@ -214,7 +214,7 @@ struct PlaylistDetailView: View {
             } else if let vm = viewModel {
                 let songs = sortedSongs(resolvedSongs(vm))
                 if vm.isRemovedFromServer {
-                    VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                    VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                         Label("Playlist removed from server", systemImage: "music.note.list")
                             .font(.headline)
                         Text(songs.isEmpty
@@ -222,7 +222,7 @@ struct PlaylistDetailView: View {
                              : String(localized: "This playlist is no longer on the server. Your downloaded songs are still available."))
                             .font(.subheadline)
                         Button("Back to Library") {
-                            NotificationCenter.default.post(name: .minidiscNavigateToLibrary, object: nil)
+                            NotificationCenter.default.post(name: .maeksterNavigateToLibrary, object: nil)
                         }
                             .frame(minHeight: 44)
                     }
@@ -308,7 +308,7 @@ struct PlaylistDetailView: View {
         .environment(\.editMode, isEditing ? Binding.constant(EditMode.active) : nil)
         .scrollContentBackground(.hidden)
         .ignoresSafeArea(.container, edges: .top)
-        .minidiscHideTopScrollEdgeEffect()
+        .maeksterHideTopScrollEdgeEffect()
         .miniPlayerBottomMargin()
         .refreshable { await viewModel?.load() }
         .alert("Remove downloaded playlist?", isPresented: $showDeleteAlert) {
@@ -405,8 +405,8 @@ struct PlaylistDetailView: View {
             }
         }
         .background(bodyColor.ignoresSafeArea())
-        .minidiscContentWidth()
-        .environment(\.minidiscPlayingAccent, heroIconColor)
+        .maeksterContentWidth()
+        .environment(\.maeksterPlayingAccent, heroIconColor)
         .navigationTitle("")
         .navigationBarTitleDisplayModeInline()
         .navigationBarBackButtonHidden(true)
@@ -441,7 +441,7 @@ struct PlaylistDetailView: View {
         .task(id: [effectiveCoverArtId, coverRefreshID.uuidString]) {
             await loadCoverAppearance()
         }
-        .minidiscZoomTransition(sourceID: zoomSourceId, in: zoomNamespace)
+        .maeksterZoomTransition(sourceID: zoomSourceId, in: zoomNamespace)
     }
 
     // MARK: - Toolbar
@@ -501,7 +501,7 @@ struct PlaylistDetailView: View {
                 .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                MinidiscMoreMenu {
+                MaeksterMoreMenu {
                     Group {
                         Button("Select Songs", systemImage: "checkmark.circle") {
                             songSelection = SongSelectionRequest(songs: sortedSongs(resolvedSongs(viewModel)))
@@ -594,7 +594,7 @@ struct PlaylistDetailView: View {
     @ViewBuilder
     private var skeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 SkeletonBlock(width: 20, height: 20, cornerRadius: 4)
                 VStack(alignment: .leading, spacing: 6) {
                     SkeletonBlock(width: 200, height: 16, cornerRadius: 4)
@@ -602,8 +602,8 @@ struct PlaylistDetailView: View {
                 }
                 Spacer()
             }
-            .padding(.vertical, MinidiscSpacing.xs)
-            .listRowInsets(EdgeInsets(top: 0, leading: MinidiscSpacing.l, bottom: 0, trailing: MinidiscSpacing.l))
+            .padding(.vertical, MaeksterSpacing.xs)
+            .listRowInsets(EdgeInsets(top: 0, leading: MaeksterSpacing.l, bottom: 0, trailing: MaeksterSpacing.l))
             .listRowBackground(bodyColor)
             .listRowSeparator(.hidden)
         }
@@ -658,22 +658,22 @@ struct PlaylistDetailView: View {
     // MARK: - In-place edit header (iOS in-place editor; reuses the validated carousel + fields)
 
     private var editHeader: some View {
-        VStack(spacing: MinidiscSpacing.xl) {
+        VStack(spacing: MaeksterSpacing.xl) {
             editCoverCarousel
                 // Clear the (edit-mode) nav bar since the list bleeds under it via ignoresSafeArea(.top).
                 .padding(.top, 100)
-            VStack(spacing: MinidiscSpacing.s) {
+            VStack(spacing: MaeksterSpacing.s) {
                 TextField("Playlist Title", text: $editName)
-                    .font(.minidiscDetailTitle)
+                    .font(.maeksterDetailTitle)
                     .multilineTextAlignment(.center)
-                    .padding(.vertical, MinidiscSpacing.s)
+                    .padding(.vertical, MaeksterSpacing.s)
                 TextField("Description", text: $editComment, axis: .vertical)
                     .multilineTextAlignment(.center)
                     .lineLimit(1...4)
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
         }
-        .padding(.bottom, MinidiscSpacing.l)
+        .padding(.bottom, MaeksterSpacing.l)
     }
 
     private var editCoverCarousel: some View {
@@ -821,17 +821,17 @@ struct PlaylistDetailView: View {
     }
 
     private func editTrackRow(_ song: DisplayableSong) -> some View {
-        HStack(spacing: MinidiscSpacing.m) {
-            CoverArtView(id: song.coverArtId ?? song.id, size: 80, cornerRadius: MinidiscCornerRadius.standard)
+        HStack(spacing: MaeksterSpacing.m) {
+            CoverArtView(id: song.coverArtId ?? song.id, size: 80, cornerRadius: MaeksterCornerRadius.standard)
                 .frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.title)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(headerTextColor)
                     .lineLimit(1)
                 if let artist = song.artist {
                     Text(artist)
-                        .font(.minidiscCellSubtitle)
+                        .font(.maeksterCellSubtitle)
                         .foregroundStyle(headerSecondaryColor)
                         .lineLimit(1)
                 }
@@ -881,7 +881,7 @@ struct PlaylistDetailView: View {
                 backgroundColor: bodyColor
             )
 
-            VStack(spacing: MinidiscSpacing.l) {
+            VStack(spacing: MaeksterSpacing.l) {
                 PlaylistDetailMetadata(
                     title: vm?.name ?? initialName,
                     owner: vm?.owner,
@@ -921,8 +921,8 @@ struct PlaylistDetailView: View {
                     )
                 }
             }
-            .padding(.top, MinidiscSpacing.m)
-            .padding(.bottom, MinidiscSpacing.xxl)
+            .padding(.top, MaeksterSpacing.m)
+            .padding(.bottom, MaeksterSpacing.xxl)
         }
         .frame(maxWidth: .infinity)
     }
@@ -988,21 +988,21 @@ private struct PlaylistDownloadProgressView: View {
     }
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.xs) {
+        VStack(spacing: MaeksterSpacing.xs) {
             if downloaded == 0 {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     ProgressView().scaleEffect(0.8)
                     Text("Starting download…")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(secondaryColor)
                 }
             } else {
                 ProgressView(value: Double(downloaded), total: Double(max(total, 1)))
                     .progressViewStyle(.linear)
-                    .tint(Color.minidiscAccent)
+                    .tint(Color.maeksterAccent)
                     .frame(maxWidth: 280)
                 Text("Downloading \(downloaded)/\(total) tracks")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(secondaryColor)
             }
         }
@@ -1094,8 +1094,8 @@ struct PlaylistSongRows: View {
             index: index + 1,
             showCoverArt: true,
             coverArtSize: trailingAccessory == .favorite ? 48 : 44,
-            coverArtCornerRadius: trailingAccessory == .favorite ? MinidiscCornerRadius.xs : MinidiscCornerRadius.standard,
-            primaryContentSpacing: trailingAccessory == .favorite ? MinidiscSpacing.m : MinidiscSpacing.s,
+            coverArtCornerRadius: trailingAccessory == .favorite ? MaeksterCornerRadius.xs : MaeksterCornerRadius.standard,
+            primaryContentSpacing: trailingAccessory == .favorite ? MaeksterSpacing.m : MaeksterSpacing.s,
             isFavorite: favoriteSongIds.contains("song:\(song.id)"),
             titleColor: titleColor,
             secondaryColor: secondaryColor,
@@ -1109,7 +1109,7 @@ struct PlaylistSongRows: View {
             onTap: { onTap(index) }
         )
         .listRowInsets(trailingAccessory == .favorite
-            ? EdgeInsets(top: 5, leading: MinidiscSpacing.xl, bottom: 5, trailing: MinidiscSpacing.trackRowTrailing)
+            ? EdgeInsets(top: 5, leading: MaeksterSpacing.xl, bottom: 5, trailing: MaeksterSpacing.trackRowTrailing)
             : nil)
         .alignmentGuide(.listRowSeparatorLeading) { dimensions in
             trailingAccessory == .favorite ? 0 : dimensions[.listRowSeparatorLeading]

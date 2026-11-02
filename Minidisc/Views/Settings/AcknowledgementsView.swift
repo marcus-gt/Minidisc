@@ -12,8 +12,8 @@ struct AcknowledgementsView: View {
             }
 
             Section {
-                creditButton(project: "Minidisc", author: "NO HIT Dev", url: MinidiscURLs.minidisc)
-                creditButton(project: "Cassette", author: "Mathieu Dubart", url: MinidiscURLs.cassette)
+                creditButton(project: "Minidisc", author: "NO HIT Dev", url: MaeksterURLs.minidisc)
+                creditButton(project: "Cassette", author: "Mathieu Dubart", url: MaeksterURLs.cassette)
             } header: {
                 Text("Based On")
             } footer: {
@@ -22,7 +22,7 @@ struct AcknowledgementsView: View {
 
             Section("Open Source") {
                 Button {
-                    ExternalLinkOpener.open(MinidiscURLs.swiftSonic)
+                    ExternalLinkOpener.open(MaeksterURLs.swiftSonic)
                 } label: {
                     LabeledContent("SwiftSonic") {
                         Text("MIT License")
@@ -33,13 +33,13 @@ struct AcknowledgementsView: View {
 
             Section {
                 Button {
-                    ExternalLinkOpener.open(MinidiscURLs.navidrome)
+                    ExternalLinkOpener.open(MaeksterURLs.navidrome)
                 } label: {
                     Text("Navidrome")
                 }
                 .foregroundStyle(.primary)
                 Button {
-                    ExternalLinkOpener.open(MinidiscURLs.openSubsonic)
+                    ExternalLinkOpener.open(MaeksterURLs.openSubsonic)
                 } label: {
                     Text("OpenSubsonic")
                 }

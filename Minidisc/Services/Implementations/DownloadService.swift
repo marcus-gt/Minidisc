@@ -252,7 +252,7 @@ actor DownloadService: DownloadServiceProtocol {
             journalURL: journalURL, transport: transport,
             connection: { serverID in
                 let connection = try await server.activeConnection()
-                guard connection.version.serverID == serverID else { throw MinidiscError.serverNotFound(id: serverID) }
+                guard connection.version.serverID == serverID else { throw MaeksterError.serverNotFound(id: serverID) }
                 return connection
             },
             isDownloaded: { [weak self] songID, serverID in
@@ -475,14 +475,14 @@ actor DownloadService: DownloadServiceProtocol {
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? -1
             struct HTTPError: Error & Sendable { let statusCode: Int }
-            throw MinidiscError.downloadFailed(songId: song.id, underlying: HTTPError(statusCode: code))
+            throw MaeksterError.downloadFailed(songId: song.id, underlying: HTTPError(statusCode: code))
         }
 
         // Reject error envelopes and incomplete payloads before storing a permanent download.
         do {
             try AudioResponseValidator.validate(fileAt: tempURL, response: response, songId: song.id, logger: Logger.download)
         } catch {
-            throw MinidiscError.downloadFailed(songId: song.id, underlying: error)
+            throw MaeksterError.downloadFailed(songId: song.id, underlying: error)
         }
 
         let mimeType = response.mimeType ?? "audio/mpeg"
@@ -973,7 +973,7 @@ actor DownloadService: DownloadServiceProtocol {
         let client = connection.makeSwiftSonicClient()
         try checkDownloadCancellation()
         guard let artURL = client.coverArtURL(id: id, size: 600) else {
-            throw MinidiscError.mediaNotFound(songId: id)
+            throw MaeksterError.mediaNotFound(songId: id)
         }
 
         var request = URLRequest(url: artURL)
@@ -987,7 +987,7 @@ actor DownloadService: DownloadServiceProtocol {
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? -1
             struct HTTPError: Error & Sendable { let statusCode: Int }
-            throw MinidiscError.downloadFailed(songId: id, underlying: HTTPError(statusCode: code))
+            throw MaeksterError.downloadFailed(songId: id, underlying: HTTPError(statusCode: code))
         }
 
         try FileManager.default.createDirectory(at: coverArtsDirectory, withIntermediateDirectories: true)

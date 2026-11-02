@@ -107,7 +107,7 @@ struct RecentlyAddedView: View {
         }
         .listStyle(.plain)
         .ignoresSafeArea(.container, edges: .top)
-        .minidiscHideTopScrollEdgeEffect()
+        .maeksterHideTopScrollEdgeEffect()
         .background(bodyColor.ignoresSafeArea())
         .refreshable {
             if container?.serverState.isOnline == true {
@@ -119,22 +119,22 @@ struct RecentlyAddedView: View {
     }
 
     private var heroContent: some View {
-        VStack(spacing: MinidiscSpacing.s) {
+        VStack(spacing: MaeksterSpacing.s) {
             Text("Recently Added")
                 .font(.system(.title, weight: .semibold))
                 .foregroundStyle(headerTextColor)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             // Held back until the fetch resolves — the hero renders before it, and "0 songs" flashing
             // under the title reads like an empty playlist.
             if viewModel?.isLoading == false {
                 Text("\(songs.count) songs")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(headerSecondaryColor)
-                    .padding(.bottom, MinidiscSpacing.xs)
+                    .padding(.bottom, MaeksterSpacing.xs)
             }
 
-            HStack(spacing: MinidiscSpacing.l) {
+            HStack(spacing: MaeksterSpacing.l) {
                 Button {
                     let shuffled = songs.shuffled()
                     Task { await container?.toastService.perform { try await container?.playerService.play(tracks: shuffled, startIndex: 0, source: .recentlyAdded) } }

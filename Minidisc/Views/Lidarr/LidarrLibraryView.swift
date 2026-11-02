@@ -15,7 +15,7 @@ struct LidarrLibraryView: View {
     @AppStorage("minidisc.lidarrArtistSort") private var artistSort: ArtistSort = .name
     @AppStorage("minidisc.lidarrLibraryGrid") private var gridLayout = true
 
-    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MinidiscSpacing.m)]
+    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MaeksterSpacing.m)]
 
     private var isOffline: Bool { container?.serverState.isOnline == false || failedOffline }
 
@@ -77,7 +77,7 @@ struct LidarrLibraryView: View {
             }
             if !artists.isEmpty || !isOffline {
                 ToolbarItem(placement: .primaryAction) {
-                    MinidiscMoreMenu {
+                    MaeksterMoreMenu {
                         if !isOffline {
                             Button("Add Artist", systemImage: "plus") { showSearch = true }
                             Button("Activity", systemImage: "waveform.path.ecg") { showActivity = true }
@@ -128,7 +128,7 @@ struct LidarrLibraryView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 if gridLayout {
-                    LazyVGrid(columns: columns, spacing: MinidiscSpacing.l) {
+                    LazyVGrid(columns: columns, spacing: MaeksterSpacing.l) {
                         ForEach(sortedArtists) { artist in
                             NavigationLink(value: artist) {
                                 if let client {
@@ -139,7 +139,7 @@ struct LidarrLibraryView: View {
                             .id(artist.id)
                         }
                     }
-                    .padding(MinidiscSpacing.l)
+                    .padding(MaeksterSpacing.l)
                 } else {
                     LazyVStack(spacing: 0) {
                         ForEach(sortedArtists) { artist in
@@ -152,8 +152,8 @@ struct LidarrLibraryView: View {
                             .id(artist.id)
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.l)
-                    .padding(.vertical, MinidiscSpacing.s)
+                    .padding(.horizontal, MaeksterSpacing.l)
+                    .padding(.vertical, MaeksterSpacing.s)
                 }
             }
             .safeAreaInset(edge: .trailing, spacing: 0) {
@@ -231,24 +231,24 @@ private struct LidarrArtistCell: View {
     let client: LidarrClient
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             // Size the cell before overlaying artwork so wide banners cannot expand the grid column.
             Color.clear
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     LidarrCoverImage(path: artist.posterPath, client: client) {
-                        RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+                        RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                             .fill(Color.secondary.opacity(0.15))
                             .overlay { Image(systemName: "music.mic").font(.title).foregroundStyle(.secondary) }
                     }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+                .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
             .overlay(alignment: .topTrailing) {
                 if !artist.monitored {
                     Image(systemName: "bookmark.slash.fill")
                         .font(.caption)
                         .foregroundStyle(.white, .black.opacity(0.4))
-                        .padding(MinidiscSpacing.xs)
+                        .padding(MaeksterSpacing.xs)
                 }
             }
 
@@ -269,24 +269,24 @@ private struct LidarrArtistRow: View {
     let client: LidarrClient
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Color.clear
                 .frame(width: 44, height: 44)
                 .overlay {
                     LidarrCoverImage(path: artist.posterPath, client: client) {
-                        RoundedRectangle(cornerRadius: MinidiscCornerRadius.s)
+                        RoundedRectangle(cornerRadius: MaeksterCornerRadius.s)
                             .fill(Color.secondary.opacity(0.15))
                             .overlay { Image(systemName: "music.mic").foregroundStyle(.secondary) }
                     }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.s))
+                .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.s))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(artist.artistName)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .lineLimit(1)
                 Text(artist.statistics?.albumCount == 1 ? "1 album" : "\(artist.statistics?.albumCount ?? 0) albums")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -297,7 +297,7 @@ private struct LidarrArtistRow: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.vertical, MinidiscSpacing.s)
+        .padding(.vertical, MaeksterSpacing.s)
         .contentShape(Rectangle())
     }
 }

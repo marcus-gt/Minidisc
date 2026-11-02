@@ -73,7 +73,7 @@ actor MoodPlaylistService {
             }
             Logger.moodPlaylists.info("[MOOD] deleted \(deleted, privacy: .public) old mood playlists, \(failed, privacy: .public) failed")
             if deleted > 0 {
-                Task { @MainActor in NotificationCenter.default.post(name: .minidiscPlaylistsChanged, object: nil) }
+                Task { @MainActor in NotificationCenter.default.post(name: .maeksterPlaylistsChanged, object: nil) }
             }
             return .finished(deleted: deleted, failed: failed)
         } catch is CancellationError { return .cancelled }

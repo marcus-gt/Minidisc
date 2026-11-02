@@ -8,7 +8,7 @@ struct AlbumCarouselCollectionView: View {
     private let continuesRecentlyAdded: Bool
     @State private var pager: RecentlyAddedAlbumPager?
     private let columns = [
-        GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MinidiscSpacing.l)
+        GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MaeksterSpacing.l)
     ]
 
     /// With `continuesRecentlyAdded`, `albums` is the newest-first page already loaded and scrolling
@@ -27,7 +27,7 @@ struct AlbumCarouselCollectionView: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: MinidiscSpacing.l) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: MaeksterSpacing.l) {
                 ForEach(container?.visibleAlbums(pager?.albums ?? albums) ?? []) { album in
                     NavigationLink {
                         AlbumDetailView(album: album)
@@ -42,14 +42,14 @@ struct AlbumCarouselCollectionView: View {
                     }
                 }
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
             if pager?.isLoadingMore == true {
                 ProgressView()
                     .frame(maxWidth: .infinity)
-                    .padding(.bottom, MinidiscSpacing.l)
+                    .padding(.bottom, MaeksterSpacing.l)
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -66,7 +66,7 @@ struct PlaylistCarouselCollectionView: View {
     private let title: Text
     private let playlists: [Playlist]
     private let columns = [
-        GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MinidiscSpacing.l)
+        GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MaeksterSpacing.l)
     ]
 
     init(_ title: LocalizedStringResource, playlists: [Playlist]) {
@@ -76,7 +76,7 @@ struct PlaylistCarouselCollectionView: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: MinidiscSpacing.l) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: MaeksterSpacing.l) {
                 ForEach(container?.visiblePlaylists(playlists) ?? []) { playlist in
                     NavigationLink {
                         PlaylistDetailView(
@@ -91,9 +91,9 @@ struct PlaylistCarouselCollectionView: View {
                                            displaySubtitle: playlist.owner ?? "", coverArtId: playlist.coverArt)
                 }
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -103,7 +103,7 @@ private struct PlaylistCarouselGridCell: View {
     let playlist: Playlist
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             GeometryReader { geometry in
                 PlaylistCoverThumbnail(
                     playlistId: playlist.id,

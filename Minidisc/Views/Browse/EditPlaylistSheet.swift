@@ -40,7 +40,7 @@ struct EditPlaylistSheet: View {
             List(selection: $selectedSongIds) {
                 Section {
                     coverCarousel
-                        .listRowInsets(EdgeInsets(top: MinidiscSpacing.s, leading: 0, bottom: MinidiscSpacing.s, trailing: 0))
+                        .listRowInsets(EdgeInsets(top: MaeksterSpacing.s, leading: 0, bottom: MaeksterSpacing.s, trailing: 0))
                         .listRowSeparator(.hidden)
                 }
 
@@ -48,7 +48,7 @@ struct EditPlaylistSheet: View {
                     TextField("Playlist Title", text: $editName)
                         .font(.system(.title2, weight: .semibold))
                         .multilineTextAlignment(.center)
-                        .padding(.vertical, MinidiscSpacing.xs)
+                        .padding(.vertical, MaeksterSpacing.xs)
                     TextField("Description", text: $editComment, axis: .vertical)
                         .multilineTextAlignment(.center)
                         .lineLimit(1...4)
@@ -169,13 +169,13 @@ struct EditPlaylistSheet: View {
     }
 
     private func trackRow(_ song: DisplayableSong) -> some View {
-        HStack(spacing: MinidiscSpacing.m) {
-            CoverArtView(id: song.coverArtId ?? song.id, size: 80, cornerRadius: MinidiscCornerRadius.standard)
+        HStack(spacing: MaeksterSpacing.m) {
+            CoverArtView(id: song.coverArtId ?? song.id, size: 80, cornerRadius: MaeksterCornerRadius.standard)
                 .frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text(song.title).font(.minidiscCellTitle).lineLimit(1)
+                Text(song.title).font(.maeksterCellTitle).lineLimit(1)
                 if let artist = song.artist {
-                    Text(artist).font(.minidiscCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
+                    Text(artist).font(.maeksterCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
         }

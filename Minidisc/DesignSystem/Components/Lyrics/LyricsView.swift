@@ -114,14 +114,14 @@ struct LyricsView: View {
                 }
             } label: {
                 Label("Follow", systemImage: "arrow.down.circle.fill")
-                    .font(.minidiscCellTitle)
-                    .padding(.horizontal, MinidiscSpacing.m)
-                    .padding(.vertical, MinidiscSpacing.s)
+                    .font(.maeksterCellTitle)
+                    .padding(.horizontal, MaeksterSpacing.m)
+                    .padding(.vertical, MaeksterSpacing.s)
                     .background(.ultraThinMaterial, in: Capsule())
                     .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
-            .padding(.bottom, MinidiscSpacing.m)
+            .padding(.bottom, MaeksterSpacing.m)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
@@ -134,7 +134,7 @@ struct LyricsView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
             Text("No lyrics available")
-                .font(.minidiscDetailTitle)
+                .font(.maeksterDetailTitle)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -146,7 +146,7 @@ struct LyricsView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
             Text("Lyrics not supported")
-                .font(.minidiscDetailTitle)
+                .font(.maeksterDetailTitle)
                 .foregroundStyle(.secondary)
             Text("Update your Navidrome server to enable the songLyrics extension")
                 .font(.callout)
@@ -163,7 +163,7 @@ struct LyricsView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
             Text("Failed to load lyrics")
-                .font(.minidiscDetailTitle)
+                .font(.maeksterDetailTitle)
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.secondary)

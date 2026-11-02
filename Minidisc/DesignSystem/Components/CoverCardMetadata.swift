@@ -11,7 +11,7 @@ struct CoverCardMetadata: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: title)
-                .font(.minidiscCellTitle)
+                .font(.maeksterCellTitle)
                 .foregroundStyle(titleColor)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                 .truncationMode(.tail)
@@ -19,7 +19,7 @@ struct CoverCardMetadata: View {
 
             if let subtitle, !subtitle.isEmpty {
                 Text(verbatim: subtitle)
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(secondaryColor)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                     .truncationMode(.tail)
@@ -27,7 +27,7 @@ struct CoverCardMetadata: View {
 
             if let detail, !detail.isEmpty {
                 Text(verbatim: detail)
-                    .font(.minidiscCaption2)
+                    .font(.maeksterCaption2)
                     .foregroundStyle(secondaryColor)
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
                     .truncationMode(.tail)

@@ -18,10 +18,10 @@ struct FavoritesView: View {
                 LoadingStateView()
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Favorites")
         .toolbarTitleDisplayMode(.inline)
-        .minidiscFilterable(text: $filterText, prompt: "Filter favorites")
+        .maeksterFilterable(text: $filterText, prompt: "Filter favorites")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 LibrarySortMenu(sort: $sort)
@@ -123,7 +123,7 @@ struct FavoritesView: View {
     private func songsSection(_ songs: [DisplayableSong]) -> some View {
         if !songs.isEmpty {
             Section {
-                HStack(spacing: MinidiscSpacing.m) {
+                HStack(spacing: MaeksterSpacing.m) {
                     Button {
                         HapticFeedback.medium.trigger()
                         Task {
@@ -132,7 +132,7 @@ struct FavoritesView: View {
                     } label: {
                         Label("Play", systemImage: "play.fill")
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, MinidiscSpacing.s)
+                            .padding(.vertical, MaeksterSpacing.s)
                     }
 
                     Button {
@@ -147,11 +147,11 @@ struct FavoritesView: View {
                     } label: {
                         Label("Shuffle", systemImage: "shuffle")
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, MinidiscSpacing.s)
+                            .padding(.vertical, MaeksterSpacing.s)
                     }
                 }
                 .buttonStyle(.bordered)
-                .tint(.minidiscAccent)
+                .tint(.maeksterAccent)
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .padding(.vertical, 4)

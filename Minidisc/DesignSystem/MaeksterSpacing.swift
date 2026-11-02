@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Spacing scale (4pt grid)
 
-nonisolated enum MinidiscSpacing {
+nonisolated enum MaeksterSpacing {
     static let xs: CGFloat    = 4
     static let s: CGFloat     = 8
     static let m: CGFloat     = 12
@@ -27,7 +27,7 @@ nonisolated enum MinidiscSpacing {
 
 // MARK: - Corner radius scale
 
-enum MinidiscCornerRadius {
+enum MaeksterCornerRadius {
     static let xs: CGFloat       = 4
     static let s: CGFloat        = 6
     static let standard: CGFloat = 8    // all cover arts, most cards
@@ -39,7 +39,7 @@ enum MinidiscCornerRadius {
 // MARK: - Control sizes
 
 /// Tap-target diameters for circular controls. Never go below `regular` (44pt HIG minimum) for primary actions.
-enum MinidiscControlSize {
+enum MaeksterControlSize {
     static let compact: CGFloat   = 36   // inline accessories (row hearts)
     static let regular: CGFloat   = 44   // secondary circle buttons, toolbars
     static let large: CGFloat     = 52   // album / artist / playlist action rows (all buttons equal)
@@ -47,7 +47,7 @@ enum MinidiscControlSize {
 
 // MARK: - Shadow presets
 
-enum MinidiscShadow {
+enum MaeksterShadow {
     static let coverRadius: CGFloat  = 8
     static let coverY: CGFloat       = 4
     static let coverOpacity: Double  = 0.15
@@ -63,21 +63,21 @@ struct ContentWidthModifier: ViewModifier {
 }
 
 extension View {
-    func minidiscContentWidth() -> some View {
+    func maeksterContentWidth() -> some View {
         modifier(ContentWidthModifier())
     }
 
     /// Hides the iOS 26 scroll-edge effect (the soft blur the system fades under top bars). Used on the
     /// immersive detail scroll views, where the cover scrolls under a transparent nav bar and the blur would
     /// otherwise flicker in/out behind it.
-    func minidiscHideTopScrollEdgeEffect() -> some View {
+    func maeksterHideTopScrollEdgeEffect() -> some View {
         scrollEdgeEffectHidden(true, for: .top)
     }
 }
 
 // MARK: - View modifier: cover art style
 
-struct MinidiscCoverModifier: ViewModifier {
+struct MaeksterCoverModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     let cornerRadius: CGFloat
 
@@ -87,14 +87,14 @@ struct MinidiscCoverModifier: ViewModifier {
             .overlay {
                 if colorScheme == .dark {
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(Color.minidiscCoverBorder, lineWidth: 1)
+                        .stroke(Color.maeksterCoverBorder, lineWidth: 1)
                 }
             }
     }
 }
 
 extension View {
-    func minidiscCoverStyle(cornerRadius: CGFloat = MinidiscCornerRadius.standard) -> some View {
-        modifier(MinidiscCoverModifier(cornerRadius: cornerRadius))
+    func maeksterCoverStyle(cornerRadius: CGFloat = MaeksterCornerRadius.standard) -> some View {
+        modifier(MaeksterCoverModifier(cornerRadius: cornerRadius))
     }
 }

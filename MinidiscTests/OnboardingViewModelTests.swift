@@ -38,7 +38,7 @@ final class MockServerService: ServerServiceProtocol {
     func loadPersistedState() async {}
     func activeConnectionVersion() async -> ServerConnection.Version? { connection?.version }
     func activeConnection() async throws -> ServerConnection {
-        guard let connection else { throw MinidiscError.notImplemented }
+        guard let connection else { throw MaeksterError.notImplemented }
         return connection
     }
 }
@@ -112,7 +112,7 @@ struct OnboardingViewModelTests {
 
     @Test func testConnection_unknownError_wrapsAsUnknown() async {
         let service = MockServerService()
-        service.testConnectionError = MinidiscError.notImplemented
+        service.testConnectionError = MaeksterError.notImplemented
         let vm = makeViewModel(service: service)
 
         await vm.testConnection()
@@ -157,7 +157,7 @@ struct OnboardingViewModelTests {
 
     @Test func addServer_persistFails_setsUnknownError() async {
         let service = MockServerService()
-        service.addServerError = MinidiscError.keychainWriteFailed(-1)
+        service.addServerError = MaeksterError.keychainWriteFailed(-1)
         let vm = makeViewModel(service: service)
 
         await vm.addServer()

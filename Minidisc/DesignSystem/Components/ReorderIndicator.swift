@@ -4,18 +4,18 @@ import SwiftUI
 struct ReorderIndicator: View {
     var isActive: Bool = false
 
-    @Environment(\.minidiscPlayingAccent) private var playingAccent
+    @Environment(\.maeksterPlayingAccent) private var playingAccent
 
     var body: some View {
         Image(systemName: "line.3.horizontal")
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .foregroundStyle(isActive ? playingAccent : Color.secondary)
             .accessibilityLabel("Reorder")
     }
 }
 
 #Preview("Light") {
-    HStack(spacing: MinidiscSpacing.l) {
+    HStack(spacing: MaeksterSpacing.l) {
         ReorderIndicator()
         ReorderIndicator(isActive: true)
     }
@@ -23,7 +23,7 @@ struct ReorderIndicator: View {
 }
 
 #Preview("Dark") {
-    HStack(spacing: MinidiscSpacing.l) {
+    HStack(spacing: MaeksterSpacing.l) {
         ReorderIndicator()
         ReorderIndicator(isActive: true)
     }

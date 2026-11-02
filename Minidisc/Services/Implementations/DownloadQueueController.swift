@@ -267,7 +267,7 @@ actor DownloadQueueController {
                 // No active connection (or an inactive server) keeps the durable request queued.
                 // Explicit transfer/commit failures are handled separately and remain retryable.
                 guard jobs[id] != nil else { starting.remove(id); continue }
-                if let error = error as? MinidiscError {
+                if let error = error as? MaeksterError {
                     switch error {
                     case .serverNotConfigured, .serverNotFound: jobs[id]?.status = .queued
                     default: fail(id, error: UserFacingError.from(error))

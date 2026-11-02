@@ -31,7 +31,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Settings")
         .task {
             guard let container else { return }
@@ -126,12 +126,12 @@ struct SettingsView: View {
     private func aboutSection() -> some View {
         Section {
             // "Leave a Review" and "Share the App" return once maekster has its own App Store listing.
-            Link(destination: MinidiscURLs.repoIssues) {
+            Link(destination: MaeksterURLs.repoIssues) {
                 Label("Report an Issue", systemImage: "exclamationmark.bubble")
             }
             .foregroundStyle(.primary)
             Button {
-                ExternalLinkOpener.open(MinidiscURLs.repo)
+                ExternalLinkOpener.open(MaeksterURLs.repo)
             } label: {
                 Label("View on GitHub", systemImage: "link")
             }
@@ -186,7 +186,7 @@ struct StorageSettingsView: View {
             if !vm.displayAlbums.isEmpty {
                 DisclosureGroup {
                     ForEach(vm.displayAlbums) { album in
-                        HStack(spacing: MinidiscSpacing.m) {
+                        HStack(spacing: MaeksterSpacing.m) {
                             CoverArtCard(id: album.coverArtId ?? album.albumId, size: 40)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(album.name)
@@ -221,7 +221,7 @@ struct StorageSettingsView: View {
             if !vm.downloadedPlaylists.isEmpty {
                 DisclosureGroup {
                     ForEach(vm.downloadedPlaylists) { playlist in
-                        HStack(spacing: MinidiscSpacing.m) {
+                        HStack(spacing: MaeksterSpacing.m) {
                             CoverArtCard(id: playlist.playlistId, size: 40)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(playlist.name)
@@ -251,7 +251,7 @@ struct StorageSettingsView: View {
                 showClearDownloadsConfirm = true
             } label: {
                 if vm.isClearingAll {
-                    HStack(spacing: MinidiscSpacing.s) {
+                    HStack(spacing: MaeksterSpacing.s) {
                         ProgressView().scaleEffect(0.8)
                         Text("Clearing…")
                     }
@@ -362,7 +362,7 @@ struct StorageSettingsView: View {
                     showClearCacheConfirm = true
                 } label: {
                     if isClearingCache {
-                        HStack(spacing: MinidiscSpacing.s) {
+                        HStack(spacing: MaeksterSpacing.s) {
                             ProgressView().scaleEffect(0.8)
                             Text("Clearing…")
                         }
@@ -656,7 +656,7 @@ private struct LibraryIndexStorageSection: View {
                 ProgressView()
             }
         case .fullIndex(let completed, let total):
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 if total > 0 {
                     ProgressView(value: Double(completed), total: Double(total))
                     Text("\(completed) of \(total) albums")
@@ -842,10 +842,10 @@ private struct LyricsSettingsSection: View {
                 Text("Timing")
             } minimumValueLabel: {
                 Text("Earlier")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
             } maximumValueLabel: {
                 Text("Later")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
             }
             if settings.timingOffsetMs != 0 {
                 Button("Reset") { settings.timingOffsetMs = 0 }

@@ -50,15 +50,15 @@ struct LidarrReleaseDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.l) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
                 headerSection
                 if release.isRejected { rejectionBanner }
                 actionButtons
                 infoSection
             }
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.top, MinidiscSpacing.xl)
-            .padding(.bottom, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.top, MaeksterSpacing.xl)
+            .padding(.bottom, MaeksterSpacing.l)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
@@ -81,20 +81,20 @@ struct LidarrReleaseDetailView: View {
     // MARK: - Header
 
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            HStack(alignment: .top, spacing: MinidiscSpacing.m) {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            HStack(alignment: .top, spacing: MaeksterSpacing.m) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                     if let flag = release.flagLabel {
                         Text(flag)
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .fontWeight(.bold)
-                            .foregroundStyle(Color.minidiscAccent)
+                            .foregroundStyle(Color.maeksterAccent)
                     }
                     Text(release.title)
-                        .font(.minidiscDetailTitle)
+                        .font(.maeksterDetailTitle)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    HStack(spacing: MinidiscSpacing.xs) {
+                    HStack(spacing: MaeksterSpacing.xs) {
                         if let quality = release.qualityName { Text(quality) }
                         if let size = release.size {
                             Text("·")
@@ -105,7 +105,7 @@ struct LidarrReleaseDetailView: View {
                             Text(LidarrFormat.age(days: age))
                         }
                     }
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
@@ -124,11 +124,11 @@ struct LidarrReleaseDetailView: View {
 
             if !release.flags.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: MinidiscSpacing.xs) {
+                    HStack(spacing: MaeksterSpacing.xs) {
                         ForEach(release.flags, id: \.self) { flag in
                             Text(flag)
-                                .font(.minidiscCaption)
-                                .padding(.horizontal, MinidiscSpacing.s)
+                                .font(.maeksterCaption)
+                                .padding(.horizontal, MaeksterSpacing.s)
                                 .padding(.vertical, 4)
                                 .background(Color.secondary.opacity(0.15), in: Capsule())
                         }
@@ -141,31 +141,31 @@ struct LidarrReleaseDetailView: View {
     // MARK: - Rejection
 
     private var rejectionBanner: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             Label("Release Rejected", systemImage: "exclamationmark.triangle.fill")
-                .font(.minidiscCellTitle)
+                .font(.maeksterCellTitle)
                 .fontWeight(.bold)
                 .foregroundStyle(.orange)
             ForEach(release.rejections ?? [], id: \.self) { reason in
                 Text(reason)
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(MinidiscSpacing.m)
-        .background(Color.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+        .padding(MaeksterSpacing.m)
+        .background(Color.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
     }
 
     // MARK: - Actions
 
     private var actionButtons: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             if let url = release.infoURL {
                 Link(destination: url) {
                     Label("Website", systemImage: "arrow.up.right.square")
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, MinidiscSpacing.s)
+                        .padding(.vertical, MaeksterSpacing.s)
                 }
             }
             Button {
@@ -180,20 +180,20 @@ struct LidarrReleaseDetailView: View {
                     Text("Download")
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
             }
             .disabled(isGrabbing)
         }
         .buttonStyle(.bordered)
-        .tint(.minidiscAccent)
+        .tint(.maeksterAccent)
     }
 
     // MARK: - Information
 
     private var infoSection: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             Text("Information")
-                .font(.minidiscShelfTitle)
+                .font(.maeksterShelfTitle)
 
             VStack(spacing: 0) {
                 infoRow("Protocol", release.isTorrent ? "Torrent" : "Usenet")
@@ -213,14 +213,14 @@ struct LidarrReleaseDetailView: View {
     private func infoRow(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
-                .font(.minidiscBody)
+                .font(.maeksterBody)
                 .foregroundStyle(.secondary)
-            Spacer(minLength: MinidiscSpacing.m)
+            Spacer(minLength: MaeksterSpacing.m)
             Text(value)
-                .font(.minidiscBody)
+                .font(.maeksterBody)
                 .multilineTextAlignment(.trailing)
         }
-        .padding(.vertical, MinidiscSpacing.s)
+        .padding(.vertical, MaeksterSpacing.s)
         Divider()
     }
 
@@ -305,19 +305,19 @@ private struct LidarrAlbumPickerSheet: View {
                     Button {
                         onSelect(album.id)
                     } label: {
-                        HStack(spacing: MinidiscSpacing.m) {
+                        HStack(spacing: MaeksterSpacing.m) {
                             LidarrCoverImage(path: album.coverPath, client: client) {
-                                RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+                                RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                                     .fill(Color.secondary.opacity(0.15))
                                     .overlay { Image(systemName: "opticaldisc").foregroundStyle(.secondary) }
                             }
                             .frame(width: 44, height: 44)
-                            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+                            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
 
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(album.title).font(.minidiscCellTitle).lineLimit(1)
+                                Text(album.title).font(.maeksterCellTitle).lineLimit(1)
                                 if let year = album.year {
-                                    Text(year).font(.minidiscCaption).foregroundStyle(.secondary)
+                                    Text(year).font(.maeksterCaption).foregroundStyle(.secondary)
                                 }
                             }
                             Spacer(minLength: 0)
@@ -329,7 +329,7 @@ private struct LidarrAlbumPickerSheet: View {
             } header: {
                 Text("Lidarr could not parse this release. Choose the album it belongs to.")
                     .textCase(nil)
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
             }
         }

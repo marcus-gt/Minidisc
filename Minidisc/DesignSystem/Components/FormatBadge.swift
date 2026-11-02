@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A short all-caps audio format label (FLAC, MP3, ALAC). Lossless formats use `minidiscLossless`.
+/// A short all-caps audio format label (FLAC, MP3, ALAC). Lossless formats use `maeksterLossless`.
 struct FormatBadge: View {
     let format: String
 
@@ -8,12 +8,12 @@ struct FormatBadge: View {
 
     var body: some View {
         Text(verbatim: format.uppercased())
-            .font(.minidiscBadge)
-            .foregroundStyle(isLossless ? AnyShapeStyle(Color.minidiscLossless) : AnyShapeStyle(.secondary))
-            .padding(.horizontal, MinidiscSpacing.s - 2)
+            .font(.maeksterBadge)
+            .foregroundStyle(isLossless ? AnyShapeStyle(Color.maeksterLossless) : AnyShapeStyle(.secondary))
+            .padding(.horizontal, MaeksterSpacing.s - 2)
             .padding(.vertical, 2)
             .background(
-                Capsule().fill(isLossless ? AnyShapeStyle(Color.minidiscLossless.opacity(0.18)) : AnyShapeStyle(.primary.opacity(0.12)))
+                Capsule().fill(isLossless ? AnyShapeStyle(Color.maeksterLossless.opacity(0.18)) : AnyShapeStyle(.primary.opacity(0.12)))
             )
             .accessibilityLabel(Text(isLossless ? "\(format.uppercased()), lossless" : "\(format.uppercased())"))
     }

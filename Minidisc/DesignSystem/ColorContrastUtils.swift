@@ -1,6 +1,6 @@
 import SwiftUI
 
-extension MinidiscColors {
+extension MaeksterColors {
     // Relative luminance: #FF6242 ≈ 0.304; #8F2408 ≈ 0.071.
     private static let accentFgLight = Color(hex: "#FF6242")
     private static let accentFgDark  = Color(hex: "#8F2408")

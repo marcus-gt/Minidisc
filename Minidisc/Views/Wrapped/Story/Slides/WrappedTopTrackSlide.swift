@@ -12,14 +12,14 @@ struct WrappedTopTrackSlide: View {
             WrappedArtBackdrop(artworkID: topTrack?.trackId, palette: palette)
 
             VStack(spacing: 0) {
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
                 WrappedSlideLabel("YOUR #1 TRACK")
-                Spacer(minLength: MinidiscSpacing.l)
+                Spacer(minLength: MaeksterSpacing.l)
 
                 if let track = topTrack {
                     WrappedSlideCover(artworkID: track.trackId)
 
-                    VStack(spacing: MinidiscSpacing.xs) {
+                    VStack(spacing: MaeksterSpacing.xs) {
                         Text(track.title)
                             .font(.system(size: 28, weight: .black, design: .rounded))
                             .kerning(-0.5)
@@ -32,25 +32,25 @@ struct WrappedTopTrackSlide: View {
                             .foregroundStyle(.white.opacity(0.8))
                             .lineLimit(1)
                     }
-                    .padding(.horizontal, MinidiscSpacing.xl)
-                    .padding(.top, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.xl)
+                    .padding(.top, MaeksterSpacing.l)
 
-                    Spacer(minLength: MinidiscSpacing.l)
+                    Spacer(minLength: MaeksterSpacing.l)
 
-                    VStack(spacing: MinidiscSpacing.s) {
+                    VStack(spacing: MaeksterSpacing.s) {
                         ForEach(runnersUp) { entry in
                             WrappedRunnerUpRow(rank: entry.rank, artworkID: entry.trackId, title: entry.title,
                                                subtitle: entry.artistName, detail: entry.playCount.plural("play", "plays"))
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.xl)
+                    .padding(.horizontal, MaeksterSpacing.xl)
                 } else {
                     Text("No track data yet")
                         .font(.system(.title2, design: .rounded, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
 
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
             }
             .wrappedSlideEntrance()
         }
@@ -67,7 +67,7 @@ struct WrappedSlideCover: View {
 
     var body: some View {
         CoverArtCard(id: artworkID, size: Self.size, tier: .hero,
-                     cornerRadius: isArtist ? Self.size / 2 : MinidiscCornerRadius.large,
+                     cornerRadius: isArtist ? Self.size / 2 : MaeksterCornerRadius.large,
                      placeholderSystemImage: isArtist ? "person.fill" : "music.note")
             .shadow(color: .black.opacity(0.4), radius: 24, y: 12)
     }

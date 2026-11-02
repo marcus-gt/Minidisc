@@ -12,7 +12,7 @@ Navibeat details, while keeping the rest of the app visually coherent.
 | Artwork-tinted screens | Always dark (player, album, artist, playlist), cover-derived tint, regardless of system appearance |
 | Track rows | No trailing "…" button. Row shows number, title, featured artists, heart, duration. Actions move to the context menu and swipe. Tapping the row plays; only the credits text opens artists |
 | Action rows | Every round button in a row is the same size; Play only gets a stronger fill |
-| Section spacing | One gap (`MinidiscSpacing.section`, 32pt) between page sections everywhere |
+| Section spacing | One gap (`MaeksterSpacing.section`, 32pt) between page sections everywhere |
 | Credit-only artists | Artists with nothing filed under them (e.g. *Bill Evans Trio*, filed under Bill Evans) show every album crediting them |
 | Artist picker | Photos; split into In Your Library (tagged "N albums", counting filed + credited albums) and Not in Your Library |
 | Artist discography | Vertical lists, expanded by default, every album shown, each section collapsible with its own Play / Shuffle |

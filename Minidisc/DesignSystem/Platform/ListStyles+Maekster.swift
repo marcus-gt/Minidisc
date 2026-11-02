@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension View {
-    func minidiscSheetListStyle() -> some View {
+    func maeksterSheetListStyle() -> some View {
         self.listStyle(.insetGrouped)
     }
 }

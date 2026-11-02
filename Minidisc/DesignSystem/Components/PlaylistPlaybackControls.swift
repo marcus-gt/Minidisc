@@ -32,20 +32,20 @@ struct PlaylistPlaybackControls: View {
     let onDownload: () -> Void
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.xl) {
+        HStack(spacing: MaeksterSpacing.xl) {
             Button("Shuffle", systemImage: "shuffle", action: onShuffle)
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
                 .accessibilityIdentifier("playlist.detail.shuffle")
 
             Button("Play", systemImage: "play.fill", action: onPlay)
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large, isProminent: true))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large, isProminent: true))
                 .accessibilityIdentifier("playlist.detail.play")
 
             Button(action: onDownload) {
                 Image(systemName: (downloadControl ?? .download).symbol)
                     .contentTransition(.symbolEffect(.replace))
             }
-            .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+            .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
             .disabled(downloadControl == nil)
             .accessibilityLabel((downloadControl ?? .download).label)
             .accessibilityIdentifier("playlist.detail.download")
@@ -53,6 +53,6 @@ struct PlaylistPlaybackControls: View {
         .foregroundStyle(.white)
         .disabled(!isEnabled)
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, MinidiscSpacing.xxl)
+        .padding(.horizontal, MaeksterSpacing.xxl)
     }
 }

@@ -6,16 +6,16 @@ struct ToastView: View {
     let toast: ToastService.Toast
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             leading
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(LocalizedStringKey(toast.message))
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .lineLimit(4)
                 if let subtitle = toast.subtitle {
                     Text(subtitle)
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -24,22 +24,22 @@ struct ToastView: View {
 
             if case .undoQueueRemoval = toast.action {
                 Text("Undo").font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.minidiscAccent)
-                    .padding(.leading, MinidiscSpacing.s)
+                    .foregroundStyle(Color.maeksterAccent)
+                    .padding(.leading, MaeksterSpacing.s)
             } else if toast.action != nil {
                 Image(systemName: "chevron.forward")
-                    .font(.minidiscCaption.weight(.semibold))
+                    .font(.maeksterCaption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .padding(.leading, MinidiscSpacing.s)
+                    .padding(.leading, MaeksterSpacing.s)
             }
         }
-        .padding(.horizontal, MinidiscSpacing.m)
-        .padding(.vertical, MinidiscSpacing.s)
+        .padding(.horizontal, MaeksterSpacing.m)
+        .padding(.vertical, MaeksterSpacing.s)
         .background(
-            RoundedRectangle(cornerRadius: MinidiscCornerRadius.large)
+            RoundedRectangle(cornerRadius: MaeksterCornerRadius.large)
                 .fill(.regularMaterial)
         )
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
@@ -48,7 +48,7 @@ struct ToastView: View {
         if let coverArtId = toast.coverArtId {
             CoverArtView(id: coverArtId, size: 120)
                 .frame(width: 34, height: 34)
-                .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+                .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
         } else {
             Image(systemName: toast.style.systemImage)
                 .foregroundStyle(toast.style.tint)
@@ -70,7 +70,7 @@ struct ToastOverlay: ViewModifier {
     }
 
     private var bottomInset: CGFloat {
-        reservesMiniPlayerSpace && miniPlayerVisible ? MinidiscSpacing.miniPlayerBottomMargin + MinidiscSpacing.s : MinidiscSpacing.l
+        reservesMiniPlayerSpace && miniPlayerVisible ? MaeksterSpacing.miniPlayerBottomMargin + MaeksterSpacing.s : MaeksterSpacing.l
     }
 
     func body(content: Content) -> some View {
@@ -118,7 +118,7 @@ struct ToastOverlay: ViewModifier {
                 }
             }
         case .navigateToDownloads:
-            NotificationCenter.default.post(name: .minidiscNavigateToDownloads, object: nil)
+            NotificationCenter.default.post(name: .maeksterNavigateToDownloads, object: nil)
         case let .navigateToPlaylist(id, name, coverArtId):
             postNavigateToPlaylist(playlistId: id, name: name, coverArtId: coverArtId)
         }

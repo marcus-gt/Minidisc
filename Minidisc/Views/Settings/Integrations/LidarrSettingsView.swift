@@ -50,10 +50,10 @@ struct LidarrSettingsView: View {
     private var aboutSection: some View {
         Section {
             Text("Lidarr manages your music collection and downloads new releases for you. Connect it to check its status from maekster.")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
             Link("Learn about Lidarr →", destination: URL(string: "https://lidarr.audio")!)
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
         }
     }
 
@@ -85,11 +85,11 @@ struct LidarrSettingsView: View {
                 switch testResult {
                 case .success:
                     Label("Connected.", systemImage: "checkmark.circle")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.green)
                 case .failure(let message):
                     Label(message, systemImage: "exclamationmark.triangle")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.orange)
                 }
             }

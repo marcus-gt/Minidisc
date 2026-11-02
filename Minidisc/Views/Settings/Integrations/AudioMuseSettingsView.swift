@@ -45,13 +45,13 @@ struct AudioMuseSettingsView: View {
     private var aboutSection: some View {
         Section {
             Text("AudioMuse-AI analyses how your music actually sounds, which lets maekster build a mood radio from the sound rather than from tags.")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
             Text("Without it, mood radios still work, built from your library's genre, BPM and mood tags. The match is rougher.")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
             Link("Learn about AudioMuse-AI →", destination: URL(string: "https://github.com/NeptuneHub/AudioMuse-AI")!)
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
         }
     }
 
@@ -83,11 +83,11 @@ struct AudioMuseSettingsView: View {
                 switch testResult {
                 case .success(let count):
                     Label("Connected — \(count) tracks matched a test search.", systemImage: "checkmark.circle")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.green)
                 case .failure(let message):
                     Label(message, systemImage: "exclamationmark.triangle")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.orange)
                 }
             }

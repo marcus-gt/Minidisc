@@ -86,7 +86,7 @@ struct OfflineFavoritesTests {
         #expect(await restored.localURL(songID: song.id, serverID: UUID()) == nil)
         #expect(await restored.localAlbumData(albumID: album.id, serverID: id)?.songs.map(\.id) == [song.id])
 
-        let models = try ModelContainer.minidisc(inMemory: true)
+        let models = try ModelContainer.maekster(inMemory: true)
         let cache = AudioStreamCache(modelContainer: models, maxBytes: 1, offlineFavorites: restored)
         let download = DownloadService(serverService: server, modelContainer: models, toastService: ToastService())
         let resolver = MediaResolver(downloadService: download, audioStreamCache: cache,
@@ -122,7 +122,7 @@ struct OfflineFavoritesTests {
         let root = try folder()
         defer { try? FileManager.default.removeItem(at: root) }
         let store = OfflineFavoritesStore(directory: root.appendingPathComponent("store"))
-        let models = try ModelContainer.minidisc(inMemory: true)
+        let models = try ModelContainer.maekster(inMemory: true)
         let server = try server()
         let id = try #require(server.connection?.version.serverID)
         let song = Song(id: "song", title: "Saved")
@@ -149,7 +149,7 @@ struct OfflineFavoritesTests {
     @Test func unknownAndMeteredConnectionsDoNotStartAutomaticTransfers() async throws {
         let root = try folder()
         defer { try? FileManager.default.removeItem(at: root) }
-        let models = try ModelContainer.minidisc(inMemory: true)
+        let models = try ModelContainer.maekster(inMemory: true)
         let server = try server()
         let settings = CacheSettings(defaults: UserDefaults(suiteName: "OfflineFavorites.\(UUID())")!)
         let sync = OfflineFavoritesSync(store: OfflineFavoritesStore(directory: root), settings: settings,
@@ -172,7 +172,7 @@ struct OfflineFavoritesTests {
     @Test func incompleteAlbumRefreshDoesNotRemoveExistingFiles() async throws {
         let root = try folder()
         defer { try? FileManager.default.removeItem(at: root) }
-        let models = try ModelContainer.minidisc(inMemory: true)
+        let models = try ModelContainer.maekster(inMemory: true)
         let server = try server()
         let id = try #require(server.connection?.version.serverID)
         let store = OfflineFavoritesStore(directory: root.appendingPathComponent("store"))
@@ -193,7 +193,7 @@ struct OfflineFavoritesTests {
     func settingsAndServerChangesCancelStaleSynchronization(change: String) async throws {
         let root = try folder()
         defer { try? FileManager.default.removeItem(at: root) }
-        let models = try ModelContainer.minidisc(inMemory: true)
+        let models = try ModelContainer.maekster(inMemory: true)
         let server = try server()
         let id = try #require(server.connection?.version.serverID)
         let store = OfflineFavoritesStore(directory: root)

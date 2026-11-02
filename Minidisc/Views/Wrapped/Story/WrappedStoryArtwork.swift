@@ -59,10 +59,10 @@ struct WrappedCoverMosaic: View {
             ZStack {
                 MeshGradientBackground(palette: palette, animated: !reduceMotion)
                 if !tiles.isEmpty {
-                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(side), spacing: MinidiscSpacing.s), count: Self.columns),
-                              spacing: MinidiscSpacing.s) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(side), spacing: MaeksterSpacing.s), count: Self.columns),
+                              spacing: MaeksterSpacing.s) {
                         ForEach(tiles.indices, id: \.self) { index in
-                            CoverArtCard(id: tiles[index], size: side, cornerRadius: MinidiscCornerRadius.standard)
+                            CoverArtCard(id: tiles[index], size: side, cornerRadius: MaeksterCornerRadius.standard)
                         }
                     }
                     .rotationEffect(.degrees(-12))
@@ -101,7 +101,7 @@ struct WrappedBrandFooter: View {
     let year: Int
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             WrappedBrandMark(width: 28)
             Text(verbatim: "maekster · \(year)")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -123,7 +123,7 @@ struct WrappedRunnerUpRow: View {
     private static let thumbnail: CGFloat = 44
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Text(verbatim: "\(rank)")
                 .font(.system(size: 17, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white.opacity(0.7))
@@ -131,10 +131,10 @@ struct WrappedRunnerUpRow: View {
             Group {
                 if WrappedIDs.isLibraryID(artworkID) {
                     CoverArtCard(id: artworkID, size: Self.thumbnail,
-                                 cornerRadius: isArtist ? Self.thumbnail / 2 : MinidiscCornerRadius.s,
+                                 cornerRadius: isArtist ? Self.thumbnail / 2 : MaeksterCornerRadius.s,
                                  placeholderSystemImage: isArtist ? "person.fill" : "music.note")
                 } else {
-                    RoundedRectangle(cornerRadius: isArtist ? Self.thumbnail / 2 : MinidiscCornerRadius.s)
+                    RoundedRectangle(cornerRadius: isArtist ? Self.thumbnail / 2 : MaeksterCornerRadius.s)
                         .fill(.white.opacity(0.15))
                         .frame(width: Self.thumbnail, height: Self.thumbnail)
                         .overlay {

@@ -13,5 +13,5 @@ func playlistServerError(code: Int = 70) async throws -> SwiftSonicError {
     )
     do { _ = try await client.getPlaylist(id: "deleted") }
     catch let error as SwiftSonicError { return error }
-    throw MinidiscError.notImplemented
+    throw MaeksterError.notImplemented
 }

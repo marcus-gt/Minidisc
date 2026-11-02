@@ -38,7 +38,7 @@ protocol PlayerServiceProtocol: AnyObject, Sendable {
     /// Clears the current queue's playing state but preserves the queue itself.
     func playRadio(_ station: InternetRadioStation) async throws
     /// Builds a Smart Shuffle queue via LibraryService and starts playback. Replaces the current queue.
-    /// Throws `MinidiscError.smartShuffleEmpty` if no eligible tracks (library too small / no downloads offline).
+    /// Throws `MaeksterError.smartShuffleEmpty` if no eligible tracks (library too small / no downloads offline).
     func playSmartShuffle() async throws
     /// A supplied seedTrack starts immediately while similarity queries build the queue.
     /// Without it, waits for the mix and throws instantMixEmpty if none is available.

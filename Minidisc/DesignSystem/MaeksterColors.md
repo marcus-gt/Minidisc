@@ -4,24 +4,24 @@
 
 | Token | Light | Dark | WCAG | Permitted uses |
 |-------|-------|------|------|----------------|
-| `minidiscAccent` | `#D96B1F` | `#FF8C4B` | ~3.5:1 on white (large text AA) | Play button, scrubber progress, active shuffle/repeat toggle, tappable artist name |
-| `minidiscAccentSecondary` | `#F5A06B` | `#FFB980` | decorative only | Gradient stop alongside `minidiscAccent`, tinted backgrounds |
-| `minidiscAccentText` | white | white | — | Text/icons placed on an accent-filled surface |
-| `minidiscCoverShadow` | rgba(0,0,0,0.15) | transparent | — | Shadow on cover art in light mode |
-| `minidiscCoverBorder` | — | white 8% | — | Thin border on cover art in dark mode (replaces invisible shadow) |
-| `minidiscLossless` | `#1E8A3C` | `#68D97D` | ~4.4:1 on white; ≥ 4:1 on artwork surfaces | Text of the lossless `FormatBadge` (FLAC, ALAC…) and its 18% tinted fill. Nothing else |
+| `maeksterAccent` | `#D96B1F` | `#FF8C4B` | ~3.5:1 on white (large text AA) | Play button, scrubber progress, active shuffle/repeat toggle, tappable artist name |
+| `maeksterAccentSecondary` | `#F5A06B` | `#FFB980` | decorative only | Gradient stop alongside `maeksterAccent`, tinted backgrounds |
+| `maeksterAccentText` | white | white | — | Text/icons placed on an accent-filled surface |
+| `maeksterCoverShadow` | rgba(0,0,0,0.15) | transparent | — | Shadow on cover art in light mode |
+| `maeksterCoverBorder` | — | white 8% | — | Thin border on cover art in dark mode (replaces invisible shadow) |
+| `maeksterLossless` | `#1E8A3C` | `#68D97D` | ~4.4:1 on white; ≥ 4:1 on artwork surfaces | Text of the lossless `FormatBadge` (FLAC, ALAC…) and its 18% tinted fill. Nothing else |
 
 ## Rules
 
-1. **`minidiscAccent` is strictly for primary interactive elements.** It must never appear on body copy, captions, metadata labels, section headers, or timestamps.
+1. **`maeksterAccent` is strictly for primary interactive elements.** It must never appear on body copy, captions, metadata labels, section headers, or timestamps.
 2. **Accent contrast is AA for large text only** (~3.5:1 against white). All text using the accent color must be ≥ 18pt regular or ≥ 14pt bold.
 3. **Text and backgrounds use SwiftUI semantic colors** (`Color.primary`, `Color.secondary`, `Color(.systemBackground)`, etc.). Do not add custom colors for text or backgrounds unless there is a concrete, justified need.
 4. **Do not add new custom colors without updating this document.**
 
 ## Dark mode behavior
 
-- Shadows on cover art are invisible against dark backgrounds. Use `.minidiscCoverStyle()` on all cover art views — it automatically switches to a 1pt border in dark mode.
-- `minidiscAccentSecondary` is slightly warmer in dark mode to maintain perceived brightness.
+- Shadows on cover art are invisible against dark backgrounds. Use `.maeksterCoverStyle()` on all cover art views — it automatically switches to a 1pt border in dark mode.
+- `maeksterAccentSecondary` is slightly warmer in dark mode to maintain perceived brightness.
 
 ## Adding a new color
 
@@ -35,7 +35,7 @@ These screens are always dark. `ArtworkSurfacePalette.tint(from:)` keeps the cov
 covers get ×1.3 saturation, capped at 0.85) and caps relative luminance at 0.1, so white text is at
 least 7:1 and 70% white secondary text stays above 4.5:1. The page fades from that tint to a base at
 32% of it. Before the cover colour is known the neutral is `Color(white: 0.09)`. Tappable artist
-credits use `minidiscAccent` (dark variant) on these surfaces.
+credits use `maeksterAccent` (dark variant) on these surfaces.
 
 ## Playlist artwork backgrounds
 

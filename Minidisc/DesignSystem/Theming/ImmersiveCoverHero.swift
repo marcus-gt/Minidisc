@@ -18,15 +18,15 @@ struct ImmersiveCoverHero<Content: View>: View {
             VStack(spacing: 0) {
                 coverHero
                 content()
-                    .padding(.top, MinidiscSpacing.m)
-                    .padding(.bottom, MinidiscSpacing.xl)
+                    .padding(.top, MaeksterSpacing.m)
+                    .padding(.bottom, MaeksterSpacing.xl)
             }
             .frame(maxWidth: .infinity)
         } else {
             ZStack(alignment: .bottom) {
                 coverHero
                 content()
-                    .padding(.bottom, MinidiscSpacing.l)
+                    .padding(.bottom, MaeksterSpacing.l)
             }
             .frame(height: heroHeight)
             .frame(maxWidth: .infinity)

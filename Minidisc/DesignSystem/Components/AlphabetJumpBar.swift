@@ -29,7 +29,7 @@ struct AlphabetJumpBar: View {
                     .frame(width: 24, height: step)
                     .foregroundStyle(
                         availableLetters.contains(letter)
-                            ? Color.minidiscAccent
+                            ? Color.maeksterAccent
                             : Color.secondary.opacity(0.3)
                     )
                     .accessibilityIdentifier("alphabet.jump.\(letter)")

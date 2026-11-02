@@ -5,11 +5,11 @@ struct SectionHeader: View {
 
     var body: some View {
         Text(title)
-            .font(.minidiscSectionTitle)
+            .font(.maeksterSectionTitle)
             .foregroundStyle(.primary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.vertical, MinidiscSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.vertical, MaeksterSpacing.s)
     }
 }
 

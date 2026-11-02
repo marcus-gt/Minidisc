@@ -176,10 +176,10 @@ final class TrackSwipeInteraction {
     }
 
     private func activeTranslation(_ translation: CGFloat) -> CGFloat {
-        guard abs(translation) > MinidiscSpacing.xl else { return 0 }
+        guard abs(translation) > MaeksterSpacing.xl else { return 0 }
         return translation > 0
-            ? translation - MinidiscSpacing.xl
-            : translation + MinidiscSpacing.xl
+            ? translation - MaeksterSpacing.xl
+            : translation + MaeksterSpacing.xl
     }
 
     private func bounceBack(reduceMotion: Bool) {
@@ -313,14 +313,14 @@ struct SwipeableTrackMetadata<Content: View>: View {
             .overlay {
                 GeometryReader { geometry in
                     let width = geometry.size.width
-                    HStack(spacing: MinidiscSpacing.xxxl) {
+                    HStack(spacing: MaeksterSpacing.xxxl) {
                         page(content(previousSong, false), width: width)
                             .accessibilityHidden(true)
                         page(content(currentSong, true), width: width)
                         page(content(nextSong, false), width: width)
                             .accessibilityHidden(true)
                     }
-                    .offset(x: -(width + MinidiscSpacing.xxxl) + interaction.offset)
+                    .offset(x: -(width + MaeksterSpacing.xxxl) + interaction.offset)
                     .frame(width: width, height: geometry.size.height, alignment: .leading)
                     .clipped()
                 }
@@ -336,7 +336,7 @@ struct SwipeableTrackMetadata<Content: View>: View {
             )
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
                 viewportWidth = width
-                interaction.pageWidth = width + MinidiscSpacing.xxxl
+                interaction.pageWidth = width + MaeksterSpacing.xxxl
             }
             .accessibilityAction(named: "Skip to previous") {
                 interaction.skip(
@@ -371,7 +371,7 @@ struct SwipeableTrackMetadata<Content: View>: View {
     }
 
     private var pageStride: CGFloat {
-        viewportWidth + MinidiscSpacing.xxxl
+        viewportWidth + MaeksterSpacing.xxxl
     }
 
     private func page<Page: View>(_ page: Page, width: CGFloat) -> some View {
@@ -392,7 +392,7 @@ struct MarqueeTrackMetadataText: View {
     @State private var viewportWidth: CGFloat = 0
     @State private var offset: CGFloat = 0
 
-    private let gap = MinidiscSpacing.xxxl
+    private let gap = MaeksterSpacing.xxxl
     private let pointsPerSecond: CGFloat = 30
 
     var body: some View {

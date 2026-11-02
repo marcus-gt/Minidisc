@@ -1,6 +1,6 @@
 import Foundation
 
-enum MinidiscURLs {
+enum MaeksterURLs {
     static let repo = URL(string: MaeksterBrand.repositoryURL)!
     static let repoIssues = URL(string: "\(MaeksterBrand.repositoryURL)/issues")!
     static let minidisc = URL(string: "https://github.com/Loriage/Minidisc")!

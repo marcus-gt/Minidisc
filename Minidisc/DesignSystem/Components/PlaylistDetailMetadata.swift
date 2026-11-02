@@ -7,9 +7,9 @@ struct PlaylistDetailMetadata: View {
     let isLoading: Bool
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.xs) {
+        VStack(spacing: MaeksterSpacing.xs) {
             Text(title)
-                .font(.minidiscDetailTitle)
+                .font(.maeksterDetailTitle)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -28,16 +28,16 @@ struct PlaylistDetailMetadata: View {
                 }
                 if let updated {
                     Text("Updated \(updated.formatted(.relative(presentation: .named)))")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.white.opacity(0.65))
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, MinidiscSpacing.xs)
+                        .padding(.top, MaeksterSpacing.xs)
                 }
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, MinidiscSpacing.xxl)
+        .padding(.horizontal, MaeksterSpacing.xxl)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("playlist.detail.metadata")
     }
@@ -49,9 +49,9 @@ struct PlaylistTrackSummary: View {
 
     var body: some View {
         Text(summary)
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .foregroundStyle(.white.opacity(0.65))
-            .padding(.vertical, MinidiscSpacing.l)
+            .padding(.vertical, MaeksterSpacing.l)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 

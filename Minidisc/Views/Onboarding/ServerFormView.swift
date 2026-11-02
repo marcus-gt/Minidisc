@@ -72,7 +72,7 @@ struct ServerFormView: View {
         if let error = viewModel.connectionError, error != .invalidURL {
             Section {
                 ConnectionErrorView(error: error)
-                    .padding(.vertical, MinidiscSpacing.xs)
+                    .padding(.vertical, MaeksterSpacing.xs)
             }
         }
     }
@@ -123,7 +123,7 @@ struct CustomHeaderRowView: View {
             Text("Value")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .padding(.top, MinidiscSpacing.xs)
+                .padding(.top, MaeksterSpacing.xs)
             HStack(spacing: 0) {
                 valueField
                     .textFieldStyle(.roundedBorder)
@@ -135,7 +135,7 @@ struct CustomHeaderRowView: View {
                     isRevealed.toggle()
                 } label: {
                     Image(systemName: isRevealed ? "eye.slash" : "eye")
-                        .foregroundStyle(isRevealed ? MinidiscColors.accent : MinidiscColors.textTertiary)
+                        .foregroundStyle(isRevealed ? MaeksterColors.accent : MaeksterColors.textTertiary)
                         .contentTransition(.symbolEffect(.replace))
                         .frame(width: 44, height: 44)
                 }
@@ -146,7 +146,7 @@ struct CustomHeaderRowView: View {
                     copyValueToClipboard()
                 } label: {
                     Image(systemName: justCopied ? "checkmark" : "doc.on.doc")
-                        .foregroundStyle(value.isEmpty ? MinidiscColors.textTertiary : MinidiscColors.accent)
+                        .foregroundStyle(value.isEmpty ? MaeksterColors.textTertiary : MaeksterColors.accent)
                         .contentTransition(.symbolEffect(.replace))
                         .frame(width: 44, height: 44)
                 }
@@ -176,7 +176,7 @@ struct CustomHeaderRowView: View {
             }
         }
         .labelsHidden()
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .onDisappear {
             isRevealed = false
             copyFeedbackTask?.cancel()

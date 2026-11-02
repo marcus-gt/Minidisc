@@ -18,7 +18,7 @@ nonisolated enum PlaybackState: Sendable, Equatable {
     case loading
     case playing
     case paused
-    case error(MinidiscError)
+    case error(MaeksterError)
 
     nonisolated static func == (lhs: PlaybackState, rhs: PlaybackState) -> Bool {
         switch (lhs, rhs) {

@@ -67,26 +67,26 @@ struct LocalMusicView: View {
                 }
             } else {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: MinidiscSpacing.xl) {
+                    LazyVStack(alignment: .leading, spacing: MaeksterSpacing.xl) {
                         collectionShelf(.albums)
                         collectionShelf(.artists)
-                        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                             sectionHeader(.songs)
                             LazyVStack(spacing: 0) {
                                 LocalMusicTrackRows(tracks: Array(tracks.prefix(5)), source: .localFolder(name: String(localized: "Local Files")), showsDividers: true)
                             }
-                            .padding(.horizontal, MinidiscSpacing.l)
-                            .minidiscSongSwipeContainer()
+                            .padding(.horizontal, MaeksterSpacing.l)
+                            .maeksterSongSwipeContainer()
                         }
                     }
-                    .padding(.top, MinidiscSpacing.m)
-                    .padding(.bottom, MinidiscSpacing.xl)
+                    .padding(.top, MaeksterSpacing.m)
+                    .padding(.bottom, MaeksterSpacing.xl)
                 }
                 .miniPlayerBottomMargin()
                 .refreshable { await container?.localMusic.refresh() }
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle(Text("Local Files", tableName: "LocalMusic"))
         .toolbarTitleDisplayMode(.inlineLarge)
         .toolbar {
@@ -102,7 +102,7 @@ struct LocalMusicView: View {
     }
 
     private func sectionHeader(_ category: LocalMusicCategory) -> some View {
-        MinidiscCarouselHeaderLink(category.title, itemCount: tracks.count, hasMore: true) {
+        MaeksterCarouselHeaderLink(category.title, itemCount: tracks.count, hasMore: true) {
             LocalMusicBrowseView(category: category)
         }
     }
@@ -112,16 +112,16 @@ struct LocalMusicView: View {
             if $0.addedAt != $1.addedAt { return $0.addedAt > $1.addedAt }
             return $0.name.localizedStandardCompare($1.name) == .orderedAscending
         }
-        return MinidiscShelf {
+        return MaeksterShelf {
             sectionHeader(category)
         } content: {
-            ForEach(Array(groups.prefix(MinidiscCarouselMetrics.previewLimit))) { group in
+            ForEach(Array(groups.prefix(MaeksterCarouselMetrics.previewLimit))) { group in
                 NavigationLink {
                     LocalMusicCollectionView(group: group, category: category)
                 } label: {
                     LocalMusicCard(group: group, category: category,
-                                   artworkSize: category == .artists ? MinidiscCarouselMetrics.artistArtwork : 160)
-                        .frame(width: category == .artists ? MinidiscCarouselMetrics.artistArtwork : 160)
+                                   artworkSize: category == .artists ? MaeksterCarouselMetrics.artistArtwork : 160)
+                        .frame(width: category == .artists ? MaeksterCarouselMetrics.artistArtwork : 160)
                 }
                 .buttonStyle(.plain)
             }
@@ -150,7 +150,7 @@ struct LocalMusicGrid: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 240 : 140), spacing: MinidiscSpacing.l)], spacing: MinidiscSpacing.l) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 240 : 140), spacing: MaeksterSpacing.l)], spacing: MaeksterSpacing.l) {
             ForEach(groups) { group in
                 NavigationLink {
                     LocalMusicCollectionView(group: group, category: category)
@@ -170,13 +170,13 @@ struct LocalMusicCard: View {
     var artworkSize: CGFloat? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             LocalMusicArtwork(id: group.artworkID, isArtist: category == .artists)
                 .aspectRatio(1, contentMode: .fit)
                 .frame(width: artworkSize, height: artworkSize)
             if category == .artists {
                 Text(group.name)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
@@ -196,7 +196,7 @@ struct LocalMusicArtwork: View {
         GeometryReader { geometry in
             CoverArtView(id: id, size: Int(geometry.size.width * 2), cornerRadius: 0)
                 .frame(width: geometry.size.width, height: geometry.size.width)
-                .clipShape(RoundedRectangle(cornerRadius: isArtist ? geometry.size.width / 2 : MinidiscCornerRadius.standard))
+                .clipShape(RoundedRectangle(cornerRadius: isArtist ? geometry.size.width / 2 : MaeksterCornerRadius.standard))
         }
         .accessibilityHidden(true)
     }
@@ -207,6 +207,6 @@ private struct LocalMusicSettingsToolbar: ViewModifier {
     let isRoot: Bool
 
     func body(content: Content) -> some View {
-        if isRoot { content.minidiscSettingsToolbar() } else { content }
+        if isRoot { content.maeksterSettingsToolbar() } else { content }
     }
 }

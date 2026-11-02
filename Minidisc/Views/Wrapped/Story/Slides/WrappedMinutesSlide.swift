@@ -25,11 +25,11 @@ struct WrappedMinutesSlide: View {
                         .foregroundStyle(.white.opacity(0.8))
                 }
 
-                Spacer(minLength: MinidiscSpacing.xl)
+                Spacer(minLength: MaeksterSpacing.xl)
 
                 AnimatedMinutesText(seconds: animatedSeconds)
 
-                Spacer(minLength: MinidiscSpacing.xl)
+                Spacer(minLength: MaeksterSpacing.xl)
 
                 if totalHours > 0 {
                     Text("That's \(totalHours) hours of music.")
@@ -39,7 +39,7 @@ struct WrappedMinutesSlide: View {
 
                 Spacer()
             }
-            .padding(.horizontal, MinidiscSpacing.xl)
+            .padding(.horizontal, MaeksterSpacing.xl)
             .wrappedSlideEntrance()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -68,7 +68,7 @@ private struct AnimatedMinutesText: View, Animatable {
 
     var body: some View {
         let (number, unit) = seconds.wrappedHeroMinutesFormat()
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             Text(number)
                 .font(.system(size: 96, weight: .black, design: .rounded))
                 .kerning(-2)

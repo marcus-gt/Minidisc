@@ -19,9 +19,9 @@ struct WrappedInsightsCarousel<Hero: View>: View {
     }
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.s) {
+        VStack(spacing: MaeksterSpacing.s) {
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: MinidiscSpacing.s) {
+                LazyHStack(spacing: MaeksterSpacing.s) {
                     hero()
                         .frame(height: WrappedInsightCard<EmptyView>.height)
                         .containerRelativeFrame(.horizontal)
@@ -44,11 +44,11 @@ struct WrappedInsightsCarousel<Hero: View>: View {
             }
             .scrollTargetBehavior(.viewAligned)
             .scrollPosition(id: $page)
-            .contentMargins(.horizontal, MinidiscSpacing.l, for: .scrollContent)
-            .padding(.horizontal, -MinidiscSpacing.l)
+            .contentMargins(.horizontal, MaeksterSpacing.l, for: .scrollContent)
+            .padding(.horizontal, -MaeksterSpacing.l)
 
             if pageCount > 1 {
-                HStack(spacing: MinidiscSpacing.xs) {
+                HStack(spacing: MaeksterSpacing.xs) {
                     ForEach(0..<pageCount, id: \.self) { index in
                         Circle()
                             .fill(index == (page ?? 0) ? Color.primary : Color.primary.opacity(0.25))
@@ -71,22 +71,22 @@ struct WrappedInsightCard<Content: View>: View {
     static var height: CGFloat { 340 }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             Text(title)
-                .font(.minidiscCaption.weight(.semibold))
+                .font(.maeksterCaption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
             headline
-                .font(.minidiscSectionTitle)
+                .font(.maeksterSectionTitle)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
             content()
                 .frame(maxHeight: .infinity)
         }
-        .padding(MinidiscSpacing.l)
+        .padding(MaeksterSpacing.l)
         .frame(height: Self.height)
         .containerRelativeFrame(.horizontal)
-        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
     }
 }
 
@@ -193,7 +193,7 @@ struct WrappedArtistTimelineCard: View {
                     }
                 }
             }
-            .chartLegend(position: .bottom, spacing: MinidiscSpacing.xs)
+            .chartLegend(position: .bottom, spacing: MaeksterSpacing.xs)
         }
     }
 }
@@ -271,12 +271,12 @@ struct WrappedMoodCard: View {
             title: "Mood",
             headline: mood.dominant.map { Text("Top mood: \(Text($0.title))") } ?? Text("Mood")
         ) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 VStack(spacing: 6) {
                     ForEach(mood.scores) { score in
-                        HStack(spacing: MinidiscSpacing.s) {
+                        HStack(spacing: MaeksterSpacing.s) {
                             Text(score.mood.title)
-                                .font(.minidiscCaption)
+                                .font(.maeksterCaption)
                                 .frame(width: 84, alignment: .leading)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
@@ -292,14 +292,14 @@ struct WrappedMoodCard: View {
                 }
 
                 Text("Stood out")
-                    .font(.minidiscCaption.weight(.semibold))
+                    .font(.maeksterCaption.weight(.semibold))
                     .foregroundStyle(.secondary)
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 2), count: min(max(mood.shifts.count, 1), 12)),
-                          spacing: MinidiscSpacing.xs) {
+                          spacing: MaeksterSpacing.xs) {
                     ForEach(mood.shifts) { shift in
                         VStack(spacing: 2) {
                             Image(systemName: shift.mood?.wrappedSymbol ?? "minus")
-                                .font(.minidiscCaption)
+                                .font(.maeksterCaption)
                                 .foregroundStyle(shift.mood?.wrappedColor ?? .secondary)
                             Text(verbatim: Self.shortLabel(shift.bucket.label))
                                 .font(.system(size: 9))

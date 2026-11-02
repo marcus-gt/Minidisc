@@ -4,19 +4,19 @@ struct LoadingStateView: View {
     var message: LocalizedStringKey? = nil
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.m) {
+        VStack(spacing: MaeksterSpacing.m) {
             ProgressView()
                 .controlSize(.large)
-                .tint(Color.minidiscAccent)
+                .tint(Color.maeksterAccent)
 
             if let message {
                 Text(message)
-                    .font(.minidiscBody)
+                    .font(.maeksterBody)
                     .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(MinidiscSpacing.xl)
+        .padding(MaeksterSpacing.xl)
     }
 }
 
@@ -24,8 +24,8 @@ struct LoadingStateView: View {
 
 struct SkeletonAlbumCard: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-            RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
+            RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                 .fill(Color.primary.opacity(0.08))
                 .aspectRatio(1, contentMode: .fit)
 
@@ -45,12 +45,12 @@ struct SkeletonAlbumCard: View {
 
 struct SkeletonSongRow: View {
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
-            RoundedRectangle(cornerRadius: MinidiscCornerRadius.xs)
+        HStack(spacing: MaeksterSpacing.m) {
+            RoundedRectangle(cornerRadius: MaeksterCornerRadius.xs)
                 .fill(Color.primary.opacity(0.08))
                 .frame(width: 44, height: 44)
 
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.primary.opacity(0.08))
                     .frame(height: 13)
@@ -64,7 +64,7 @@ struct SkeletonSongRow: View {
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .shimmer()
     }
 }

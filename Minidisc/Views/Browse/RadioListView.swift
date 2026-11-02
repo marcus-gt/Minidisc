@@ -44,7 +44,7 @@ struct RadioListView: View {
                 .refreshable { await load(forceRefresh: true) }
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Radio")
         .task(id: container?.serverState.isOnline) {
             guard container?.serverState.isOnline == true else { return }
@@ -82,28 +82,28 @@ private struct RadioStationRow: View {
     let station: InternetRadioStation
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             if let coverArt = station.coverArt, !coverArt.isEmpty {
                 CoverArtCard(id: coverArt, size: 56)
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous)
-                        .fill(Color.minidiscAccent.opacity(0.15))
+                    RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous)
+                        .fill(Color.maeksterAccent.opacity(0.15))
                         .frame(width: 56, height: 56)
                     Image(systemName: "antenna.radiowaves.left.and.right")
                         .font(.title2)
-                        .foregroundStyle(Color.minidiscAccent)
+                        .foregroundStyle(Color.maeksterAccent)
                 }
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(station.name)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 if let homePageUrl = station.homePageUrl, !homePageUrl.isEmpty {
                     Text(homePageUrl)
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -114,9 +114,9 @@ private struct RadioStationRow: View {
 
             Image(systemName: "play.circle.fill")
                 .font(.title2)
-                .foregroundStyle(Color.minidiscAccent)
+                .foregroundStyle(Color.maeksterAccent)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
     }
 }

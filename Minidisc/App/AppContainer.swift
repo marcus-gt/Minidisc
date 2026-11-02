@@ -94,7 +94,7 @@ final class AppContainer {
         lyricsSettings = LyricsSettings(defaults: userDefaults)
         self.playbackDiagnostics = playbackDiagnostics
         networkMonitor = NetworkMonitor(playbackDiagnostics: playbackDiagnostics)
-        modelContainer = try ModelContainer.minidisc(inMemory: inMemory)
+        modelContainer = try ModelContainer.maekster(inMemory: inMemory)
         let libraryIndexContainer = try ModelContainer.libraryIndex(inMemory: inMemory)
         let indexStore = LibraryIndexStore(modelContainer: libraryIndexContainer)
         libraryIndexStore = indexStore
@@ -287,7 +287,7 @@ final class AppContainer {
             directory: inMemory
                 ? URL.temporaryDirectory.appendingPathComponent("minidisc-new-releases-\(UUID())")
                 : URL.applicationSupportDirectory.appendingPathComponent("minidisc-new-releases"),
-            onChange: { await MainActor.run { NotificationCenter.default.post(name: .minidiscFreshReleasesChanged, object: nil) } }
+            onChange: { await MainActor.run { NotificationCenter.default.post(name: .maeksterFreshReleasesChanged, object: nil) } }
         )
         newReleasesService = newReleases
         recommendationService = RecommendationService(
@@ -333,7 +333,7 @@ final class AppContainer {
         networkMonitor.stop()
     }
 
-    /// Awaited by MinidiscApp's `.task` before the UI appears, ensuring
+    /// Awaited by MaeksterApp's `.task` before the UI appears, ensuring
     /// PlayerService→NowPlayingService wiring is complete before any user
     /// interaction is possible.
     func setup() async {
@@ -371,7 +371,7 @@ extension ModelContainer {
     /// Creates the Minidisc ModelContainer.
     /// - Parameter inMemory: Pass `true` in tests — Swift Testing parallelises tests,
     ///   so each test must create its own in-memory container (never shared).
-    static func minidisc(inMemory: Bool = false) throws -> ModelContainer {
+    static func maekster(inMemory: Bool = false) throws -> ModelContainer {
         let schema = Schema([
             ServerConfig.self,
             CachedTrack.self,

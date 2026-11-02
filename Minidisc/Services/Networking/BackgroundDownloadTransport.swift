@@ -144,12 +144,12 @@ private nonisolated final class DownloadSessionDelegate: NSObject, URLSessionDow
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
         // Every preceding completion has a durable receipt. Processing is replayable if iOS
         // suspends us while validating/remuxing/committing metadata.
-        Task { @MainActor in MinidiscAppDelegate.finishDownloadEvents() }
+        Task { @MainActor in MaeksterAppDelegate.finishDownloadEvents() }
     }
 }
 
 @MainActor
-final class MinidiscAppDelegate: NSObject, UIApplicationDelegate {
+final class MaeksterAppDelegate: NSObject, UIApplicationDelegate {
     private static var completion: (() -> Void)?
     private static var eventsFinished = false
 

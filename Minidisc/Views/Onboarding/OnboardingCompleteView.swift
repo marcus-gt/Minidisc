@@ -8,24 +8,24 @@ struct OnboardingCompleteView: View {
 
     var body: some View {
         ZStack {
-            MinidiscColors.backgroundPrimary.ignoresSafeArea()
+            MaeksterColors.backgroundPrimary.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer()
 
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 80))
-                    .foregroundStyle(MinidiscColors.accent)
+                    .foregroundStyle(MaeksterColors.accent)
                     .scaleEffect(appeared ? 1 : 0.3)
                     .opacity(appeared ? 1 : 0)
                     .animation(.spring(duration: 0.6, bounce: 0.4), value: appeared)
 
-                Spacer().frame(height: MinidiscSpacing.xxxxl)
+                Spacer().frame(height: MaeksterSpacing.xxxxl)
 
-                VStack(spacing: MinidiscSpacing.m) {
+                VStack(spacing: MaeksterSpacing.m) {
                     Text("You're all set.")
                         .font(.system(.largeTitle, weight: .bold))
-                        .foregroundStyle(MinidiscColors.textPrimary)
+                        .foregroundStyle(MaeksterColors.textPrimary)
                         .multilineTextAlignment(.center)
                         .opacity(appeared ? 1 : 0)
                         .offset(y: appeared ? 0 : 24)
@@ -33,7 +33,7 @@ struct OnboardingCompleteView: View {
 
                     Text("Your library is waiting.\nTime to press play.")
                         .font(.system(.body))
-                        .foregroundStyle(MinidiscColors.textSecondary)
+                        .foregroundStyle(MaeksterColors.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                         .opacity(appeared ? 1 : 0)
@@ -42,13 +42,13 @@ struct OnboardingCompleteView: View {
 
                     Text("You can adjust everything anytime in Settings.")
                         .font(.system(.footnote))
-                        .foregroundStyle(MinidiscColors.textTertiary)
+                        .foregroundStyle(MaeksterColors.textTertiary)
                         .multilineTextAlignment(.center)
                         .opacity(appeared ? 1 : 0)
                         .offset(y: appeared ? 0 : 24)
                         .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.4), value: appeared)
                 }
-                .padding(.horizontal, MinidiscSpacing.xxxl)
+                .padding(.horizontal, MaeksterSpacing.xxxl)
 
                 Spacer()
 
@@ -61,9 +61,9 @@ struct OnboardingCompleteView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .tint(MinidiscColors.accent)
-                .padding(.horizontal, MinidiscSpacing.xxxl)
-                .padding(.bottom, MinidiscSpacing.xxxl)
+                .tint(MaeksterColors.accent)
+                .padding(.horizontal, MaeksterSpacing.xxxl)
+                .padding(.bottom, MaeksterSpacing.xxxl)
                 .opacity(appeared ? 1 : 0)
                 .offset(y: appeared ? 0 : 30)
                 .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.5), value: appeared)

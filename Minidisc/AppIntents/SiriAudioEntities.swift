@@ -21,7 +21,7 @@ struct SiriArtistEntity {
 
 @available(iOS 27.0, *)
 struct SiriArtistEntityQuery: EntityStringQuery {
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func entities(for identifiers: [String]) async throws -> [SiriArtistEntity] {
@@ -66,7 +66,7 @@ struct SiriAlbumEntity {
 
 @available(iOS 27.0, *)
 struct SiriAlbumEntityQuery: EntityStringQuery {
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func entities(for identifiers: [String]) async throws -> [SiriAlbumEntity] {
@@ -117,7 +117,7 @@ struct SiriSongEntity {
 
 @available(iOS 27.0, *)
 struct SiriSongEntityQuery: EntityStringQuery {
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func entities(for identifiers: [String]) async throws -> [SiriSongEntity] {
@@ -161,7 +161,7 @@ struct SiriPlaylistEntity {
 
 @available(iOS 27.0, *)
 struct SiriPlaylistEntityQuery: EntityStringQuery {
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func entities(for identifiers: [String]) async throws -> [SiriPlaylistEntity] {
@@ -229,7 +229,7 @@ nonisolated extension SiriMusicItem {
 
 @available(iOS 27.0, *)
 struct SiriMusicSearchQuery: IntentValueQuery {
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func values(for input: AudioSearch) async throws -> [SiriMusicItem] {
@@ -277,7 +277,7 @@ struct PlaySiriAudioIntent: AudioPlaybackIntent {
     var playbackAttributes: Set<SiriPlaybackAttribute>
     var warmupAudioQueueResult: SiriAudioWarmup?
     var queueLocation: SiriQueueLocation?
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func perform() async throws -> some IntentResult {

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Fixed colours that tell the Queue Builder's main genres apart (#17). Sub-genres use their main
 /// genre's tint. Every tint keeps white text at WCAG AA (≥ 4.5:1) when a pill is picked; see
-/// MinidiscColors.md. "Other", decades and moods stay neutral, so colour always means genre.
+/// MaeksterColors.md. "Other", decades and moods stay neutral, so colour always means genre.
 nonisolated enum GenreTint {
     static func color(for mainGenre: String) -> Color? {
         tints[mainGenre].map { Color(red: $0.red, green: $0.green, blue: $0.blue) }
@@ -37,11 +37,11 @@ struct PillAppearance {
     let tint: Color?
     let isSelected: Bool
 
-    var foreground: Color { isSelected ? .minidiscAccentText : .primary }
+    var foreground: Color { isSelected ? .maeksterAccentText : .primary }
 
     var fill: Color {
         if let tint { return isSelected ? tint : tint.opacity(0.16) }
-        return isSelected ? .minidiscAccent : Color.secondary.opacity(0.14)
+        return isSelected ? .maeksterAccent : Color.secondary.opacity(0.14)
     }
 
     /// Outline only for unpicked tinted pills, so the genre reads even when nothing is picked.

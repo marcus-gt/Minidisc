@@ -15,12 +15,12 @@ struct LidarrArtistDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.l) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
                 header
                 searchButton
                 albumsSection
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
         .navigationTitle(artist.artistName)
         .navigationBarTitleDisplayModeInline()
@@ -77,24 +77,24 @@ struct LidarrArtistDetailView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .top, spacing: MinidiscSpacing.m) {
+        HStack(alignment: .top, spacing: MaeksterSpacing.m) {
             LidarrCoverImage(path: artist.posterPath, client: client) {
-                RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+                RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                     .fill(Color.secondary.opacity(0.15))
                     .overlay { Image(systemName: "music.mic").font(.title).foregroundStyle(.secondary) }
             }
             .frame(width: 120, height: 120)
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
 
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-                Text(artist.artistName).font(.minidiscDetailTitle).lineLimit(3)
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
+                Text(artist.artistName).font(.maeksterDetailTitle).lineLimit(3)
                 Label(artist.monitored ? "Monitored" : "Not monitored",
                       systemImage: artist.monitored ? "bookmark.fill" : "bookmark")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
                 if let count = artist.statistics?.albumCount {
                     Text(count == 1 ? "1 album" : "\(count) albums")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -103,7 +103,7 @@ struct LidarrArtistDetailView: View {
     }
 
     private var searchButton: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Button {
                 Task { await triggerSearch() }
             } label: {
@@ -116,7 +116,7 @@ struct LidarrArtistDetailView: View {
                     Text("Search Monitored")
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
             }
             .disabled(isSearching || !artist.monitored)
 
@@ -126,11 +126,11 @@ struct LidarrArtistDetailView: View {
                     Text("Interactive")
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
             }
         }
         .buttonStyle(.bordered)
-        .tint(.minidiscAccent)
+        .tint(.maeksterAccent)
     }
 
     private var albumGroups: [(title: String, albums: [LidarrAlbum])] {
@@ -151,24 +151,24 @@ struct LidarrArtistDetailView: View {
     private var albumsSection: some View {
         if let overview = artist.overview, !overview.isEmpty {
             Text(overview)
-                .font(.minidiscBody)
+                .font(.maeksterBody)
                 .foregroundStyle(.secondary)
         }
 
         if isLoading {
-            Text("Albums").font(.minidiscShelfTitle)
+            Text("Albums").font(.maeksterShelfTitle)
             ProgressView().frame(maxWidth: .infinity)
         } else if let errorMessage {
-            Text("Albums").font(.minidiscShelfTitle)
-            Text(errorMessage).font(.minidiscCaption).foregroundStyle(.orange)
+            Text("Albums").font(.maeksterShelfTitle)
+            Text(errorMessage).font(.maeksterCaption).foregroundStyle(.orange)
         } else if albums.isEmpty {
-            Text("Albums").font(.minidiscShelfTitle)
-            Text("No albums.").font(.minidiscCaption).foregroundStyle(.secondary)
+            Text("Albums").font(.maeksterShelfTitle)
+            Text("No albums.").font(.maeksterCaption).foregroundStyle(.secondary)
         } else {
             ForEach(albumGroups, id: \.title) { group in
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                     Text(group.title)
-                        .font(.minidiscShelfTitle)
+                        .font(.maeksterShelfTitle)
                     VStack(spacing: 0) {
                         ForEach(group.albums) { album in
                             LidarrAlbumRow(
@@ -253,27 +253,27 @@ private struct LidarrAlbumRow: View {
     let onToggleMonitor: (Bool) -> Void
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             NavigationLink(value: album) {
-                HStack(spacing: MinidiscSpacing.m) {
+                HStack(spacing: MaeksterSpacing.m) {
                     LidarrCoverImage(path: album.coverPath, client: client) {
-                        RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+                        RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                             .fill(Color.secondary.opacity(0.15))
                             .overlay { Image(systemName: "opticaldisc").foregroundStyle(.secondary) }
                     }
                     .frame(width: 48, height: 48)
-                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+                    .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(album.title).font(.minidiscCellTitle).lineLimit(1)
-                        HStack(spacing: MinidiscSpacing.xs) {
+                        Text(album.title).font(.maeksterCellTitle).lineLimit(1)
+                        HStack(spacing: MaeksterSpacing.xs) {
                             if let year = album.year { Text(year) }
                             if let progress = album.trackProgress {
                                 Text("·")
                                 Text("\(progress) tracks")
                             }
                         }
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 0)
@@ -288,13 +288,13 @@ private struct LidarrAlbumRow: View {
             } label: {
                 Image(systemName: album.monitored ? "bookmark.fill" : "bookmark")
                     .font(.title3)
-                    .foregroundStyle(album.monitored ? Color.minidiscAccent : .secondary)
+                    .foregroundStyle(album.monitored ? Color.maeksterAccent : .secondary)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(album.monitored ? "Stop monitoring" : "Monitor")
         }
-        .padding(.vertical, MinidiscSpacing.s)
+        .padding(.vertical, MaeksterSpacing.s)
     }
 }

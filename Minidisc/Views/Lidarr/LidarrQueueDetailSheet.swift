@@ -43,34 +43,34 @@ struct LidarrQueueDetailSheet: View {
 
     private var detailStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.l) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
                 header
                 if showsStatusBanner { statusBanner }
                 actionButtons
                 infoSection
             }
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.top, MinidiscSpacing.xl)
-            .padding(.bottom, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.top, MaeksterSpacing.xl)
+            .padding(.bottom, MaeksterSpacing.l)
         }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            HStack(alignment: .top, spacing: MinidiscSpacing.m) {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            HStack(alignment: .top, spacing: MaeksterSpacing.m) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                     Text(item.displayTitle)
-                        .font(.minidiscDetailTitle)
+                        .font(.maeksterDetailTitle)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    HStack(spacing: MinidiscSpacing.xs) {
+                    HStack(spacing: MaeksterSpacing.xs) {
                         if let quality = item.qualityName { Text(quality) }
                         if let size = item.totalSize {
                             if item.qualityName != nil { Text("·") }
                             Text(LidarrFormat.size(size))
                         }
                     }
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
@@ -93,9 +93,9 @@ struct LidarrQueueDetailSheet: View {
     }
 
     private var progressRow: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             ProgressView(value: item.progress)
-                .tint(item.hasIssue ? Color.orange : Color.minidiscAccent)
+                .tint(item.hasIssue ? Color.orange : Color.maeksterAccent)
 
             HStack {
                 Text(item.progress.formatted(.percent.precision(.fractionLength(1))))
@@ -104,44 +104,44 @@ struct LidarrQueueDetailSheet: View {
                     Text("\(remaining) left")
                 }
             }
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .foregroundStyle(.secondary)
         }
     }
 
     private var statusBanner: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             Label(
                 item.statusLabel,
                 systemImage: item.hasIssue ? "exclamationmark.triangle.fill" : "info.circle.fill"
             )
-            .font(.minidiscCellTitle)
+            .font(.maeksterCellTitle)
             .fontWeight(.bold)
             .foregroundStyle(item.hasIssue ? Color.orange : Color.secondary)
 
             ForEach(item.allMessages, id: \.self) { message in
                 Text(message)
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(MinidiscSpacing.m)
+        .padding(MaeksterSpacing.m)
         .background(
             (item.hasIssue ? Color.orange : Color.secondary).opacity(0.15),
-            in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+            in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
         )
     }
 
     private var actionButtons: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Button {
                 step = .remove
             } label: {
                 Label("Remove", systemImage: "trash")
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, MinidiscSpacing.s)
+                    .padding(.vertical, MaeksterSpacing.s)
             }
             .tint(.red)
 
@@ -151,9 +151,9 @@ struct LidarrQueueDetailSheet: View {
                 } label: {
                     Label("Import", systemImage: "square.and.arrow.down")
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, MinidiscSpacing.s)
+                        .padding(.vertical, MaeksterSpacing.s)
                 }
-                .tint(.minidiscAccent)
+                .tint(.maeksterAccent)
             }
         }
         .buttonStyle(.bordered)
@@ -177,9 +177,9 @@ struct LidarrQueueDetailSheet: View {
     }
 
     private var infoSection: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             Text("Information")
-                .font(.minidiscShelfTitle)
+                .font(.maeksterShelfTitle)
 
             VStack(spacing: 0) {
                 ForEach(Array(infoRows.enumerated()), id: \.offset) { index, row in
@@ -187,8 +187,8 @@ struct LidarrQueueDetailSheet: View {
                     LabeledContent(row.label) {
                         Text(row.value).multilineTextAlignment(.trailing)
                     }
-                    .font(.minidiscBody)
-                    .padding(.vertical, MinidiscSpacing.s)
+                    .font(.maeksterBody)
+                    .padding(.vertical, MaeksterSpacing.s)
                 }
             }
         }
@@ -197,8 +197,8 @@ struct LidarrQueueDetailSheet: View {
     private var removeStep: some View {
         VStack(spacing: 0) {
             removeBar
-                .padding(.horizontal, MinidiscSpacing.l)
-                .padding(.top, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
+                .padding(.top, MaeksterSpacing.l)
 
             Form {
                 Section {
@@ -219,7 +219,7 @@ struct LidarrQueueDetailSheet: View {
             }
             .formStyle(.grouped)
             .tint(nil)
-            .contentMargins(.top, MinidiscSpacing.m, for: .scrollContent)
+            .contentMargins(.top, MaeksterSpacing.m, for: .scrollContent)
         }
     }
 

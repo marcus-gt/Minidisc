@@ -81,9 +81,9 @@ struct LidarrInteractiveSearchView: View {
     var body: some View {
         Group {
             if isLoading {
-                VStack(spacing: MinidiscSpacing.m) {
+                VStack(spacing: MaeksterSpacing.m) {
                     ProgressView()
-                    Text("Searching…").font(.minidiscBody).foregroundStyle(.secondary)
+                    Text("Searching…").font(.maeksterBody).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMessage {
@@ -167,7 +167,7 @@ struct LidarrInteractiveSearchView: View {
         } label: {
             Image(systemName: hasActiveFilter ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
         }
-        .tint(hasActiveFilter ? .minidiscAccent : .primary)
+        .tint(hasActiveFilter ? .maeksterAccent : .primary)
     }
 
     private func load() async {
@@ -193,13 +193,13 @@ private struct LidarrReleaseRow: View {
     let release: LidarrRelease
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(release.title)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .lineLimit(2)
 
-                HStack(spacing: MinidiscSpacing.xs) {
+                HStack(spacing: MaeksterSpacing.xs) {
                     if let quality = release.qualityName { Text(quality) }
                     if let size = release.size {
                         Text("·")
@@ -210,10 +210,10 @@ private struct LidarrReleaseRow: View {
                         Text(LidarrFormat.age(days: age))
                     }
                 }
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
 
-                HStack(spacing: MinidiscSpacing.xs) {
+                HStack(spacing: MaeksterSpacing.xs) {
                     Text(release.isTorrent ? "Torrent" : "Usenet")
                     if release.isTorrent, let seeders = release.seeders {
                         Text("(\(seeders))")
@@ -224,7 +224,7 @@ private struct LidarrReleaseRow: View {
                         Text(indexer)
                     }
                 }
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
@@ -239,7 +239,7 @@ private struct LidarrReleaseRow: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
     }
 }

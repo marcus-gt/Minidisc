@@ -19,7 +19,7 @@ private struct SongMenuContextKey: EnvironmentKey {
 
 extension EnvironmentValues {
     /// Set by album and artist detail pages; rows elsewhere show both "Go to" actions.
-    var minidiscSongMenuContext: SongMenuContext {
+    var maeksterSongMenuContext: SongMenuContext {
         get { self[SongMenuContextKey.self] }
         set { self[SongMenuContextKey.self] = newValue }
     }
@@ -38,8 +38,8 @@ struct SongRow: View {
     var showArtist: Bool = true
     var secondaryText: String? = nil
     var coverArtSize: CGFloat = 44
-    var coverArtCornerRadius: CGFloat = MinidiscCornerRadius.standard
-    var primaryContentSpacing: CGFloat = MinidiscSpacing.s
+    var coverArtCornerRadius: CGFloat = MaeksterCornerRadius.standard
+    var primaryContentSpacing: CGFloat = MaeksterSpacing.s
     var isFavorite: Bool = false
     var titleColor: Color = .primary
     var secondaryColor: Color = .secondary
@@ -57,14 +57,14 @@ struct SongRow: View {
 
     @Environment(\.appContainer) private var container
     @Environment(ArtworkImageCache.self) private var artworkImageCache
-    @Environment(\.minidiscPlayingAccent) private var playingAccent
+    @Environment(\.maeksterPlayingAccent) private var playingAccent
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var coverImage: PlatformImage?
     @State private var shareRequest: DisplayableSong?
     @State private var preparedShare: PreparedTrackShare?
     @State private var trackInformation: DisplayableSong?
 
-    init(song: DisplayableSong, index: Int, showCoverArt: Bool = false, showArtist: Bool = true, secondaryText: String? = nil, coverArtSize: CGFloat = 44, coverArtCornerRadius: CGFloat = MinidiscCornerRadius.standard, primaryContentSpacing: CGFloat = MinidiscSpacing.s, isFavorite: Bool = false, titleColor: Color = .primary, secondaryColor: Color = .secondary, trailingAccessory: SongRowTrailingAccessory = .duration, rowAccessibilityIdentifier: String = "", onDownload: (() -> Void)? = nil, onRemoveDownload: (() -> Void)? = nil, isDownloading: Bool = false, onRemoveFromPlaylist: (() -> Void)? = nil, onAddToPlaylist: ((DisplayableSong) -> Void)? = nil, onGoToAlbum: (() -> Void)? = nil, artistCredits: [ArtistCredit] = [], onArtistsTap: (([ArtistCredit]) -> Void)? = nil, onTap: (() -> Void)? = nil) {
+    init(song: DisplayableSong, index: Int, showCoverArt: Bool = false, showArtist: Bool = true, secondaryText: String? = nil, coverArtSize: CGFloat = 44, coverArtCornerRadius: CGFloat = MaeksterCornerRadius.standard, primaryContentSpacing: CGFloat = MaeksterSpacing.s, isFavorite: Bool = false, titleColor: Color = .primary, secondaryColor: Color = .secondary, trailingAccessory: SongRowTrailingAccessory = .duration, rowAccessibilityIdentifier: String = "", onDownload: (() -> Void)? = nil, onRemoveDownload: (() -> Void)? = nil, isDownloading: Bool = false, onRemoveFromPlaylist: (() -> Void)? = nil, onAddToPlaylist: ((DisplayableSong) -> Void)? = nil, onGoToAlbum: (() -> Void)? = nil, artistCredits: [ArtistCredit] = [], onArtistsTap: (([ArtistCredit]) -> Void)? = nil, onTap: (() -> Void)? = nil) {
         self.song = song
         self.index = index
         self.showCoverArt = showCoverArt
@@ -117,7 +117,7 @@ struct SongRow: View {
     }
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             if let onTap, showsTappableCredits {
                 // The play button fills the row behind the content. Index and title don't take touches,
                 // so taps on them reach it; only the credits link on top opens artists.
@@ -143,7 +143,7 @@ struct SongRow: View {
 
             trailingContent
         }
-        .padding(.vertical, trailingAccessory == .favorite ? MinidiscSpacing.xs : MinidiscSpacing.s)
+        .padding(.vertical, trailingAccessory == .favorite ? MaeksterSpacing.xs : MaeksterSpacing.s)
         .contentShape(Rectangle())
         .task(id: song.id) {
             coverImage = await artworkImageCache.load(coverArtId: song.coverArtId ?? song.id)
@@ -196,7 +196,7 @@ struct SongRow: View {
                         NowPlayingBarsIndicator(isPlaying: isPlaying)
                     } else {
                         Text("\(song.trackNumber ?? index)")
-                            .font(.minidiscTrackNumber)
+                            .font(.maeksterTrackNumber)
                             .foregroundStyle(secondaryColor.opacity(0.72))
                             .opacity(showsLeadingFavoriteMarker ? 0 : 1)
                         if showsLeadingFavoriteMarker {
@@ -215,7 +215,7 @@ struct SongRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.title)
-                    .font(.minidiscTrackTitle)
+                    .font(.maeksterTrackTitle)
                     .foregroundStyle(isCurrentTrack ? playingAccent : titleColor)
                     .lineLimit(textLineLimit)
                     .fixedSize(horizontal: false, vertical: true)
@@ -228,7 +228,7 @@ struct SongRow: View {
                     ) { onArtistsTap(artistCredits) }
                 } else if let secondaryText = secondaryText ?? (showArtist ? song.artist : nil) {
                     Text(secondaryText)
-                        .font(.minidiscCellSubtitle)
+                        .font(.maeksterCellSubtitle)
                         .foregroundStyle(secondaryColor)
                         .lineLimit(textLineLimit)
                         .fixedSize(horizontal: false, vertical: true)
@@ -242,10 +242,10 @@ struct SongRow: View {
     }
 
     private var trailingContent: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             if song.isDownloaded {
                 Image(systemName: "arrow.down.circle.fill")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(secondaryColor.opacity(0.6))
             } else if isDownloading {
                 ProgressView()
@@ -261,7 +261,7 @@ struct SongRow: View {
                         .font(.body)
                         .foregroundStyle(isFavorite ? AnyShapeStyle(playingAccent) : AnyShapeStyle(secondaryColor))
                         .contentTransition(.symbolEffect(.replace))
-                        .frame(width: MinidiscControlSize.regular, height: MinidiscControlSize.regular)
+                        .frame(width: MaeksterControlSize.regular, height: MaeksterControlSize.regular)
                         .contentShape(Rectangle())
                 } primaryAction: {
                     SongActions.toggleFavorite(song: song, isFavorite: isFavorite, container: container)
@@ -275,10 +275,10 @@ struct SongRow: View {
             }
             if song.duration > 0 {
                 Text(Duration.seconds(song.duration).formatted(.time(pattern: .minuteSecond)))
-                    .font(trailingAccessory == .favorite ? .minidiscTrackNumber : .minidiscCaption)
+                    .font(trailingAccessory == .favorite ? .maeksterTrackNumber : .maeksterCaption)
                     .foregroundStyle(secondaryColor.opacity(trailingAccessory == .favorite ? 0.75 : 0.6))
                     .monospacedDigit()
-                    .frame(minWidth: trailingAccessory == .favorite ? MinidiscSpacing.xxxxl : nil, alignment: .trailing)
+                    .frame(minWidth: trailingAccessory == .favorite ? MaeksterSpacing.xxxxl : nil, alignment: .trailing)
             }
         }
     }
@@ -319,7 +319,7 @@ private struct SongActions: View {
 
     @Environment(\.appContainer) private var container
     @Environment(PlaylistAddition.self) private var playlistAddition: PlaylistAddition?
-    @Environment(\.minidiscSongMenuContext) private var menuContext
+    @Environment(\.maeksterSongMenuContext) private var menuContext
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
 

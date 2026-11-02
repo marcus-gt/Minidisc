@@ -5,8 +5,8 @@ struct PlayButton: View {
     var label: LocalizedStringKey = "Play"
     var systemImage: String = "play.fill"
     var isDisabled: Bool = false
-    var accentColor: Color = MinidiscColors.accent
-    var labelColor: Color = Color.minidiscAccentText
+    var accentColor: Color = MaeksterColors.accent
+    var labelColor: Color = Color.maeksterAccentText
     /// Fixed capsule height. When set, the capsule fills exactly this height (so it can match a
     /// sibling like a 44 pt circle); when nil, the capsule sizes to its label + vertical padding.
     var height: CGFloat? = nil
@@ -29,19 +29,19 @@ struct PlayButton: View {
     @ViewBuilder
     private var sizedLabel: some View {
         let base = Label(label, systemImage: systemImage)
-            .font(.minidiscCellTitle)
+            .font(.maeksterCellTitle)
             .foregroundStyle(labelColor)
             .frame(maxWidth: .infinity)
         if let height {
             base.frame(height: height)
         } else {
-            base.padding(.vertical, MinidiscSpacing.m)
+            base.padding(.vertical, MaeksterSpacing.m)
         }
     }
 }
 
 #Preview {
-    VStack(spacing: MinidiscSpacing.l) {
+    VStack(spacing: MaeksterSpacing.l) {
         PlayButton(action: {})
         PlayButton(action: {}, label: "Shuffle", isDisabled: true)
     }

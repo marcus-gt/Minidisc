@@ -14,9 +14,9 @@ struct WrappedTopArtistsSection: View {
     @State private var coverImages: [String: PlatformImage] = [:]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             Text("Top Artists")
-                .font(.minidiscSectionTitle)
+                .font(.maeksterSectionTitle)
             if artists.isEmpty {
                 emptyLabel("No artist data for this period.")
             } else {
@@ -32,14 +32,14 @@ struct WrappedTopArtistsSection: View {
         let allArtists = Array(artists.prefix(10))
         if !allArtists.isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: MinidiscSpacing.m) {
+                LazyHStack(alignment: .top, spacing: MaeksterSpacing.m) {
                     ForEach(allArtists.indices, id: \.self) { index in
                         artistCard(allArtists[index], isFirst: index == 0)
                     }
                 }
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             }
-            .padding(.horizontal, -MinidiscSpacing.l)
+            .padding(.horizontal, -MaeksterSpacing.l)
         }
     }
 
@@ -52,21 +52,21 @@ struct WrappedTopArtistsSection: View {
                 artistToNavigate = try? await container?.libraryService.artist(id: artist.artistId)
             }
         } label: {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 ZStack(alignment: .topLeading) {
                     CoverArtCard(
                         id: artist.artistId,
                         size: cardWidth,
                         tier: .hero,
-                        cornerRadius: MinidiscCornerRadius.large,
+                        cornerRadius: MaeksterCornerRadius.large,
                         initialImage: coverImages[artist.artistId]
                     )
                     dominantColors[artist.artistId, default: .clear]
                         .opacity(0.15)
                         .frame(width: cardWidth, height: cardWidth)
-                        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
                     rankBadge(artist.rank)
-                        .padding(MinidiscSpacing.xs)
+                        .padding(MaeksterSpacing.xs)
                 }
                 CoverCardMetadata(
                     title: artist.name,
@@ -83,14 +83,14 @@ struct WrappedTopArtistsSection: View {
         case 1: return WrappedYearPalette.medalGold
         case 2: return WrappedYearPalette.medalSilver
         case 3: return WrappedYearPalette.medalBronze
-        default: return MinidiscColors.accent
+        default: return MaeksterColors.accent
         }
     }
 
     private func rankBadge(_ rank: Int) -> some View {
         let isMedal = rank <= 3
         return Text("#\(rank)")
-            .font(.minidiscCaption2)
+            .font(.maeksterCaption2)
             .fontWeight(.bold)
             .foregroundStyle(isMedal ? Color.black : Color.primary)
             .padding(.horizontal, 6)
@@ -106,7 +106,7 @@ struct WrappedTopArtistsSection: View {
 
     private func emptyLabel(_ text: LocalizedStringKey) -> some View {
         Text(text)
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .foregroundStyle(.secondary)
     }
 

@@ -29,10 +29,10 @@ struct AlbumsListView: View {
                 LoadingStateView()
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Albums")
         .toolbarTitleDisplayMode(.inline)
-        .minidiscFilterable(text: $filterText, prompt: "Filter albums")
+        .maeksterFilterable(text: $filterText, prompt: "Filter albums")
         .recentlyPlayedOrder($recentlyPlayed, when: albumSort == .recentlyPlayed)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -40,7 +40,7 @@ struct AlbumsListView: View {
                     .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                MinidiscMoreMenu {
+                MaeksterMoreMenu {
                     Button(
                         gridLayout ? "List view" : "Grid view",
                         systemImage: gridLayout ? "list.bullet" : "square.grid.2x2"
@@ -118,7 +118,7 @@ struct AlbumsListView: View {
     private func albumsGrid(_ vm: AlbumListViewModel) -> some View {
         AlphabetIndexedContent(entries: albumIndex(vm), prepareJump: { albumSort = .name }) {
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 110, maximum: 180), spacing: MinidiscSpacing.l)], spacing: MinidiscSpacing.l) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 110, maximum: 180), spacing: MaeksterSpacing.l)], spacing: MaeksterSpacing.l) {
                     ForEach(sortedAlbums(vm)) { album in
                         NavigationLink(value: HomeDestination.album(album)) {
                             AlbumGridCell(album: album)
@@ -128,7 +128,7 @@ struct AlbumsListView: View {
                         .accessibilityIdentifier("browse.album.\(album.id)")
                     }
                 }
-                .padding(MinidiscSpacing.l)
+                .padding(MaeksterSpacing.l)
             }
             .refreshable { await refresh(vm) }
         }

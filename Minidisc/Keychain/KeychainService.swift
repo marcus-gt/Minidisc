@@ -34,7 +34,7 @@ actor KeychainService: KeychainServiceProtocol {
         guard status == errSecSuccess else {
             // Never log `data` — it may contain credentials.
             Logger.keychain.error("Keychain write failed for key '\(key, privacy: .public)' — OSStatus \(status)")
-            throw MinidiscError.keychainWriteFailed(status)
+            throw MaeksterError.keychainWriteFailed(status)
         }
     }
 
@@ -53,7 +53,7 @@ actor KeychainService: KeychainServiceProtocol {
         guard status != errSecItemNotFound else { return nil }
         guard status == errSecSuccess else {
             Logger.keychain.error("Keychain read failed for key '\(key, privacy: .public)' — OSStatus \(status)")
-            throw MinidiscError.keychainReadFailed(status)
+            throw MaeksterError.keychainReadFailed(status)
         }
 
         guard let data = result as? Data else { return nil }
@@ -70,7 +70,7 @@ actor KeychainService: KeychainServiceProtocol {
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             Logger.keychain.error("Keychain delete failed for key '\(key, privacy: .public)' — OSStatus \(status)")
-            throw MinidiscError.keychainDeleteFailed(status)
+            throw MaeksterError.keychainDeleteFailed(status)
         }
     }
 }

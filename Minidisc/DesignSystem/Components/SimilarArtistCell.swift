@@ -36,13 +36,13 @@ struct ArtistPortraitCell<Portrait: View>: View {
     @ViewBuilder let portrait: () -> Portrait
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.s) {
+        VStack(spacing: MaeksterSpacing.s) {
             portrait()
                 .frame(width: size, height: size)
                 .clipShape(Circle())
 
             Text(name)
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)

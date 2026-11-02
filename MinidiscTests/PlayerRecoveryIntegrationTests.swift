@@ -145,7 +145,7 @@ private actor RecoveryTestResolver: MediaResolverProtocol {
         if let local = await localSource(songId: songId, serverId: serverId) { return local }
         return .stream(URL(string: "https://playback.invalid/stream")!, customHeaders: [:])
     }
-    func resolveRadio(_ station: InternetRadioStation) async throws -> MediaSource { throw MinidiscError.notImplemented }
+    func resolveRadio(_ station: InternetRadioStation) async throws -> MediaSource { throw MaeksterError.notImplemented }
     func availability(songId: String, serverId: UUID) async -> MediaAvailability {
         availabilityCalls += 1
         if blockAvailability {
@@ -161,10 +161,10 @@ private actor RecoveryTestResolver: MediaResolverProtocol {
 }
 
 private nonisolated final class RecoveryTestLibrary: AlbumBrowsing, ArtistBrowsing, PlaybackQueueBuilding, PlaybackReporting {
-    func album(id: String) async throws -> AlbumID3 { throw MinidiscError.notImplemented }
+    func album(id: String) async throws -> AlbumID3 { throw MaeksterError.notImplemented }
     func allAlbums() async throws -> [AlbumID3] { [] }
     func artists() async throws -> [ArtistIndex] { [] }
-    func artist(id: String) async throws -> ArtistID3 { throw MinidiscError.notImplemented }
+    func artist(id: String) async throws -> ArtistID3 { throw MaeksterError.notImplemented }
     func fetchAllTracks(forArtistID artistID: String) async throws -> [DisplayableSong] { [] }
     func smartShuffleQueue(targetSize: Int) async throws -> [DisplayableSong] { [] }
     func similarBackfillQueue(targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] { [] }
@@ -178,10 +178,10 @@ private nonisolated final class ScrobbleRecordingLibrary: AlbumBrowsing, ArtistB
 
     var nowPlayingIDs: [String] { calls.withLock { $0.filter { !$0.submission }.map(\.songId) } }
 
-    func album(id: String) async throws -> AlbumID3 { throw MinidiscError.notImplemented }
+    func album(id: String) async throws -> AlbumID3 { throw MaeksterError.notImplemented }
     func allAlbums() async throws -> [AlbumID3] { [] }
     func artists() async throws -> [ArtistIndex] { [] }
-    func artist(id: String) async throws -> ArtistID3 { throw MinidiscError.notImplemented }
+    func artist(id: String) async throws -> ArtistID3 { throw MaeksterError.notImplemented }
     func fetchAllTracks(forArtistID artistID: String) async throws -> [DisplayableSong] { [] }
     func smartShuffleQueue(targetSize: Int) async throws -> [DisplayableSong] { [] }
     func similarBackfillQueue(targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] { [] }
@@ -217,7 +217,7 @@ private struct RecoveryHarness {
         library: (any AlbumBrowsing & ArtistBrowsing & PlaybackQueueBuilding & PlaybackReporting)? = nil,
         playingNowDelay: TimeInterval = 3
     ) throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let server = MockServerService()
         server.state.activeServer = ServerSnapshot(from: ServerConfig(
             displayName: "Test", baseURL: "https://playback.invalid", username: "test"
@@ -951,10 +951,10 @@ private actor InstantMixRecordingLibrary: AlbumBrowsing, ArtistBrowsing, Playbac
         return mixTracks
     }
 
-    func album(id: String) async throws -> AlbumID3 { throw MinidiscError.notImplemented }
+    func album(id: String) async throws -> AlbumID3 { throw MaeksterError.notImplemented }
     func allAlbums() async throws -> [AlbumID3] { [] }
     func artists() async throws -> [ArtistIndex] { [] }
-    func artist(id: String) async throws -> ArtistID3 { throw MinidiscError.notImplemented }
+    func artist(id: String) async throws -> ArtistID3 { throw MaeksterError.notImplemented }
     func fetchAllTracks(forArtistID artistID: String) async throws -> [DisplayableSong] { [] }
     func smartShuffleQueue(targetSize: Int) async throws -> [DisplayableSong] { [] }
     func similarBackfillQueue(targetSize: Int, excludedIds: Set<String>) async throws -> [DisplayableSong] { [] }
@@ -1080,7 +1080,7 @@ struct InstantMixAutoExtendTests {
         try await h.play(["a", "b", "c"])
         let playsBefore = h.engine.playCount
 
-        let error = await #expect(throws: MinidiscError.self) {
+        let error = await #expect(throws: MaeksterError.self) {
             try await h.player.playInstantMix(from: .song(id: "a"), startingWith: try track("a"), source: nil)
         }
         guard case .instantMixEmpty = error else {

@@ -9,10 +9,10 @@ struct WrappedYearlyListView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.l) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 140, maximum: 200), spacing: MinidiscSpacing.s)],
-                    spacing: MinidiscSpacing.s
+                    columns: [GridItem(.adaptive(minimum: 140, maximum: 200), spacing: MaeksterSpacing.s)],
+                    spacing: MaeksterSpacing.s
                 ) {
                     WrappedYearTile(period: .allTime)
                     ForEach(years, id: \.self) { year in
@@ -23,16 +23,16 @@ struct WrappedYearlyListView: View {
                 NavigationLink {
                     WrappedView()
                 } label: {
-                    HStack(spacing: MinidiscSpacing.s) {
+                    HStack(spacing: MaeksterSpacing.s) {
                         Image(systemName: "chart.bar.fill")
                             .font(.title2)
-                            .foregroundStyle(Color.minidiscAccent)
+                            .foregroundStyle(Color.maeksterAccent)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("View Listening Stats")
-                                .font(.minidiscCellTitle)
+                                .font(.maeksterCellTitle)
                                 .foregroundStyle(.primary)
                             Text("Monthly and annual breakdowns")
-                                .font(.minidiscCaption)
+                                .font(.maeksterCaption)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer(minLength: 0)
@@ -40,15 +40,15 @@ struct WrappedYearlyListView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    .padding(MinidiscSpacing.m)
-                    .background(Color.minidiscAccent.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
+                    .padding(MaeksterSpacing.m)
+                    .background(Color.maeksterAccent.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Wrapped")
         .task {
             guard let container else { return }

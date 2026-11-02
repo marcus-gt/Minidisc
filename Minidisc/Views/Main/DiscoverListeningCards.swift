@@ -19,14 +19,14 @@ struct ArtistStationCard: View {
 
     var body: some View {
         Button(action: onPlay) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 ZStack {
                     LinearGradient(colors: palette, startPoint: .topLeading, endPoint: .bottomTrailing)
                     FeaturedArtistAvatar(artist: station.artist, size: side * 0.72)
                         .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                 }
                 .frame(width: side, height: side)
-                .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+                .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
                 .accessibilityHidden(true)
                 CoverCardMetadata(title: title,
                                   subtitle: isStarting ? String(localized: "Preparing…") : String(localized: "Radio Station"))
@@ -51,8 +51,8 @@ struct SmartShuffleCard: View {
 
     var body: some View {
         Button(action: onPlay) {
-            HStack(spacing: MinidiscSpacing.m) {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            HStack(spacing: MaeksterSpacing.m) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                     Label("Smart Shuffle", systemImage: "shuffle")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.85))
@@ -63,16 +63,16 @@ struct SmartShuffleCard: View {
                     Text("Favourites, recent taste and a few surprises")
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.85))
-                    HStack(spacing: MinidiscSpacing.s) {
+                    HStack(spacing: MaeksterSpacing.s) {
                         if isStarting { ProgressView().tint(.white) }
                         Label(isStarting ? LocalizedStringResource("Preparing…") : LocalizedStringResource("Shuffle"),
                               systemImage: "play.fill")
                     }
                     .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, MinidiscSpacing.m)
+                    .padding(.horizontal, MaeksterSpacing.m)
                     .frame(minHeight: 44)
                     .background(.white.opacity(0.18), in: Capsule())
-                    .padding(.top, MinidiscSpacing.xs)
+                    .padding(.top, MaeksterSpacing.xs)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if !dynamicTypeSize.isAccessibilitySize {
@@ -82,12 +82,12 @@ struct SmartShuffleCard: View {
                 }
             }
             .foregroundStyle(.white)
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(LinearGradient(colors: [Color(red: 0.48, green: 0.06, blue: 0.18),
                                                  Color(red: 0.80, green: 0.17, blue: 0.08)],
                                        startPoint: .leading, endPoint: .trailing))
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
         }
         .buttonStyle(.plain)
         .disabled(isStarting)
@@ -96,7 +96,7 @@ struct SmartShuffleCard: View {
         .accessibilityHint("Play a new mix from your library")
         .accessibilityValue(isStarting ? Text("Preparing…") : Text(""))
         .accessibilityIdentifier("discover.smartShuffle")
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 }
 

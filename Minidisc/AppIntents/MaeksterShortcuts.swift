@@ -1,6 +1,6 @@
 import AppIntents
 
-struct MinidiscShortcuts: AppShortcutsProvider {
+struct MaeksterShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: PlayMinidiscMusicIntent(), phrases: [
             "Play \(\.$music) in \(.applicationName)",
@@ -10,7 +10,7 @@ struct MinidiscShortcuts: AppShortcutsProvider {
             "Play \(\.$mood) mood in \(.applicationName)",
             "Play a mood in \(.applicationName)"
         ], shortTitle: "Play a Mood", systemImageName: "moon.stars")
-        AppShortcut(intent: MinidiscSmartShuffleIntent(), phrases: [
+        AppShortcut(intent: MaeksterSmartShuffleIntent(), phrases: [
             "Smart Shuffle in \(.applicationName)"
         ], shortTitle: "Smart Shuffle", systemImageName: "shuffle")
         AppShortcut(intent: ResumeMinidiscIntent(), phrases: [
