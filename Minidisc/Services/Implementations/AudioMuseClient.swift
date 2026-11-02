@@ -83,6 +83,10 @@ nonisolated struct AudioMuseMoodScores: Codable, Sendable, Equatable {
     }
 }
 
+private nonisolated struct PathResponse: Decodable {
+    let path: [AudioMuseTrack]
+}
+
 private nonisolated struct ScoreResponse: Decodable {
     let otherFeatures: String?
     let moodVector: String?
@@ -173,6 +177,34 @@ actor AudioMuseClient {
 
         // Keep internal IDs and metadata for the provider’s library-resolution fallback.
         return results
+    }
+
+    /// One end of a song path: a song, or a mood AudioMuse resolves to the nearest real song (#65).
+    nonisolated enum PathEnd: Sendable, Equatable {
+        case song(id: String)
+        /// happy, sad, aggressive, relaxed or danceable.
+        case mood(String)
+    }
+
+    /// A smooth sequence of songs from `start` to `end`, both included, `length` songs long
+    /// (`/api/find_path`, #65). Only one end may be a mood. Throws `.notFound` when no path exists.
+    func findPath(from start: PathEnd, to end: PathEnd, length: Int) async throws -> [AudioMuseTrack] {
+        await resolveServerIfNeeded()
+        var query = [URLQueryItem(name: "max_steps", value: String(max(length, 2))),
+                     URLQueryItem(name: "path_fix_size", value: "true")]
+        for (prefix, value) in [("start", start), ("end", end)] {
+            switch value {
+            case .song(let id): query.append(URLQueryItem(name: "\(prefix)_song_id", value: id))
+            case .mood(let mood): query.append(URLQueryItem(name: "\(prefix)_mood", value: mood))
+            }
+        }
+        if let server = selectedServer ?? nil { query.append(URLQueryItem(name: "server", value: server)) }
+        let data = try await send(path: "/api/find_path", query: query, body: nil, method: "GET")
+        do {
+            return try JSONDecoder().decode(PathResponse.self, from: data).path
+        } catch {
+            throw AudioMuseError.decoding(String(describing: error))
+        }
     }
 
     /// The mood scores AudioMuse stored for one track. Throws `.notFound` for tracks never analysed.

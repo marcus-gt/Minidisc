@@ -7,6 +7,8 @@ nonisolated enum DiscoverSection: String, LayoutSection {
     case stations
     case smartShuffle
     case queueBuilder
+    /// From one song or mood to another, through AudioMuse (#65).
+    case songPath
     case moods
     case wrapped
     case internetRadio
@@ -19,6 +21,7 @@ nonisolated enum DiscoverSection: String, LayoutSection {
         case .stations: "Stations for You"
         case .smartShuffle: "Smart Shuffle"
         case .queueBuilder: "Queue Builder"
+        case .songPath: "Song Path"
         case .moods: "Moods"
         case .wrapped: "Wrapped"
         case .internetRadio: "Internet Radio"

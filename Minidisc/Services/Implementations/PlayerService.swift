@@ -244,6 +244,8 @@ actor PlayerService: PlayerServiceProtocol {
     private var instantMixAnchorSongID: String?
     /// Refills a Queue Builder queue from the same picks. Cleared with every new queue, like the anchor.
     private var queueRefill: QueueRefill?
+    /// The current queue ends with its last song (a song path, #65); cleared by any new queue.
+    private var queueStopsAtEnd = false
     /// Playback generation whose seed-only queue is still waiting for its Instant Mix. Auto-extend
     /// would otherwise see a 1-track queue and build a competing mix. Bumped generations make a
     /// leftover value inert, so it can never block auto-extend for later playback.
@@ -665,6 +667,7 @@ actor PlayerService: PlayerServiceProtocol {
             originalQueueOrder = nil
             instantMixAnchorSongID = nil
             queueRefill = nil
+            queueStopsAtEnd = false
             queueGeneration &+= 1
         }
         let committedQueueGeneration = queueGeneration
@@ -1185,6 +1188,16 @@ actor PlayerService: PlayerServiceProtocol {
 
     // MARK: - Queue Builder
 
+    func playUntilEnd(_ tracks: [DisplayableSong], source: QueueSource?) async throws {
+        let expectedPlayGeneration = playbackGeneration &+ 1
+        try await play(tracks: tracks, startIndex: 0, source: source)
+        // A later play replaced this queue meanwhile; it keeps its own behaviour.
+        guard expectedPlayGeneration == playbackGeneration else { return }
+        queueStopsAtEnd = true
+        autoExtendFetchTask?.cancel()
+        autoExtendFetchTask = nil
+    }
+
     func playBuiltQueue(_ tracks: [DisplayableSong], source: QueueSource?, refill: @escaping QueueRefill) async throws {
         guard !tracks.isEmpty else { throw MinidiscError.smartShuffleEmpty }
         cancelPendingInstantMix()
@@ -1604,6 +1617,7 @@ actor PlayerService: PlayerServiceProtocol {
             return (state.isAutoExtendEnabled, state.repeatMode, state.currentRadio, remaining, Set(state.queue.map(\.id)), state.currentTrack?.id)
         }
         guard expectedQueueGeneration == queueGeneration else { return }
+        guard !queueStopsAtEnd else { return }
         guard isEnabled, await MainActor.run(body: { state.currentTrack?.isLocalFile != true }) else { return }
         guard repeatMode == .off else { return }
         guard currentRadio == nil else { return }

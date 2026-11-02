@@ -1274,3 +1274,34 @@ struct QueueSourcePlaybackTests {
         await h.player.stop()
     }
 }
+
+@Suite("Song Path playback (#65)", .serialized)
+@MainActor
+struct SongPathPlaybackTests {
+    private func tracks(_ prefix: String, _ count: Int) throws -> [DisplayableSong] {
+        try (1...count).map { index in
+            DisplayableSong(from: try JSONDecoder().decode(Song.self, from: Data(
+                "{\"id\":\"\(prefix)\(index)\",\"title\":\"t\",\"isDir\":false,\"duration\":120}".utf8
+            )))
+        }
+    }
+
+    /// A path stops at its last song even with auto-extend on, and leaves the setting alone.
+    @Test func path_isNotExtended() async throws {
+        let library = InstantMixRecordingLibrary()
+        let h = try RecoveryHarness(library: library)
+        await library.setMix(try tracks("m", 20))
+        h.state.isAutoExtendEnabled = true
+
+        try await h.player.playUntilEnd(try tracks("p", 3), source: .songPath(from: "A", to: "B"))
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(h.state.queue.count == 3)
+        #expect(await library.calls.isEmpty)
+        #expect(h.state.isAutoExtendEnabled)
+
+        // The next queue extends as usual.
+        try await h.player.play(tracks: try tracks("x", 3), startIndex: 0, source: nil)
+        try await h.waitUntil { h.state.queue.count > 3 }
+        await h.player.stop()
+    }
+}

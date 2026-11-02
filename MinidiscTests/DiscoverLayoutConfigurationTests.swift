@@ -6,7 +6,7 @@ import Testing
 struct DiscoverLayoutConfigurationTests {
     @Test func default_keepsDiscoversOriginalOrder() {
         #expect(DiscoverLayoutConfiguration.default.visibleSections == [
-            .freshReleases, .stations, .smartShuffle, .queueBuilder, .moods, .wrapped, .internetRadio,
+            .freshReleases, .stations, .smartShuffle, .queueBuilder, .songPath, .moods, .wrapped, .internetRadio,
         ])
     }
 
@@ -27,7 +27,8 @@ struct DiscoverLayoutConfigurationTests {
         // A layout saved before two sections existed (queueBuilder and internetRadio), with Wrapped moved first.
         let raw = #"{"hidden":[],"order":["wrapped","freshReleases","stations","smartShuffle","moods"]}"#
         let decoded = try #require(DiscoverLayoutConfiguration(rawValue: raw))
-        #expect(decoded.order == [.wrapped, .internetRadio, .freshReleases, .stations, .smartShuffle, .queueBuilder, .moods])
+        #expect(decoded.order == [.wrapped, .internetRadio, .freshReleases, .stations, .smartShuffle, .queueBuilder, .songPath, .moods])
+        #expect(decoded.isVisible(.songPath))
         #expect(decoded.isVisible(.queueBuilder))
         #expect(decoded.isVisible(.internetRadio))
     }

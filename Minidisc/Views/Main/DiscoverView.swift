@@ -94,6 +94,8 @@ struct DiscoverView: View {
             if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
                 QueueBuilderCard(viewModel: queueBuilder)
             }
+        case .songPath:
+            if SongPathAvailability.isAvailable(container) { SongPathCard() }
         case .moods:
             moodsSection
         case .wrapped:

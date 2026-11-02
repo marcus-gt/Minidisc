@@ -148,6 +148,8 @@ struct HomeView: View {
             if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
                 QueueBuilderCard(viewModel: queueBuilder)
             }
+        case .songPath:
+            if SongPathAvailability.isAvailable(container) { SongPathCard() }
         case .favoriteSongs:
             HomeFavoriteSongsSection(songs: favorites.songs)
         case .favoriteAlbums:

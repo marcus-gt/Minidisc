@@ -108,7 +108,8 @@ struct FullPlayerView: View {
                     AddToPlaylistSheet(request: request)
                 }
                 .quickPlaylistPicker(.player, container: container)
-                .environment(\.quickPlaylistHost, .player)
+                .songPathSheet(.player, container: container)
+                .environment(\.sheetHost, .player)
                 .environment(playlistAddition)
         }
     }
@@ -395,6 +396,7 @@ private struct TrackInfoSection: View {
 
     @Query private var favoriteMatches: [FavoriteRecord]
     @Environment(PlaylistAddition.self) private var playlistAddition
+    @Environment(\.sheetHost) private var sheetHost
     @State private var shareRequest: DisplayableSong?
     @State private var preparedShare: PreparedTrackShare?
     @State private var trackInformation: DisplayableSong?
@@ -514,6 +516,11 @@ private struct TrackInfoSection: View {
                         }
                     }
                     .disabled(container?.serverState.activeServer == nil)
+                    if SongPathAvailability.isAvailable(container), let track = playerState.currentTrack, !track.isLocalFile {
+                        Button("Song Path from Here", systemImage: SongPathSheet.symbol) {
+                            container?.songPathLauncher.open(from: .song(track), in: sheetHost)
+                        }
+                    }
                 } label: {
                     Image(systemName: "ellipsis")
                         .foregroundStyle(contentColor)
