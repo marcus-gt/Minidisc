@@ -14,6 +14,8 @@ nonisolated enum HomeSection: String, LayoutSection {
     case favoriteAlbums
     case recentlyPlayed
     case heavyRotation
+    /// A daily blend of favourite, dormant and untried artists (#63).
+    case artists
     case rediscover
     case relevantAdditions
     case recentlyAdded
@@ -31,6 +33,7 @@ nonisolated enum HomeSection: String, LayoutSection {
         case .favoriteAlbums: "Your Favorite Albums"
         case .recentlyPlayed: "Recently Played"
         case .heavyRotation: "In Heavy Rotation"
+        case .artists: "Artist Picks"
         case .rediscover: "Rediscover"
         case .relevantAdditions: "Recently Added from Your Artists"
         case .recentlyAdded: "Recently Added"
@@ -41,9 +44,9 @@ nonisolated enum HomeSection: String, LayoutSection {
     /// Identifier the section's shelf uses for accessibility and its stored layout. Genre shelves share one.
     var shelfIdentifier: String { "home.\(rawValue)" }
 
-    /// Favorite Songs is a short vertical list and the Queue Builder a set of pickers, so neither has
-    /// a carousel / grid choice.
-    var supportsLayoutChoice: Bool { self != .favoriteSongs && self != .queueBuilder && self != .songPath }
+    /// Favorite Songs is a short vertical list, the Queue Builder a set of pickers and the artists
+    /// a row of portraits, so none has a carousel / grid choice.
+    var supportsLayoutChoice: Bool { ![.favoriteSongs, .queueBuilder, .songPath, .artists].contains(self) }
 
     static var hiddenByDefault: Set<HomeSection> { [.songPath] }
 }
