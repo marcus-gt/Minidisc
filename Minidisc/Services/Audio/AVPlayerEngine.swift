@@ -261,7 +261,7 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
             // Record why the standby was not adopted.
             let standbyState = String(describing: standbyPreparationState)
             let standbyItemStatus = preloadedItem?.status.rawValue ?? -1
-            Logger.player.info(
+            Logger.player.notice(
                 "[ENGINE] cold load track='\(trackID, privacy: .public)' discarding standby='\(preloadedTrackID, privacy: .public)' sameTrack=\(preloadedTrackID == trackID, privacy: .public) standbyState=\(standbyState, privacy: .public) standbyItemStatus=\(standbyItemStatus, privacy: .public) handedOff='\(self.handedOffTrackID ?? "none", privacy: .public)'"
             )
         }

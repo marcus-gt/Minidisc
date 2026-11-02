@@ -4262,14 +4262,14 @@ actor PlayerService: PlayerServiceProtocol {
             }
         }
         if await mediaResolver.localSource(songId: songId, serverId: serverId) != nil {
-            Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' is already on disk")
+            Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' is already on disk")
             return
         }
         let (allowCellular, cacheFormat, isExpensive) = await MainActor.run {
             (cacheSettings.cacheOverCellular, cacheSettings.cacheFormat, serverService.state.isExpensive)
         }
         guard !isExpensive || allowCellular else {
-            Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' skipped on cellular")
+            Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' skipped on cellular")
             return
         }
         guard isCurrent(),
@@ -4277,15 +4277,15 @@ actor PlayerService: PlayerServiceProtocol {
               isCurrent(),
               let url = await cacheURL(songId: songId, streamURL: streamURL, format: cacheFormat),
               isCurrent() else { return }
-        Logger.player.info("[CACHE] caching next '\(songId, privacy: .public)' ahead")
+        Logger.player.notice("[CACHE] caching next '\(songId, privacy: .public)' ahead")
         do {
             try await downloadAndCache(songId: songId, serverId: serverId, streamURL: url, customHeaders: customHeaders,
                                        allowCellular: allowCellular, using: cacheSession)
         } catch {
             if Task.isCancelled {
-                Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' cancelled")
+                Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' cancelled")
             } else {
-                Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' failed: \(error, privacy: .public)")
+                Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' failed: \(error, privacy: .public)")
             }
         }
     }
@@ -4321,7 +4321,7 @@ actor PlayerService: PlayerServiceProtocol {
         let isExpensive = await MainActor.run { serverService.state.isExpensive }
         if isExpensive {
             playbackDiagnostics.record(.cache(.skippedCellular))
-            Logger.player.debug("Cache skipped — cellular, '\(songId, privacy: .public)' is streaming")
+            Logger.player.notice("Cache skipped — cellular, '\(songId, privacy: .public)' is streaming")
             return
         }
 
@@ -4339,10 +4339,10 @@ actor PlayerService: PlayerServiceProtocol {
         } catch {
             if Task.isCancelled {
                 playbackDiagnostics.record(.cache(.cancelled))
-                Logger.player.debug("Cache download cancelled for '\(songId, privacy: .public)'")
+                Logger.player.notice("Cache download cancelled for '\(songId, privacy: .public)'")
             } else {
                 playbackDiagnostics.record(.cache(.failed(code: (error as NSError).code)))
-                Logger.player.debug("Cache download failed for '\(songId, privacy: .public)': \(error, privacy: .public)")
+                Logger.player.notice("Cache download failed for '\(songId, privacy: .public)': \(error, privacy: .public)")
             }
         }
     }
@@ -4383,7 +4383,7 @@ actor PlayerService: PlayerServiceProtocol {
         )
 
         playbackDiagnostics.record(.cache(.stored))
-        Logger.player.info("Cached '\(songId, privacy: .public)' from stream (\(fileSize) bytes, \(mimeType, privacy: .public))")
+        Logger.player.notice("Cached '\(songId, privacy: .public)' from stream (\(fileSize) bytes, \(mimeType, privacy: .public))")
     }
 
     /// A cache download needs the actual response length. A stream URL may request an
