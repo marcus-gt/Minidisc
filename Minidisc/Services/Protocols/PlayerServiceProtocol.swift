@@ -46,6 +46,9 @@ protocol PlayerServiceProtocol: AnyObject, Sendable {
     /// Plays a ready-made queue (Queue Builder) and keeps auto-extend refilling it from `refill`,
     /// which receives the queued song IDs to skip and how many songs to add.
     func playBuiltQueue(_ tracks: [DisplayableSong], source: QueueSource?, refill: @escaping QueueRefill) async throws
+    /// Plays a queue that ends with its last song: auto-extend leaves it alone, without changing the
+    /// listener's auto-extend setting (a song path, #65).
+    func playUntilEnd(_ tracks: [DisplayableSong], source: QueueSource?) async throws
     /// Toggles the auto-extend preference and persists it to UserDefaults.
     /// When enabled and ≤15 tracks remain, the player appends a fresh smart shuffle batch automatically.
     func setAutoExtendEnabled(_ enabled: Bool) async
@@ -74,6 +77,10 @@ nonisolated struct PreparedPlaybackQueue: Sendable {
 typealias QueueRefill = @Sendable (_ excluded: Set<String>, _ count: Int) async throws -> [DisplayableSong]
 
 extension PlayerServiceProtocol {
+    nonisolated func playUntilEnd(_ tracks: [DisplayableSong], source: QueueSource?) async throws {
+        try await play(tracks: tracks, startIndex: 0, source: source)
+    }
+
     nonisolated func playBuiltQueue(_ tracks: [DisplayableSong], source: QueueSource?, refill: @escaping QueueRefill) async throws {
         try await play(tracks: tracks, startIndex: 0, source: source)
     }

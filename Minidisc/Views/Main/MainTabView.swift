@@ -42,6 +42,7 @@ struct MainTabView: View {
                 AddToPlaylistSheet(request: request)
             }
             .quickPlaylistPicker(.main, container: container)
+            .songPathSheet(.main, container: container)
             .environment(playlistAddition)
     }
 

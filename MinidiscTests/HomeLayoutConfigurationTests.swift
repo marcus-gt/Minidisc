@@ -4,8 +4,10 @@ import Testing
 @Suite("HomeLayoutConfiguration")
 @MainActor
 struct HomeLayoutConfigurationTests {
-    @Test func default_showsEverySectionInDeclarationOrder() {
-        #expect(HomeLayoutConfiguration.default.visibleSections == HomeSection.allCases)
+    /// Song Path is the one section Home starts without (#65).
+    @Test func default_showsEverySectionButSongPathInDeclarationOrder() {
+        #expect(HomeLayoutConfiguration.default.order == HomeSection.allCases)
+        #expect(HomeLayoutConfiguration.default.visibleSections == HomeSection.allCases.filter { $0 != .songPath })
     }
 
     @Test func queueBuilder_isShownByDefaultWithoutAStyleChoice() {
@@ -17,8 +19,9 @@ struct HomeLayoutConfigurationTests {
     @Test func layoutSavedBeforeTheQueueBuilder_getsItAppendedVisible() throws {
         let saved = #"{"hidden":["rediscover"],"order":["playlists","favoriteSongs","favoriteAlbums","recentlyPlayed","heavyRotation","rediscover","relevantAdditions","recentlyAdded","genres"]}"#
         let decoded = try #require(HomeLayoutConfiguration(rawValue: saved))
-        #expect(decoded.order.prefix(4) == [.pinned, .playlists, .queueBuilder, .favoriteSongs])
+        #expect(decoded.order.prefix(5) == [.pinned, .playlists, .queueBuilder, .songPath, .favoriteSongs])
         #expect(decoded.isVisible(.queueBuilder))
+        #expect(!decoded.isVisible(.songPath))
         #expect(!decoded.isVisible(.rediscover))
     }
 
@@ -76,14 +79,14 @@ struct HomeLayoutConfigurationTests {
         #expect(decoded.hidden.isEmpty)
     }
 
-    @Test func decode_missingSections_landInTheirDefaultPlaceVisible() throws {
+    @Test func decode_missingSections_landInTheirDefaultPlace() throws {
         let raw = #"{"order":["genres"],"hidden":[]}"#
 
         let decoded = try #require(HomeLayoutConfiguration(rawValue: raw))
 
         // Every missing section goes after its default predecessor, which rebuilds the default order.
         #expect(decoded.order == HomeSection.allCases)
-        #expect(decoded.visibleSections.count == HomeSection.allCases.count)
+        #expect(decoded.visibleSections == HomeSection.allCases.filter { $0 != .songPath })
     }
 
     /// A layout saved before the Pinned shelf existed shows it, at the top (#44).

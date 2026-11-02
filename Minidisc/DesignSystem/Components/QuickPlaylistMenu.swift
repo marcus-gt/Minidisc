@@ -9,7 +9,7 @@ struct QuickPlaylistMenuItems: View {
     let onAddToPlaylist: ((DisplayableSong) -> Void)?
 
     @Environment(\.appContainer) private var container
-    @Environment(\.quickPlaylistHost) private var host
+    @Environment(\.sheetHost) private var host
 
     private var entries: [QuickPlaylists.Entry] {
         guard let container, let serverID = container.serverState.activeServer?.id.uuidString else { return [] }
@@ -69,14 +69,9 @@ enum QuickPlaylistAction {
     }
 }
 
-extension EnvironmentValues {
-    /// Which presenter shows the quick playlist picker for menus below: the full player sets `.player`.
-    @Entry var quickPlaylistHost: QuickPlaylists.Host = .main
-}
-
 extension View {
     /// Presents the quick playlist picker when a heart's menu asks this host for it.
-    func quickPlaylistPicker(_ host: QuickPlaylists.Host, container: AppContainer?) -> some View {
+    func quickPlaylistPicker(_ host: SheetHost, container: AppContainer?) -> some View {
         sheet(isPresented: Binding(
             get: { container?.quickPlaylists.choosingIn == host },
             set: { if !$0 { container?.quickPlaylists.choosingIn = nil } }

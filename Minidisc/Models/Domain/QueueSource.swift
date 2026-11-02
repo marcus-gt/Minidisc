@@ -25,6 +25,8 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
     case recentlyAdded
     case songs
     case localFolder(name: String)
+    /// A song path from one song or mood to another (#65).
+    case songPath(from: String, to: String)
 
     static func moodRadio(_ mood: Mood) -> QueueSource { .moodRadio(moodRawValue: mood.rawValue) }
 
@@ -94,6 +96,7 @@ nonisolated enum QueueSource: Codable, Sendable, Hashable {
         case .downloads: String(localized: "Downloads")
         case .recentlyAdded: String(localized: "Recently Added")
         case .songs: String(localized: "Songs")
+        case .songPath(let from, let to): String(localized: "Song Path · \(from) → \(to)")
         }
     }
 

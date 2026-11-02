@@ -8,6 +8,8 @@ nonisolated enum HomeSection: String, LayoutSection {
     case pinned
     case playlists
     case queueBuilder
+    /// Off by default on Home; Discover shows it (#65).
+    case songPath
     case favoriteSongs
     case favoriteAlbums
     case recentlyPlayed
@@ -24,6 +26,7 @@ nonisolated enum HomeSection: String, LayoutSection {
         case .pinned: "Pinned"
         case .playlists: "Your Playlists"
         case .queueBuilder: "Queue Builder"
+        case .songPath: "Song Path"
         case .favoriteSongs: "Your Favorite Songs"
         case .favoriteAlbums: "Your Favorite Albums"
         case .recentlyPlayed: "Recently Played"
@@ -40,7 +43,9 @@ nonisolated enum HomeSection: String, LayoutSection {
 
     /// Favorite Songs is a short vertical list and the Queue Builder a set of pickers, so neither has
     /// a carousel / grid choice.
-    var supportsLayoutChoice: Bool { self != .favoriteSongs && self != .queueBuilder }
+    var supportsLayoutChoice: Bool { self != .favoriteSongs && self != .queueBuilder && self != .songPath }
+
+    static var hiddenByDefault: Set<HomeSection> { [.songPath] }
 }
 
 /// Which Home sections are shown, and in what order.

@@ -3,7 +3,14 @@ import Foundation
 /// A screen section the user can show, hide and reorder in Settings (Home, Discover).
 /// Raw values are persisted: never rename an existing case.
 nonisolated protocol LayoutSection: RawRepresentable, CaseIterable, Hashable, Identifiable, Sendable
-where RawValue == String, AllCases == [Self] {}
+where RawValue == String, AllCases == [Self] {
+    /// Sections that start hidden, also when an update adds them to a saved layout.
+    static var hiddenByDefault: Set<Self> { get }
+}
+
+extension LayoutSection {
+    nonisolated static var hiddenByDefault: Set<Self> { [] }
+}
 
 /// Which sections of a screen are shown, and in what order. Persisted as JSON through `@AppStorage`.
 ///
@@ -14,7 +21,7 @@ nonisolated struct SectionLayoutConfiguration<Section: LayoutSection>: Equatable
     private(set) var order: [Section]
     private(set) var hidden: Set<Section>
 
-    static var `default`: Self { Self(order: Section.allCases, hidden: []) }
+    static var `default`: Self { Self(order: Section.allCases, hidden: Section.hiddenByDefault) }
 
     init(order: [Section], hidden: Set<Section>) {
         self.order = Self.normalized(order)
@@ -64,10 +71,10 @@ extension SectionLayoutConfiguration: RawRepresentable {
     init?(rawValue: String) {
         guard let data = rawValue.data(using: .utf8),
               let stored = try? JSONDecoder().decode(Stored.self, from: data) else { return nil }
-        self.init(
-            order: stored.order.compactMap(Section.init(rawValue:)),
-            hidden: Set(stored.hidden.compactMap(Section.init(rawValue:)))
-        )
+        let order = stored.order.compactMap(Section.init(rawValue:))
+        // A section this layout has never seen starts as its default says: hidden ones stay hidden.
+        let added = Section.hiddenByDefault.subtracting(order)
+        self.init(order: order, hidden: Set(stored.hidden.compactMap(Section.init(rawValue:))).union(added))
     }
 
     var rawValue: String {

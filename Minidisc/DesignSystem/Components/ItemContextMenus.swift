@@ -105,6 +105,7 @@ struct SongContextMenuModifier: ViewModifier {
     let song: DisplayableSong
     let coverImage: PlatformImage?
 
+    @Environment(\.sheetHost) private var sheetHost
     @Environment(\.appContainer) private var container
 
     private var isFavorite: Bool {
@@ -142,6 +143,14 @@ struct SongContextMenuModifier: ViewModifier {
                 startInstantMix(from: .song(id: song.id), using: container, startingWith: song)
             } label: {
                 Label("Instant Mix", systemImage: instantMixSymbol)
+            }
+
+            if SongPathAvailability.isAvailable(container), !song.isLocalFile {
+                Button {
+                    container?.songPathLauncher.open(from: .song(song), in: sheetHost)
+                } label: {
+                    Label("Song Path from Here", systemImage: SongPathSheet.symbol)
+                }
             }
 
             Divider()
