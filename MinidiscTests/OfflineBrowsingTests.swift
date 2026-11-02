@@ -47,7 +47,7 @@ struct OfflineBrowsingTests {
         server.state.isOnline = false
         let id = account.id
         let root = URL.temporaryDirectory.appendingPathComponent("offline-browse-\(UUID())")
-        let manualFolder = URL.documentsDirectory.appendingPathComponent("app.minidisc/downloads/\(id)")
+        let manualFolder = URL.documentsDirectory.appendingPathComponent("app.maekster/downloads/\(id)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: manualFolder, withIntermediateDirectories: true)
         defer {

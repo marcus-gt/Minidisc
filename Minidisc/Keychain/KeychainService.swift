@@ -3,7 +3,7 @@ import Security
 import OSLog
 
 actor KeychainService: KeychainServiceProtocol {
-    private let service = "app.minidisc.server-credentials"
+    private let service = "app.maekster.server-credentials"
 
     func store<T: Codable & Sendable>(_ value: T, forKey key: String) async throws {
         let data = try JSONEncoder().encode(value)

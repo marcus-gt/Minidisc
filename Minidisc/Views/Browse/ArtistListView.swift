@@ -5,8 +5,8 @@ import SwiftSonic
 struct ArtistListView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: ArtistListViewModel?
-    @AppStorage("minidisc.artistSort") private var artistSort: ArtistSort = .name
-    @AppStorage("minidisc.artistListGrid") private var gridLayout = false
+    @AppStorage("maekster.artistSort") private var artistSort: ArtistSort = .name
+    @AppStorage("maekster.artistListGrid") private var gridLayout = false
     @State private var filterText = ""
     @State private var recentlyPlayed = RecentlyPlayedOrder()
 

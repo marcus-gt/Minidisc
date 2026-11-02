@@ -8,7 +8,7 @@ struct OnboardingWelcomeView: View {
     @State private var viewModel: OnboardingViewModel?
     @State private var showingServerForm = false
     @State private var appeared = false
-    @AppStorage("minidisc.localMusicEnabled") private var localMusicEnabled = false
+    @AppStorage("maekster.localMusicEnabled") private var localMusicEnabled = false
 
     var body: some View {
         ZStack {

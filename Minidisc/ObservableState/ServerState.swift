@@ -98,7 +98,7 @@ final class ServerState {
     var isOfflineModeEnabled: Bool {
         didSet {
             guard oldValue != isOfflineModeEnabled else { return }
-            defaults?.set(isOfflineModeEnabled, forKey: "minidisc.offlineMode")
+            defaults?.set(isOfflineModeEnabled, forKey: "maekster.offlineMode")
             offlineModeRevision &+= 1
             publishEffectiveNetworkPath()
         }
@@ -110,7 +110,7 @@ final class ServerState {
 
     init(defaults: UserDefaults? = nil) {
         self.defaults = defaults
-        isOfflineModeEnabled = defaults?.bool(forKey: "minidisc.offlineMode") ?? false
+        isOfflineModeEnabled = defaults?.bool(forKey: "maekster.offlineMode") ?? false
         if isOfflineModeEnabled { offlineModeRevision = 1 }
         publishEffectiveNetworkPath()
     }

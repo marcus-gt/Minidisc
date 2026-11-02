@@ -2,15 +2,15 @@ import SwiftUI
 
 struct MainTabView: View {
     @Environment(\.appContainer) private var container
-    @SceneStorage("minidisc.searchText") private var searchText = ""
+    @SceneStorage("maekster.searchText") private var searchText = ""
     @State private var searchPath = NavigationPath()
     @State private var homePath = NavigationPath()
     @State private var libraryPath = NavigationPath()
     @State private var discoverPath = NavigationPath()
-    @SceneStorage("minidisc.selectedTab") private var selectedTab: AppTab = .home
+    @SceneStorage("maekster.selectedTab") private var selectedTab: AppTab = .home
     @State private var playerPresentation = PlayerContainerConfiguration()
     @State private var playlistAddition = PlaylistAddition()
-    @AppStorage("minidisc.appTheme") private var theme: AppTheme = .system
+    @AppStorage("maekster.appTheme") private var theme: AppTheme = .system
 
     private enum AppTab: String, Hashable { case home, discover, library, lidarr, search }
 

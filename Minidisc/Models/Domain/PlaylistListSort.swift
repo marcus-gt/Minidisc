@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSonic
 
-/// Ordering for the Playlists list. Persists via `@AppStorage("minidisc.playlistListSort")`.
+/// Ordering for the Playlists list. Persists via `@AppStorage("maekster.playlistListSort")`.
 nonisolated enum PlaylistListSort: String, CaseIterable, Identifiable, Sendable {
     case lastUsed
     case recentlyCreated

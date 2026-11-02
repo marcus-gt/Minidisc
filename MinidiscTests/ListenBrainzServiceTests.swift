@@ -48,7 +48,7 @@ private final class LBMockKeychain: KeychainServiceProtocol {
 // MARK: - Helpers
 
 private let keychainKey = "listenbrainz-username"
-private let defaultsKey = "app.minidisc.listenbrainz.isEnabled"
+private let defaultsKey = "app.maekster.listenbrainz.isEnabled"
 
 private func makeComponents(transport: any ListenBrainzTransport) -> (ListenBrainzService, LBMockKeychain, String) {
     let client = ListenBrainzClient(transport: transport)

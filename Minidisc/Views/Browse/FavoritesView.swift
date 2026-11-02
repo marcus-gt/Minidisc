@@ -7,7 +7,7 @@ struct FavoritesView: View {
     @Environment(PlaylistAddition.self) private var playlistAddition
     @State private var viewModel: FavoritesViewModel?
     @State private var filterText = ""
-    @AppStorage("minidisc.favoritesSort") private var sort: FavoritesListSort = .name
+    @AppStorage("maekster.favoritesSort") private var sort: FavoritesListSort = .name
     @State private var recentlyPlayed = RecentlyPlayedOrder()
 
     var body: some View {

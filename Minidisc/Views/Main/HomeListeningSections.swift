@@ -133,7 +133,7 @@ nonisolated enum HomeShelfLayout: String {
     }
 
     static func storageKey(for identifier: String) -> String {
-        "minidisc.homeShelfLayout.\(identifier)"
+        "maekster.homeShelfLayout.\(identifier)"
     }
 }
 

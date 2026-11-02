@@ -33,5 +33,5 @@ nonisolated enum DiscoverSection: String, LayoutSection {
 typealias DiscoverLayoutConfiguration = SectionLayoutConfiguration<DiscoverSection>
 
 extension SectionLayoutConfiguration where Section == DiscoverSection {
-    static var storageKey: String { "minidisc.discoverLayout" }
+    static var storageKey: String { "maekster.discoverLayout" }
 }

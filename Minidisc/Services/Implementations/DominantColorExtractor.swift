@@ -9,9 +9,9 @@ import UIKit
 @Observable
 final class DominantColorExtractor {
     // v3 invalidates the bottom-strip averages stored by v2.
-    private static let userDefaultsKey = "minidisc.dominantColor.cache.v3"
-    private static let legacyUserDefaultsKey = "minidisc.dominantColor.cache.v2"
-    private static let overridesKey = "minidisc.dominantColor.overrides"
+    private static let userDefaultsKey = "maekster.dominantColor.cache.v3"
+    private static let legacyUserDefaultsKey = "maekster.dominantColor.cache.v2"
+    private static let overridesKey = "maekster.dominantColor.overrides"
 
     // Memoization must not invalidate views that read colors during body evaluation.
     @ObservationIgnored private var cache: [String: Color] = [:]

@@ -4,7 +4,7 @@ import SwiftData
 struct DownloadedView: View {
     @Environment(\.appContainer) private var container
     @State private var filterText = ""
-    @AppStorage("minidisc.downloadsSort") private var sort: DownloadsListSort = .name
+    @AppStorage("maekster.downloadsSort") private var sort: DownloadsListSort = .name
 
     var body: some View {
         Group {

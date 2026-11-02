@@ -16,7 +16,7 @@ actor HomeFeedCache {
     static let shared = HomeFeedCache()
     private let directory: URL
 
-    init(directory: URL = URL.cachesDirectory.appendingPathComponent("minidisc-home", isDirectory: true)) {
+    init(directory: URL = URL.cachesDirectory.appendingPathComponent("maekster-home", isDirectory: true)) {
         self.directory = directory
     }
 

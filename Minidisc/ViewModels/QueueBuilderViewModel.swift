@@ -52,8 +52,8 @@ final class QueueBuilderViewModel {
         self.playerService = playerService
         self.toastService = toastService
         self.defaults = defaults
-        selectionKey = "minidisc.queueBuilder.selection.\(storageScope)"
-        lengthKey = "minidisc.queueBuilder.length.\(storageScope)"
+        selectionKey = "maekster.queueBuilder.selection.\(storageScope)"
+        lengthKey = "maekster.queueBuilder.length.\(storageScope)"
         if let data = defaults.data(forKey: selectionKey),
            let saved = try? JSONDecoder().decode(QueueBuilderSelection.self, from: data) {
             selection = saved

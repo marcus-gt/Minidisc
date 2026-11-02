@@ -42,7 +42,7 @@ actor BackgroundDownloadTransport: DownloadTransport {
     private let session: URLSession
     private let inbox: URL
 
-    init(identifier: String? = nil, inbox: URL = URL.applicationSupportDirectory.appendingPathComponent("minidisc-download-inbox", isDirectory: true)) {
+    init(identifier: String? = nil, inbox: URL = URL.applicationSupportDirectory.appendingPathComponent("maekster-download-inbox", isDirectory: true)) {
         self.inbox = inbox
         let channel = AsyncStream<DownloadTransportEvent>.makeStream()
         events = channel.stream

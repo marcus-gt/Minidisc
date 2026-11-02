@@ -360,7 +360,7 @@ struct QueueBuilderViewModelTests {
     @Test func savedPicksThatNoLongerExist_areDropped() async throws {
         let store = defaults()
         let stale = QueueBuilderSelection(mains: ["Jazz", "Polka"], tags: ["nolongerthere"], decades: [1880, 1950], moods: [.happy])
-        store.set(try JSONEncoder().encode(stale), forKey: "minidisc.queueBuilder.selection.server-a")
+        store.set(try JSONEncoder().encode(stale), forKey: "maekster.queueBuilder.selection.server-a")
 
         let vm = await model(defaults: store)
 

@@ -26,8 +26,8 @@ final class LidarrSettings {
         return _baseURL
     }
 
-    private static let baseURLKey = "app.minidisc.lidarr.baseURL"
-    private static let credentialsKeychainKey = "app.minidisc.lidarr.credentials"
+    private static let baseURLKey = "app.maekster.lidarr.baseURL"
+    private static let credentialsKeychainKey = "app.maekster.lidarr.credentials"
 
     init(keychain: any KeychainServiceProtocol, defaults: UserDefaults = .standard) {
         self.keychain = keychain

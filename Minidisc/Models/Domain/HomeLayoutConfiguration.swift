@@ -53,5 +53,5 @@ nonisolated enum HomeSection: String, LayoutSection {
 typealias HomeLayoutConfiguration = SectionLayoutConfiguration<HomeSection>
 
 extension SectionLayoutConfiguration where Section == HomeSection {
-    static var storageKey: String { "minidisc.homeLayout" }
+    static var storageKey: String { "maekster.homeLayout" }
 }

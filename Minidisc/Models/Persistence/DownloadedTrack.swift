@@ -7,7 +7,7 @@ final class DownloadedTrack {
     var songId: String
     var serverId: UUID
     var albumId: String?
-    var filePath: String        // relative to Documents/app.minidisc/downloads/
+    var filePath: String        // relative to Documents/app.maekster/downloads/
     var fileSize: Int64
     var mimeType: String
     var downloadedAt: Date

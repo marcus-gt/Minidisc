@@ -24,7 +24,7 @@ struct ArtistDetailView: View {
     @Environment(DominantColorExtractor.self) private var colorExtractor
     @Environment(\.colorScheme) private var colorScheme
     @State private var dominantColor: Color = .clear
-    @AppStorage("minidisc.albumSort") private var albumSort: AlbumSort = .recentlyAdded
+    @AppStorage("maekster.albumSort") private var albumSort: AlbumSort = .recentlyAdded
     private let heroCoverHeight: CGFloat = 500
     @State private var isGeneratingMix = false
     /// Discography groups the listener folded away; everything starts expanded.

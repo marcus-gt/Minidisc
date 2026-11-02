@@ -27,7 +27,7 @@ actor AudioMuseMoodScorer: MoodScoring {
 
     init(
         serverService: any ServerServiceProtocol,
-        cacheDirectory: URL = URL.cachesDirectory.appendingPathComponent("minidisc-audiomuse-moods", isDirectory: true),
+        cacheDirectory: URL = URL.cachesDirectory.appendingPathComponent("maekster-audiomuse-moods", isDirectory: true),
         session: URLSession = .shared
     ) {
         self.serverService = serverService

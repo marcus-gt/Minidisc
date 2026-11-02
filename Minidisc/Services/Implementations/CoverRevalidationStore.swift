@@ -113,7 +113,7 @@ final class CoverRevalidationStore {
 
     nonisolated private static func defaultFileURL() -> URL {
         let base = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("app.minidisc", isDirectory: true)
+            .appendingPathComponent("app.maekster", isDirectory: true)
         return base.appendingPathComponent("coverart-revalidation.json")
     }
 }

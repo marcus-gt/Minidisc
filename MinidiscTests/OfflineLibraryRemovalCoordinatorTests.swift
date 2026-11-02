@@ -14,7 +14,7 @@ struct OfflineLibraryRemovalCoordinatorTests {
     ) {
         let container = try ModelContainer.maekster(inMemory: true)
         let downloadsDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("minidisc-offline-removal-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("maekster-offline-removal-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(
             at: downloadsDirectory,
             withIntermediateDirectories: true

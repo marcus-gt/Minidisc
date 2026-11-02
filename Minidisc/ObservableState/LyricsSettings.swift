@@ -53,9 +53,9 @@ final class LyricsSettings {
 
     static let defaultSource: LyricsSource = .automatic
     static let timingOffsetLimitMs = 3_000
-    private static let sourceKey = "minidisc.lyrics.source"
-    private static let showsCurrentLineKey = "minidisc.lyrics.showCurrentLineInPlayer"
-    private static let timingOffsetKey = "minidisc.lyrics.timingOffsetMs"
+    private static let sourceKey = "maekster.lyrics.source"
+    private static let showsCurrentLineKey = "maekster.lyrics.showCurrentLineInPlayer"
+    private static let timingOffsetKey = "maekster.lyrics.timingOffsetMs"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults

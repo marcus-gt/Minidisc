@@ -14,7 +14,7 @@ final class DownloadedAlbum {
     var totalTracksCount: Int
     var downloadedAt: Date
     var coverArtId: String?
-    /// Relative path (from Documents/app.minidisc/) to the cached cover art file. Nil if not downloaded.
+    /// Relative path (from Documents/app.maekster/) to the cached cover art file. Nil if not downloaded.
     var localCoverArtPath: String?
 
     var isComplete: Bool { tracksCount == totalTracksCount }

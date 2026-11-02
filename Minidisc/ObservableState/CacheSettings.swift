@@ -94,12 +94,12 @@ final class CacheSettings {
     static let defaultCacheOverCellular: Bool = false
     static let defaultCacheArtwork: Bool = true
 
-    private static let capacityMegabytesKey = "minidisc.cache.capacityMegabytes"
-    private static let legacyMaxTracksKey = "minidisc.cache.maxTracks"
-    private static let cacheFormatKey = "minidisc.cache.format"
-    private static let cacheOverCellularKey = "minidisc.cache.cellular"
-    private static let keepFavoritesOfflineKey = "minidisc.cache.favoritesOffline"
-    private static let cacheArtworkKey = "minidisc.cache.artwork"
+    private static let capacityMegabytesKey = "maekster.cache.capacityMegabytes"
+    private static let legacyMaxTracksKey = "maekster.cache.maxTracks"
+    private static let cacheFormatKey = "maekster.cache.format"
+    private static let cacheOverCellularKey = "maekster.cache.cellular"
+    private static let keepFavoritesOfflineKey = "maekster.cache.favoritesOffline"
+    private static let cacheArtworkKey = "maekster.cache.artwork"
 
     // MARK: - Init
 

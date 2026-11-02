@@ -6,8 +6,8 @@ final class PlaybackPreferences {
     static let defaultVolume: Float = 0.7
 
     private enum Key {
-        static let lastVolume = "minidisc.lastVolume"
-        static let autoExtendEnabled = "minidisc.player.autoExtendEnabled"
+        static let lastVolume = "maekster.lastVolume"
+        static let autoExtendEnabled = "maekster.player.autoExtendEnabled"
     }
 
     private let defaults: UserDefaults

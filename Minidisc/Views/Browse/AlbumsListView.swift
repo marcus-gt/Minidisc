@@ -6,8 +6,8 @@ import OSLog
 struct AlbumsListView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: AlbumListViewModel?
-    @AppStorage("minidisc.albumSort") private var albumSort: AlbumSort = .recentlyAdded
-    @AppStorage("minidisc.albumListGrid") private var gridLayout = false
+    @AppStorage("maekster.albumSort") private var albumSort: AlbumSort = .recentlyAdded
+    @AppStorage("maekster.albumListGrid") private var gridLayout = false
     @State private var filterText = ""
     @State private var recentlyPlayed = RecentlyPlayedOrder()
 

@@ -9,19 +9,19 @@ nonisolated struct PendingListenQueueFile: Codable, Sendable {
 
 actor ListenBrainzService {
     private static let usernameKeychainKey = "listenbrainz-username"
-    private static let isEnabledDefaultsKey = "app.minidisc.listenbrainz.isEnabled"
+    private static let isEnabledDefaultsKey = "app.maekster.listenbrainz.isEnabled"
 
     // MARK: - Scrobbling Keychain / UserDefaults keys
 
-    private static let scrobblingTokenKeychainKey    = "app.minidisc.listenbrainz.token"
-    private static let scrobblingUsernameKeychainKey = "app.minidisc.listenbrainz.username"
-    private static let scrobblingEnabledDefaultsKey  = "app.minidisc.listenbrainz.scrobbling.isEnabled"
-    private static let scrobblingServerURLDefaultsKey = "app.minidisc.listenbrainz.scrobbling.serverRootURL"
+    private static let scrobblingTokenKeychainKey    = "app.maekster.listenbrainz.token"
+    private static let scrobblingUsernameKeychainKey = "app.maekster.listenbrainz.username"
+    private static let scrobblingEnabledDefaultsKey  = "app.maekster.listenbrainz.scrobbling.isEnabled"
+    private static let scrobblingServerURLDefaultsKey = "app.maekster.listenbrainz.scrobbling.serverRootURL"
     /// Durable transaction fence. It is set before the first write of the two-key credential
     /// pair and cleared only after a complete commit, complete rollback, or complete purge.
     /// A process restart can therefore never reactivate credentials left between two writes.
     private static let scrobblingCredentialsInvalidDefaultsKey =
-        "app.minidisc.listenbrainz.scrobbling.credentialsInvalid"
+        "app.maekster.listenbrainz.scrobbling.credentialsInvalid"
     static let defaultScrobblingServerURL = "https://api.listenbrainz.org"
 
     private let client: ListenBrainzClient
@@ -92,13 +92,13 @@ actor ListenBrainzService {
                 appropriateFor: nil,
                 create: true
             )
-            let dir = appSupport.appendingPathComponent("app.minidisc", isDirectory: true)
+            let dir = appSupport.appendingPathComponent("app.maekster", isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             return dir.appendingPathComponent("listenbrainz-queue.json")
         } catch {
             Logger.listenBrainz.error("Failed to resolve Application Support path: \(error, privacy: .public)")
             return URL(fileURLWithPath: NSTemporaryDirectory())
-                .appendingPathComponent("app.minidisc.listenbrainz-queue.json")
+                .appendingPathComponent("app.maekster.listenbrainz-queue.json")
         }
     }
 
