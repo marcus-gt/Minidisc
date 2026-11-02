@@ -171,11 +171,24 @@ actor PlayerService: PlayerServiceProtocol {
     /// How long a track must have been audible before "now playing" is reported anywhere.
     private let playingNowDelay: TimeInterval
     private var cacheDownloadTask: Task<Void, Never>?
-    /// The next queue item's cache download (#56). It runs after the current track's own and is
-    /// cancelled with the standby preload whenever the queue or the current track changes.
-    private var nextTrackCacheTask: Task<Void, Never>?
+    /// A download that caches a queue item ahead (#56). `id` tells a finishing download which
+    /// slot it still occupies.
+    private struct AheadCacheDownload {
+        let id: UUID
+        let songID: String
+        let task: Task<Void, Never>
+    }
+    /// The next queue item's cache download (#56). It runs after the current track's own.
+    private var nextTrackCache: AheadCacheDownload?
+    /// An ahead download set aside by a skip or queue edit. The next progress tick keeps it if its
+    /// song became the current or still is the next one, and cancels it otherwise.
+    private var setAsideNextTrackCache: AheadCacheDownload?
+    /// An ahead download whose song became the current one: it is that song's cache download now.
+    private var adoptedNextTrackCache: AheadCacheDownload?
     /// The upcoming song the next-item cache last tried, so each one is tried once.
     private var nextTrackCacheSongID: String?
+    /// The current track plays from a remote stream rather than a file (#9).
+    private var currentTrackStreams = false
     private let cacheSession: URLSession
     private var prefetchScheduled = false
     /// Invalidates a preload resolution already suspended in MediaResolver when its context changes.
@@ -532,7 +545,7 @@ actor PlayerService: PlayerServiceProtocol {
         }
         isRestoringSession = false
         cancelPendingInstantMix()
-        cancelPendingPrefetch()
+        cancelPendingPrefetch(keepingAheadCache: true)
 
         // Reset shuffle only when starting a genuinely new queue, not on internal skips
         // (skipToNext/skipToPrevious pass state.queue unchanged, so IDs match).
@@ -666,7 +679,7 @@ actor PlayerService: PlayerServiceProtocol {
 
         cancelPendingScrobble()
         cancelPendingCacheDownload()
-        cancelPendingPrefetch()
+        cancelPendingPrefetch(keepingAheadCache: true)
 
         if isNewQueue {
             originalQueueOrder = nil
@@ -812,6 +825,7 @@ actor PlayerService: PlayerServiceProtocol {
             await listenBrainzService.notifyTrackStarted(song: song)
         }
 
+        if case .stream = source { currentTrackStreams = true } else { currentTrackStreams = false }
         if case .stream(let streamURL, let customHeaders) = source, let serverId {
             let (allowCellular, cacheFormat) = await MainActor.run {
                 (cacheSettings.cacheOverCellular, cacheSettings.cacheFormat)
@@ -3486,26 +3500,78 @@ actor PlayerService: PlayerServiceProtocol {
     private func cancelPendingCacheDownload() {
         cacheDownloadTask?.cancel()
         cacheDownloadTask = nil
+        adoptedNextTrackCache?.task.cancel()
+        adoptedNextTrackCache = nil
     }
 
     // MARK: - Crossfade prefetch
 
-    private func cancelPendingPrefetch() {
+    /// `keepingAheadCache` sets a running next-item download aside instead of cancelling it, for
+    /// skips and queue edits that may land on the song it is fetching.
+    private func cancelPendingPrefetch(keepingAheadCache: Bool = false) {
         prefetchGeneration &+= 1
         prefetchScheduled = false
         preparedNextPlayback = nil
-        cancelNextTrackCache()
+        cancelNextTrackCache(settingAside: keepingAheadCache)
     }
 
-    private func cancelNextTrackCache() {
-        nextTrackCacheTask?.cancel()
-        nextTrackCacheTask = nil
+    private func cancelNextTrackCache(settingAside: Bool = false) {
+        if settingAside, let running = nextTrackCache {
+            setAsideNextTrackCache?.task.cancel()
+            setAsideNextTrackCache = running
+        } else {
+            nextTrackCache?.task.cancel()
+            setAsideNextTrackCache?.task.cancel()
+            setAsideNextTrackCache = nil
+        }
+        nextTrackCache = nil
         nextTrackCacheSongID = nil
+    }
+
+    /// Any ahead download still running, attached or not.
+    private var isCachingAhead: Bool {
+        nextTrackCache != nil || setAsideNextTrackCache != nil || adoptedNextTrackCache != nil
+    }
+
+    /// Settles a set-aside ahead download on the tick after a skip or queue edit (#56).
+    private func settleSetAsideNextTrackCache(currentID: String?, nextID: String?) {
+        guard let download = setAsideNextTrackCache else { return }
+        setAsideNextTrackCache = nil
+        switch Self.aheadCacheOutcome(downloading: download.songID, current: currentID, next: nextID) {
+        case .becomesCurrent:
+            // It replaces the current song's own (still waiting) cache download.
+            cacheDownloadTask?.cancel()
+            cacheDownloadTask = nil
+            adoptedNextTrackCache = download
+            Logger.player.notice("[CACHE] kept '\(download.songID, privacy: .public)': it's playing now")
+        case .staysNext:
+            nextTrackCache = download
+            nextTrackCacheSongID = download.songID
+        case .cancel:
+            download.task.cancel()
+            Logger.player.notice("[CACHE] next '\(download.songID, privacy: .public)' cancelled: no longer up next")
+        }
+    }
+
+    nonisolated enum AheadCacheOutcome: Equatable { case becomesCurrent, staysNext, cancel }
+
+    /// What happens to an ahead download after a skip or queue edit: it carries on when its song is
+    /// now playing or still next.
+    nonisolated static func aheadCacheOutcome(downloading songID: String, current: String?, next: String?) -> AheadCacheOutcome {
+        if songID == current { return .becomesCurrent }
+        if songID == next { return .staysNext }
+        return .cancel
+    }
+
+    private func finishAheadCacheDownload(_ id: UUID) {
+        if nextTrackCache?.id == id { nextTrackCache = nil }
+        if setAsideNextTrackCache?.id == id { setAsideNextTrackCache = nil }
+        if adoptedNextTrackCache?.id == id { adoptedNextTrackCache = nil }
     }
 
     private func invalidateStandbyPreload(reason: String) {
         let hadPendingWork = prefetchScheduled || preparedNextPlayback != nil
-        cancelPendingPrefetch()
+        cancelPendingPrefetch(keepingAheadCache: true)
         engine.cancelPreload()
         if hadPendingWork {
             Logger.player.debug("[PREFETCH] invalidated standby: \(reason, privacy: .public)")
@@ -3563,10 +3629,14 @@ actor PlayerService: PlayerServiceProtocol {
         nextSongID: String?,
         lastTriedSongID: String?,
         isRepeatOne: Bool,
-        isBusy: Bool
+        isBusy: Bool,
+        streamsOnCellular: Bool = false,
+        bufferedUntil: Double = 0
     ) -> Bool {
         guard let nextSongID, nextSongID != lastTriedSongID, !isRepeatOne, !isBusy, duration > 0,
               position >= nextTrackCacheDelay else { return false }
+        // On cellular, a stream that's still loading keeps the connection to itself (#9).
+        if streamsOnCellular && bufferedUntil < duration - 1 { return false }
         return !shouldProtectTransitionFromCaching(crossfadeDuration: crossfadeDuration, remaining: duration - position)
     }
 
@@ -3594,7 +3664,7 @@ actor PlayerService: PlayerServiceProtocol {
         }
         guard duration > 0, hasNextTrack, repeatMode != .one else { return }
         let remaining = duration - position
-        if cacheDownloadTask != nil || nextTrackCacheTask != nil,
+        if cacheDownloadTask != nil || isCachingAhead,
            PlayerService.shouldProtectTransitionFromCaching(
                crossfadeDuration: crossfadeConfig.duration,
                remaining: remaining
@@ -3604,8 +3674,10 @@ actor PlayerService: PlayerServiceProtocol {
             )
             cancelPendingCacheDownload()
             // Keeps the song ID, so it isn't tried again before this hand-off.
-            nextTrackCacheTask?.cancel()
-            nextTrackCacheTask = nil
+            nextTrackCache?.task.cancel()
+            nextTrackCache = nil
+            setAsideNextTrackCache?.task.cancel()
+            setAsideNextTrackCache = nil
         }
         guard PlayerService.shouldSchedulePrefetch(crossfadeDuration: crossfadeConfig.duration, remaining: remaining) else { return }
 
@@ -4214,12 +4286,14 @@ actor PlayerService: PlayerServiceProtocol {
 
     /// Starts the next queue item's cache download when `shouldCacheNextTrack` allows it (#56).
     private func checkNextTrackCache() async {
-        let snapshot = await MainActor.run { () -> (position: Double, duration: Double, next: DisplayableSong?, isRepeatOne: Bool, isLive: Bool) in
+        let snapshot = await MainActor.run { () -> (position: Double, duration: Double, current: String?, next: DisplayableSong?, isRepeatOne: Bool, isLive: Bool, isExpensive: Bool) in
             let nextIndex = state.currentIndex + 1
-            return (state.position, state.duration,
+            return (state.position, state.duration, state.currentTrack?.id,
                     state.queue.indices.contains(nextIndex) ? state.queue[nextIndex] : nil,
-                    state.repeatMode == .one, state.isLiveStream)
+                    state.repeatMode == .one, state.isLiveStream, serverService.state.isExpensive)
         }
+        settleSetAsideNextTrackCache(currentID: snapshot.current, nextID: snapshot.next?.id)
+        let streamsOnCellular = currentTrackStreams && snapshot.isExpensive
         guard !snapshot.isLive, let next = snapshot.next, !next.isLocalFile,
               Self.shouldCacheNextTrack(
                   position: snapshot.position,
@@ -4228,38 +4302,39 @@ actor PlayerService: PlayerServiceProtocol {
                   nextSongID: next.id,
                   lastTriedSongID: nextTrackCacheSongID,
                   isRepeatOne: snapshot.isRepeatOne,
-                  isBusy: cacheDownloadTask != nil || nextTrackCacheTask != nil
+                  isBusy: cacheDownloadTask != nil || isCachingAhead,
+                  streamsOnCellular: streamsOnCellular,
+                  bufferedUntil: streamsOnCellular ? engine.bufferedUntil : 0
               ) else { return }
         guard let serverId = await MainActor.run(body: { serverService.state.isOnline ? serverService.state.activeServer?.id : nil })
         else { return }
         // The snapshot may be stale after the hop; another tick may have started it meanwhile.
-        guard nextTrackCacheTask == nil, nextTrackCacheSongID != next.id else { return }
+        guard !isCachingAhead, nextTrackCacheSongID != next.id else { return }
         nextTrackCacheSongID = next.id
         let generation = playbackGeneration
         let prefetch = prefetchGeneration
-        nextTrackCacheTask = Task { [weak self] in
-            await self?.cacheNextTrack(songId: next.id, serverId: serverId, generation: generation, prefetchGeneration: prefetch)
-        }
+        let id = UUID()
+        nextTrackCache = AheadCacheDownload(id: id, songID: next.id, task: Task { [weak self] in
+            await self?.cacheNextTrack(id: id, songId: next.id, serverId: serverId, generation: generation, prefetchGeneration: prefetch)
+        })
     }
 
-    private func cacheNextTrack(songId: String, serverId: UUID, generation: UInt64, prefetchGeneration: UInt64) async {
+    /// Before the download starts, a skip or queue edit stops it. Once it's running, a set-aside
+    /// download carries on until `settleSetAsideNextTrackCache` decides.
+    private func cacheNextTrack(id: UUID, songId: String, serverId: UUID, generation: UInt64, prefetchGeneration: UInt64) async {
         func isCurrent() -> Bool {
             !Task.isCancelled && generation == playbackGeneration && prefetchGeneration == self.prefetchGeneration
         }
-        defer {
-            if generation == playbackGeneration && prefetchGeneration == self.prefetchGeneration {
-                nextTrackCacheTask = nil
-            }
-        }
+        defer { finishAheadCacheDownload(id) }
         if await mediaResolver.localSource(songId: songId, serverId: serverId) != nil {
-            Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' is already on disk")
+            Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' is already on disk")
             return
         }
         let (allowCellular, cacheFormat, isExpensive) = await MainActor.run {
             (cacheSettings.cacheOverCellular, cacheSettings.cacheFormat, serverService.state.isExpensive)
         }
         guard !isExpensive || allowCellular else {
-            Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' skipped on cellular")
+            Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' skipped on cellular")
             return
         }
         guard isCurrent(),
@@ -4267,15 +4342,15 @@ actor PlayerService: PlayerServiceProtocol {
               isCurrent(),
               let url = await cacheURL(songId: songId, streamURL: streamURL, format: cacheFormat),
               isCurrent() else { return }
-        Logger.player.info("[CACHE] caching next '\(songId, privacy: .public)' ahead")
+        Logger.player.notice("[CACHE] caching next '\(songId, privacy: .public)' ahead")
         do {
             try await downloadAndCache(songId: songId, serverId: serverId, streamURL: url, customHeaders: customHeaders,
                                        allowCellular: allowCellular, using: cacheSession)
         } catch {
             if Task.isCancelled {
-                Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' cancelled")
+                Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' cancelled")
             } else {
-                Logger.player.debug("[CACHE] next '\(songId, privacy: .public)' failed: \(error, privacy: .public)")
+                Logger.player.notice("[CACHE] next '\(songId, privacy: .public)' failed: \(error, privacy: .public)")
             }
         }
     }
@@ -4306,10 +4381,12 @@ actor PlayerService: PlayerServiceProtocol {
             return
         }
 
+        // On cellular a second download of the song that's streaming competes with the stream
+        // itself (#9). The next song is cached ahead instead, once this stream has fully loaded.
         let isExpensive = await MainActor.run { serverService.state.isExpensive }
-        if isExpensive && !allowCellular {
+        if isExpensive {
             playbackDiagnostics.record(.cache(.skippedCellular))
-            Logger.player.debug("Cache skipped — cellular for '\(songId, privacy: .public)'")
+            Logger.player.notice("Cache skipped — cellular, '\(songId, privacy: .public)' is streaming")
             return
         }
 
@@ -4327,10 +4404,10 @@ actor PlayerService: PlayerServiceProtocol {
         } catch {
             if Task.isCancelled {
                 playbackDiagnostics.record(.cache(.cancelled))
-                Logger.player.debug("Cache download cancelled for '\(songId, privacy: .public)'")
+                Logger.player.notice("Cache download cancelled for '\(songId, privacy: .public)'")
             } else {
                 playbackDiagnostics.record(.cache(.failed(code: (error as NSError).code)))
-                Logger.player.debug("Cache download failed for '\(songId, privacy: .public)': \(error, privacy: .public)")
+                Logger.player.notice("Cache download failed for '\(songId, privacy: .public)': \(error, privacy: .public)")
             }
         }
     }
@@ -4371,7 +4448,7 @@ actor PlayerService: PlayerServiceProtocol {
         )
 
         playbackDiagnostics.record(.cache(.stored))
-        Logger.player.info("Cached '\(songId, privacy: .public)' from stream (\(fileSize) bytes, \(mimeType, privacy: .public))")
+        Logger.player.notice("Cached '\(songId, privacy: .public)' from stream (\(fileSize) bytes, \(mimeType, privacy: .public))")
     }
 
     /// A cache download needs the actual response length. A stream URL may request an
