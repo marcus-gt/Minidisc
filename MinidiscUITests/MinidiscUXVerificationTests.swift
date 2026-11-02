@@ -1441,7 +1441,6 @@ final class MinidiscUXVerificationTests: XCTestCase {
             ("home.recentlyPlayed", "Aurore — Sessions"),
             ("home.heavyRotation", "Écoute familière 01"),
             ("home.rediscover", "Écoute familière 13"),
-            ("home.relevantAdditions", "Aurore — Sessions"),
             ("home.recentlyAdded", "Rives")
         ]
         for (identifier, title) in sections {
@@ -1469,13 +1468,13 @@ final class MinidiscUXVerificationTests: XCTestCase {
         try scrollHomeTo(favoriteShelf.buttons["Horizons de test, Atelier Minidisc"], named: "home-large-album-card")
         captureHierarchy("home-large-text-album-card")
         try await Task.sleep(for: .seconds(3))
-        try scrollHomeTo(searchElement("home.relevantAdditions"), named: "home-large-relevant-additions")
-        captureHierarchy("home-large-text-relevant-additions")
+        try scrollHomeTo(searchElement("home.recentlyAdded"), named: "home-large-recently-added")
+        captureHierarchy("home-large-text-recently-added")
         try await Task.sleep(for: .seconds(3))
         // Launch arguments are per run: also inspect the compact player at ordinary text size.
         try await launchFixtureApp(homeCatalog: true)
-        try scrollHomeTo(searchElement("home.relevantAdditions"), named: "home-normal-relevant-additions")
-        captureHierarchy("home-normal-player-and-relevant-additions")
+        try scrollHomeTo(searchElement("home.recentlyAdded"), named: "home-normal-recently-added")
+        captureHierarchy("home-normal-player-and-recently-added")
         try await Task.sleep(for: .seconds(3))
     }
 
