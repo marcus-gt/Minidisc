@@ -17,7 +17,6 @@ nonisolated enum HomeSection: String, LayoutSection {
     /// A daily blend of favourite, dormant and untried artists (#63).
     case artists
     case rediscover
-    case relevantAdditions
     case recentlyAdded
     case genres
 
@@ -35,7 +34,6 @@ nonisolated enum HomeSection: String, LayoutSection {
         case .heavyRotation: "In Heavy Rotation"
         case .artists: "Artist Picks"
         case .rediscover: "Rediscover"
-        case .relevantAdditions: "Recently Added from Your Artists"
         case .recentlyAdded: "Recently Added"
         case .genres: "Genres"
         }

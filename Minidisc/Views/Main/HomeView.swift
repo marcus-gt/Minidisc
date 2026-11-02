@@ -165,13 +165,10 @@ struct HomeView: View {
             if isOnline { ArtistShelf() }
         case .rediscover:
             albumSection(section, albums: container?.visibleAlbums(vm.rediscovery) ?? [])
-        case .relevantAdditions:
-            albumSection(section, albums: container?.visibleAlbums(vm.relevantAdditions) ?? [])
         case .recentlyAdded:
             if isOnline, vm.recentlyAdded.isEmpty, vm.pendingSections.contains(.recent) {
                 HomeShelfPlaceholder(title: section.title, side: 160)
             }
-            // The full newest list, even albums also shown under "Recently Added from Your Artists".
             HomeAlbumSection(title: section.title, albums: container?.visibleAlbums(vm.recentlyAdded) ?? [],
                              identifier: section.shelfIdentifier, continuesRecentlyAdded: true)
         case .genres:

@@ -120,4 +120,13 @@ struct HomeLayoutConfigurationTests {
         config.setVisible(true, for: .favoriteSongs)
         #expect(config.visibleSections.contains(.favoriteSongs))
     }
+
+    /// "Recently Added from Your Artists" is gone (#62); a layout that still lists it decodes without it.
+    @Test func removedSection_isDroppedFromASavedLayout() throws {
+        let saved = #"{"hidden":["relevantAdditions"],"order":["relevantAdditions","recentlyAdded","pinned"]}"#
+        let decoded = try #require(HomeLayoutConfiguration(rawValue: saved))
+        #expect(decoded.order.first == .recentlyAdded)
+        #expect(Set(decoded.order) == Set(HomeSection.allCases))
+        #expect(decoded.order.count == HomeSection.allCases.count)
+    }
 }

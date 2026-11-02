@@ -14,26 +14,6 @@ struct HomePersonalizationTests {
         #expect(HomePersonalization.rediscovery(favorites: [a, b], frequent: [b, c], recent: [a]).map(\.id) == ["b", "c"])
     }
 
-    @Test("Relevant additions use favorite artists and listening habits without inventing matches")
-    func relevantArtists() throws {
-        let favorite = try album("favorite", artistID: "favorite-artist")
-        let familiar = try album("familiar", artistID: "frequent-artist")
-        let newFavorite = try album("new-favorite", artistID: "favorite-artist")
-        let newFamiliar = try album("new-familiar", artistID: "frequent-artist")
-        let stranger = try album("stranger", artistID: "another-artist")
-        let result = HomePersonalization.relevantAdditions([newFavorite, stranger, newFamiliar, newFavorite],
-            favorites: HomeFavorites(albums: [favorite]), frequent: [familiar])
-        #expect(result.map(\.id) == ["new-favorite", "new-familiar"])
-    }
-
-    @Test("Artist names are a fallback only when IDs are absent")
-    func missingArtistIDs() throws {
-        let favorites = HomeFavorites(artists: [ArtistID3(id: "known", name: "Beyoncé")])
-        let sameNameOtherID = try album("other", artistID: "other-artist", artist: "Beyonce")
-        let missingID = try album("missing", artistID: nil, artist: "Beyonce")
-        #expect(HomePersonalization.relevantAdditions([sameNameOtherID, missingID], favorites: favorites, frequent: []).map(\.id) == ["missing"])
-    }
-
     @Test("The earlier offline Home cache still decodes after the new shelves")
     func oldCacheRemainsReadable() throws {
         let data = Data(#"{"playlists":[],"recentlyPlayed":[],"recentlyAdded":[],"genres":[]}"#.utf8)

@@ -48,9 +48,6 @@ final class HomeFeedViewModel {
         HomePersonalization.rediscovery(favorites: [], frequent: mostPlayed,
                                         recent: recentlyPlayed + favorites.albums + heavyRotation)
     }
-    var relevantAdditions: [AlbumID3] {
-        HomePersonalization.relevantAdditions(recentlyAdded, favorites: favorites, frequent: mostPlayed)
-    }
     private(set) var pendingSections: Set<Section> = []
     private(set) var hasPartialFailure = false
     var isLoading = false
