@@ -2,7 +2,7 @@ import OSLog
 import SwiftSonic
 import SwiftUI
 
-/// Home's "Artists for You" (#63): today's blend of favourite, dormant and untried artists, as
+/// Home's "Artist Picks" (#63): today's blend of favourite, dormant and untried artists, as
 /// round portraits. Tapping one opens the artist; the menu starts their radio or shuffles them.
 struct ArtistShelf: View {
     @Environment(\.appContainer) private var container

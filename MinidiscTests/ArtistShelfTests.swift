@@ -3,7 +3,7 @@ import SwiftSonic
 import Testing
 @testable import Minidisc
 
-@Suite("Artists for You (#63)")
+@Suite("Artist Picks (#63)")
 struct ArtistShelfTests {
     private nonisolated static let now = Date(timeIntervalSince1970: 1_800_000_000)
     private nonisolated static let day: TimeInterval = 24 * 60 * 60

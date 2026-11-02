@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 import SwiftSonic
 
-/// Home's "Artists for You" shelf (#63): a daily blend of the artists you play most, ones you
+/// Home's "Artist Picks" shelf (#63): a daily blend of the artists you play most, ones you
 /// used to play but haven't lately, and ones in the library you've barely tried.
 actor ArtistShelfService {
     /// The library's artists and its play history, from the server.

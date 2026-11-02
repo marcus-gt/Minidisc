@@ -33,7 +33,7 @@ nonisolated enum HomeSection: String, LayoutSection {
         case .favoriteAlbums: "Your Favorite Albums"
         case .recentlyPlayed: "Recently Played"
         case .heavyRotation: "In Heavy Rotation"
-        case .artists: "Artists for You"
+        case .artists: "Artist Picks"
         case .rediscover: "Rediscover"
         case .relevantAdditions: "Recently Added from Your Artists"
         case .recentlyAdded: "Recently Added"
