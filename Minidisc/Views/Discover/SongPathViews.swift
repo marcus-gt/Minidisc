@@ -79,8 +79,7 @@ struct SongPathCard: View {
         .padding(.horizontal, MinidiscSpacing.l)
         .sheet(item: $editing) { side in
             NavigationStack {
-                SongPathEndPicker(selection: binding(for: side),
-                                  moodAllowed: (side == .from ? to : from)?.isMood != true)
+                SongPathEndPicker(selection: binding(for: side), other: side == .from ? to : from)
             }
         }
     }
@@ -260,7 +259,7 @@ struct SongPathSheet: View {
     private func endLink(_ title: LocalizedStringKey, end: Binding<SongPathService.End?>,
                          other: SongPathService.End?) -> some View {
         NavigationLink {
-            SongPathEndPicker(selection: end, moodAllowed: other?.isMood != true)
+            SongPathEndPicker(selection: end, other: other)
         } label: {
             LabeledContent(title) {
                 if let value = end.wrappedValue {
@@ -324,13 +323,18 @@ private struct SongPathEndLabel: View {
 /// Pick a song from the library (searched as you type, or the one playing) or a mood.
 private struct SongPathEndPicker: View {
     @Binding var selection: SongPathService.End?
-    let moodAllowed: Bool
+    /// The path's other end: a mood there rules out a mood here, and Surprise Me avoids its song.
+    let other: SongPathService.End?
 
     @Environment(\.appContainer) private var container
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @State private var results: [DisplayableSong] = []
     @State private var choosingMood = false
+    @State private var suggestions: SongPathService.Suggestions?
+    @State private var isSurprising = false
+
+    private var moodAllowed: Bool { other?.isMood != true }
 
     var body: some View {
         List {
@@ -351,11 +355,12 @@ private struct SongPathEndPicker: View {
                     }
                 }
             } else {
-                if query.isEmpty, case .song(let playing)? = SongPathCard.nowPlaying(container) {
-                    Section("Now Playing") { songRow(playing) }
-                }
-                Section {
-                    ForEach(results) { songRow($0) }
+                if query.isEmpty {
+                    suggestionSections
+                } else {
+                    Section {
+                        ForEach(results) { songRow($0) }
+                    }
                 }
             }
         }
@@ -363,7 +368,58 @@ private struct SongPathEndPicker: View {
         .navigationBarTitleDisplayModeInline()
         .searchable(text: $query, prompt: "Search songs")
         .task(id: query) { await search() }
+        .task { suggestions = await container?.songPathService.suggestions() }
         .onAppear { if case .mood = selection { choosingMood = true } }
+    }
+
+    /// Before a search: what's playing, a random song, and the songs you're most likely to mean.
+    @ViewBuilder
+    private var suggestionSections: some View {
+        if case .song(let playing)? = SongPathCard.nowPlaying(container) {
+            Section("Now Playing") { songRow(playing) }
+        }
+        Section {
+            Button {
+                Task { await surprise() }
+            } label: {
+                HStack {
+                    Label("Surprise Me", systemImage: "dice")
+                    Spacer()
+                    if isSurprising { ProgressView() }
+                }
+            }
+            .disabled(isSurprising)
+        }
+        if let suggestions {
+            suggestionSection("Recently Played", songs: suggestions.recent)
+            suggestionSection("Your Top Songs", songs: suggestions.top)
+            suggestionSection("Favorites", songs: suggestions.favorites)
+        } else {
+            Section {
+                ProgressView().frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func suggestionSection(_ title: LocalizedStringKey, songs: [DisplayableSong]) -> some View {
+        if !songs.isEmpty {
+            Section(title) {
+                ForEach(songs) { songRow($0) }
+            }
+        }
+    }
+
+    private func surprise() async {
+        guard let service = container?.songPathService else { return }
+        isSurprising = true
+        defer { isSurprising = false }
+        let avoid: String? = if case .song(let song)? = other { song.id } else { nil }
+        if let song = try? await service.surpriseSong(avoiding: avoid) {
+            choose(.song(song))
+        } else {
+            container?.toastService.showError(String(localized: "Couldn't find a song. Try again."))
+        }
     }
 
     private func songRow(_ song: DisplayableSong) -> some View {

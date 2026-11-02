@@ -184,7 +184,7 @@ final class AppContainer {
         )
         moodPlaylistService = MoodPlaylistService(serverService: server, catalog: catalog)
         songPathService = SongPathService(serverService: server, serverState: serverState,
-                                          libraryService: library, catalog: catalog)
+                                          libraryService: library, catalog: catalog, statsService: stats)
         moodRadioService = MoodRadioService(
             serverService: server,
             serverState: serverState,

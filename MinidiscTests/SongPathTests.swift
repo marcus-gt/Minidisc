@@ -116,4 +116,54 @@ struct SongPathTests {
         #expect(restored?.isVisible(.recentlyPlayed) == true)
         #expect(DiscoverLayoutConfiguration.default.isVisible(.songPath))
     }
+
+    private nonisolated static func play(_ id: String) -> PlaybackEventDTO {
+        PlaybackEventDTO(trackId: id, trackTitle: "Played \(id)", albumId: nil, albumTitle: nil, artistId: nil,
+                         artistName: "Artist", genre: nil, timestamp: .now, durationListened: 200, trackDuration: 200,
+                         wasCompleted: true, serverId: "s")
+    }
+
+    private nonisolated static func top(_ ids: [String]) -> [TopTrackEntry] {
+        ids.enumerated().map { TopTrackEntry(rank: $0.offset + 1, trackId: $0.element, title: "Top \($0.element)",
+                                             artistName: "Artist", albumTitle: nil, totalSecondsListened: 600, playCount: 3) }
+    }
+
+    /// Recent plays without repeats or local files, the month's top songs and favourites; indexed
+    /// songs bring their details.
+    @Test func suggestions_recentTopAndFavorites() async {
+        let monthTop = Self.top(["t1", "t2", "t3", "t4", "t5"])
+        let service = SongPathService(makeClient: { nil }, resolver: nil, songsByID: { ids in
+            ids.filter { $0 == "a" }.map { Song(id: $0, title: "Indexed a", artist: "Artist", coverArt: "cover-a") }
+        }, sources: .init(
+            recentPlays: { ["a", "b", "a", "local:ff", "c"].map(Self.play) },
+            topTracks: { period in if case .month = period { monthTop } else { [] } },
+            favorites: { [Song(id: "f1", title: "Fav")] }
+        ))
+        let suggestions = await service.suggestions()
+        #expect(suggestions.recent.map(\.id) == ["a", "b", "c"])
+        #expect(suggestions.recent[0].title == "Indexed a")
+        #expect(suggestions.recent[1].title == "Played b")
+        #expect(suggestions.top.map(\.id) == ["t1", "t2", "t3", "t4", "t5"])
+        #expect(suggestions.favorites.map(\.id) == ["f1"])
+    }
+
+    /// Early in a month the year's top songs stand in; a failing list comes back empty.
+    @Test func suggestions_thinMonthUsesTheYear() async {
+        struct Failure: Error {}
+        let service = SongPathService(makeClient: { nil }, resolver: nil, songsByID: { _ in [] }, sources: .init(
+            topTracks: { period in if case .year = period { Self.top(["y1", "y2"]) } else { Self.top(["m1"]) } },
+            favorites: { throw Failure() }
+        ))
+        let suggestions = await service.suggestions()
+        #expect(suggestions.top.map(\.id) == ["y1", "y2"])
+        #expect(suggestions.favorites.isEmpty)
+    }
+
+    @Test func surprise_avoidsTheOtherEnd() async throws {
+        let service = SongPathService(makeClient: { nil }, resolver: nil, songsByID: { _ in [] }, sources: .init(
+            randomSongs: { _ in [Song(id: "a", title: "A"), Song(id: "b", title: "B")] }
+        ))
+        #expect(try await service.surpriseSong(avoiding: "a")?.id == "b")
+        #expect(try await service.surpriseSong(avoiding: nil)?.id == "a")
+    }
 }
