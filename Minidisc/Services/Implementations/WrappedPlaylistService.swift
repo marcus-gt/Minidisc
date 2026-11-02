@@ -24,18 +24,13 @@ extension SwiftSonicClient: PlaylistSyncClient {
 nonisolated enum WrappedPlaylistService {
     static let wrappedPlaylistNamePrefix = "maekster Wrapped "
 
-    /// Prefix used before the rebrand.
-    static let legacyWrappedPlaylistNamePrefix = "Minidisc Wrapped "
-
     static func playlistName(year: Int) -> String {
         "\(wrappedPlaylistNamePrefix)\(year)"
     }
 
-    /// The year of a Wrapped playlist under the current or the legacy name; nil for any other playlist.
+    /// The year of a Wrapped playlist; nil for any other playlist.
     static func year(fromPlaylistName name: String) -> Int? {
-        for prefix in [wrappedPlaylistNamePrefix, legacyWrappedPlaylistNamePrefix] where name.hasPrefix(prefix) {
-            return Int(name.dropFirst(prefix.count))
-        }
-        return nil
+        guard name.hasPrefix(wrappedPlaylistNamePrefix) else { return nil }
+        return Int(name.dropFirst(wrappedPlaylistNamePrefix.count))
     }
 }

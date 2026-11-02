@@ -2,7 +2,7 @@ import SwiftUI
 
 extension View {
     @ViewBuilder
-    func minidiscFullScreenCover<Content: View>(
+    func maeksterFullScreenCover<Content: View>(
         isPresented: Binding<Bool>,
         onDismiss: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content

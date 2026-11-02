@@ -47,7 +47,7 @@ nonisolated enum AlbumReleaseCategory: Sendable, Equatable, CaseIterable {
 }
 
 extension AlbumID3 {
-    nonisolated var minidiscReleaseCategory: AlbumReleaseCategory {
+    nonisolated var maeksterReleaseCategory: AlbumReleaseCategory {
         AlbumReleaseCategory.category(releaseTypes: releaseTypes, isCompilation: isCompilation)
     }
 }

@@ -10,7 +10,7 @@ struct WrappedDiscoveriesSlide: View {
             WrappedCoverMosaic(artworkIDs: data.topAlbums.reversed().map(\.albumId), palette: palette)
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
 
                 Text("DISCOVERIES")
                     .font(.system(size: 13, weight: .heavy, design: .rounded))
@@ -28,9 +28,9 @@ struct WrappedDiscoveriesSlide: View {
                         .foregroundStyle(.white.opacity(0.8))
                 }
 
-                Spacer(minLength: MinidiscSpacing.xl)
+                Spacer(minLength: MaeksterSpacing.xl)
 
-                VStack(alignment: .leading, spacing: MinidiscSpacing.m) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.m) {
                     discoveryRow(count: data.totalUniqueTracks, label: "different songs")
                     discoveryRow(count: data.totalUniqueArtists, label: "different artists")
                     discoveryRow(count: data.totalUniqueAlbums, label: "different albums")
@@ -38,14 +38,14 @@ struct WrappedDiscoveriesSlide: View {
 
                 Spacer()
             }
-            .padding(.horizontal, MinidiscSpacing.xl)
+            .padding(.horizontal, MaeksterSpacing.xl)
             .wrappedSlideEntrance()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func discoveryRow(count: Int, label: LocalizedStringKey) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: MinidiscSpacing.s) {
+        HStack(alignment: .firstTextBaseline, spacing: MaeksterSpacing.s) {
             Text("\(count)")
                 .font(.system(size: 48, weight: .black, design: .rounded))
                 .kerning(-1)

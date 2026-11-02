@@ -20,7 +20,7 @@ struct WrappedTopGenreSlide: View {
             WrappedCoverMosaic(artworkIDs: artworkIDs, palette: palette)
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
                 WrappedSlideLabel("YOUR SOUND")
                 Spacer()
 
@@ -39,17 +39,17 @@ struct WrappedTopGenreSlide: View {
                         .foregroundStyle(.white.opacity(0.8))
                 }
 
-                Spacer(minLength: MinidiscSpacing.xl)
+                Spacer(minLength: MaeksterSpacing.xl)
 
-                VStack(spacing: MinidiscSpacing.m) {
+                VStack(spacing: MaeksterSpacing.m) {
                     ForEach(runnersUp) { genre in
                         genreRow(genre)
                     }
                 }
 
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
             }
-            .padding(.horizontal, MinidiscSpacing.xl)
+            .padding(.horizontal, MaeksterSpacing.xl)
             .wrappedSlideEntrance()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -58,7 +58,7 @@ struct WrappedTopGenreSlide: View {
     /// Rank, name and share, with a bar scaled to the top genre so the gaps read at a glance.
     private func genreRow(_ genre: TopGenreEntry) -> some View {
         let lead = genres.first?.share ?? 1
-        return VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        return VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             HStack {
                 Text(verbatim: "\(genre.rank)")
                     .font(.system(size: 17, weight: .heavy, design: .rounded))
@@ -80,7 +80,7 @@ struct WrappedTopGenreSlide: View {
                     .frame(width: max(6, proxy.size.width * genre.share / max(lead, 0.001)))
             }
             .frame(height: 6)
-            .padding(.leading, 22 + MinidiscSpacing.s)
+            .padding(.leading, 22 + MaeksterSpacing.s)
         }
         .accessibilityElement(children: .combine)
     }

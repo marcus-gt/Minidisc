@@ -55,27 +55,27 @@ struct MiniPlayerAccessoryView: View {
     }
 
     private func inlineBar(coverArtId: String, title: String, artist: String?, isPlaying: Bool, isAvailable: Bool, isLiveStream: Bool, status: String?) -> some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             miniArtwork(coverArtId)
                 .opacity(isAvailable ? 1.0 : 0.5)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .accessibilityIdentifier("player.mini.title")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .fontWeight(.semibold)
                     .foregroundStyle(typoColor)
                     .lineLimit(1)
                     .accessibilityLabel(metadataLabel(title: title, artist: artist, status: status))
                 if let status, !dynamicTypeSize.isAccessibilitySize {
                     Text(status)
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(typoSecondaryColor)
                         .lineLimit(1)
                 } else if !dynamicTypeSize.isAccessibilitySize {
-                    HStack(spacing: MinidiscSpacing.xs) {
+                    HStack(spacing: MaeksterSpacing.xs) {
                         if let artist {
                             Text(artist)
-                                .font(.minidiscCaption)
+                                .font(.maeksterCaption)
                                 .foregroundStyle(typoSecondaryColor)
                                 .lineLimit(1)
                         }
@@ -85,9 +85,9 @@ struct MiniPlayerAccessoryView: View {
             Spacer(minLength: 0)
             playPauseButton(isPlaying: isPlaying, isAvailable: isAvailable)
         }
-        .padding(.leading, MinidiscSpacing.m)
-        .padding(.trailing, MinidiscSpacing.s)
-        .padding(.vertical, MinidiscSpacing.s)
+        .padding(.leading, MaeksterSpacing.m)
+        .padding(.trailing, MaeksterSpacing.s)
+        .padding(.vertical, MaeksterSpacing.s)
     }
 
     private func expandedBar(playerState: PlayerState, coverArtId: String, title: String, artist: String?, isPlaying: Bool, isAvailable: Bool, isLiveStream: Bool, status: String?) -> some View {
@@ -96,27 +96,27 @@ struct MiniPlayerAccessoryView: View {
             ? 0.0
             : PlaybackClock.shownElapsed(playerState.position, duration: playerState.duration) / playerState.duration
         return VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: MinidiscSpacing.m) {
+            HStack(alignment: .center, spacing: MaeksterSpacing.m) {
                 miniArtwork(coverArtId)
                     .opacity(isAvailable ? 1.0 : 0.5)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .accessibilityIdentifier("player.mini.title")
-                        .font(.minidiscCellTitle)
+                        .font(.maeksterCellTitle)
                         .foregroundStyle(typoColor)
                         .lineLimit(1)
                         .accessibilityLabel(metadataLabel(title: title, artist: artist, status: status))
                     if let status, !dynamicTypeSize.isAccessibilitySize {
                         Text(status)
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(typoSecondaryColor)
                             .lineLimit(1)
                     } else if !dynamicTypeSize.isAccessibilitySize {
-                        HStack(spacing: MinidiscSpacing.xs) {
+                        HStack(spacing: MaeksterSpacing.xs) {
                             if let artist {
                                 Text(artist)
-                                    .font(.minidiscCaption)
+                                    .font(.maeksterCaption)
                                     .foregroundStyle(typoSecondaryColor)
                                     .lineLimit(1)
                             }
@@ -126,7 +126,7 @@ struct MiniPlayerAccessoryView: View {
 
                 Spacer(minLength: 0)
 
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     playPauseButton(isPlaying: isPlaying, isAvailable: isAvailable)
                     if !playerState.queue.isEmpty && !isLiveStream {
                         Button {
@@ -145,12 +145,12 @@ struct MiniPlayerAccessoryView: View {
                 }
                 .frame(height: 36)
             }
-            .padding(.leading, MinidiscSpacing.l)
-            .padding(.trailing, MinidiscSpacing.s)
-            .padding(.vertical, MinidiscSpacing.m)
+            .padding(.leading, MaeksterSpacing.l)
+            .padding(.trailing, MaeksterSpacing.s)
+            .padding(.vertical, MaeksterSpacing.m)
 
             if isLiveStream {
-                HStack(spacing: MinidiscSpacing.xs) {
+                HStack(spacing: MaeksterSpacing.xs) {
                     Circle().fill(Color.red).frame(width: 6, height: 6)
                     Text("LIVE")
                         .font(.caption2)
@@ -158,13 +158,13 @@ struct MiniPlayerAccessoryView: View {
                         .foregroundStyle(.red)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
                 .frame(height: 3)
                 .accessibilityHidden(true)
             } else {
                 GeometryReader { geo in
                     Capsule()
-                        .fill(isAvailable ? Color.minidiscAccent : Color.secondary.opacity(0.3))
+                        .fill(isAvailable ? Color.maeksterAccent : Color.secondary.opacity(0.3))
                         .frame(width: geo.size.width * CGFloat(progress), height: 3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -177,7 +177,7 @@ struct MiniPlayerAccessoryView: View {
     private func miniArtwork(_ coverArtId: String) -> some View {
         CoverArtView(id: coverArtId, size: 60,
                      initialImage: initialArtwork?.id == coverArtId ? initialArtwork?.image : nil)
-            .minidiscCoverStyle()
+            .maeksterCoverStyle()
             .modifier(PlayerArtworkTransition(namespace: artworkNamespace))
             .frame(width: 30, height: 30)
     }
@@ -283,7 +283,7 @@ private struct MiniPlayerPlacementReader<Content: View>: View {
 
 #if DEBUG
 #Preview("In the tab bar") {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         TabView {
             Tab("Home", systemImage: "house.fill") { Color.clear }
             Tab("Library", systemImage: "music.note.square.stack.fill") { Color.clear }
@@ -296,14 +296,14 @@ private struct MiniPlayerPlacementReader<Content: View>: View {
 }
 
 #Preview("Inline and expanded, paused") {
-    MinidiscPreview(container: .preview(isPlaying: false)) {
-        VStack(spacing: MinidiscSpacing.xxl) {
+    MaeksterPreview(container: .preview(isPlaying: false)) {
+        VStack(spacing: MaeksterSpacing.xxl) {
             MiniPlayerAccessoryView(placementOverride: true, expandPlayer: {})
                 .frame(height: 48)
             MiniPlayerAccessoryView(placementOverride: false, expandPlayer: {})
                 .frame(height: 56)
         }
-        .padding(MinidiscSpacing.l)
+        .padding(MaeksterSpacing.l)
     }
 }
 #endif

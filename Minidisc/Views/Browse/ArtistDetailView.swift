@@ -75,7 +75,7 @@ struct ArtistDetailView: View {
     }
 
     private let columns = [
-        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: MinidiscSpacing.l)
+        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: MaeksterSpacing.l)
     ]
 
     var body: some View {
@@ -111,7 +111,7 @@ struct ArtistDetailView: View {
                     } else {
                         ScrollView {
                             artistHero(vm: vm)
-                            VStack(alignment: .leading, spacing: MinidiscSpacing.section) {
+                            VStack(alignment: .leading, spacing: MaeksterSpacing.section) {
                                 if !isOnline && albums.isEmpty {
                                     ForEach(Array(localTracks.enumerated()), id: \.element.id) { index, song in
                                         SongRow(song: song, index: index + 1, showCoverArt: true)
@@ -178,15 +178,15 @@ struct ArtistDetailView: View {
                                     )
                                 }
                             }
-                            .padding(.vertical, MinidiscSpacing.l)
+                            .padding(.vertical, MaeksterSpacing.l)
                             .frame(maxWidth: .infinity)
                             .background(bodyColor)
                             // Force the themed scheme so the shared cells contrast the tinted body.
                             .environment(\.colorScheme, theme.isThemed ? (theme.isLight ? .light : .dark) : colorScheme)
                         }
                         .ignoresSafeArea(.container, edges: .top)
-                        .minidiscHideTopScrollEdgeEffect()
-                        .minidiscSongSwipeContainer()
+                        .maeksterHideTopScrollEdgeEffect()
+                        .maeksterSongSwipeContainer()
                         .background(bodyColor.ignoresSafeArea())
                         .refreshable {
                             await vm.load()
@@ -206,7 +206,7 @@ struct ArtistDetailView: View {
                 skeletonGrid
             }
         }
-        .environment(\.minidiscSongMenuContext, SongMenuContext(artistID: artist.id))
+        .environment(\.maeksterSongMenuContext, SongMenuContext(artistID: artist.id))
         .navigationTitle("")
         .navigationBarTitleDisplayModeInline()
         .navigationBarBackButtonHidden(true)
@@ -222,7 +222,7 @@ struct ArtistDetailView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                MinidiscMoreMenu {
+                MaeksterMoreMenu {
                     Button("Instant Mix", systemImage: instantMixSymbol) {
                         startArtistAutomix()
                     }
@@ -295,19 +295,19 @@ struct ArtistDetailView: View {
             heroHeight: heroCoverHeight
         ) {
             heroContent(vm: vm, albums: albums)
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
         }
     }
 
     private func heroContent(vm: ArtistDetailViewModel, albums: [AlbumID3]) -> some View {
-        VStack(spacing: MinidiscSpacing.xl) {
+        VStack(spacing: MaeksterSpacing.xl) {
             Text(artist.name)
-                .font(.minidiscHeroTitle)
+                .font(.maeksterHeroTitle)
                 .foregroundStyle(headerTextColor)
                 .multilineTextAlignment(.center)
 
             let canPlay = !(vm.isPlayLoading || (albums.isEmpty && vm.offlineTracks.isEmpty && vm.appearanceSongs.isEmpty))
-            HStack(spacing: MinidiscSpacing.xl) {
+            HStack(spacing: MaeksterSpacing.xl) {
                 Button(isArtistFavorite ? "Remove from Favorites" : "Add to Favorites",
                        systemImage: isArtistFavorite ? "heart.fill" : "heart") {
                     HapticFeedback.light.trigger()
@@ -320,25 +320,25 @@ struct ArtistDetailView: View {
                     }
                 }
                 .contentTransition(.symbolEffect(.replace))
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
                 .disabled(!isOnline)
 
                 Button("Play", systemImage: "play.fill") {
                     Task { await playAll(shuffled: false) }
                 }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large, isProminent: true))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large, isProminent: true))
                 .disabled(!canPlay)
 
                 Button("Shuffle", systemImage: "shuffle") {
                     Task { await playAll(shuffled: true) }
                 }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
                 .disabled(!canPlay)
 
                 Button("Get Info", systemImage: "info") {
                     isShowingArtistInformation = true
                 }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
             }
             .foregroundStyle(headerTextColor)
         }
@@ -391,40 +391,40 @@ struct ArtistDetailView: View {
 
     private func sectionHeader(_ title: LocalizedStringKey) -> some View {
         Text(title)
-            .font(.minidiscSectionTitle)
+            .font(.maeksterSectionTitle)
             .foregroundStyle(headerTextColor)
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
     }
 
     private func featuredReleaseSection(_ album: AlbumID3) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            MinidiscCarouselHeader("Latest Release", showsChevron: false)
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            MaeksterCarouselHeader("Latest Release", showsChevron: false)
             NavigationLink(value: HomeDestination.album(album)) {
-                HStack(spacing: MinidiscSpacing.m) {
+                HStack(spacing: MaeksterSpacing.m) {
                     CoverArtView(id: album.coverArt ?? album.id, size: 200)
                         .frame(width: 88, height: 88)
-                        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous))
                     VStack(alignment: .leading, spacing: 4) {
                         if let year = album.year {
                             Text(verbatim: "\(year)")
-                                .font(.minidiscCaption)
+                                .font(.maeksterCaption)
                                 .foregroundStyle(headerSecondaryColor)
                         }
                         Text(album.name)
-                            .font(.minidiscCellTitle)
+                            .font(.maeksterCellTitle)
                             .foregroundStyle(headerTextColor)
                             .lineLimit(2)
                         Text("\(album.songCount) songs")
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(headerSecondaryColor)
                     }
                     Spacer(minLength: 0)
                 }
-                .padding(MinidiscSpacing.m)
-                .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+                .padding(MaeksterSpacing.m)
+                .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
                 // Include transparent gaps in the card’s hit area.
-                .contentShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
-                .padding(.horizontal, MinidiscSpacing.l)
+                .contentShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
+                .padding(.horizontal, MaeksterSpacing.l)
             }
             .buttonStyle(.plain)
             .lazyCollectionContextMenu(
@@ -447,58 +447,58 @@ struct ArtistDetailView: View {
     }
 
     private func bestOfSection(_ songs: [DisplayableSong]) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             sectionHeader("Made For You")
             NavigationLink(value: HomeDestination.artistBestOf(
                 artistId: artist.id,
                 artistName: artist.name,
                 coverArtId: viewModel?.artist?.coverArt ?? artist.coverArt
             )) {
-                HStack(spacing: MinidiscSpacing.m) {
+                HStack(spacing: MaeksterSpacing.m) {
                     CoverArtView(id: heroCoverArtId, size: 200)
                         .frame(width: 88, height: 88)
-                        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous))
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Playlist")
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(headerSecondaryColor)
                         Text("The best of \(artist.name)")
-                            .font(.minidiscCellTitle)
+                            .font(.maeksterCellTitle)
                             .foregroundStyle(headerTextColor)
                             .lineLimit(2)
                         Text("\(songs.count) songs")
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(headerSecondaryColor)
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(headerSecondaryColor)
                 }
-                .padding(MinidiscSpacing.m)
-                .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
-                .contentShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(MaeksterSpacing.m)
+                .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
+                .padding(.horizontal, MaeksterSpacing.l)
             }
             .buttonStyle(.plain)
         }
     }
 
     private func likedSongsSection(_ songs: [DisplayableSong]) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            HStack(spacing: MinidiscSpacing.m) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            HStack(spacing: MaeksterSpacing.m) {
                 sectionHeader("Liked Songs")
                 Spacer()
                 Button {
                     Task { await container?.toastService.perform { try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0, source: artistSource) } }
                 } label: {
                     Image(systemName: "shuffle")
-                        .font(.minidiscSectionTitle)
+                        .font(.maeksterSectionTitle)
                         .foregroundStyle(headerTextColor)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Shuffle liked songs")
-                .padding(.trailing, MinidiscSpacing.l)
+                .padding(.trailing, MaeksterSpacing.l)
             }
             VStack(spacing: 0) {
                 ForEach(Array(songs.enumerated()), id: \.element.id) { index, song in
@@ -518,18 +518,18 @@ struct ArtistDetailView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.leading, MinidiscSpacing.l)
-            .padding(.trailing, MinidiscSpacing.trackRowTrailing)
+            .padding(.leading, MaeksterSpacing.l)
+            .padding(.trailing, MaeksterSpacing.trackRowTrailing)
         }
     }
 
     private var likedSongsSkeleton: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             sectionHeader("Liked Songs")
-            VStack(spacing: MinidiscSpacing.m) {
+            VStack(spacing: MaeksterSpacing.m) {
                 ForEach(0..<3, id: \.self) { _ in
-                    HStack(spacing: MinidiscSpacing.m) {
-                        SkeletonBlock(width: 44, height: 44, cornerRadius: MinidiscCornerRadius.standard)
+                    HStack(spacing: MaeksterSpacing.m) {
+                        SkeletonBlock(width: 44, height: 44, cornerRadius: MaeksterCornerRadius.standard)
                         VStack(alignment: .leading, spacing: 6) {
                             SkeletonBlock(width: 180, height: 13, cornerRadius: 4)
                             SkeletonBlock(width: 120, height: 11, cornerRadius: 4)
@@ -538,7 +538,7 @@ struct ArtistDetailView: View {
                     }
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
         }
         .allowsHitTesting(false)
     }
@@ -567,7 +567,7 @@ struct ArtistDetailView: View {
         do {
             let tracks = try await c.libraryService.fetchAllTracks(forArtistID: artist.id)
             try await c.playerService.play(tracks: shuffled ? tracks.shuffled() : tracks, startIndex: 0, source: artistSource)
-        } catch MinidiscError.artistTracksUnavailable {
+        } catch MaeksterError.artistTracksUnavailable {
             c.toastService.showError("Unable to load artist tracks. Please check your connection and try again.")
         } catch {
             c.toastService.showError("Playback failed. Please try again.")
@@ -630,10 +630,10 @@ struct ArtistDetailView: View {
 
     private var skeletonGrid: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: MinidiscSpacing.l) {
+            LazyVGrid(columns: columns, spacing: MaeksterSpacing.l) {
                 ForEach(0..<6, id: \.self) { _ in SkeletonAlbumCard() }
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
         // Loading sits on the same dark surface the page resolves to.
         .background(bodyColor.ignoresSafeArea())
@@ -655,18 +655,18 @@ private struct ArtistTopSongsSection: View {
     let titleColor: Color
     let secondaryColor: Color
 
-    @Environment(\.minidiscSongMenuContext) private var menuContext
+    @Environment(\.maeksterSongMenuContext) private var menuContext
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            MinidiscCarouselHeaderLink(
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            MaeksterCarouselHeaderLink(
                 "Top Songs",
                 itemCount: songs.count,
                 visibleLimit: 5
             ) {
                 // Passed explicitly: a pushed destination need not inherit the page's environment.
                 ArtistTopSongsCollectionView(artistId: artistId, artistName: artistName, songs: songs)
-                    .environment(\.minidiscSongMenuContext, menuContext)
+                    .environment(\.maeksterSongMenuContext, menuContext)
             }
             ArtistTopSongsList(
                 artistId: artistId,
@@ -676,23 +676,23 @@ private struct ArtistTopSongsSection: View {
                 titleColor: titleColor,
                 secondaryColor: secondaryColor
             )
-            .padding(.leading, MinidiscSpacing.l)
-            .padding(.trailing, MinidiscSpacing.trackRowTrailing)
+            .padding(.leading, MaeksterSpacing.l)
+            .padding(.trailing, MaeksterSpacing.trackRowTrailing)
         }
     }
 }
 
 private struct ArtistTopSongsSkeleton: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-            MinidiscCarouselHeader("Top Songs", showsChevron: false)
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            MaeksterCarouselHeader("Top Songs", showsChevron: false)
             VStack(spacing: 0) {
                 ForEach(0..<5, id: \.self) { _ in
-                    HStack(spacing: MinidiscSpacing.s) {
+                    HStack(spacing: MaeksterSpacing.s) {
                         SkeletonBlock(
                             width: ArtistDetailMetrics.topSongArtwork,
                             height: ArtistDetailMetrics.topSongArtwork,
-                            cornerRadius: MinidiscCornerRadius.xs
+                            cornerRadius: MaeksterCornerRadius.xs
                         )
                         VStack(alignment: .leading, spacing: 6) {
                             SkeletonBlock(width: 180, height: 14, cornerRadius: 4)
@@ -701,10 +701,10 @@ private struct ArtistTopSongsSkeleton: View {
                         Spacer(minLength: 0)
                         SkeletonBlock(width: 28, height: 10, cornerRadius: 4)
                     }
-                    .padding(.vertical, MinidiscSpacing.xs)
+                    .padding(.vertical, MaeksterSpacing.xs)
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
         }
         .allowsHitTesting(false)
     }
@@ -745,8 +745,8 @@ private struct ArtistTopSongsList: View {
                         showArtist: false,
                         secondaryText: song.albumName ?? artistName,
                         coverArtSize: ArtistDetailMetrics.topSongArtwork,
-                        coverArtCornerRadius: MinidiscCornerRadius.xs,
-                        primaryContentSpacing: MinidiscSpacing.m,
+                        coverArtCornerRadius: MaeksterCornerRadius.xs,
+                        primaryContentSpacing: MaeksterSpacing.m,
                         isFavorite: favoriteSongIDs.contains(song.id),
                         titleColor: titleColor,
                         secondaryColor: secondaryColor,
@@ -755,12 +755,12 @@ private struct ArtistTopSongsList: View {
                         onGoToAlbum: { presentAlbum(for: song) },
                         onTap: { play(song) }
                     )
-                    .padding(.vertical, MinidiscSpacing.xs)
+                    .padding(.vertical, MaeksterSpacing.xs)
 
                     if song.id != displayedSongs.last?.id {
                         Divider()
                             .overlay(secondaryColor.opacity(0.26))
-                            .padding(.leading, ArtistDetailMetrics.topSongArtwork + MinidiscSpacing.s)
+                            .padding(.leading, ArtistDetailMetrics.topSongArtwork + MaeksterSpacing.s)
                     }
                 }
             }
@@ -806,9 +806,9 @@ private struct ArtistTopSongsCollectionView: View {
                 displayedSongs: songs,
                 playbackSongs: songs
             )
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Top Songs")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -826,27 +826,27 @@ struct OutOfLibraryArtistSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: MinidiscSpacing.l) {
+                VStack(spacing: MaeksterSpacing.l) {
                     ExternalCoverView(url: imageURL) {
                         ArtistPlaceholderView(name: artist.name, size: 120)
                     }
                     .frame(width: 120, height: 120)
                     .clipShape(Circle())
-                    .padding(.top, MinidiscSpacing.l)
+                    .padding(.top, MaeksterSpacing.l)
 
-                    VStack(spacing: MinidiscSpacing.xs) {
+                    VStack(spacing: MaeksterSpacing.xs) {
                         Text(artist.name)
                             .font(.title2.bold())
                             .multilineTextAlignment(.center)
 
                         Text("Not in your library")
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(.secondary)
                     }
 
                     externalLinksSection
                 }
-                .padding(MinidiscSpacing.l)
+                .padding(MaeksterSpacing.l)
             }
             .navigationTitle(artist.name)
             .navigationBarTitleDisplayMode(.inline)
@@ -860,7 +860,7 @@ struct OutOfLibraryArtistSheet: View {
 
     @ViewBuilder
     private var externalLinksSection: some View {
-        VStack(spacing: MinidiscSpacing.s) {
+        VStack(spacing: MaeksterSpacing.s) {
             if !providers.isEmpty {
                 ForEach(providers) { provider in
                     if let url = provider.buildURL(artistName: artist.name, albumTitle: "") {
@@ -886,7 +886,7 @@ struct OutOfLibraryArtistSheet: View {
                 }
             }
         }
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 
     private func externalLinkButton(title: LocalizedStringKey, url: URL, secondary: Bool) -> some View {
@@ -898,14 +898,14 @@ struct OutOfLibraryArtistSheet: View {
                 Spacer(minLength: 0)
                 Image(systemName: "arrow.up.right")
             }
-            .font(.minidiscCellTitle)
-            .padding(MinidiscSpacing.m)
+            .font(.maeksterCellTitle)
+            .padding(MaeksterSpacing.m)
             .frame(maxWidth: .infinity)
             .background(secondary
                 ? Color.secondary.opacity(0.08)
-                : Color.minidiscAccent.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
-            .foregroundStyle(secondary ? Color.secondary : Color.minidiscAccent)
+                : Color.maeksterAccent.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous))
+            .foregroundStyle(secondary ? Color.secondary : Color.maeksterAccent)
         }
         .buttonStyle(.plain)
     }
@@ -915,7 +915,7 @@ struct OutOfLibraryArtistSheet: View {
 #Preview("Artist") {
     let container = AppContainer.preview()
     let artist = PreviewFixtures.noraVale
-    MinidiscPreview(container: container) {
+    MaeksterPreview(container: container) {
         NavigationStack {
             ArtistDetailView(artist: artist, viewModel: .preview(artist: artist, container: container))
         }
@@ -925,7 +925,7 @@ struct OutOfLibraryArtistSheet: View {
 #Preview("Credit-only artist") {
     let container = AppContainer.preview()
     let artist = PreviewFixtures.harbourStrings
-    MinidiscPreview(container: container) {
+    MaeksterPreview(container: container) {
         NavigationStack {
             ArtistDetailView(artist: artist, viewModel: .preview(artist: artist, container: container))
         }

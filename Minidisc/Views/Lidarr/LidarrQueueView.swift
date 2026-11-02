@@ -121,13 +121,13 @@ private struct LidarrQueueRow: View {
     let item: LidarrQueueItem
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.displayTitle)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .lineLimit(2)
 
-                HStack(spacing: MinidiscSpacing.xs) {
+                HStack(spacing: MaeksterSpacing.xs) {
                     Text(item.statusLabel)
                         .foregroundStyle(item.hasIssue ? .orange : .secondary)
                     if let quality = item.qualityName {
@@ -135,18 +135,18 @@ private struct LidarrQueueRow: View {
                         Text(quality)
                     }
                 }
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
 
                 if item.hasIssue, let detail = item.issueDetail {
                     Label(detail, systemImage: "exclamationmark.triangle.fill")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.orange)
                         .lineLimit(2)
                 }
 
                 if item.progress > 0 && item.progress < 1 {
                     ProgressView(value: item.progress)
-                        .tint(item.hasIssue ? .orange : .minidiscAccent)
+                        .tint(item.hasIssue ? .orange : .maeksterAccent)
                 }
             }
             Spacer(minLength: 0)
@@ -156,7 +156,7 @@ private struct LidarrQueueRow: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
     }
 }

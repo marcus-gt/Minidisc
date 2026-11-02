@@ -46,7 +46,7 @@ private func nonSubsonicJSON() -> Data {
 struct ConnectionTestErrorMappingTests {
 
     private func makeService() throws -> ServerService {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let state = ServerState()
         return ServerService(
             state: state,
@@ -268,7 +268,7 @@ struct ConnectionTestErrorMappingTests {
 
     @Test func nonSwiftSonicError_mapsToUnknown() async throws {
         let service = try makeService()
-        let result = await service.mapToConnectionTestError(MinidiscError.notImplemented)
+        let result = await service.mapToConnectionTestError(MaeksterError.notImplemented)
         if case .unknown = result { } else {
             Issue.record("Expected .unknown, got \(result)")
         }

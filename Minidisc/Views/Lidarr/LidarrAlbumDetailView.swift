@@ -25,12 +25,12 @@ struct LidarrAlbumDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.l) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
                 header
                 searchButton
                 tracksSection
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
         .navigationTitle(album.title)
         .navigationBarTitleDisplayModeInline()
@@ -40,22 +40,22 @@ struct LidarrAlbumDetailView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .top, spacing: MinidiscSpacing.m) {
+        HStack(alignment: .top, spacing: MaeksterSpacing.m) {
             LidarrCoverImage(path: album.coverPath, client: client) {
-                RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+                RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                     .fill(Color.secondary.opacity(0.15))
                     .overlay { Image(systemName: "opticaldisc").font(.title).foregroundStyle(.secondary) }
             }
             .frame(width: 120, height: 120)
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
 
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-                Text(album.title).font(.minidiscDetailTitle).lineLimit(3)
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
+                Text(album.title).font(.maeksterDetailTitle).lineLimit(3)
                 if let year = album.year {
-                    Text(year).font(.minidiscCaption).foregroundStyle(.secondary)
+                    Text(year).font(.maeksterCaption).foregroundStyle(.secondary)
                 }
                 if let progress = album.trackProgress {
-                    Text("\(progress) tracks").font(.minidiscCaption).foregroundStyle(.secondary)
+                    Text("\(progress) tracks").font(.maeksterCaption).foregroundStyle(.secondary)
                 }
                 Button {
                     HapticFeedback.light.trigger()
@@ -63,8 +63,8 @@ struct LidarrAlbumDetailView: View {
                 } label: {
                     Label(monitored ? "Monitored" : "Not monitored",
                           systemImage: monitored ? "bookmark.fill" : "bookmark")
-                        .font(.minidiscCaption)
-                        .foregroundStyle(monitored ? Color.minidiscAccent : .secondary)
+                        .font(.maeksterCaption)
+                        .foregroundStyle(monitored ? Color.maeksterAccent : .secondary)
                 }
                 .buttonStyle(.plain)
             }
@@ -73,7 +73,7 @@ struct LidarrAlbumDetailView: View {
     }
 
     private var searchButton: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Button {
                 Task { await searchAlbum() }
             } label: {
@@ -86,7 +86,7 @@ struct LidarrAlbumDetailView: View {
                     Text("Search Album")
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
             }
             .disabled(isSearching)
 
@@ -96,11 +96,11 @@ struct LidarrAlbumDetailView: View {
                     Text("Interactive")
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
             }
         }
         .buttonStyle(.bordered)
-        .tint(.minidiscAccent)
+        .tint(.maeksterAccent)
     }
 
     @ViewBuilder
@@ -108,19 +108,19 @@ struct LidarrAlbumDetailView: View {
         if isLoading {
             ProgressView().frame(maxWidth: .infinity)
         } else if let errorMessage {
-            Text(errorMessage).font(.minidiscCaption).foregroundStyle(.orange)
+            Text(errorMessage).font(.maeksterCaption).foregroundStyle(.orange)
         } else if tracks.isEmpty {
-            Text("No tracks.").font(.minidiscCaption).foregroundStyle(.secondary)
+            Text("No tracks.").font(.maeksterCaption).foregroundStyle(.secondary)
         } else {
             ForEach(mediumNumbers, id: \.self) { medium in
                 let mediumTracks = tracks.filter { ($0.mediumNumber ?? 1) == medium }
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                     if mediumNumbers.count > 1 || (album.media?.count ?? 0) > 1 {
                         Text(album.mediumTitle(for: medium))
-                            .font(.minidiscShelfTitle)
+                            .font(.maeksterShelfTitle)
                     } else {
                         Text("Tracks")
-                            .font(.minidiscShelfTitle)
+                            .font(.maeksterShelfTitle)
                     }
                     VStack(spacing: 0) {
                         ForEach(mediumTracks) { track in
@@ -181,23 +181,23 @@ private struct LidarrTrackRow: View {
     let track: LidarrTrack
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Text(track.trackNumber ?? "–")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
                 .frame(width: 28, alignment: .trailing)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(track.title).font(.minidiscCellTitle).lineLimit(1)
-                HStack(spacing: MinidiscSpacing.xs) {
+                Text(track.title).font(.maeksterCellTitle).lineLimit(1)
+                HStack(spacing: MaeksterSpacing.xs) {
                     Text(track.hasFile ? "Downloaded" : "Missing")
                     if let duration = track.durationText {
                         Text("·")
                         Text(duration)
                     }
                 }
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
@@ -206,6 +206,6 @@ private struct LidarrTrackRow: View {
                 .font(.body)
                 .foregroundStyle(track.hasFile ? Color(.systemGreen) : .secondary)
         }
-        .padding(.vertical, MinidiscSpacing.s)
+        .padding(.vertical, MaeksterSpacing.s)
     }
 }

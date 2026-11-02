@@ -6,28 +6,28 @@ struct WrappedPeriodPicker: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MinidiscSpacing.xs) {
+            HStack(spacing: MaeksterSpacing.xs) {
                 ForEach(availablePeriods, id: \.self) { period in
                     let isSelected = period == selectedPeriod
                     Button {
                         selectedPeriod = period
                     } label: {
                         Text(shortLabel(for: period))
-                            .font(isSelected ? .minidiscCellTitle : .minidiscCaption)
-                            .foregroundStyle(isSelected ? Color.minidiscAccentText : .primary)
-                            .padding(.horizontal, MinidiscSpacing.m)
-                            .padding(.vertical, MinidiscSpacing.s)
-                            .background(isSelected ? Color.minidiscAccent : Color.primary.opacity(0.08))
+                            .font(isSelected ? .maeksterCellTitle : .maeksterCaption)
+                            .foregroundStyle(isSelected ? Color.maeksterAccentText : .primary)
+                            .padding(.horizontal, MaeksterSpacing.m)
+                            .padding(.vertical, MaeksterSpacing.s)
+                            .background(isSelected ? Color.maeksterAccent : Color.primary.opacity(0.08))
                             .clipShape(Capsule())
                             .animation(.easeInOut(duration: 0.15), value: isSelected)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.vertical, MinidiscSpacing.xs)
+            .padding(.vertical, MaeksterSpacing.xs)
         }
-        .contentMargins(.horizontal, MinidiscSpacing.l, for: .scrollContent)
-        .padding(.horizontal, -MinidiscSpacing.l)
+        .contentMargins(.horizontal, MaeksterSpacing.l, for: .scrollContent)
+        .padding(.horizontal, -MaeksterSpacing.l)
     }
 
     private func shortLabel(for period: WrappedPeriod) -> String {

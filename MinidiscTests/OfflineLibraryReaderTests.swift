@@ -14,7 +14,7 @@ struct OfflineLibraryReaderTests {
     }
 
     private func makeSubject() throws -> Subject {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let downloadsDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("OfflineLibraryReaderTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(

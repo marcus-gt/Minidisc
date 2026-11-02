@@ -105,7 +105,7 @@ struct QuickPlaylistPicker: View {
                 Text(playlist.name).foregroundStyle(.primary)
                 Spacer()
                 if isQuick {
-                    Image(systemName: "checkmark").foregroundStyle(Color.minidiscAccent)
+                    Image(systemName: "checkmark").foregroundStyle(Color.maeksterAccent)
                 }
             }
             .contentShape(Rectangle())

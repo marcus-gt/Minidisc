@@ -12,7 +12,7 @@ private struct MiniPlayerBottomMargin: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .contentMargins(.bottom, isMiniPlayerVisible ? MinidiscSpacing.miniPlayerBottomMargin : 0, for: .scrollContent)
+            .contentMargins(.bottom, isMiniPlayerVisible ? MaeksterSpacing.miniPlayerBottomMargin : 0, for: .scrollContent)
     }
 }
 

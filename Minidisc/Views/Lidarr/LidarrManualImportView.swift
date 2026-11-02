@@ -133,25 +133,25 @@ private struct LidarrManualImportRow: View {
     let isSelected: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: MinidiscSpacing.m) {
+        HStack(alignment: .top, spacing: MaeksterSpacing.m) {
             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                 .font(.title3)
-                .foregroundStyle(isSelected ? Color.minidiscAccent : .secondary)
+                .foregroundStyle(isSelected ? Color.maeksterAccent : .secondary)
                 .opacity(file.isImportable ? 1 : 0.35)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(file.displayName)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .lineLimit(2)
 
                 if let artist = file.artist?.artistName, let album = file.album?.title {
                     Text("\(artist) — \(album)")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
 
-                HStack(spacing: MinidiscSpacing.xs) {
+                HStack(spacing: MaeksterSpacing.xs) {
                     if let quality = file.qualityName { Text(quality) }
                     let trackCount = file.tracks?.count ?? 0
                     if trackCount > 0 {
@@ -159,17 +159,17 @@ private struct LidarrManualImportRow: View {
                         Text(trackCount == 1 ? "1 track" : "\(trackCount) tracks")
                     }
                 }
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
 
                 ForEach(file.reasons, id: \.self) { reason in
                     Label(reason, systemImage: "exclamationmark.triangle.fill")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.orange)
                 }
             }
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
     }
 }

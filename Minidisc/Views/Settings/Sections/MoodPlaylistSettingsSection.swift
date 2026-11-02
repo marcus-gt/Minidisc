@@ -31,7 +31,7 @@ struct MoodPlaylistSettingsSection: View {
             .disabled(request != nil || serverId == nil)
             if let outcome {
                 MoodDeletionResult(outcome: outcome)
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
             }
             if serverId == nil {

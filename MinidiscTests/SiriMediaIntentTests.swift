@@ -69,7 +69,7 @@ struct SiriMediaIntentTests {
         container.serverState.isOnline = false
         try await container.libraryIndexStore.upsertTracks([Song(id: "one", title: "One")], serverID: server.id, generation: "test", serverOrderStart: 0)
         var loads = 0
-        let handler = SiriMediaIntentHandler(runtime: MinidiscRuntime { loads += 1; return container })
+        let handler = SiriMediaIntentHandler(runtime: MaeksterRuntime { loads += 1; return container })
         let record = MusicIntentRecord(scope: scope, song: Song(id: "one", title: "One"))
         let request = intent(items: [SiriMediaIntentHandler.mediaItem(record)])
         let first = await handler.resolveMediaItems(for: request)

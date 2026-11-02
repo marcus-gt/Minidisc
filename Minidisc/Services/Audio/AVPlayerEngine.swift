@@ -84,7 +84,7 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
     private var overlapStartedAt: Date?
     private var overlapAwaitingStandbyPlayback = false
     private var isOverlapping = false
-    private let rampQueue = DispatchQueue(label: "minidisc.engine.crossfade")
+    private let rampQueue = DispatchQueue(label: "maekster.engine.crossfade")
     private var overlapBoundaryToken: Any?
     private var overlapBoundaryOwner: AVPlayer?
     /// Authoritative track length from the library metadata. AVPlayer's own `item.duration` is an
@@ -117,7 +117,7 @@ nonisolated final class AVPlayerEngine: AudioEngine, @unchecked Sendable {
     /// Handlers take `lock`, and the lock can be held by a thread parked in a synchronous
     /// media-server call. Waiting for it on the main thread froze the whole app whenever the
     /// system media server stopped answering.
-    private let callbackQueue = DispatchQueue(label: "minidisc.engine.callbacks")
+    private let callbackQueue = DispatchQueue(label: "maekster.engine.callbacks")
 
     init(playerFactory: @escaping @Sendable () -> AVPlayer = { AVPlayer() }) {
         self.playerFactory = playerFactory

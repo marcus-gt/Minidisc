@@ -219,7 +219,7 @@ struct AlbumDetailView: View {
                     coverImage: effectiveInitialImage,
                     albumName: viewModel?.albumName ?? initialName
                 )
-                .padding(.top, MinidiscSpacing.xxl)
+                .padding(.top, MaeksterSpacing.xxl)
 
                 AlbumMetadataSection(
                     albumName: viewModel?.albumName ?? initialName,
@@ -235,7 +235,7 @@ struct AlbumDetailView: View {
                     genres: viewModel?.genres ?? [],
                     recordLabels: viewModel?.recordLabels ?? []
                 )
-                .padding(.top, MinidiscSpacing.xl)
+                .padding(.top, MaeksterSpacing.xl)
 
                 AlbumPlaybackActions(
                     albumId: albumId,
@@ -248,8 +248,8 @@ struct AlbumDetailView: View {
                     onToggleFavorite: toggleAlbumFavorite,
                     showDeleteAlert: $showDeleteAlert
                 )
-                .padding(.top, MinidiscSpacing.xl)
-                .padding(.bottom, MinidiscSpacing.xl)
+                .padding(.top, MaeksterSpacing.xl)
+                .padding(.bottom, MaeksterSpacing.xl)
 
                 if isLoadingSkeleton {
                     AlbumTrackSkeletonRows()
@@ -331,23 +331,23 @@ struct AlbumDetailView: View {
                                     isLoading: isLoadingSimilarArtists,
                                     onOutOfLibraryTap: { selectedOutOfLibraryArtist = $0 }
                                 )
-                                .padding(.top, MinidiscSpacing.section)
+                                .padding(.top, MaeksterSpacing.section)
                             }
 
                             AlbumYouMightAlsoLikeSection(albums: visibleRecommendedAlbums)
                         }
 
                         // Breathing room before the mini player margin, whichever section ends the page.
-                        Color.clear.frame(height: MinidiscSpacing.section)
+                        Color.clear.frame(height: MaeksterSpacing.section)
                     }
                 }
             }
         }
         .refreshable { await viewModel?.load() }
         .miniPlayerBottomMargin()
-        .minidiscHideTopScrollEdgeEffect()
-        .minidiscSongSwipeContainer()
-        .environment(\.minidiscSongMenuContext, SongMenuContext(albumID: albumId))
+        .maeksterHideTopScrollEdgeEffect()
+        .maeksterSongSwipeContainer()
+        .environment(\.maeksterSongMenuContext, SongMenuContext(albumID: albumId))
         .alert("Remove downloaded album?", isPresented: $showDeleteAlert) {
             Button("Remove", role: .destructive) { Task { await viewModel?.deleteDownload() } }
             Button("Cancel", role: .cancel) { }
@@ -355,8 +355,8 @@ struct AlbumDetailView: View {
             Text("The audio files will be deleted from this device.")
         }
         .background(AlbumDetailPageBackground(palette: palette))
-        .minidiscContentWidth()
-        .environment(\.minidiscPlayingAccent, palette.contentColor)
+        .maeksterContentWidth()
+        .environment(\.maeksterPlayingAccent, palette.contentColor)
         .environment(\.colorScheme, palette.preferredContentScheme ?? colorScheme)
         .navigationTitle("")
         .navigationBarTitleDisplayModeInline()
@@ -371,7 +371,7 @@ struct AlbumDetailView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 // ⋯ order shared by the detail pages (#43): playback, Select Songs, edit, Pin, Share, appearance.
-                MinidiscMoreMenu {
+                MaeksterMoreMenu {
                     Group {
                         Button("Instant Mix", systemImage: instantMixSymbol) {
                             HapticFeedback.medium.trigger()
@@ -472,7 +472,7 @@ struct AlbumDetailView: View {
 
             await loadAlbumRecommendations(for: recommendationRequest)
         }
-        .minidiscZoomTransition(sourceID: zoomSourceId, in: zoomNamespace)
+        .maeksterZoomTransition(sourceID: zoomSourceId, in: zoomNamespace)
     }
 
     // MARK: - Favourite
@@ -598,12 +598,12 @@ struct AlbumArtworkSection: View {
             id: coverArtId,
             size: 800,
             tier: .hero,
-            cornerRadius: MinidiscCornerRadius.large,
+            cornerRadius: MaeksterCornerRadius.large,
             initialImage: coverImage
         )
         .aspectRatio(1, contentMode: .fit)
         .frame(maxWidth: 340)
-        .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.large)
+        .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.large)
         .shadow(color: .black.opacity(0.16), radius: 12, y: 6)
         .padding(.horizontal, 64)
         .accessibilityLabel(
@@ -630,9 +630,9 @@ struct AlbumMetadataSection: View {
     var recordLabels: [String] = []
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.xs) {
+        VStack(spacing: MaeksterSpacing.xs) {
             Text(albumName)
-                .font(.minidiscDetailTitle)
+                .font(.maeksterDetailTitle)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
 
@@ -642,21 +642,21 @@ struct AlbumMetadataSection: View {
                 if let artistId, !isOffline {
                     NavigationLink(value: HomeDestination.artist(ArtistID3(id: artistId, name: artistName))) {
                         Text(artistName)
-                            .font(.minidiscDetailSubtitle)
+                            .font(.maeksterDetailSubtitle)
                             .foregroundStyle(.primary)
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint(Text("Opens the artist"))
                 } else {
                     Text(artistName)
-                        .font(.minidiscDetailSubtitle)
+                        .font(.maeksterDetailSubtitle)
                         .foregroundStyle(.primary)
                 }
             }
 
             if isLoading {
                 SkeletonBlock(width: 100, height: 14, cornerRadius: 4)
-                    .padding(.top, MinidiscSpacing.xs)
+                    .padding(.top, MaeksterSpacing.xs)
             } else {
                 AlbumMetadataLine(
                     year: year,
@@ -664,7 +664,7 @@ struct AlbumMetadataSection: View {
                     totalDuration: totalDuration,
                     audioFormats: audioFormats
                 )
-                .padding(.top, MinidiscSpacing.xs)
+                .padding(.top, MaeksterSpacing.xs)
 
                 let chips = genreChips + labelChips
                 if !chips.isEmpty {
@@ -684,11 +684,11 @@ struct AlbumMetadataSection: View {
                             }
                         }
                     }
-                    .padding(.top, MinidiscSpacing.s)
+                    .padding(.top, MaeksterSpacing.s)
                 }
             }
         }
-        .padding(.horizontal, MinidiscSpacing.xxl)
+        .padding(.horizontal, MaeksterSpacing.xxl)
     }
 
     private struct Chip: Hashable {
@@ -742,7 +742,7 @@ private struct AlbumMetadataLine: View {
     }
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             if !parts.isEmpty {
                 Text(verbatim: parts.joined(separator: " · "))
                     .lineLimit(1)
@@ -751,7 +751,7 @@ private struct AlbumMetadataLine: View {
                 FormatBadge(format: format)
             }
         }
-        .font(.minidiscMetadata)
+        .font(.maeksterMetadata)
         .foregroundStyle(.secondary)
         .accessibilityElement(children: .combine)
     }
@@ -774,13 +774,13 @@ private struct AlbumPlaybackActions: View {
     private var albumSource: QueueSource { .album(id: albumId, name: viewModel?.albumName ?? "") }
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.m) {
-            HStack(spacing: MinidiscSpacing.xl) {
+        VStack(spacing: MaeksterSpacing.m) {
+            HStack(spacing: MaeksterSpacing.xl) {
                 Button(isFavorite ? "Remove from Favorites" : "Add to Favorites",
                        systemImage: isFavorite ? "heart.fill" : "heart",
                        action: onToggleFavorite)
                     .contentTransition(.symbolEffect(.replace))
-                    .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+                    .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
                     .disabled(!canFavorite)
                     .accessibilityIdentifier("album.detail.favorite")
 
@@ -791,7 +791,7 @@ private struct AlbumPlaybackActions: View {
                         await container?.toastService.perform { try await container?.playerService.play(tracks: songs, startIndex: 0, source: albumSource) }
                     }
                 }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large, isProminent: true))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large, isProminent: true))
                 .disabled(songs.isEmpty)
                 .accessibilityIdentifier("album.detail.play")
 
@@ -802,7 +802,7 @@ private struct AlbumPlaybackActions: View {
                         await container?.toastService.perform { try await container?.playerService.play(tracks: songs.shuffled(), startIndex: 0, source: albumSource) }
                     }
                 }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
                 .disabled(songs.isEmpty)
                 .accessibilityIdentifier("album.detail.shuffle")
 
@@ -856,7 +856,7 @@ private struct AlbumDownloadActionButton: View {
             Image(systemName: state.systemImage)
                 .contentTransition(.symbolEffect(.replace))
         }
-        .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+        .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
         .disabled(state == .unavailable)
         .accessibilityLabel(Text(actionLabel))
         .accessibilityIdentifier("album.detail.download")
@@ -903,9 +903,9 @@ private struct AlbumDownloadProgress: View {
     let total: Int
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.xs) {
+        VStack(spacing: MaeksterSpacing.xs) {
             if downloaded == 0 {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     ProgressView()
                         .scaleEffect(0.8)
                     Text("Starting download…")
@@ -913,12 +913,12 @@ private struct AlbumDownloadProgress: View {
             } else {
                 ProgressView(value: Double(downloaded), total: Double(max(total, 1)))
                     .progressViewStyle(.linear)
-                    .tint(MinidiscColors.accent)
+                    .tint(MaeksterColors.accent)
                     .frame(maxWidth: 280)
                 Text("Downloading \(downloaded)/\(total) tracks")
             }
         }
-        .font(.minidiscCaption)
+        .font(.maeksterCaption)
         .foregroundStyle(.secondary)
         .frame(minHeight: 44)
     }
@@ -927,14 +927,14 @@ private struct AlbumDownloadProgress: View {
 private struct AlbumTrackSkeletonRows: View {
     var body: some View {
         ForEach(0..<5, id: \.self) { _ in
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 SkeletonBlock(width: 20, height: 20, cornerRadius: 4)
                 SkeletonBlock(width: 200, height: 16, cornerRadius: 4)
                 Spacer()
                 SkeletonBlock(width: 24, height: 16, cornerRadius: 4)
             }
-            .padding(.vertical, MinidiscSpacing.s)
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.vertical, MaeksterSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.l)
         }
     }
 }
@@ -1070,8 +1070,8 @@ struct AlbumSongRows: View {
                     onArtistsTap: onArtistsTap.map { handler in { handler(song, $0) } },
                     onTap: { onTap(index) }
                 )
-                .padding(.leading, MinidiscSpacing.l)
-                .padding(.trailing, MinidiscSpacing.trackRowTrailing)
+                .padding(.leading, MaeksterSpacing.l)
+                .padding(.trailing, MaeksterSpacing.trackRowTrailing)
             }
         }
     }
@@ -1095,8 +1095,8 @@ private struct AlbumMoreByArtistSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !albums.isEmpty {
-                MinidiscShelf {
-                    MinidiscCarouselHeaderLink(
+                MaeksterShelf {
+                    MaeksterCarouselHeaderLink(
                         sectionTitle,
                         itemCount: albums.count,
                         hasMore: true
@@ -1115,7 +1115,7 @@ private struct AlbumMoreByArtistSection: View {
             }
         }
         // Spacing only when the shelf shows, so an artist with one album leaves no gap.
-        .padding(.top, albums.isEmpty ? 0 : MinidiscSpacing.section)
+        .padding(.top, albums.isEmpty ? 0 : MaeksterSpacing.section)
         .task(id: artistId) {
             await loadAlbums()
         }
@@ -1134,7 +1134,7 @@ private struct AlbumMoreByArtistSection: View {
                 (artist.album ?? [])
                     .lazy
                     .filter { $0.id != currentAlbumId }
-                    .prefix(MinidiscCarouselMetrics.previewLimit)
+                    .prefix(MaeksterCarouselMetrics.previewLimit)
             )
         } catch is CancellationError {
             return
@@ -1154,12 +1154,12 @@ private struct AlbumMoreByArtistSection: View {
 private struct AlbumYouMightAlsoLikeSection: View {
     let albums: [AlbumID3]
 
-    static let resultLimit = MinidiscCarouselMetrics.previewLimit * 2
+    static let resultLimit = MaeksterCarouselMetrics.previewLimit * 2
 
     var body: some View {
         if !albums.isEmpty {
-            MinidiscShelf {
-                MinidiscCarouselHeaderLink(
+            MaeksterShelf {
+                MaeksterCarouselHeaderLink(
                     "You Might Also Like",
                     itemCount: albums.count
                 ) {
@@ -1169,11 +1169,11 @@ private struct AlbumYouMightAlsoLikeSection: View {
                     )
                 }
             } content: {
-                ForEach(Array(albums.prefix(MinidiscCarouselMetrics.previewLimit))) { album in
+                ForEach(Array(albums.prefix(MaeksterCarouselMetrics.previewLimit))) { album in
                     AlbumShelfCard(album: album)
                 }
             }
-            .padding(.top, MinidiscSpacing.section)
+            .padding(.top, MaeksterSpacing.section)
         }
     }
 }
@@ -1220,7 +1220,7 @@ struct ThemeColorSheet: View {
 #Preview("Album") {
     let container = AppContainer.preview()
     let album = PreviewFixtures.tidalRooms
-    MinidiscPreview(container: container) {
+    MaeksterPreview(container: container) {
         NavigationStack {
             AlbumDetailView(
                 album: album,
@@ -1234,7 +1234,7 @@ struct ThemeColorSheet: View {
 #Preview("Album, two discs, large text") {
     let container = AppContainer.preview()
     let album = PreviewFixtures.fieldRecordings
-    MinidiscPreview(container: container) {
+    MaeksterPreview(container: container) {
         NavigationStack {
             AlbumDetailView(
                 album: album,

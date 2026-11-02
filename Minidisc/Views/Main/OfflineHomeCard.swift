@@ -19,7 +19,7 @@ struct OfflineHomeCard: View {
             }
 
             if isManual {
-                Divider().padding(.horizontal, MinidiscSpacing.l)
+                Divider().padding(.horizontal, MaeksterSpacing.l)
                 Button(action: onDisable) {
                     Text("Turn Off Offline Mode")
                         .font(.subheadline.weight(.semibold))
@@ -28,13 +28,13 @@ struct OfflineHomeCard: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(Color.minidiscAccent)
-                .padding(.horizontal, MinidiscSpacing.l)
-                .padding(.vertical, MinidiscSpacing.xs)
+                .foregroundStyle(Color.maeksterAccent)
+                .padding(.horizontal, MaeksterSpacing.l)
+                .padding(.vertical, MaeksterSpacing.xs)
                 .accessibilityIdentifier("home.offline.disable")
             }
         }
-        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.hero))
+        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.hero))
         .accessibilityIdentifier("home.offline.card")
     }
 }
@@ -45,15 +45,15 @@ private struct OfflineHomeStatus: View {
     let isLoading: Bool
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Image(systemName: "wifi.slash")
                 .font(.body.weight(.semibold))
-                .foregroundStyle(Color.minidiscAccent)
+                .foregroundStyle(Color.maeksterAccent)
                 .frame(width: 44, height: 44)
-                .background(Color.minidiscAccent.opacity(0.1), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large))
+                .background(Color.maeksterAccent.opacity(0.1), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.large))
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 Text(isManual ? LocalizedStringKey("Offline Mode") : LocalizedStringKey("You're Offline"))
                     .font(.headline)
                     .foregroundStyle(.primary)
@@ -79,7 +79,7 @@ private struct OfflineHomeStatus: View {
                     .accessibilityHidden(true)
             }
         }
-        .padding(MinidiscSpacing.l)
+        .padding(MaeksterSpacing.l)
         .contentShape(Rectangle())
     }
 }

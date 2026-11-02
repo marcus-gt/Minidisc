@@ -5,7 +5,7 @@ import SwiftSonic
 /// Resolve through the shared artist index and verify identity before swapping.
 struct FeaturedArtistAvatar: View {
     let artist: FeaturedArtist
-    var size: CGFloat = MinidiscCarouselMetrics.artistArtwork
+    var size: CGFloat = MaeksterCarouselMetrics.artistArtwork
 
     @Environment(\.appContainer) private var container
     @State private var resolvedArtistCoverArt: String?

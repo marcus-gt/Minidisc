@@ -11,30 +11,30 @@ struct AlbumRow: View {
     @State private var coverImage: PlatformImage?
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             CoverArtCard(id: coverArtId ?? albumId, size: 56)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(name)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 if let artist {
                     Text(artist)
-                        .font(.minidiscCellSubtitle)
+                        .font(.maeksterCellSubtitle)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
                 if let year {
                     Text(String(year))
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.tertiary)
                 }
             }
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
         .task(id: albumId) {
             coverImage = await artworkImageCache.load(coverArtId: coverArtId ?? albumId)

@@ -49,11 +49,11 @@ struct FullPlayerView: View {
 
     // MARK: - Player layout
 
-    private static let playerCoverHPadding: CGFloat = MinidiscSpacing.xxxl
-    private static let playerHorizontalPadding: CGFloat = MinidiscSpacing.xxxl
+    private static let playerCoverHPadding: CGFloat = MaeksterSpacing.xxxl
+    private static let playerHorizontalPadding: CGFloat = MaeksterSpacing.xxxl
     private static let playerTopGap: CGFloat = 36
-    private static let playerCoverToTitleGap: CGFloat = MinidiscSpacing.xl
-    private static let playerControlsSpacing: CGFloat = MinidiscSpacing.xl
+    private static let playerCoverToTitleGap: CGFloat = MaeksterSpacing.xl
+    private static let playerControlsSpacing: CGFloat = MaeksterSpacing.xl
 
     /// With the player's current line on, every track's lyrics are loaded, not just the panel's (#36).
     private var showsCurrentLyricLine: Bool {
@@ -127,10 +127,10 @@ struct FullPlayerView: View {
 
         surfaceStack(playerState, coverArtId: coverArtId, showingQueue: showingQueue)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .minidiscContentWidth()
+            .maeksterContentWidth()
             .padding(contentInsets)
             .environment(\.colorScheme, .dark)
-            .environment(\.minidiscPlayingAccent, MinidiscColors.accent)
+            .environment(\.maeksterPlayingAccent, MaeksterColors.accent)
         .background {
             FullPlayerBackground(colors: colors)
         }
@@ -199,7 +199,7 @@ struct FullPlayerView: View {
                         onTap: { withAnimation(.smooth(duration: 0.3)) { showLyrics = true } }
                     )
                     .padding(.horizontal, Self.playerHorizontalPadding)
-                    .padding(.top, MinidiscSpacing.m)
+                    .padding(.top, MaeksterSpacing.m)
                 }
 
                 if !playerState.isLiveStream {
@@ -211,7 +211,7 @@ struct FullPlayerView: View {
                         isCellular: container?.serverState.networkPathEvent.descriptor.isCellular == true
                     )
                     .padding(.horizontal, Self.playerHorizontalPadding)
-                    .padding(.top, MinidiscSpacing.m)
+                    .padding(.top, MaeksterSpacing.m)
                     .disabled(!playerState.isPlaybackAvailable)
                     .opacity(playerState.isPlaybackAvailable ? 1.0 : 0.4)
                 }
@@ -224,7 +224,7 @@ struct FullPlayerView: View {
                     contentColor: vm.contentColor
                 )
                 // Shuffle and repeat sit in 44pt frames; inset them to line up with the scrubber.
-                .padding(.horizontal, Self.playerHorizontalPadding - MinidiscSpacing.m)
+                .padding(.horizontal, Self.playerHorizontalPadding - MaeksterSpacing.m)
                 .padding(.top, Self.playerControlsSpacing)
 
                 if dynamicTypeSize < .accessibility1 {
@@ -233,7 +233,7 @@ struct FullPlayerView: View {
                         .padding(.top, Self.playerControlsSpacing)
                 }
 
-                flowGap((showLyrics || showingQueue) ? MinidiscSpacing.xs : 40)
+                flowGap((showLyrics || showingQueue) ? MaeksterSpacing.xs : 40)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.smooth(duration: 0.3), value: showLyrics)
@@ -244,11 +244,11 @@ struct FullPlayerView: View {
                 surface: $surface,
                 isLiveStream: playerState.isLiveStream,
                 secondaryContentColor: vm.secondaryContentColor,
-                accentColor: MinidiscColors.accent,
+                accentColor: MaeksterColors.accent,
                 playerState: playerState
             )
-            .padding(.top, MinidiscSpacing.s)
-            .padding(.bottom, MinidiscSpacing.l)
+            .padding(.top, MaeksterSpacing.s)
+            .padding(.bottom, MaeksterSpacing.l)
         }
         .overlay(alignment: .top) {
             topBar
@@ -266,7 +266,7 @@ struct FullPlayerView: View {
                          initialImage: initialArtwork?.id == coverArtId ? initialArtwork?.image : nil)
                 .clipShape(
                     RoundedRectangle(
-                        cornerRadius: isSource ? MinidiscCornerRadius.large : MinidiscCornerRadius.standard,
+                        cornerRadius: isSource ? MaeksterCornerRadius.large : MaeksterCornerRadius.standard,
                         style: .continuous
                     )
                 )
@@ -291,7 +291,7 @@ struct FullPlayerView: View {
 
     private func flowingQueueContent(_ playerState: PlayerState) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 // Invisible endpoint for the cover's matched-geometry transition.
                 Color.clear
                     .frame(width: 56, height: 56)
@@ -305,12 +305,12 @@ struct FullPlayerView: View {
                     compact: true
                 )
             }
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.top, MinidiscSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.top, MaeksterSpacing.s)
 
             queuePills(playerState)
-                .padding(.horizontal, MinidiscSpacing.l)
-                .padding(.vertical, MinidiscSpacing.m)
+                .padding(.horizontal, MaeksterSpacing.l)
+                .padding(.vertical, MaeksterSpacing.m)
 
             InlineQueueList(
                 playerState: playerState,
@@ -331,7 +331,7 @@ struct FullPlayerView: View {
     }
 
     private func queuePills(_ playerState: PlayerState) -> some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             queuePill(systemImage: "shuffle", isActive: playerState.isShuffled,
                       label: playerState.isShuffled ? "Shuffle On" : "Shuffle Off") {
                 Task { await container?.playerService.toggleShuffle() }
@@ -359,9 +359,9 @@ struct FullPlayerView: View {
                 .foregroundStyle(isActive ? Color.white : vm.secondaryContentColor)
                 .frame(height: 24)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
                 .background {
-                    Capsule().fill(isActive ? MinidiscColors.AccentRamp.v500 : vm.contentColor.opacity(0.12))
+                    Capsule().fill(isActive ? MaeksterColors.AccentRamp.v500 : vm.contentColor.opacity(0.12))
                 }
         }
         .buttonStyle(.plain)
@@ -423,12 +423,12 @@ private struct TrackInfoSection: View {
     private var isOnline: Bool { container?.serverState.isOnline == true }
 
     var body: some View {
-        HStack(alignment: compact ? .center : .top, spacing: MinidiscSpacing.m) {
+        HStack(alignment: compact ? .center : .top, spacing: MaeksterSpacing.m) {
             trackMetadata
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
 
-            HStack(spacing: MinidiscSpacing.s) {
+            HStack(spacing: MaeksterSpacing.s) {
                 if !playerState.isLiveStream {
                     // Tap likes; a long-press offers the quick playlists (#68).
                     Menu {
@@ -444,7 +444,7 @@ private struct TrackInfoSection: View {
                     }
                     .menuStyle(.button)
                     .menuIndicator(.hidden)
-                    .buttonStyle(.minidiscCircle(diameter: compact ? MinidiscControlSize.compact : MinidiscControlSize.regular))
+                    .buttonStyle(.maeksterCircle(diameter: compact ? MaeksterControlSize.compact : MaeksterControlSize.regular))
                     .disabled(!isOnline || playerState.currentTrack == nil || playerState.currentTrack?.isLocalFile == true)
                     .accessibilityLabel(isFavorite ? "Remove from Favorites" : "Add to Favorites")
                     .accessibilityHint("Touch and hold to add to a quick playlist")
@@ -526,7 +526,7 @@ private struct TrackInfoSection: View {
                         .foregroundStyle(contentColor)
                 }
                 .menuOrder(.fixed)
-                .buttonStyle(.minidiscCircle(diameter: compact ? MinidiscControlSize.compact : MinidiscControlSize.regular))
+                .buttonStyle(.maeksterCircle(diameter: compact ? MaeksterControlSize.compact : MaeksterControlSize.regular))
                 .tint(.primary)
                 .accessibilityLabel("More options")
             }
@@ -561,7 +561,7 @@ private struct TrackInfoSection: View {
     }
 
     private func metadata(for song: DisplayableSong?, isCurrent: Bool) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             metadataTitle(
                 playerState.isLiveStream ? (playerState.currentRadio?.name ?? "") : (song?.title ?? ""),
                 usesMarquee: isCurrent && !compact && !playerState.isLiveStream
@@ -598,7 +598,7 @@ private struct TrackInfoSection: View {
             )
         } else {
             Text(title)
-                .font(compact ? .minidiscSectionTitle : .title2)
+                .font(compact ? .maeksterSectionTitle : .title2)
                 .fontWeight(compact ? .semibold : .bold)
                 .foregroundStyle(contentColor)
                 .lineLimit(1)
@@ -627,7 +627,7 @@ private struct TrackInfoSection: View {
     private func albumLine(for song: DisplayableSong?, isCurrent: Bool) -> some View {
         if let albumName = song?.albumName, !albumName.isEmpty {
             let label = Text(verbatim: albumName)
-                .font(.minidiscPlayerTertiary)
+                .font(.maeksterPlayerTertiary)
                 .foregroundStyle(secondaryContentColor.opacity(0.85))
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -730,7 +730,7 @@ private struct TrackInfoSection: View {
     }
 
     private func smartShuffleErrorMessage(from error: Error) -> String {
-        if case MinidiscError.smartShuffleEmpty = error {
+        if case MaeksterError.smartShuffleEmpty = error {
             return String(localized: "Smart Shuffle unavailable — try playing some tracks first or download more music for offline use.")
         }
         return String(localized: "Smart Shuffle failed. Please try again.")
@@ -763,7 +763,7 @@ private struct ScrubberView: View {
     }
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.xs) {
+        VStack(spacing: MaeksterSpacing.xs) {
             ProgressSlider(
                 value: positionBinding,
                 total: effectiveDuration,
@@ -801,7 +801,7 @@ private struct ScrubberView: View {
                     color: secondaryContentColor
                 )
                 // Clear the elapsed and remaining labels on either side.
-                .padding(.horizontal, MinidiscSpacing.xxxxl)
+                .padding(.horizontal, MaeksterSpacing.xxxxl)
             }
         }
     }
@@ -814,7 +814,7 @@ private struct PlaybackFormatLine: View {
 
     var body: some View {
         if let description {
-            HStack(spacing: MinidiscSpacing.xs) {
+            HStack(spacing: MaeksterSpacing.xs) {
                 Image(systemName: description.systemImage)
                     .imageScale(.small)
                     .accessibilityHidden(true)
@@ -822,7 +822,7 @@ private struct PlaybackFormatLine: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .monospacedDigit()
             .foregroundStyle(color)
             .accessibilityElement(children: .combine)
@@ -842,14 +842,14 @@ private struct ScrubberTimeLabels: View {
         let shown = overridePosition ?? PlaybackClock.shownElapsed(playerState.position, duration: effectiveDuration)
         HStack {
             Text(Duration.seconds(shown).formatted(.time(pattern: .minuteSecond)))
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(color)
                 .monospacedDigit()
             Spacer()
             Text(
                 verbatim: "-\(Duration.seconds(max(effectiveDuration - shown, 0)).formatted(.time(pattern: .minuteSecond)))"
             )
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(color)
                 .monospacedDigit()
         }
@@ -974,7 +974,7 @@ private struct PlaybackControlsView: View {
                 }
                 .accessibilityIdentifier("player.shuffle")
 
-                Spacer(minLength: MinidiscSpacing.s)
+                Spacer(minLength: MaeksterSpacing.s)
 
                 Button {
                     HapticFeedback.light.trigger()
@@ -988,7 +988,7 @@ private struct PlaybackControlsView: View {
                 .disabled(playerState.queue.isEmpty)
                 .accessibilityLabel("Skip to previous")
 
-                Spacer(minLength: MinidiscSpacing.s)
+                Spacer(minLength: MaeksterSpacing.s)
             }
 
             Button {
@@ -1008,7 +1008,7 @@ private struct PlaybackControlsView: View {
             .accessibilityValue(playerState.playbackStatusMessage ?? "")
 
             if !playerState.isLiveStream {
-                Spacer(minLength: MinidiscSpacing.s)
+                Spacer(minLength: MaeksterSpacing.s)
 
                 Button {
                     HapticFeedback.light.trigger()
@@ -1022,7 +1022,7 @@ private struct PlaybackControlsView: View {
                 .disabled(playerState.queue.isEmpty)
                 .accessibilityLabel("Skip to next")
 
-                Spacer(minLength: MinidiscSpacing.s)
+                Spacer(minLength: MaeksterSpacing.s)
 
                 modeToggle(
                     systemImage: playerState.repeatMode.systemImage,
@@ -1051,11 +1051,11 @@ private struct PlaybackControlsView: View {
             Image(systemName: systemImage)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(isActive ? Color.black : contentColor.opacity(0.75))
-                .frame(width: MinidiscControlSize.compact, height: MinidiscControlSize.compact)
+                .frame(width: MaeksterControlSize.compact, height: MaeksterControlSize.compact)
                 .background {
                     Circle().fill(isActive ? contentColor : .clear)
                 }
-                .frame(width: MinidiscControlSize.regular, height: MinidiscControlSize.regular)
+                .frame(width: MaeksterControlSize.regular, height: MaeksterControlSize.regular)
                 .contentShape(Circle())
                 .animation(.smooth(duration: 0.2), value: isActive)
         }
@@ -1077,7 +1077,7 @@ private struct BottomToolbar: View {
     let playerState: PlayerState
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.xxxxl) {
+        HStack(spacing: MaeksterSpacing.xxxxl) {
             if !isLiveStream {
                 Button {
                     if surface == .queue { surface = .player }
@@ -1085,14 +1085,14 @@ private struct BottomToolbar: View {
                 } label: {
                     Image(systemName: "quote.bubble")
                 }
-                .buttonStyle(.minidiscCircle(isActive: showLyrics && surface == .player))
+                .buttonStyle(.maeksterCircle(isActive: showLyrics && surface == .player))
                 .accessibilityLabel("Lyrics")
                 .accessibilityAddTraits(showLyrics ? .isSelected : [])
                 .disabled(playerState.currentTrack?.isLocalFile == true)
             }
 
             AirPlayRouteButton(tintColor: .white)
-                .frame(width: MinidiscControlSize.regular, height: MinidiscControlSize.regular)
+                .frame(width: MaeksterControlSize.regular, height: MaeksterControlSize.regular)
                 .background(Circle().fill(.primary.opacity(0.16)))
 
             if !isLiveStream {
@@ -1109,7 +1109,7 @@ private struct BottomToolbar: View {
                             if let badge = playerState.queueModeBadge {
                                 Image(systemName: badge)
                                     .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(Color.minidiscAccent)
+                                    .foregroundStyle(Color.maeksterAccent)
                                     .padding(2)
                                     .background(.background, in: Circle())
                                     .overlay(Circle().stroke(.background.opacity(0.5), lineWidth: 0.5))
@@ -1119,7 +1119,7 @@ private struct BottomToolbar: View {
                         }
                         .animation(.smooth(duration: 0.2), value: playerState.queueModeBadge)
                 }
-                .buttonStyle(.minidiscCircle(isActive: surface == .queue))
+                .buttonStyle(.maeksterCircle(isActive: surface == .queue))
                 .accessibilityLabel("Queue")
                 .accessibilityAddTraits(surface == .queue ? .isSelected : [])
             }
@@ -1132,7 +1132,7 @@ private struct AirPlayRouteButton: UIViewRepresentable {
 
     func makeUIView(context: Context) -> AVRoutePickerView {
         let view = AVRoutePickerView()
-        view.activeTintColor = UIColor(Color.minidiscAccent)
+        view.activeTintColor = UIColor(Color.maeksterAccent)
         view.tintColor = UIColor(tintColor)
         view.backgroundColor = .clear
         return view
@@ -1149,7 +1149,7 @@ private struct VolumeSection: View {
     let secondaryContentColor: Color
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Image(systemName: "speaker.fill")
                 .font(.caption)
                 .foregroundStyle(secondaryContentColor)
@@ -1169,13 +1169,13 @@ private struct VolumeSection: View {
 
 #if DEBUG
 #Preview("Playing") {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         FullPlayerView()
     }
 }
 
 #Preview("Paused, large text") {
-    MinidiscPreview(container: .preview(isPlaying: false)) {
+    MaeksterPreview(container: .preview(isPlaying: false)) {
         FullPlayerView()
             .dynamicTypeSize(.accessibility2)
     }

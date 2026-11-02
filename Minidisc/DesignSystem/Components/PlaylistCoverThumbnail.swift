@@ -16,7 +16,7 @@ struct PlaylistCoverThumbnail: View {
     var body: some View {
         CoverArtView(id: localCoverId ?? coverArtId, size: Int(size * 2))
             .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
             .task(id: "\(playlistId):\(coverArtUploadVersion)") {
                 guard let downloadService = container?.downloadService else { return }
                 localCoverId = await PlaylistCoverManager.localCoverId(

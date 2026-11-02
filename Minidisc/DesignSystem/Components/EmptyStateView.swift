@@ -12,18 +12,18 @@ struct EmptyStateView: View {
     var action: Action? = nil
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.l) {
+        VStack(spacing: MaeksterSpacing.l) {
             Image(systemName: systemImage)
                 .font(.system(size: 48, weight: .light))
                 .foregroundStyle(.secondary)
 
-            VStack(spacing: MinidiscSpacing.s) {
+            VStack(spacing: MaeksterSpacing.s) {
                 Text(title)
-                    .font(.minidiscSectionTitle)
+                    .font(.maeksterSectionTitle)
                     .multilineTextAlignment(.center)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.minidiscBody)
+                        .font(.maeksterBody)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 280)
@@ -33,10 +33,10 @@ struct EmptyStateView: View {
             if let action {
                 Button(action.label, action: action.handler)
                     .buttonStyle(.borderedProminent)
-                    .tint(Color.minidiscAccent)
+                    .tint(Color.maeksterAccent)
             }
         }
-        .padding(MinidiscSpacing.xxxl)
+        .padding(MaeksterSpacing.xxxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

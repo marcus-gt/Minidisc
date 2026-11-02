@@ -12,14 +12,14 @@ struct WrappedTopAlbumSlide: View {
             WrappedArtBackdrop(artworkID: topAlbum?.albumId, palette: palette)
 
             VStack(spacing: 0) {
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
                 WrappedSlideLabel("YOUR #1 ALBUM")
-                Spacer(minLength: MinidiscSpacing.l)
+                Spacer(minLength: MaeksterSpacing.l)
 
                 if let album = topAlbum {
                     WrappedSlideCover(artworkID: album.albumId)
 
-                    VStack(spacing: MinidiscSpacing.xs) {
+                    VStack(spacing: MaeksterSpacing.xs) {
                         Text(album.title)
                             .font(.system(size: 28, weight: .black, design: .rounded))
                             .kerning(-0.5)
@@ -32,25 +32,25 @@ struct WrappedTopAlbumSlide: View {
                             .foregroundStyle(.white.opacity(0.8))
                             .lineLimit(1)
                     }
-                    .padding(.horizontal, MinidiscSpacing.xl)
-                    .padding(.top, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.xl)
+                    .padding(.top, MaeksterSpacing.l)
 
-                    Spacer(minLength: MinidiscSpacing.l)
+                    Spacer(minLength: MaeksterSpacing.l)
 
-                    VStack(spacing: MinidiscSpacing.s) {
+                    VStack(spacing: MaeksterSpacing.s) {
                         ForEach(runnersUp) { entry in
                             WrappedRunnerUpRow(rank: entry.rank, artworkID: entry.albumId, title: entry.title,
                                                subtitle: entry.artistName, detail: entry.playCount.plural("play", "plays"))
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.xl)
+                    .padding(.horizontal, MaeksterSpacing.xl)
                 } else {
                     Text("No album data yet")
                         .font(.system(.title2, design: .rounded, weight: .medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
 
-                Spacer(minLength: MinidiscSpacing.xxxxl)
+                Spacer(minLength: MaeksterSpacing.xxxxl)
             }
             .wrappedSlideEntrance()
         }

@@ -78,7 +78,7 @@ struct MusicIntentTests {
     @Test func simultaneousLaunchesShareTheSameContainer() async throws {
         let expected = try makeContainer()
         var loads = 0
-        let runtime = MinidiscRuntime {
+        let runtime = MaeksterRuntime {
             loads += 1
             await Task.yield()
             return expected
@@ -96,7 +96,7 @@ struct MusicIntentTests {
     @Test func failedLaunchCanRetry() async throws {
         let expected = try makeContainer()
         var attempts = 0
-        let runtime = MinidiscRuntime {
+        let runtime = MaeksterRuntime {
             attempts += 1
             if attempts == 1 { throw MusicIntentError.unavailable }
             return expected

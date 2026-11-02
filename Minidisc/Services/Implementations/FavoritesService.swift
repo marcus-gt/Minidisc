@@ -30,7 +30,7 @@ actor FavoritesService: FavoritesServiceProtocol {
     // MARK: - Star
 
     func star(itemType: FavoriteType, itemId: String) async throws {
-        guard let serverId = await MainActor.run(body: { serverState.activeServer?.id }) else { throw MinidiscError.serverNotConfigured }
+        guard let serverId = await MainActor.run(body: { serverState.activeServer?.id }) else { throw MaeksterError.serverNotConfigured }
 
         let record = FavoriteRecord(itemType: itemType, itemId: itemId, starredDate: Date(), serverId: serverId)
         backgroundContext.insert(record)

@@ -427,7 +427,7 @@ extension AppContainer {
         do {
             container = try AppContainer(
                 inMemory: true,
-                userDefaults: UserDefaults(suiteName: "minidisc.previews") ?? .standard
+                userDefaults: UserDefaults(suiteName: "maekster.previews") ?? .standard
             )
         } catch {
             fatalError("Preview AppContainer failed to initialise: \(error)")
@@ -500,8 +500,8 @@ extension HomeFeedViewModel {
 
 // MARK: - Environment
 
-/// Supplies the same environment `MinidiscApp` and `MainTabView` give real screens.
-struct MinidiscPreview<Content: View>: View {
+/// Supplies the same environment `MaeksterApp` and `MainTabView` give real screens.
+struct MaeksterPreview<Content: View>: View {
     let container: AppContainer
     @ViewBuilder var content: Content
     @State private var playlistAddition = PlaylistAddition()

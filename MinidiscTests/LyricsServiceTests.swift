@@ -18,7 +18,7 @@ final class MockLyricsServerService: ServerServiceProtocol {
     func testConnection() async throws {}
     func testConnection(url: String, username: String, password: String, customHeaders: [String: String]) async throws {}
     func activeConnectionVersion() async -> ServerConnection.Version? { nil }
-    func activeConnection() async throws -> ServerConnection { throw MinidiscError.notImplemented }
+    func activeConnection() async throws -> ServerConnection { throw MaeksterError.notImplemented }
     func loadPersistedState() async {}
 }
 

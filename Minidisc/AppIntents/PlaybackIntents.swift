@@ -4,9 +4,9 @@ struct PlayMinidiscMusicIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Play Music"
     static let description = IntentDescription("Play a song, album, artist or playlist from your maekster library.")
     static var supportedModes: IntentModes { .background }
-    @Parameter(title: "Music") var music: MinidiscMusicEntity
+    @Parameter(title: "Music") var music: MaeksterMusicEntity
     @Parameter(title: "Shuffle", default: false) var shuffle: Bool
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     static var parameterSummary: some ParameterSummary {
         Summary("Play \(\.$music)") { \.$shuffle }
@@ -25,7 +25,7 @@ struct PlayMinidiscMoodIntent: AudioPlaybackIntent {
     static let description = IntentDescription("Play a radio of songs from your library that fit a mood.")
     static var supportedModes: IntentModes { .background }
     @Parameter(title: "Mood") var mood: Mood
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
     static var parameterSummary: some ParameterSummary { Summary("Play \(\.$mood)") }
 
     @MainActor
@@ -36,10 +36,10 @@ struct PlayMinidiscMoodIntent: AudioPlaybackIntent {
     }
 }
 
-struct MinidiscSmartShuffleIntent: AudioPlaybackIntent {
+struct MaeksterSmartShuffleIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Smart Shuffle"
     static var supportedModes: IntentModes { .background }
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func perform() async throws -> some IntentResult {
@@ -56,7 +56,7 @@ struct MinidiscSmartShuffleIntent: AudioPlaybackIntent {
 struct ResumeMinidiscIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Resume Playback"
     static var supportedModes: IntentModes { .background }
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     @MainActor
     func perform() async throws -> some IntentResult {
@@ -73,7 +73,7 @@ struct ResumeMinidiscIntent: AudioPlaybackIntent {
 struct PauseMinidiscIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Pause Playback"
     static var supportedModes: IntentModes { .background }
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     func perform() async throws -> some IntentResult {
         let container = try await runtime.container()
@@ -86,7 +86,7 @@ struct PauseMinidiscIntent: AudioPlaybackIntent {
 struct NextMinidiscTrackIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Next Track"
     static var supportedModes: IntentModes { .background }
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     func perform() async throws -> some IntentResult {
         let container = try await runtime.container()
@@ -99,7 +99,7 @@ struct NextMinidiscTrackIntent: AudioPlaybackIntent {
 struct PreviousMinidiscTrackIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Previous Track"
     static var supportedModes: IntentModes { .background }
-    @Dependency private var runtime: MinidiscRuntime
+    @Dependency private var runtime: MaeksterRuntime
 
     func perform() async throws -> some IntentResult {
         let container = try await runtime.container()

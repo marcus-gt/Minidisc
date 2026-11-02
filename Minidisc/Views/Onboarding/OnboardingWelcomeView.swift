@@ -12,7 +12,7 @@ struct OnboardingWelcomeView: View {
 
     var body: some View {
         ZStack {
-            MinidiscColors.backgroundPrimary.ignoresSafeArea()
+            MaeksterColors.backgroundPrimary.ignoresSafeArea()
 
             GeometryReader { geometry in
                 ScrollView {
@@ -41,16 +41,16 @@ struct OnboardingWelcomeView: View {
 
     private var welcomeContent: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: MinidiscSpacing.xl)
+            Spacer(minLength: MaeksterSpacing.xl)
 
             BrandMarkHero(appeared: appeared)
 
-            Spacer().frame(height: MinidiscSpacing.xxxxl)
+            Spacer().frame(height: MaeksterSpacing.xxxxl)
 
-            VStack(spacing: MinidiscSpacing.m) {
+            VStack(spacing: MaeksterSpacing.m) {
                 Text("Your music.\nYour rules.")
                     .font(.system(.largeTitle, weight: .bold))
-                    .foregroundStyle(MinidiscColors.textPrimary)
+                    .foregroundStyle(MaeksterColors.textPrimary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .lineSpacing(4)
@@ -60,7 +60,7 @@ struct OnboardingWelcomeView: View {
 
                 Text("Stream your library from your own server.\nNo subscriptions. No big tech.")
                     .font(.system(.body))
-                    .foregroundStyle(MinidiscColors.textSecondary)
+                    .foregroundStyle(MaeksterColors.textSecondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .lineSpacing(3)
@@ -68,18 +68,18 @@ struct OnboardingWelcomeView: View {
                     .offset(y: appeared ? 0 : 24)
                     .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.1), value: appeared)
             }
-            .padding(.horizontal, MinidiscSpacing.xxxl)
+            .padding(.horizontal, MaeksterSpacing.xxxl)
 
-            Spacer(minLength: MinidiscSpacing.xl)
+            Spacer(minLength: MaeksterSpacing.xl)
 
             Button { localMusicEnabled = true } label: {
                 Text("Use Local Files", tableName: "LocalMusic")
             }
-            .padding(.bottom, MinidiscSpacing.l)
+            .padding(.bottom, MaeksterSpacing.l)
 
             getStartedButton
-                .padding(.horizontal, MinidiscSpacing.xxxl)
-                .padding(.bottom, MinidiscSpacing.xxxl)
+                .padding(.horizontal, MaeksterSpacing.xxxl)
+                .padding(.bottom, MaeksterSpacing.xxxl)
                 .opacity(appeared ? 1 : 0)
                 .offset(y: appeared ? 0 : 30)
                 .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.2), value: appeared)
@@ -99,7 +99,7 @@ struct OnboardingWelcomeView: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
-        .tint(MinidiscColors.accent)
+        .tint(MaeksterColors.accent)
         .disabled(viewModel == nil)
     }
 
@@ -124,7 +124,7 @@ private struct BrandMarkHero: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(MinidiscColors.accent.opacity(0.08))
+                .fill(MaeksterColors.accent.opacity(0.08))
                 .frame(width: glowDiameter, height: glowDiameter)
                 .blur(radius: glowBlur)
                 .accessibilityHidden(true)

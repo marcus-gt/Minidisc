@@ -59,7 +59,7 @@ struct WrappedRadioCard: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 220)
                 .overlay { overlayContent }
-                .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.hero, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.hero, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
@@ -69,7 +69,7 @@ struct WrappedRadioCard: View {
     }
 
     private var overlayContent: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             HStack {
                 Label("Wrapped Radio", systemImage: "dot.radiowaves.left.and.right")
                     .font(.system(size: 20, weight: .bold, design: .rounded))
@@ -94,7 +94,7 @@ struct WrappedRadioCard: View {
                 .foregroundStyle(.white.opacity(0.75))
                 .lineLimit(2)
         }
-        .padding(MinidiscSpacing.l)
+        .padding(MaeksterSpacing.l)
     }
 
     @ViewBuilder

@@ -3,8 +3,8 @@ import SwiftUI
 /// The round, softly filled button used across artwork-led screens: the player's heart and menu, the
 /// album and artist action rows, and the player toolbar. Use on dark surfaces; the fill and glyph follow
 /// the foreground style so they read on any tint.
-struct MinidiscCircleButtonStyle: ButtonStyle {
-    var diameter: CGFloat = MinidiscControlSize.regular
+struct MaeksterCircleButtonStyle: ButtonStyle {
+    var diameter: CGFloat = MaeksterControlSize.regular
     /// The play button in an action row: a stronger fill at the same size as its neighbours.
     var isProminent = false
     /// Highlights a toggled state (e.g. the queue or lyrics surface is showing).
@@ -51,26 +51,26 @@ struct MinidiscCircleButtonStyle: ButtonStyle {
     }
 }
 
-extension ButtonStyle where Self == MinidiscCircleButtonStyle {
-    static func minidiscCircle(
-        diameter: CGFloat = MinidiscControlSize.regular,
+extension ButtonStyle where Self == MaeksterCircleButtonStyle {
+    static func maeksterCircle(
+        diameter: CGFloat = MaeksterControlSize.regular,
         isProminent: Bool = false,
         isActive: Bool = false
-    ) -> MinidiscCircleButtonStyle {
-        MinidiscCircleButtonStyle(diameter: diameter, isProminent: isProminent, isActive: isActive)
+    ) -> MaeksterCircleButtonStyle {
+        MaeksterCircleButtonStyle(diameter: diameter, isProminent: isProminent, isActive: isActive)
     }
 }
 
 #Preview {
-    HStack(spacing: MinidiscSpacing.l) {
+    HStack(spacing: MaeksterSpacing.l) {
         Button("Favorite", systemImage: "heart") {}
-            .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+            .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
         Button("Play", systemImage: "play.fill") {}
-            .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large, isProminent: true))
+            .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large, isProminent: true))
         Button("Shuffle", systemImage: "shuffle") {}
-            .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large))
+            .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large))
         Button("Queue", systemImage: "list.bullet") {}
-            .buttonStyle(.minidiscCircle(isActive: true))
+            .buttonStyle(.maeksterCircle(isActive: true))
     }
     .padding()
     .background(ArtworkSurfaceBackground(tint: ArtworkSurfacePalette.tint(from: .orange)))

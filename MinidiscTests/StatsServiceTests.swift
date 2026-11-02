@@ -7,7 +7,7 @@ import SwiftData
 struct StatsServiceTests {
 
     private func makeService() throws -> StatsService {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         return StatsService(modelContainer: container)
     }
 

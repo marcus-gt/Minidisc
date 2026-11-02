@@ -87,7 +87,7 @@ actor MediaResolver: MediaResolverProtocol {
     func resolve(songId: String, serverId: UUID) async throws -> MediaSource {
         guard Self.isValidSongID(songId) else {
             Self.logInvalidSongID(operation: "resolve")
-            throw MinidiscError.mediaNotFound(songId: songId)
+            throw MaeksterError.mediaNotFound(songId: songId)
         }
         let (isOnline, prefersStreaming) = await MainActor.run {
             (serverState.isOnline, streamSettings.prefersStreamingOverDownloads)
@@ -111,7 +111,7 @@ actor MediaResolver: MediaResolverProtocol {
         }
         guard isOnline else {
             Logger.resolver.warning("'\(songId, privacy: .public)' not available offline.")
-            throw MinidiscError.offlineUnavailable(songId: songId)
+            throw MaeksterError.offlineUnavailable(songId: songId)
         }
         return try await streamSource(songId: songId)
     }
@@ -127,7 +127,7 @@ actor MediaResolver: MediaResolverProtocol {
             format: quality.subsonicFormat,
             estimateContentLength: true
         ) else {
-            throw MinidiscError.mediaNotFound(songId: songId)
+            throw MaeksterError.mediaNotFound(songId: songId)
         }
         Logger.resolver.debug("Resolved '\(songId, privacy: .public)' as stream.")
         return .stream(
@@ -139,13 +139,13 @@ actor MediaResolver: MediaResolverProtocol {
     func resolveRadio(_ station: InternetRadioStation) async throws -> MediaSource {
         guard let url = URL(string: station.streamUrl) else {
             Logger.resolver.error("Invalid stream URL for radio station '\(station.id, privacy: .public)': \(station.streamUrl, privacy: .private)")
-            throw MinidiscError.mediaNotFound(songId: station.id)
+            throw MaeksterError.mediaNotFound(songId: station.id)
         }
 
         let isOnline = await MainActor.run { serverState.isOnline }
         guard isOnline else {
             Logger.resolver.warning("Radio '\(station.id, privacy: .public)' not available offline.")
-            throw MinidiscError.offlineUnavailable(songId: station.id)
+            throw MaeksterError.offlineUnavailable(songId: station.id)
         }
 
         let connection = try await serverService.activeConnection()

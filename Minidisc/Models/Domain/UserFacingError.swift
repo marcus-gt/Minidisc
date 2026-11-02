@@ -82,8 +82,8 @@ nonisolated enum UserFacingError: LocalizedError, Identifiable, Sendable, Codabl
                 return .serverUnreachable
             }
         }
-        if let minidiscError = error as? MinidiscError {
-            switch minidiscError {
+        if let maeksterError = error as? MaeksterError {
+            switch maeksterError {
             case .offlineUnavailable:
                 return .contentUnavailableOffline
             case .downloadFailed:

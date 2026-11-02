@@ -15,7 +15,7 @@ struct AlbumCollectionView: View {
     }
 
     private let columns = [
-        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: MinidiscSpacing.l)
+        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: MaeksterSpacing.l)
     ]
 
     var body: some View {
@@ -74,9 +74,9 @@ struct AlbumCollectionView: View {
         case .loaded:
             let albums = container?.visibleAlbums(viewModel.albums) ?? viewModel.albums
             ScrollView {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.xxl) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.xxl) {
                     header(viewModel, albumCount: albums.count)
-                    LazyVGrid(columns: columns, alignment: .leading, spacing: MinidiscSpacing.l) {
+                    LazyVGrid(columns: columns, alignment: .leading, spacing: MaeksterSpacing.l) {
                         ForEach(albums) { album in
                             NavigationLink {
                                 AlbumDetailView(album: album)
@@ -87,44 +87,44 @@ struct AlbumCollectionView: View {
                         }
                     }
                 }
-                .padding(MinidiscSpacing.l)
+                .padding(MaeksterSpacing.l)
             }
             .refreshable { await viewModel.load() }
             .miniPlayerBottomMargin()
-            .minidiscContentWidth()
+            .maeksterContentWidth()
         }
     }
 
     private func header(_ viewModel: AlbumCollectionViewModel, albumCount: Int) -> some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Image(systemName: kind.systemImage)
                 .font(.title3)
-                .foregroundStyle(Color.minidiscAccent)
-                .frame(width: MinidiscControlSize.regular, height: MinidiscControlSize.regular)
-                .background(Circle().fill(Color.minidiscAccent.opacity(0.14)))
+                .foregroundStyle(Color.maeksterAccent)
+                .frame(width: MaeksterControlSize.regular, height: MaeksterControlSize.regular)
+                .background(Circle().fill(Color.maeksterAccent.opacity(0.14)))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: kind.name)
-                    .font(.minidiscSectionTitle)
+                    .font(.maeksterSectionTitle)
                     .lineLimit(2)
                 Text("\(albumCount) albums")
-                    .font(.minidiscMetadata)
+                    .font(.maeksterMetadata)
                     .foregroundStyle(.secondary)
             }
-            Spacer(minLength: MinidiscSpacing.s)
+            Spacer(minLength: MaeksterSpacing.s)
             Button("Play All", systemImage: "play.fill") {
                 Task { await play(viewModel, shuffled: false) }
             }
-            .buttonStyle(.minidiscCircle(isProminent: true))
+            .buttonStyle(.maeksterCircle(isProminent: true))
             Button("Shuffle", systemImage: "shuffle") {
                 Task { await play(viewModel, shuffled: true) }
             }
-            .buttonStyle(.minidiscCircle())
+            .buttonStyle(.maeksterCircle())
         }
         .disabled(viewModel.isPlayLoading || albumCount == 0)
-        .padding(MinidiscSpacing.l)
+        .padding(MaeksterSpacing.l)
         .background(
-            RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous)
+            RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous)
                 .fill(.primary.opacity(0.06))
         )
         .accessibilityElement(children: .contain)
@@ -150,7 +150,7 @@ struct AlbumCollectionView: View {
 
 #if DEBUG
 #Preview("Genre") {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         NavigationStack {
             AlbumCollectionView(
                 kind: .genre("Indie Pop"),

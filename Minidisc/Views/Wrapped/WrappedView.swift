@@ -62,7 +62,7 @@ struct WrappedView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: MinidiscSpacing.xl) {
+            LazyVStack(alignment: .leading, spacing: MaeksterSpacing.xl) {
                 yearMenu
                 if !availablePeriods.isEmpty {
                     WrappedPeriodPicker(selectedPeriod: $selectedPeriod, availablePeriods: availablePeriods)
@@ -70,17 +70,17 @@ struct WrappedView: View {
                 sourceCaption
 
                 if isLoading {
-                    VStack(spacing: MinidiscSpacing.s) {
+                    VStack(spacing: MaeksterSpacing.s) {
                         ProgressView()
                         if let fetchedListens, fetchedListens > 0 {
                             Text("Loading your listening history… \(fetchedListens) listens")
-                                .font(.minidiscCaption)
+                                .font(.maeksterCaption)
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.top, MinidiscSpacing.xxxxl)
+                    .padding(.top, MaeksterSpacing.xxxxl)
                 } else if loadFailed {
                     EmptyStateView(
                         systemImage: "exclamationmark.triangle",
@@ -112,9 +112,9 @@ struct WrappedView: View {
                     emptyState
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.top, MinidiscSpacing.l)
-            .padding(.bottom, MinidiscSpacing.xl)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.top, MaeksterSpacing.l)
+            .padding(.bottom, MaeksterSpacing.xl)
         }
         .refreshable { await loadData(refresh: true) }
         .navigationTitle("")
@@ -150,11 +150,11 @@ struct WrappedView: View {
                 }
             }
         } label: {
-            HStack(spacing: MinidiscSpacing.xs) {
+            HStack(spacing: MaeksterSpacing.xs) {
                 Text(verbatim: isAllTime ? WrappedPeriod.allTime.displayName : String(currentYear))
-                    .font(.minidiscDetailTitle)
+                    .font(.maeksterDetailTitle)
                 Image(systemName: "chevron.down")
-                    .font(.minidiscCaption.weight(.semibold))
+                    .font(.maeksterCaption.weight(.semibold))
             }
             .foregroundStyle(.primary)
         }
@@ -166,15 +166,15 @@ struct WrappedView: View {
     private var sourceCaption: some View {
         if fellBack {
             Label("ListenBrainz is unavailable, so this shows the plays recorded on this iPhone.", systemImage: "exclamationmark.triangle")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
         } else if source == .listenBrainz {
             Label("From your ListenBrainz history, across every player.", systemImage: "waveform")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
         } else if source == .device {
             Label("From the plays recorded on this iPhone. Connect ListenBrainz to include every player.", systemImage: "iphone")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
         }
     }
@@ -182,19 +182,19 @@ struct WrappedView: View {
     // MARK: - Empty state
 
     private var emptyState: some View {
-        VStack(spacing: MinidiscSpacing.s) {
+        VStack(spacing: MaeksterSpacing.s) {
             Image(systemName: "waveform")
                 .font(.largeTitle)
-                .foregroundStyle(Color.minidiscAccent.opacity(0.5))
+                .foregroundStyle(Color.maeksterAccent.opacity(0.5))
             Text("No listens for this period.")
-                .font(.minidiscCellTitle)
+                .font(.maeksterCellTitle)
             Text("Listen up — we'll keep track of your activity.")
-                .font(.minidiscCaption)
+                .font(.maeksterCaption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, MinidiscSpacing.xxxxl)
+        .padding(.top, MaeksterSpacing.xxxxl)
     }
 
     // MARK: - Data loading

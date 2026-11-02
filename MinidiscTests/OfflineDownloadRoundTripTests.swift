@@ -9,7 +9,7 @@ import SwiftSonic
 struct OfflineDownloadRoundTripTests {
 
     private func makeService() throws -> (service: DownloadService, container: ModelContainer, serverId: UUID) {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let service = DownloadService(
             serverService: MockServerService(),
             modelContainer: container,

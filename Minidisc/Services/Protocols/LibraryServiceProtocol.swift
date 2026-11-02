@@ -24,7 +24,7 @@ nonisolated protocol ArtistBrowsing: AnyObject, Sendable {
     /// Fetches every track from every album of the given artist.
     /// Albums are ordered most-recent first (by year); albums without a year come last (alphabetical).
     /// Uses a TaskGroup bounded to 5 concurrent album fetches — safe for home-server instances.
-    /// Individual album failures are logged and skipped (best-effort). Throws `MinidiscError.artistTracksUnavailable`
+    /// Individual album failures are logged and skipped (best-effort). Throws `MaeksterError.artistTracksUnavailable`
     /// only when every album fetch fails.
     func fetchAllTracks(forArtistID artistID: String) async throws -> [DisplayableSong]
 

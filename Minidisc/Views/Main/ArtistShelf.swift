@@ -16,7 +16,7 @@ struct ArtistShelf: View {
             if isLoading && artists.isEmpty {
                 placeholder
             } else if !artists.isEmpty {
-                MinidiscShelf {
+                MaeksterShelf {
                     header
                 } content: {
                     ForEach(artists, id: \.id) { artist in
@@ -30,25 +30,25 @@ struct ArtistShelf: View {
     }
 
     private var header: some View {
-        MinidiscCarouselHeader(HomeSection.artists.title, showsChevron: false)
+        MaeksterCarouselHeader(HomeSection.artists.title, showsChevron: false)
             .accessibilityAddTraits(.isHeader)
     }
 
     private var placeholder: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: MinidiscSpacing.m) {
+                HStack(alignment: .top, spacing: MaeksterSpacing.m) {
                     ForEach(0..<6, id: \.self) { _ in
-                        VStack(spacing: MinidiscSpacing.xs) {
-                            SkeletonBlock(width: MinidiscCarouselMetrics.artistArtwork,
-                                          height: MinidiscCarouselMetrics.artistArtwork,
-                                          cornerRadius: MinidiscCarouselMetrics.artistArtwork / 2)
+                        VStack(spacing: MaeksterSpacing.xs) {
+                            SkeletonBlock(width: MaeksterCarouselMetrics.artistArtwork,
+                                          height: MaeksterCarouselMetrics.artistArtwork,
+                                          cornerRadius: MaeksterCarouselMetrics.artistArtwork / 2)
                             SkeletonBlock(width: 72, height: 11, cornerRadius: 4)
                         }
                     }
                 }
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             }
             .scrollDisabled(true)
         }
@@ -76,7 +76,7 @@ private struct ArtistShelfCell: View {
     let artist: ArtistID3
     @Environment(\.appContainer) private var container
 
-    private static let size = MinidiscCarouselMetrics.artistArtwork
+    private static let size = MaeksterCarouselMetrics.artistArtwork
 
     var body: some View {
         NavigationLink(value: HomeDestination.artist(artist)) {
@@ -104,7 +104,7 @@ private struct ArtistShelfCell: View {
             let tracks = try await container.libraryService.fetchAllTracks(forArtistID: artist.id)
             try await container.playerService.play(tracks: tracks.shuffled(), startIndex: 0,
                                                     source: .artist(id: artist.id, name: artist.name))
-        } catch MinidiscError.artistTracksUnavailable {
+        } catch MaeksterError.artistTracksUnavailable {
             container.toastService.showError(String(localized: "Unable to load artist tracks. Please check your connection and try again."))
         } catch {
             guard !UserFacingError.isCancellation(error) else { return }

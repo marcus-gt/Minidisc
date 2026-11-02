@@ -8,7 +8,7 @@ import Testing
 @MainActor
 struct PinnedShelfTests {
     private func service() throws -> (PinService, ModelContainer) {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         return (PinService(modelContainer: container), container)
     }
 

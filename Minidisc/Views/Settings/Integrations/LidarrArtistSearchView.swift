@@ -13,7 +13,7 @@ struct LidarrArtistSearchView: View {
     @State private var selected: LidarrArtistLookup?
     @State private var searchTask: Task<Void, Never>?
 
-    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MinidiscSpacing.m)]
+    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MaeksterSpacing.m)]
 
     var body: some View {
         NavigationStack {
@@ -68,7 +68,7 @@ struct LidarrArtistSearchView: View {
 
     private var resultsGrid: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: MinidiscSpacing.l) {
+            LazyVGrid(columns: columns, spacing: MaeksterSpacing.l) {
                 ForEach(results) { artist in
                     Button { selected = artist } label: {
                         LidarrArtistResultCell(artist: artist)
@@ -76,7 +76,7 @@ struct LidarrArtistSearchView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
     }
 
@@ -129,22 +129,22 @@ private struct LidarrArtistResultCell: View {
     let artist: LidarrArtistLookup
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             AsyncImage(url: artist.posterURL) { image in
                 image.resizable().scaledToFill()
             } placeholder: {
-                RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+                RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                     .fill(Color.secondary.opacity(0.15))
                     .overlay { Image(systemName: "music.mic").font(.title).foregroundStyle(.secondary) }
             }
             .frame(maxWidth: .infinity)
             .aspectRatio(1, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+            .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
             .overlay(alignment: .topTrailing) {
                 if artist.isAlreadyAdded {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.white, Color(.systemGreen))
-                        .padding(MinidiscSpacing.xs)
+                        .padding(MaeksterSpacing.xs)
                 }
             }
 

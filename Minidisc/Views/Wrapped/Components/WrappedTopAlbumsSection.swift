@@ -4,18 +4,18 @@ struct WrappedTopAlbumsSection: View {
     let albums: [TopAlbumEntry]
 
     private let columns = [
-        GridItem(.flexible(), spacing: MinidiscSpacing.m),
-        GridItem(.flexible(), spacing: MinidiscSpacing.m)
+        GridItem(.flexible(), spacing: MaeksterSpacing.m),
+        GridItem(.flexible(), spacing: MaeksterSpacing.m)
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             Text("Top Albums")
-                .font(.minidiscSectionTitle)
+                .font(.maeksterSectionTitle)
             if albums.isEmpty {
                 emptyLabel("No album data for this period.")
             } else {
-                LazyVGrid(columns: columns, spacing: MinidiscSpacing.m) {
+                LazyVGrid(columns: columns, spacing: MaeksterSpacing.m) {
                     ForEach(albums.prefix(6)) { album in
                         // An album only in the ListenBrainz history isn't on the server to open (#16).
                         if WrappedIDs.isLibraryID(album.albumId) {
@@ -35,17 +35,17 @@ struct WrappedTopAlbumsSection: View {
     }
 
     private func albumCard(_ album: TopAlbumEntry) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             ZStack(alignment: .topLeading) {
                 Color.clear
                     .aspectRatio(1, contentMode: .fit)
                     .overlay {
                         CoverArtView(id: album.albumId, size: 220, tier: .hero)
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard, style: .continuous))
-                    .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
+                    .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard, style: .continuous))
+                    .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.standard)
                 rankBadge(album.rank)
-                    .padding(MinidiscSpacing.xs)
+                    .padding(MaeksterSpacing.xs)
             }
             CoverCardMetadata(title: album.title, subtitle: album.artistName)
         }
@@ -56,14 +56,14 @@ struct WrappedTopAlbumsSection: View {
         case 1: return WrappedYearPalette.medalGold
         case 2: return WrappedYearPalette.medalSilver
         case 3: return WrappedYearPalette.medalBronze
-        default: return MinidiscColors.accent
+        default: return MaeksterColors.accent
         }
     }
 
     private func rankBadge(_ rank: Int) -> some View {
         let isMedal = rank <= 3
         return Text("#\(rank)")
-            .font(.minidiscCaption2)
+            .font(.maeksterCaption2)
             .fontWeight(.bold)
             .foregroundStyle(isMedal ? Color.black : Color.primary)
             .padding(.horizontal, 6)
@@ -79,7 +79,7 @@ struct WrappedTopAlbumsSection: View {
 
     private func emptyLabel(_ text: LocalizedStringKey) -> some View {
         Text(text)
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .foregroundStyle(.secondary)
     }
 }

@@ -35,7 +35,6 @@ struct PlaylistListSortTests {
     @Test func lastUsed_generatedPlaylistsDontRiseOnTheirSyncDate() {
         let playlists = [
             playlist("mood", Mood.night.playlistName, changed: -1),
-            playlist("legacy-mood", Mood.focus.legacyPlaylistName, changed: -2),
             playlist("wrapped", WrappedPlaylistService.playlistName(year: 2026), changed: -3),
             playlist("mine", "Mine", changed: -86_400)
         ]

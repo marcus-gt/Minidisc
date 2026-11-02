@@ -82,20 +82,19 @@ private func playlist(_ id: String, _ name: String, owner: String) -> Playlist {
 struct MoodPlaylistServiceTests {
     private let serverId = "server"
 
-    @Test("Deletion removes the user's current and pre-rebrand mood playlists, and nothing else")
+    @Test("Deletion removes the user's mood playlists, and nothing else")
     func deletionTargetsOnlyOwnedMoods() async {
         let playlists = PlaylistStub()
         let service = MoodPlaylistService(playlistClientFactory: { playlists }, playlistOwner: "me")
         playlists.existing = [
             playlist("night", Mood.night.playlistName, owner: "me"),
             playlist("duplicate-night", Mood.night.playlistName, owner: "me"),
-            playlist("legacy-chill", Mood.chill.legacyPlaylistName, owner: "me"),
             playlist("shared-night", Mood.night.playlistName, owner: "someone-else"),
-            playlist("wrapped", "Minidisc Wrapped 2025", owner: "me"),
-            playlist("custom", "Minidisc · My favourites", owner: "me")
+            playlist("wrapped", "maekster Wrapped 2025", owner: "me"),
+            playlist("custom", "maekster · My favourites", owner: "me")
         ]
-        #expect(await service.deletePlaylists(serverId: serverId) == .finished(deleted: 3, failed: 0))
-        #expect(Set(playlists.deleted) == ["night", "duplicate-night", "legacy-chill"])
+        #expect(await service.deletePlaylists(serverId: serverId) == .finished(deleted: 2, failed: 0))
+        #expect(Set(playlists.deleted) == ["night", "duplicate-night"])
     }
 
     @Test("Failed deletions are counted, and a second attempt finishes the job")
@@ -126,12 +125,10 @@ struct MoodPlaylistServiceTests {
         #expect(queries.allSatisfy { $0.allSatisfy(\.isASCII) })
     }
 
-    @Test func names_currentAndLegacy_areRecognised() {
+    @Test func names_areRecognised() {
         #expect(Mood.night.playlistName == "maekster · Night")
-        #expect(Mood.night.legacyPlaylistName == "Minidisc · Night")
         #expect(Mood.forPlaylistName("maekster · Night") == .night)
-        #expect(Mood.forPlaylistName("Minidisc · Night") == .night)
-        #expect(Mood.forPlaylistName("Minidisc · My favourites") == nil)
+        #expect(Mood.forPlaylistName("maekster · My favourites") == nil)
         #expect(Mood.forPlaylistName("Night") == nil)
         #expect(MusicIntentService.matchesPlaylist("Minidisc · Night", term: "night"))
     }

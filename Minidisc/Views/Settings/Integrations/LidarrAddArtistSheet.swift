@@ -30,12 +30,12 @@ struct LidarrAddArtistSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack(spacing: MinidiscSpacing.m) {
+                    HStack(spacing: MaeksterSpacing.m) {
                         poster
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(artist.artistName).font(.minidiscCellTitle).lineLimit(2)
+                            Text(artist.artistName).font(.maeksterCellTitle).lineLimit(2)
                             if let disambiguation = artist.disambiguation, !disambiguation.isEmpty {
-                                Text(disambiguation).font(.minidiscCaption).foregroundStyle(.secondary).lineLimit(1)
+                                Text(disambiguation).font(.maeksterCaption).foregroundStyle(.secondary).lineLimit(1)
                             }
                         }
                     }
@@ -73,7 +73,7 @@ struct LidarrAddArtistSheet: View {
                 if let errorMessage {
                     Section {
                         Label(errorMessage, systemImage: "exclamationmark.triangle")
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(.orange)
                     }
                 }
@@ -104,12 +104,12 @@ struct LidarrAddArtistSheet: View {
         AsyncImage(url: artist.posterURL) { image in
             image.resizable().scaledToFill()
         } placeholder: {
-            RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+            RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                 .fill(Color.secondary.opacity(0.15))
                 .overlay { Image(systemName: "music.mic").foregroundStyle(.secondary) }
         }
         .frame(width: 56, height: 56)
-        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+        .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
     }
 
     private func loadOptions() async {

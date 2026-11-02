@@ -17,7 +17,7 @@ struct AlbumReleaseCategoryTests {
         (["Album/Remix"], .other)
     ] as [([String], AlbumReleaseCategory)])
     func releaseTypes(types: [String], expected: AlbumReleaseCategory) {
-        #expect(album(releaseTypes: types).minidiscReleaseCategory == expected)
+        #expect(album(releaseTypes: types).maeksterReleaseCategory == expected)
     }
 
     @Test("Albums and missing release metadata stay in the album shelf", arguments: [
@@ -26,7 +26,7 @@ struct AlbumReleaseCategoryTests {
         ["Album"]
     ] as [[String]?])
     func albums(releaseTypes: [String]?) {
-        #expect(album(releaseTypes: releaseTypes).minidiscReleaseCategory == .album)
+        #expect(album(releaseTypes: releaseTypes).maeksterReleaseCategory == .album)
     }
 
     @Test func compilationFlag_withoutReleaseTypes_isCompilation() {

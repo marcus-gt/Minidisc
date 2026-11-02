@@ -173,7 +173,7 @@ struct PlaylistGradientSpec: Codable, Equatable, Sendable {
     }
 
     static func neutral(shape: PlaylistGradientShape = .prism) -> PlaylistGradientSpec {
-        PlaylistGradientSpec(shape: shape, baseColor: Color.minidiscAccent)
+        PlaylistGradientSpec(shape: shape, baseColor: Color.maeksterAccent)
     }
 }
 

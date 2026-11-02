@@ -15,7 +15,7 @@ struct SquareCropView: View {
     var body: some View {
         NavigationStack {
             GeometryReader { geo in
-                let F = max(0, min(geo.size.width, geo.size.height) - MinidiscSpacing.l * 2)
+                let F = max(0, min(geo.size.width, geo.size.height) - MaeksterSpacing.l * 2)
                 let base = baseSize(forFrame: F)
                 ZStack {
                     Color.black.ignoresSafeArea()

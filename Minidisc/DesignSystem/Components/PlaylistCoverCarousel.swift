@@ -47,12 +47,12 @@ struct PlaylistCoverCarousel: View {
     var cardFraction: CGFloat = 0.74
 
     var body: some View {
-        VStack(spacing: MinidiscSpacing.m) {
+        VStack(spacing: MaeksterSpacing.m) {
             GeometryReader { geo in
                 let cardSize = geo.size.width * cardFraction
                 let sidePeek = max(0, (geo.size.width - cardSize) / 2)
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: MinidiscSpacing.m) {
+                    LazyHStack(spacing: MaeksterSpacing.m) {
                         ForEach(options, id: \.self) { option in
                             card(option)
                                 .frame(width: cardSize, height: cardSize)
@@ -99,7 +99,7 @@ struct PlaylistCoverCarousel: View {
                 } else {
                     Color.secondary.opacity(0.12)
                     Circle()
-                        .fill(Color.minidiscAccent)
+                        .fill(Color.maeksterAccent)
                         .frame(width: 72, height: 72)
                         .overlay {
                             Image(systemName: "photo")
@@ -112,8 +112,8 @@ struct PlaylistCoverCarousel: View {
                 titleOverlay
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
         .onTapGesture { handleTap(option) }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel(for: option))

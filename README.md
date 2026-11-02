@@ -86,8 +86,8 @@ Do these steps:
 
 1. Clone the repository and open the project.
     ```bash
-    git clone https://github.com/marcus-gt/Minidisc.git
-    cd Minidisc
+    git clone https://github.com/marcus-gt/maekster.git
+    cd maekster
     open Minidisc.xcodeproj
     ```
     Swift Package Manager gets the dependencies (SwiftSonic), so you do not have to do more setup.
@@ -103,7 +103,7 @@ Do these steps:
 
 ## Server compatibility
 
-maekster works with each server that has the Subsonic or OpenSubsonic API. Navidrome is the recommended server, and maekster is tested primarily with Navidrome. If your server has the Subsonic API but a function does not work, [open an issue](https://github.com/marcus-gt/Minidisc/issues).
+maekster works with each server that has the Subsonic or OpenSubsonic API. Navidrome is the recommended server, and maekster is tested primarily with Navidrome. If your server has the Subsonic API but a function does not work, [open an issue](https://github.com/marcus-gt/maekster/issues).
 
 ## Architecture
 

@@ -10,26 +10,26 @@ Defined in two places:
 
 | Source | What lives there |
 |--------|-----------------|
-| `Assets.xcassets` | `MinidiscAccent`, `MinidiscAccentSecondary` — Xcode auto-generates `Color.minidiscAccent` etc. with light/dark variants |
-| `MinidiscColors.swift` | `minidiscAccentText`, `minidiscCoverShadow`, `minidiscCoverBorder` — pure Swift constants |
+| `Assets.xcassets` | `MaeksterAccent`, `MaeksterAccentSecondary` — Xcode auto-generates `Color.maeksterAccent` etc. with light/dark variants |
+| `MaeksterColors.swift` | `maeksterAccentText`, `maeksterCoverShadow`, `maeksterCoverBorder` — pure Swift constants |
 
-See `MinidiscColors.md` for the full palette table, WCAG contrast notes, and usage rules.
+See `MaeksterColors.md` for the full palette table, WCAG contrast notes, and usage rules.
 
 **Critical rules:**
-- `minidiscAccent` is for **primary interactive elements only** (play button, scrubber, active toggles, tappable artist name). Never on body copy or captions.
+- `maeksterAccent` is for **primary interactive elements only** (play button, scrubber, active toggles, tappable artist name). Never on body copy or captions.
 - All text and backgrounds use SwiftUI semantic colors (`Color.primary`, `.secondary`, `Color(.systemBackground)`, etc.).
-- Never add custom colors without updating `MinidiscColors.md`.
+- Never add custom colors without updating `MaeksterColors.md`.
 
 ---
 
 ## Spacing
 
-Use `MinidiscSpacing` constants everywhere. Never write a literal `CGFloat` for spacing.
-`MinidiscSpacing.section` (32) is the only gap between page sections (shelves, track lists,
+Use `MaeksterSpacing` constants everywhere. Never write a literal `CGFloat` for spacing.
+`MaeksterSpacing.section` (32) is the only gap between page sections (shelves, track lists,
 discography groups); a section that renders nothing must not leave its spacing behind.
 
 ```swift
-enum MinidiscSpacing {
+enum MaeksterSpacing {
     static let xs:    CGFloat = 4
     static let s:     CGFloat = 8
     static let m:     CGFloat = 12
@@ -46,7 +46,7 @@ enum MinidiscSpacing {
 ## Corner Radii
 
 ```swift
-enum MinidiscCornerRadius {
+enum MaeksterCornerRadius {
     static let xs:       CGFloat = 4
     static let s:        CGFloat = 6
     static let standard: CGFloat = 8   // list thumbnails, buttons
@@ -59,32 +59,32 @@ enum MinidiscCornerRadius {
 
 ## Typography
 
-All font styles are `Font` extensions in `MinidiscTypography.swift`, built on text styles so they follow
+All font styles are `Font` extensions in `MaeksterTypography.swift`, built on text styles so they follow
 Dynamic Type. The app uses **plain SF Pro** everywhere (no SF Pro Rounded); hierarchy comes from size and
 weight. Wrapped and the generated-cover renderers keep their own display styling.
 
 | Token | Spec | Usage |
 |-------|------|-------|
-| `.minidiscHeroTitle` | `.largeTitle`, bold | Artist name over the hero image |
-| `.minidiscPlayerTitle` | `.title2`, bold | Track title in FullPlayerView |
-| `.minidiscPlayerSubtitle` | `.title3` | Artist line in the player |
-| `.minidiscPlayerTertiary` | `.callout` | Album line in the player |
-| `.minidiscDetailTitle` | `.title2`, bold | Album/playlist name in a detail header |
-| `.minidiscDetailSubtitle` | `.body`, medium | Artist/owner under a detail title |
-| `.minidiscSectionTitle` | `.headline`, semibold | Section and disc headers |
-| `.minidiscShelfTitle` | `.title3`, bold | Carousel/shelf headers |
-| `.minidiscBody` | `.body` | Body copy |
-| `.minidiscTrackTitle` | `.body` | Track titles in album/playlist lists |
-| `.minidiscTrackNumber` | `.subheadline`, monospaced digits | Track numbers and durations |
-| `.minidiscCellTitle` | `.callout`, semibold | Primary text in list cells |
-| `.minidiscCellSubtitle` | `.subheadline` | Secondary text in list cells |
-| `.minidiscMetadata` | `.footnote`, monospaced digits | Release metadata line, chips |
-| `.minidiscBadge` | `.caption2`, bold | Format badges (FLAC, MP3) |
-| `.minidiscCaption` / `.minidiscCaption2` | `.caption` / `.caption2` | Smallest text |
+| `.maeksterHeroTitle` | `.largeTitle`, bold | Artist name over the hero image |
+| `.maeksterPlayerTitle` | `.title2`, bold | Track title in FullPlayerView |
+| `.maeksterPlayerSubtitle` | `.title3` | Artist line in the player |
+| `.maeksterPlayerTertiary` | `.callout` | Album line in the player |
+| `.maeksterDetailTitle` | `.title2`, bold | Album/playlist name in a detail header |
+| `.maeksterDetailSubtitle` | `.body`, medium | Artist/owner under a detail title |
+| `.maeksterSectionTitle` | `.headline`, semibold | Section and disc headers |
+| `.maeksterShelfTitle` | `.title3`, bold | Carousel/shelf headers |
+| `.maeksterBody` | `.body` | Body copy |
+| `.maeksterTrackTitle` | `.body` | Track titles in album/playlist lists |
+| `.maeksterTrackNumber` | `.subheadline`, monospaced digits | Track numbers and durations |
+| `.maeksterCellTitle` | `.callout`, semibold | Primary text in list cells |
+| `.maeksterCellSubtitle` | `.subheadline` | Secondary text in list cells |
+| `.maeksterMetadata` | `.footnote`, monospaced digits | Release metadata line, chips |
+| `.maeksterBadge` | `.caption2`, bold | Format badges (FLAC, MP3) |
+| `.maeksterCaption` / `.maeksterCaption2` | `.caption` / `.caption2` | Smallest text |
 
 ## Control sizes
 
-`MinidiscControlSize` sets circular tap targets: `compact` 36 (row accessories), `regular` 44 (toolbar,
+`MaeksterControlSize` sets circular tap targets: `compact` 36 (row accessories), `regular` 44 (toolbar,
 secondary), `large` 52 (album, artist and playlist action rows; every button in a row is the same size, Play only gets a stronger fill).
 
 ## Artwork-led screens
@@ -105,7 +105,7 @@ The standard wrapper for any cover art thumbnail. Handles async loading, 1:1 cli
 CoverArtCard(id: album.coverArt ?? album.id, size: 56)
 
 // Large detail header (album, playlist)
-CoverArtCard(id: album.coverArt ?? album.id, size: 220, cornerRadius: MinidiscCornerRadius.large)
+CoverArtCard(id: album.coverArt ?? album.id, size: 220, cornerRadius: MaeksterCornerRadius.large)
 
 // Mini-player
 CoverArtCard(id: track.coverArt ?? track.id, size: 44)
@@ -113,9 +113,9 @@ CoverArtCard(id: track.coverArt ?? track.id, size: 44)
 
 **Do not** use `CoverArtView` directly in views and manually apply `.clipShape` + `.shadow`. Always prefer `CoverArtCard`.
 
-**Exception**: flexible-width contexts (2-column grids) where the size is determined by geometry. Use `CoverArtView` + `.minidiscCoverStyle(cornerRadius:)` + `GeometryReader` in that case.
+**Exception**: flexible-width contexts (2-column grids) where the size is determined by geometry. Use `CoverArtView` + `.maeksterCoverStyle(cornerRadius:)` + `GeometryReader` in that case.
 
-### `.minidiscCoverStyle(cornerRadius:)`
+### `.maeksterCoverStyle(cornerRadius:)`
 
 The view modifier that `CoverArtCard` applies internally. It clips the view and adds:
 - A drop shadow in light mode
@@ -136,26 +136,26 @@ Shuffle, Play and Download and stacks them at accessibility text sizes. The trac
 duration belong below the song list, in PlaylistTrackSummary. SongRow's menu mode keeps playback
 and the menu as separate touch targets and permits two text lines at accessibility sizes.
 
-PlaylistFeaturedArtistsShelf uses the same MinidiscShelf, carousel title, 104-point portraits and
+PlaylistFeaturedArtistsShelf uses the same MaeksterShelf, carousel title, 104-point portraits and
 ArtistPortraitCell as Similar Artists on an artist page. Artwork lookup and navigation stay with
 their respective screens.
 
 The isolated playlist artwork scenarios in Scripts/Testing exercise these components with real
 cover loading, cover replacement and large text; see that directory's README for reproduction.
 
-### Round buttons: `.minidiscCircle`
+### Round buttons: `.maeksterCircle`
 
 `ButtonStyle` for the soft, filled round buttons on artwork-led screens (player heart/menu/toolbar,
 album, artist and playlist action rows). `isProminent` for Play (stronger fill, same size), `isActive` for a toggled surface.
 
 ```swift
 Button("Play", systemImage: "play.fill") { … }
-    .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.large, isProminent: true))
+    .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.large, isProminent: true))
 ```
 
 ### Album header pieces
 
-`FormatBadge` (lossless formats in `minidiscLossless`), `MetadataChip` + `MetadataChipFlow` (genres,
+`FormatBadge` (lossless formats in `maeksterLossless`), `MetadataChip` + `MetadataChipFlow` (genres,
 label), `DiscHeader` (multi-disc track lists), `TrackArtistsLine` + `ArtistPickerSheet` (tappable
 featured artists: one credit opens the artist, several open the picker), `SimilarArtistsShelf`
 (shared by album and artist pages). Genre and label chips push `AlbumCollectionView`.
@@ -200,7 +200,7 @@ AlbumRow(
 )
 ```
 
-Use in flat lists (search results, etc.). For grids, use `CoverArtView + minidiscCoverStyle` directly.
+Use in flat lists (search results, etc.). For grids, use `CoverArtView + maeksterCoverStyle` directly.
 
 ### `ArtistRow`
 
@@ -263,5 +263,5 @@ SectionHeader("Recent Albums")
 ## Adding a new color
 
 1. Add the color set to `Assets.xcassets` with both Any and Dark Appearance variants.
-2. Add a row to the palette table in `MinidiscColors.md` with WCAG notes and permitted uses.
+2. Add a row to the palette table in `MaeksterColors.md` with WCAG notes and permitted uses.
 3. Do **not** add a manual `Color` extension — Xcode generates `Color.<assetName>` automatically.

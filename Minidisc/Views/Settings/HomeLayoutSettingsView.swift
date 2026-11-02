@@ -56,14 +56,14 @@ private struct HomeLayoutSettingsRow: View {
     }
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Button {
                 isVisible.toggle()
             } label: {
-                HStack(spacing: MinidiscSpacing.m) {
+                HStack(spacing: MaeksterSpacing.m) {
                     Image(systemName: isVisible ? "checkmark.circle.fill" : "circle")
                         .font(.title3)
-                        .foregroundStyle(isVisible ? Color.minidiscAccent : Color.secondary)
+                        .foregroundStyle(isVisible ? Color.maeksterAccent : Color.secondary)
                     Text(section.title)
                         .foregroundStyle(isVisible ? .primary : .secondary)
                 }

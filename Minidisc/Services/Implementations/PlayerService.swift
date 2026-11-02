@@ -477,7 +477,7 @@ actor PlayerService: PlayerServiceProtocol {
             }
             return .localFile(access)
         }
-        guard let serverId else { throw MinidiscError.serverNotConfigured }
+        guard let serverId else { throw MaeksterError.serverNotConfigured }
         return try await mediaResolver.resolve(songId: song.id, serverId: serverId)
     }
 
@@ -568,7 +568,7 @@ actor PlayerService: PlayerServiceProtocol {
         let serverId = tracks[startIndex].isLocalFile ? nil : activeServerID
         guard serverId != nil || tracks[startIndex].isLocalFile else {
             await MainActor.run { state.playbackState = .error(.serverNotConfigured) }
-            throw MinidiscError.serverNotConfigured
+            throw MaeksterError.serverNotConfigured
         }
 
         let previousPlaybackState = await MainActor.run { state.playbackState }
@@ -603,7 +603,7 @@ actor PlayerService: PlayerServiceProtocol {
         } else {
             do {
                 source = try await resolveSource(song, serverId: serverId)
-            } catch let e as MinidiscError {
+            } catch let e as MaeksterError {
                 guard isCurrentPlaybackIntent(
                     playbackGeneration: generation,
                     transportIntentGeneration: transportGeneration
@@ -1168,7 +1168,7 @@ actor PlayerService: PlayerServiceProtocol {
         guard requestGeneration == queueBuildGeneration else { return }
         guard !tracks.isEmpty else {
             Logger.player.info("Smart shuffle returned empty — library too small or no downloads offline")
-            throw MinidiscError.smartShuffleEmpty
+            throw MaeksterError.smartShuffleEmpty
         }
 
         // play(tracks:) resets isSmartShuffleActive via the new-queue check, so set the flag after.
@@ -1209,7 +1209,7 @@ actor PlayerService: PlayerServiceProtocol {
     }
 
     func playBuiltQueue(_ tracks: [DisplayableSong], source: QueueSource?, refill: @escaping QueueRefill) async throws {
-        guard !tracks.isEmpty else { throw MinidiscError.smartShuffleEmpty }
+        guard !tracks.isEmpty else { throw MaeksterError.smartShuffleEmpty }
         cancelPendingInstantMix()
         let expectedPlayGeneration = playbackGeneration &+ 1
         let expectedBuildGeneration = queueBuildGeneration &+ 1
@@ -1354,7 +1354,7 @@ actor PlayerService: PlayerServiceProtocol {
             return
         }
         let fresh = tracks.filter { $0.id != seedTrack.id }
-        guard !fresh.isEmpty else { throw MinidiscError.instantMixEmpty }
+        guard !fresh.isEmpty else { throw MaeksterError.instantMixEmpty }
 
         let previousNextTrackID = await queuedNextTrackID()
         guard requestGeneration == queueBuildGeneration,
@@ -1520,7 +1520,7 @@ actor PlayerService: PlayerServiceProtocol {
         let buildMs = Int(Date().timeIntervalSince(tStart) * 1000)
         guard !tracks.isEmpty else {
             Logger.player.info("Instant Mix returned empty — no similarity data for seed")
-            throw MinidiscError.instantMixEmpty
+            throw MaeksterError.instantMixEmpty
         }
         let tPlay = Date()
         let expectedPlayGeneration = playbackGeneration &+ 1
@@ -3270,7 +3270,7 @@ actor PlayerService: PlayerServiceProtocol {
     /// Serializes terminal failure against an in-flight play/skip commit. Stale timeouts can
     /// never stop a newer track or overwrite a user pause.
     private func finishFailedPlayback(
-        error: MinidiscError,
+        error: MaeksterError,
         expectedPlaybackGeneration: UInt64,
         expectedTransportGeneration: UInt64
     ) async -> Bool {

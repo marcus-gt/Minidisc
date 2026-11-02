@@ -1,7 +1,7 @@
 import Intents
 import UIKit
 
-extension MinidiscAppDelegate {
+extension MaeksterAppDelegate {
     func application(_ application: UIApplication, handlerFor intent: INIntent) -> Any? {
         intent is INPlayMediaIntent || intent is INSearchForMediaIntent ? SiriMediaIntentHandler() : nil
     }
@@ -9,9 +9,9 @@ extension MinidiscAppDelegate {
 
 @MainActor
 final class SiriMediaIntentHandler: NSObject, INPlayMediaIntentHandling, INSearchForMediaIntentHandling {
-    private let runtime: MinidiscRuntime
+    private let runtime: MaeksterRuntime
 
-    init(runtime: MinidiscRuntime = .shared) {
+    init(runtime: MaeksterRuntime = .shared) {
         self.runtime = runtime
     }
 

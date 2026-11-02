@@ -25,7 +25,7 @@ struct LocalMusicCollectionView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: MinidiscSpacing.xl) {
+            VStack(spacing: MaeksterSpacing.xl) {
                 if category == .albums {
                     AlbumArtworkSection(coverArtId: artworkID, coverImage: coverImage, albumName: group.name)
                     AlbumMetadataSection(albumName: group.name, artistName: tracks.first?.song.artist,
@@ -36,40 +36,40 @@ struct LocalMusicCollectionView: View {
                     Text(group.name)
                         .font(.largeTitle.bold())
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, MinidiscSpacing.l)
+                        .padding(.horizontal, MaeksterSpacing.l)
                 }
 
                 LocalMusicPlaybackControls(tracks: tracks, source: .localFolder(name: group.name), foregroundColor: palette.contentColor)
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.l)
 
                 if category == .artists {
-                    VStack(alignment: .leading, spacing: MinidiscSpacing.m) {
-                        Text("Albums").font(.minidiscShelfTitle)
+                    VStack(alignment: .leading, spacing: MaeksterSpacing.m) {
+                        Text("Albums").font(.maeksterShelfTitle)
                         LocalMusicGrid(groups: LocalMusicGroup.groups(in: tracks, category: .albums), category: .albums)
                     }
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.l)
                 }
 
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if category == .artists {
-                        Text("Songs").font(.minidiscShelfTitle)
-                            .padding(.bottom, MinidiscSpacing.m)
+                        Text("Songs").font(.maeksterShelfTitle)
+                            .padding(.bottom, MaeksterSpacing.m)
                     }
                     LocalMusicTrackRows(tracks: tracks, source: .localFolder(name: group.name), showCoverArt: category == .artists,
                                         titleColor: palette.contentColor, secondaryColor: palette.secondaryContentColor,
                                         showsDividers: true)
                 }
-                .padding(.horizontal, MinidiscSpacing.l)
-                .minidiscSongSwipeContainer()
+                .padding(.horizontal, MaeksterSpacing.l)
+                .maeksterSongSwipeContainer()
             }
-            .padding(.top, MinidiscSpacing.l)
-            .padding(.bottom, MinidiscSpacing.xxl)
+            .padding(.top, MaeksterSpacing.l)
+            .padding(.bottom, MaeksterSpacing.xxl)
             .frame(maxWidth: .infinity)
         }
         .miniPlayerBottomMargin()
-        .minidiscHideTopScrollEdgeEffect()
-        .minidiscContentWidth()
-        .environment(\.minidiscPlayingAccent, palette.contentColor)
+        .maeksterHideTopScrollEdgeEffect()
+        .maeksterContentWidth()
+        .environment(\.maeksterPlayingAccent, palette.contentColor)
         .environment(\.colorScheme, palette.preferredContentScheme ?? colorScheme)
         .background(AlbumDetailPageBackground(palette: palette))
         .foregroundStyle(palette.contentColor)
@@ -91,22 +91,22 @@ struct LocalMusicPlaybackControls: View {
     let tracks: [LocalMusicTrack]
     /// What "Playing from" shows (#71).
     let source: QueueSource?
-    var foregroundColor: Color = .minidiscAccent
+    var foregroundColor: Color = .maeksterAccent
     @Environment(\.appContainer) private var container
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: MinidiscSpacing.m))
-            : AnyLayout(HStackLayout(spacing: MinidiscSpacing.m))
+            ? AnyLayout(VStackLayout(spacing: MaeksterSpacing.m))
+            : AnyLayout(HStackLayout(spacing: MaeksterSpacing.m))
         layout {
             Button { play(shuffled: false) } label: {
                 Label("Play", systemImage: "play.fill")
-                    .frame(maxWidth: .infinity).padding(.vertical, MinidiscSpacing.s)
+                    .frame(maxWidth: .infinity).padding(.vertical, MaeksterSpacing.s)
             }
             Button { play(shuffled: true) } label: {
                 Label("Shuffle", systemImage: "shuffle")
-                    .frame(maxWidth: .infinity).padding(.vertical, MinidiscSpacing.s)
+                    .frame(maxWidth: .infinity).padding(.vertical, MaeksterSpacing.s)
             }
         }
         .buttonStyle(.bordered)
@@ -144,7 +144,7 @@ struct LocalMusicTrackRows: View {
                     titleColor: track.isAvailable ? titleColor : secondaryColor,
                     secondaryColor: secondaryColor, trailingAccessory: .favorite,
                     onTap: { play(track) })
-                .padding(.vertical, MinidiscSpacing.s)
+                .padding(.vertical, MaeksterSpacing.s)
                 .id(track.id)
             if showsDividers && index < tracks.count - 1 {
                 Divider().overlay(secondaryColor.opacity(0.12))

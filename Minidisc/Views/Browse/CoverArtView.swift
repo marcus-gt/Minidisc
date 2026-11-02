@@ -164,7 +164,7 @@ private struct CoverArtViewContent: View {
     private var placeholder: some View {
         ZStack {
             LinearGradient(
-                colors: [MinidiscColors.accent.opacity(0.25), MinidiscColors.accent.opacity(0.08)],
+                colors: [MaeksterColors.accent.opacity(0.25), MaeksterColors.accent.opacity(0.08)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

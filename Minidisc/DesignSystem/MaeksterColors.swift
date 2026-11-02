@@ -2,33 +2,33 @@ import SwiftUI
 
 // MARK: - Minidisc Design Tokens
 
-public enum MinidiscColors {
+public enum MaeksterColors {
     
     // MARK: — Accent
-    public static let accent = Color("MinidiscAccent")
+    public static let accent = Color("MaeksterAccent")
 
-    public static let accentBackground = Color("MinidiscAccentBackground")
+    public static let accentBackground = Color("MaeksterAccentBackground")
 
-    public static let accentForeground = Color("MinidiscAccentForeground")
+    public static let accentForeground = Color("MaeksterAccentForeground")
 
     // MARK: — Backgrounds
-    public static let backgroundPrimary = Color("MinidiscBackgroundPrimary")
+    public static let backgroundPrimary = Color("MaeksterBackgroundPrimary")
 
-    public static let backgroundSecondary = Color("MinidiscBackgroundSecondary")
+    public static let backgroundSecondary = Color("MaeksterBackgroundSecondary")
 
-    public static let backgroundTertiary = Color("MinidiscBackgroundTertiary")
+    public static let backgroundTertiary = Color("MaeksterBackgroundTertiary")
 
     // MARK: — Text
-    public static let textPrimary = Color("MinidiscTextPrimary")
+    public static let textPrimary = Color("MaeksterTextPrimary")
 
-    public static let textSecondary = Color("MinidiscTextSecondary")
+    public static let textSecondary = Color("MaeksterTextSecondary")
 
-    public static let textTertiary = Color("MinidiscTextTertiary")
+    public static let textTertiary = Color("MaeksterTextTertiary")
 
     // MARK: — Structure
-    public static let separator = Color("MinidiscSeparator")
+    public static let separator = Color("MaeksterSeparator")
 
-    public static let border = Color("MinidiscBorder")
+    public static let border = Color("MaeksterBorder")
     
     // MARK: — Accent Ramp (raw orange-red stops, light-mode only — gradients, artwork tints, brand chips).
     public enum AccentRamp {
@@ -58,5 +58,5 @@ extension Color {
     }
 }
 
-// AccentColor mirrors MinidiscAccent. Apply branded tints locally, not at WindowGroup,
+// AccentColor mirrors MaeksterAccent. Apply branded tints locally, not at WindowGroup,
 // so secondary actions and alerts retain their contextual appearance.

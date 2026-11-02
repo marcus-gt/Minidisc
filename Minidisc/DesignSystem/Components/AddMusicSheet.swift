@@ -113,10 +113,10 @@ struct AddMusicSheet: View {
 
     private var libraryRoot: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xl) {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xl) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                     Text("Library")
-                        .font(.minidiscShelfTitle)
+                        .font(.maeksterShelfTitle)
                     VStack(spacing: 0) {
                         AddMusicLibraryRow(title: "Playlists", systemImage: "music.note.list", route: .allPlaylists)
                         Divider().padding(.leading, 52)
@@ -129,12 +129,12 @@ struct AddMusicSheet: View {
                         AddMusicLibraryRow(title: "Downloads", systemImage: "arrow.down.circle.fill", route: .downloads)
                     }
                 }
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
 
                 AddMusicSongShelf(feed: .recentlyAdded, title: "Recently Added")
                 AddMusicSongShelf(feed: .recentlyPlayed, title: "Recently Played")
             }
-            .padding(.vertical, MinidiscSpacing.m)
+            .padding(.vertical, MaeksterSpacing.m)
         }
     }
 
@@ -188,17 +188,17 @@ private struct AddMusicLibraryRow: View {
 
     var body: some View {
         NavigationLink(value: route) {
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(Color.minidiscAccent)
+                        .fill(Color.maeksterAccent)
                         .frame(width: 30, height: 30)
                     Image(systemName: systemImage)
                         .font(.caption).fontWeight(.semibold)
                         .foregroundStyle(.white)
                 }
                 Text(title)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(.primary)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
@@ -206,7 +206,7 @@ private struct AddMusicLibraryRow: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(.tertiary)
             }
-            .padding(.vertical, MinidiscSpacing.m)
+            .padding(.vertical, MaeksterSpacing.m)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -223,17 +223,17 @@ private struct AddMusicSongRow: View {
         Button {
             selection.toggle(song)
         } label: {
-            HStack(spacing: MinidiscSpacing.l) {
-                CoverArtView(id: song.coverArtId ?? song.id, size: 120, cornerRadius: MinidiscCornerRadius.standard)
+            HStack(spacing: MaeksterSpacing.l) {
+                CoverArtView(id: song.coverArtId ?? song.id, size: 120, cornerRadius: MaeksterCornerRadius.standard)
                     .frame(width: 52, height: 52)
-                    .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
+                    .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.standard)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(song.title).font(.minidiscCellTitle).lineLimit(1)
+                    Text(song.title).font(.maeksterCellTitle).lineLimit(1)
                     if let artist = song.artist {
-                        Text(artist).font(.minidiscCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
+                        Text(artist).font(.maeksterCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
-                Spacer(minLength: MinidiscSpacing.s)
+                Spacer(minLength: MaeksterSpacing.s)
                 trailingIcon
             }
             .contentShape(Rectangle())
@@ -251,11 +251,11 @@ private struct AddMusicSongRow: View {
         } else if selection.isSelected(song) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 18))
-                .foregroundStyle(Color.minidiscAccent)
+                .foregroundStyle(Color.maeksterAccent)
         } else {
             Image(systemName: "plus.circle")
                 .font(.system(size: 18))
-                .foregroundStyle(Color.minidiscAccent)
+                .foregroundStyle(Color.maeksterAccent)
         }
     }
 }
@@ -371,23 +371,23 @@ private struct AddMusicSongShelf: View {
     private static let songLimit = 24
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             Text(title)
-                .font(.minidiscShelfTitle)
-                .padding(.horizontal, MinidiscSpacing.l)
+                .font(.maeksterShelfTitle)
+                .padding(.horizontal, MaeksterSpacing.l)
             if pages.isEmpty {
                 AddMusicPhaseView(phase: phase, emptyText: "No songs")
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.l)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(alignment: .top, spacing: MinidiscSpacing.l) {
+                    LazyHStack(alignment: .top, spacing: MaeksterSpacing.l) {
                         ForEach(Array(pages.enumerated()), id: \.offset) { _, page in
                             songPage(page)
                         }
                     }
                     .scrollTargetLayout()
                 }
-                .contentMargins(.horizontal, MinidiscSpacing.l, for: .scrollContent)
+                .contentMargins(.horizontal, MaeksterSpacing.l, for: .scrollContent)
                 .scrollTargetBehavior(.viewAligned)
             }
         }
@@ -398,14 +398,14 @@ private struct AddMusicSongShelf: View {
         VStack(spacing: 0) {
             ForEach(songs) { song in
                 AddMusicSongRow(song: song)
-                    .padding(.vertical, MinidiscSpacing.xs)
+                    .padding(.vertical, MaeksterSpacing.xs)
                 if song.id != songs.last?.id {
                     Divider().padding(.leading, 68)
                 }
             }
         }
         .containerRelativeFrame(.horizontal) { length, _ in
-            length - MinidiscSpacing.s
+            length - MaeksterSpacing.s
         }
     }
 
@@ -669,14 +669,14 @@ private struct AddMusicCoverRow: View {
     let subtitle: String?
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.l) {
-            CoverArtView(id: coverArtId, size: 120, cornerRadius: MinidiscCornerRadius.standard)
+        HStack(spacing: MaeksterSpacing.l) {
+            CoverArtView(id: coverArtId, size: 120, cornerRadius: MaeksterCornerRadius.standard)
                 .frame(width: 52, height: 52)
-                .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
+                .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.standard)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.minidiscCellTitle).lineLimit(1)
+                Text(title).font(.maeksterCellTitle).lineLimit(1)
                 if let subtitle, !subtitle.isEmpty {
-                    Text(subtitle).font(.minidiscCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
+                    Text(subtitle).font(.maeksterCellSubtitle).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
         }
@@ -696,12 +696,12 @@ private struct AddMusicPhaseView: View {
                 .listRowSeparator(.hidden)
         case .empty, .loaded:
             Text(emptyText)
-                .font(.minidiscCellSubtitle).foregroundStyle(.secondary)
+                .font(.maeksterCellSubtitle).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .listRowSeparator(.hidden)
         case .failed:
             Text("Couldn't load")
-                .font(.minidiscCellSubtitle).foregroundStyle(.secondary)
+                .font(.maeksterCellSubtitle).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .listRowSeparator(.hidden)
         }

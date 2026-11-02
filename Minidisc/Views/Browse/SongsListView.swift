@@ -28,10 +28,10 @@ struct SongsListView: View {
                 LoadingStateView()
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Songs")
         .toolbarTitleDisplayMode(.inline)
-        .minidiscFilterable(text: $filterText, prompt: "Filter songs")
+        .maeksterFilterable(text: $filterText, prompt: "Filter songs")
         .sheet(item: $songSelection) { SongSelectionSheet(request: $0) }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -39,7 +39,7 @@ struct SongsListView: View {
                     .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                MinidiscMoreMenu {
+                MaeksterMoreMenu {
                     Button("Select Songs", systemImage: "checkmark.circle") {
                         songSelection = SongSelectionRequest(songs: filteredSongs ?? viewModel?.displaySongs ?? [])
                     }
@@ -122,10 +122,10 @@ struct SongsListView: View {
     }
 
     private func loadingProgress(_ vm: SongsListViewModel) -> some View {
-        VStack(spacing: MinidiscSpacing.m) {
+        VStack(spacing: MaeksterSpacing.m) {
             ProgressView()
             Text(vm.loadedCount == 0 ? "Loading songs…" : "\(vm.loadedCount.formatted()) songs loaded…")
-                .font(.minidiscBody)
+                .font(.maeksterBody)
                 .foregroundStyle(.secondary)
                 .contentTransition(.numericText())
                 .animation(.easeInOut, value: vm.loadedCount)
@@ -139,7 +139,7 @@ struct SongsListView: View {
             List {
                 if container?.serverState.isOnline != false && vm.didTruncate {
                     Text("Showing the first \(allSongs(vm).count.formatted()) songs.")
-                        .font(.minidiscCaption)
+                        .font(.maeksterCaption)
                         .foregroundStyle(.secondary)
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
@@ -175,7 +175,7 @@ struct SongsListView: View {
 
     @ViewBuilder
     private func playShuffleHeader(_ songs: [DisplayableSong]) -> some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Button {
                 HapticFeedback.medium.trigger()
                 Task {
@@ -185,7 +185,7 @@ struct SongsListView: View {
             } label: {
                 Label("Play", systemImage: "play.fill")
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, MinidiscSpacing.s)
+                    .padding(.vertical, MaeksterSpacing.s)
             }
 
             Button {
@@ -201,11 +201,11 @@ struct SongsListView: View {
             } label: {
                 Label("Shuffle", systemImage: "shuffle")
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, MinidiscSpacing.s)
+                    .padding(.vertical, MaeksterSpacing.s)
             }
         }
         .buttonStyle(.bordered)
-        .tint(.minidiscAccent)
+        .tint(.maeksterAccent)
         .disabled(songs.isEmpty)
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)

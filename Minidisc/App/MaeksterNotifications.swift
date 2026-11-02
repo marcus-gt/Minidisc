@@ -7,7 +7,7 @@ import Foundation
 func postNavigateToAlbum(track: DisplayableSong, inCurrentTab: Bool = false) {
     guard let albumId = track.albumId else { return }
     NotificationCenter.default.post(
-        name: .minidiscNavigateToAlbum,
+        name: .maeksterNavigateToAlbum,
         object: nil,
         userInfo: [
             "albumId":   albumId,
@@ -27,7 +27,7 @@ func postNavigateToArtist(track: DisplayableSong, inCurrentTab: Bool = false) {
 
 func postNavigateToArtist(artistId: String, artistName: String, coverArtId: String?, inCurrentTab: Bool = false) {
     NotificationCenter.default.post(
-        name: .minidiscNavigateToArtist,
+        name: .maeksterNavigateToArtist,
         object: nil,
         userInfo: [
             "artistId":   artistId,
@@ -40,7 +40,7 @@ func postNavigateToArtist(artistId: String, artistName: String, coverArtId: Stri
 
 func postNavigateToPlaylist(playlistId: String, name: String, coverArtId: String?) {
     NotificationCenter.default.post(
-        name: .minidiscNavigateToPlaylist,
+        name: .maeksterNavigateToPlaylist,
         object: nil,
         userInfo: [
             "playlistId": playlistId,
@@ -53,25 +53,25 @@ func postNavigateToPlaylist(playlistId: String, name: String, coverArtId: String
 /// A playlist was deleted (server-confirmed) from a detail surface. The playlist list observes this to reload,
 /// so the deleted playlist disappears on return without a manual refresh — and without an `.onAppear` reload.
 func postPlaylistDeleted() {
-    NotificationCenter.default.post(name: .minidiscPlaylistDeleted, object: nil)
+    NotificationCenter.default.post(name: .maeksterPlaylistDeleted, object: nil)
 }
 
 extension Notification.Name {
-    static let minidiscNavigateToLibrary = Notification.Name("minidiscNavigateToLibrary")
-    static let minidiscNavigateToDownloads = Notification.Name("minidiscNavigateToDownloads")
-    static let minidiscNavigateToAlbum    = Notification.Name("minidiscNavigateToAlbum")
-    static let minidiscNavigateToArtist   = Notification.Name("minidiscNavigateToArtist")
-    static let minidiscNavigateToPlaylist = Notification.Name("minidiscNavigateToPlaylist")
-    static let minidiscPlaylistDeleted    = Notification.Name("minidisc.playlistDeleted")
-    static let minidiscOfflineLibraryChanged = Notification.Name("minidisc.offlineLibraryChanged")
-    static let minidiscFavoritesChanged = Notification.Name("minidisc.favoritesChanged")
-    static let minidiscPlaylistsChanged   = Notification.Name("minidisc.playlistsChanged")
+    static let maeksterNavigateToLibrary = Notification.Name("maeksterNavigateToLibrary")
+    static let maeksterNavigateToDownloads = Notification.Name("maeksterNavigateToDownloads")
+    static let maeksterNavigateToAlbum    = Notification.Name("maeksterNavigateToAlbum")
+    static let maeksterNavigateToArtist   = Notification.Name("maeksterNavigateToArtist")
+    static let maeksterNavigateToPlaylist = Notification.Name("maeksterNavigateToPlaylist")
+    static let maeksterPlaylistDeleted    = Notification.Name("maekster.playlistDeleted")
+    static let maeksterOfflineLibraryChanged = Notification.Name("maekster.offlineLibraryChanged")
+    static let maeksterFavoritesChanged = Notification.Name("maekster.favoritesChanged")
+    static let maeksterPlaylistsChanged   = Notification.Name("maekster.playlistsChanged")
     /// The library new-releases feed finished a refresh (#15).
-    static let minidiscFreshReleasesChanged = Notification.Name("minidisc.freshReleasesChanged")
-    static let lidarrLibraryDidChange     = Notification.Name("minidisc.lidarrLibraryDidChange")
-    static let lidarrQueueDidChange       = Notification.Name("minidisc.lidarrQueueDidChange")
+    static let maeksterFreshReleasesChanged = Notification.Name("maekster.freshReleasesChanged")
+    static let lidarrLibraryDidChange     = Notification.Name("maekster.lidarrLibraryDidChange")
+    static let lidarrQueueDidChange       = Notification.Name("maekster.lidarrQueueDidChange")
 }
 
 func postOfflineLibraryChanged() {
-    NotificationCenter.default.post(name: .minidiscOfflineLibraryChanged, object: nil)
+    NotificationCenter.default.post(name: .maeksterOfflineLibraryChanged, object: nil)
 }

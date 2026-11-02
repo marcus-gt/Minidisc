@@ -11,29 +11,29 @@ struct SimilarArtistsShelf: View {
 
     var body: some View {
         if isLoading {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-                MinidiscCarouselHeader("Similar Artists", showsChevron: false)
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+                MaeksterCarouselHeader("Similar Artists", showsChevron: false)
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(alignment: .top, spacing: MinidiscSpacing.m) {
+                    LazyHStack(alignment: .top, spacing: MaeksterSpacing.m) {
                         ForEach(0..<6, id: \.self) { _ in
-                            VStack(spacing: MinidiscSpacing.xs) {
+                            VStack(spacing: MaeksterSpacing.xs) {
                                 SkeletonBlock(
-                                    width: MinidiscCarouselMetrics.artistArtwork,
-                                    height: MinidiscCarouselMetrics.artistArtwork,
-                                    cornerRadius: MinidiscCarouselMetrics.artistArtwork / 2
+                                    width: MaeksterCarouselMetrics.artistArtwork,
+                                    height: MaeksterCarouselMetrics.artistArtwork,
+                                    cornerRadius: MaeksterCarouselMetrics.artistArtwork / 2
                                 )
                                 SkeletonBlock(width: 96, height: 11, cornerRadius: 4)
                             }
-                            .frame(width: MinidiscCarouselMetrics.artistArtwork)
+                            .frame(width: MaeksterCarouselMetrics.artistArtwork)
                         }
                     }
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .padding(.horizontal, MaeksterSpacing.l)
                 }
             }
             .allowsHitTesting(false)
         } else {
-            MinidiscShelf {
-                MinidiscCarouselHeaderLink(
+            MaeksterShelf {
+                MaeksterCarouselHeaderLink(
                     "Similar Artists",
                     itemCount: recommendations.count
                 ) {
@@ -43,11 +43,11 @@ struct SimilarArtistsShelf: View {
                     )
                 }
             } content: {
-                ForEach(Array(recommendations.prefix(MinidiscCarouselMetrics.previewLimit))) { recommendation in
+                ForEach(Array(recommendations.prefix(MaeksterCarouselMetrics.previewLimit))) { recommendation in
                     ArtistRecommendationCard(
                         recommendation: recommendation,
                         imageURL: imageURLs[recommendation.id] ?? nil,
-                        size: MinidiscCarouselMetrics.artistArtwork,
+                        size: MaeksterCarouselMetrics.artistArtwork,
                         onOutOfLibraryTap: { onOutOfLibraryTap(recommendation) }
                     )
                 }
@@ -100,12 +100,12 @@ private struct SimilarArtistsCollectionView: View {
     @State private var selectedArtist: SimilarArtistRecommendation?
 
     private let columns = [
-        GridItem(.adaptive(minimum: 140, maximum: 170), spacing: MinidiscSpacing.l)
+        GridItem(.adaptive(minimum: 140, maximum: 170), spacing: MaeksterSpacing.l)
     ]
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, alignment: .center, spacing: MinidiscSpacing.l) {
+            LazyVGrid(columns: columns, alignment: .center, spacing: MaeksterSpacing.l) {
                 ForEach(recommendations) { recommendation in
                     ArtistRecommendationCard(
                         recommendation: recommendation,
@@ -115,9 +115,9 @@ private struct SimilarArtistsCollectionView: View {
                     )
                 }
             }
-            .padding(MinidiscSpacing.l)
+            .padding(MaeksterSpacing.l)
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Similar Artists")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedArtist) { recommendation in

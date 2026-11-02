@@ -24,13 +24,13 @@ nonisolated struct ServerConnection: Sendable {
         credentials: ServerCredentials
     ) throws {
         guard version.serverID == server.id else {
-            throw MinidiscError.serverNotConfigured
+            throw MaeksterError.serverNotConfigured
         }
         guard let baseURL = URL(string: server.baseURL),
               let scheme = baseURL.scheme?.lowercased(),
               scheme == "http" || scheme == "https",
               baseURL.host != nil else {
-            throw MinidiscError.invalidServerURL(server.baseURL)
+            throw MaeksterError.invalidServerURL(server.baseURL)
         }
 
         self.version = version

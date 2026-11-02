@@ -54,7 +54,7 @@ struct NavidromeCompatibilityTests {
 
     @MainActor
     @Test func migratesOwnedDataWithoutLosingAudioOrOtherServers() throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let context = ModelContext(container)
         let serverID = UUID(), otherServerID = UUID()
         let directory = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -123,7 +123,7 @@ struct NavidromeCompatibilityTests {
 
     @MainActor
     @Test func defersOfflineAndOlderServersThenMigratesExactlyOnce() async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let sessions = PlaybackSessionService(modelContainer: try ModelContainer.session(inMemory: true))
         let index = LibraryIndexStore(modelContainer: try ModelContainer.libraryIndex(inMemory: true))
         let suite = "NavidromeCompatibilityTests.\(UUID())"
@@ -199,7 +199,7 @@ struct NavidromeCompatibilityTests {
         ("navidrome", "0.64.0 (1072e9f)", true, true)
     ])
     func onlyResyncsAffectedUpgradedNavidrome(type: String, version: String, oldIDs: Bool, shouldReset: Bool) async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let sessions = PlaybackSessionService(modelContainer: try ModelContainer.session(inMemory: true))
         let index = LibraryIndexStore(modelContainer: try ModelContainer.libraryIndex(inMemory: true))
         let suite = "NavidromeGating.\(UUID())"
@@ -243,7 +243,7 @@ struct NavidromeCompatibilityTests {
 
     @MainActor
     @Test func retriesIncompleteMigrationBeforePublishingRestoredConnection() async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let sessions = PlaybackSessionService(modelContainer: try ModelContainer.session(inMemory: true))
         let index = LibraryIndexStore(modelContainer: try ModelContainer.libraryIndex(inMemory: true))
         let suite = "NavidromeRetry.\(UUID())"

@@ -13,7 +13,7 @@ final class MockKeychain: KeychainServiceProtocol {
     func setShouldFailOnStore(_ value: Bool) { failOnStore = value }
 
     func store<T: Codable & Sendable>(_ value: T, forKey key: String) async throws {
-        if failOnStore { throw MinidiscError.keychainWriteFailed(-1) }
+        if failOnStore { throw MaeksterError.keychainWriteFailed(-1) }
         storage[key] = try JSONEncoder().encode(value)
     }
 
@@ -52,7 +52,7 @@ struct ServerServiceTests {
         // Default argument expressions are nonisolated — resolve the @MainActor
         // mock inside the MainActor method body instead.
         let keychain = keychain ?? MockKeychain()
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let state = ServerState()
         let service = ServerService(state: state, keychain: keychain, modelContainer: container, audioStreamCache: MockAudioStreamCache())
         return (service, state)
@@ -92,7 +92,7 @@ struct ServerServiceTests {
     @Test func addServer_invalidHeaderName_throwsInvalidHeaderName() async throws {
         let (service, _) = try makeService()
 
-        await #expect(throws: MinidiscError.self) {
+        await #expect(throws: MaeksterError.self) {
             try await service.addServer(
                 displayName: "S", baseURL: "https://s.example.com",
                 username: "u", password: "p",
@@ -135,7 +135,7 @@ struct ServerServiceTests {
     @Test func removeServer_unknownId_throwsServerNotFound() async throws {
         let (service, _) = try makeService()
 
-        await #expect(throws: MinidiscError.self) {
+        await #expect(throws: MaeksterError.self) {
             try await service.removeServer(id: UUID())
         }
     }
@@ -164,7 +164,7 @@ struct ServerServiceTests {
     @Test func setActiveServer_unknownId_throwsServerNotFound() async throws {
         let (service, _) = try makeService()
 
-        await #expect(throws: MinidiscError.self) {
+        await #expect(throws: MaeksterError.self) {
             try await service.setActiveServer(id: UUID())
         }
     }
@@ -253,7 +253,7 @@ struct ServerServiceTests {
         let (service, _) = try makeService(keychain: keychain)
         let unknownId = UUID()
 
-        await #expect(throws: MinidiscError.self) {
+        await #expect(throws: MaeksterError.self) {
             try await service.updateServer(
                 id: unknownId,
                 displayName: "Missing",
@@ -283,7 +283,7 @@ struct ServerServiceTests {
         let key = ServerCredentials.keychainKey(for: unknownId)
         try await keychain.store(original, forKey: key)
 
-        await #expect(throws: MinidiscError.self) {
+        await #expect(throws: MaeksterError.self) {
             try await service.setAudioMuseConfig(
                 serverId: unknownId,
                 urlString: "https://new.example.com",
@@ -301,7 +301,7 @@ struct ServerServiceTests {
 
     @Test func loadPersistedState_restoresServersAndActiveServer() async throws {
         let keychain = MockKeychain()
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
 
         let state1 = ServerState()
         let service1 = ServerService(state: state1, keychain: keychain, modelContainer: container, audioStreamCache: MockAudioStreamCache())

@@ -21,10 +21,10 @@ struct GenreListView: View {
                 LoadingStateView()
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Genres")
         .toolbarTitleDisplayMode(.inline)
-        .minidiscFilterable(text: $filterText, prompt: "Filter genres")
+        .maeksterFilterable(text: $filterText, prompt: "Filter genres")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 LibrarySortMenu(sort: $sort)
@@ -124,7 +124,7 @@ struct GenreDetailView: View {
             }
         }
         .listStyle(.plain)
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle(genre.isOther ? Text("Other") : Text(verbatim: genre.name))
         .toolbarTitleDisplayMode(.inline)
         .toolbar {
@@ -149,29 +149,29 @@ private struct GenreRow: View {
     }
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             if let coverArtId {
                 CoverArtCard(id: coverArtId, size: 56)
             }
             VStack(alignment: .leading, spacing: 2) {
                 title
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 Text("\(albumCount) albums")
-                    .font(.minidiscCellSubtitle)
+                    .font(.maeksterCellSubtitle)
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .contentShape(Rectangle())
     }
 }
 
 #if DEBUG
 #Preview("Genres") {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         NavigationStack {
             GenreListView(viewModel: GenreListViewModel(library: PreviewLibraryService()))
         }
@@ -179,7 +179,7 @@ private struct GenreRow: View {
 }
 
 #Preview("Genre") {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         NavigationStack {
             GenreDetailView(genre: MainGenreSummary(
                 name: "Jazz", tags: ["Jazz", "Hard Bop", "Modal"], albumCount: 12, coverArtId: nil,

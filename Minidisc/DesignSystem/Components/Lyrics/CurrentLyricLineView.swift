@@ -15,7 +15,7 @@ struct CurrentLyricLineView: View {
             if let line = viewModel.currentLine {
                 // Italic between two note glyphs, so the line reads as sung words rather than metadata.
                 Text(verbatim: "\(Self.noteGlyph) \(line) \(Self.noteGlyph)")
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .italic()
                     .foregroundStyle(contentColor.opacity(0.75))
                     .multilineTextAlignment(.center)

@@ -31,7 +31,7 @@ struct WrappedYearTile: View {
                 MeshGradientBackground(palette: palette, animated: !reduceMotion)
                     .frame(width: 140, height: 140)
                     .overlay { cardOverlay }
-                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.large, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.large, style: .continuous))
                     .drawingGroup()
             }
             .buttonStyle(.plain)
@@ -45,7 +45,7 @@ struct WrappedYearTile: View {
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(.plain)
-                .padding(MinidiscSpacing.s)
+                .padding(MaeksterSpacing.s)
                 .accessibilityLabel(Text("Play Story"))
             }
         }
@@ -55,7 +55,7 @@ struct WrappedYearTile: View {
                 Task { await WrappedRadio.play(period, container: container) }
             }
         }
-        .minidiscFullScreenCover(isPresented: $showStoryPlayer) {
+        .maeksterFullScreenCover(isPresented: $showStoryPlayer) {
             if let year { WrappedStoryPlayerView(year: year) }
         }
     }
@@ -74,7 +74,7 @@ struct WrappedYearTile: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(MinidiscSpacing.s)
+        .padding(MaeksterSpacing.s)
     }
 }
 

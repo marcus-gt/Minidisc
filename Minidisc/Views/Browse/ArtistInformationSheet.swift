@@ -95,7 +95,7 @@ struct ArtistInformationSheet: View {
                     }
 
                     biographySection
-                        .padding(.top, MinidiscSpacing.xxxl)
+                        .padding(.top, MaeksterSpacing.xxxl)
 
                     if lastFmURL != nil || musicBrainzURL != nil {
                         externalLinks
@@ -104,9 +104,9 @@ struct ArtistInformationSheet: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 36)
-                .padding(.bottom, MinidiscSpacing.xxxxl)
+                .padding(.bottom, MaeksterSpacing.xxxxl)
             }
-            .contentMargins(.horizontal, MinidiscSpacing.xxl, for: .scrollContent)
+            .contentMargins(.horizontal, MaeksterSpacing.xxl, for: .scrollContent)
             .background { sheetBackground }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -139,7 +139,7 @@ struct ArtistInformationSheet: View {
                 GridItem(.flexible(), alignment: .leading)
             ],
             alignment: .leading,
-            spacing: MinidiscSpacing.l
+            spacing: MaeksterSpacing.l
         ) {
             if let albumCount {
                 fact(title: "Albums", value: albumCount.formatted())
@@ -163,7 +163,7 @@ struct ArtistInformationSheet: View {
     }
 
     private func fact(title: LocalizedStringKey, value: String) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             Text(title)
                 .font(.footnote)
                 .foregroundStyle(tertiaryColor)
@@ -176,18 +176,18 @@ struct ArtistInformationSheet: View {
     }
 
     private var genreSection: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             Text("Genre")
                 .font(.footnote)
                 .foregroundStyle(tertiaryColor)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: MinidiscSpacing.s) {
+                LazyHStack(spacing: MaeksterSpacing.s) {
                     ForEach(genres, id: \.self) { genre in
                         Text(genre)
                             .font(.subheadline.weight(.regular))
                             .foregroundStyle(contentColor)
-                            .padding(.horizontal, MinidiscSpacing.m)
+                            .padding(.horizontal, MaeksterSpacing.m)
                             .padding(.vertical, 5)
                             .background(contentColor.opacity(0.11), in: Capsule())
                     }
@@ -200,17 +200,17 @@ struct ArtistInformationSheet: View {
     @ViewBuilder
     private var biographySection: some View {
         if isLoadingBiography {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.m) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.m) {
                 Text("About")
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(contentColor)
                 ProgressView()
                     .tint(contentColor)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, MinidiscSpacing.xl)
+                    .padding(.vertical, MaeksterSpacing.xl)
             }
         } else if let biography = nonEmpty(biography) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.m) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.m) {
                 Text("About")
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(contentColor)
@@ -224,7 +224,7 @@ struct ArtistInformationSheet: View {
     }
 
     private var externalLinks: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.m) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.m) {
             if let lastFmURL {
                 externalLink(title: "Last.fm", destination: lastFmURL)
             }
@@ -242,7 +242,7 @@ struct ArtistInformationSheet: View {
         destination: URL
     ) -> some View {
         Link(destination: destination) {
-            HStack(spacing: MinidiscSpacing.s) {
+            HStack(spacing: MaeksterSpacing.s) {
                 Image(systemName: "arrow.up.right")
                     .font(.subheadline.weight(.semibold))
                 Text(title)

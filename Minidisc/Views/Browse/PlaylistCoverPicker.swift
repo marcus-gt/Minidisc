@@ -15,13 +15,13 @@ struct PlaylistCoverPicker: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 PlaylistCoverSwatch(isSelected: isLeadingSelected, label: leadingLabel, action: onSelectLeading) {
                     if let leadingCoverArtId {
                         CoverArtView(id: leadingCoverArtId, size: 120)
                     } else {
                         ZStack {
-                            RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard).fill(Color.secondary.opacity(0.15))
+                            RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard).fill(Color.secondary.opacity(0.15))
                             Image(systemName: "nosign").font(.title3).foregroundStyle(.secondary)
                         }
                     }
@@ -33,7 +33,7 @@ struct PlaylistCoverPicker: View {
                             if let photoPreview {
                                 platformImage(photoPreview).resizable().aspectRatio(1, contentMode: .fill)
                             } else {
-                                RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard).fill(Color.secondary.opacity(0.15))
+                                RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard).fill(Color.secondary.opacity(0.15))
                                 Image(systemName: "photo").font(.title3).foregroundStyle(.secondary)
                             }
                         }
@@ -50,7 +50,7 @@ struct PlaylistCoverPicker: View {
                     }
                 }
             }
-            .padding(.vertical, MinidiscSpacing.xs)
+            .padding(.vertical, MaeksterSpacing.xs)
         }
     }
 
@@ -74,17 +74,17 @@ struct PlaylistCoverSwatch<Content: View>: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: MinidiscSpacing.xs) {
+            VStack(spacing: MaeksterSpacing.xs) {
                 content()
                     .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard))
+                    .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
                     .overlay(
-                        RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
-                            .strokeBorder(Color.minidiscAccent, lineWidth: isSelected ? 3 : 0)
+                        RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
+                            .strokeBorder(Color.maeksterAccent, lineWidth: isSelected ? 3 : 0)
                     )
                 Text(label)
                     .font(.caption2)
-                    .foregroundStyle(isSelected ? Color.minidiscAccent : Color.secondary)
+                    .foregroundStyle(isSelected ? Color.maeksterAccent : Color.secondary)
             }
         }
         .buttonStyle(.plain)

@@ -20,7 +20,7 @@ private func utcDate(year: Int, month: Int, day: Int, hour: Int = 12, minute: In
 }
 
 private func makeService() throws -> StatsService {
-    let container = try ModelContainer.minidisc(inMemory: true)
+    let container = try ModelContainer.maekster(inMemory: true)
     return StatsService(modelContainer: container)
 }
 

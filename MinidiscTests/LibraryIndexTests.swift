@@ -229,7 +229,7 @@ struct LibraryIndexTests {
     @Test("the V1 library store migrates to V3 without losing indexed media")
     func v1StoreMigratesToV3() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appending(path: "MinidiscLibraryMigration-\(UUID().uuidString)", directoryHint: .isDirectory)
+            .appending(path: "MaeksterLibraryMigration-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
 

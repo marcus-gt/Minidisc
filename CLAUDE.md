@@ -20,13 +20,15 @@ The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as r
   `INAlternativeAppNames` stays "Mackster".
 - In the app, use the mark (`Image("BrandMark")`) and plain text. Never use the wordmark.
 - Names sent to external services come from `MaeksterBrand` (`Utilities/MaeksterBrand.swift`).
-- The Xcode project, targets, schemes, Swift module and the internal `Minidisc*` / `minidisc*` type,
-  token and modifier names are still `Minidisc`. So are storage keys and paths that hold user data
-  (`minidisc.*` defaults, `app.minidisc.*`, `Documents/app.minidisc/…`, SwiftData store names).
-  Renaming those is a separate pass; don't change them piecemeal.
-- Earlier versions created server playlists named `maekster Wrapped <year>` / `maekster · <Mood>` (and
-  `Minidisc …` before the rebrand). Nothing creates them now. `WrappedPlaylistService.year(fromPlaylistName:)`
-  and `Mood.isPlaylistName(_:)` recognise both names; match playlists through them, not by comparing strings.
+- Types, tokens, modifiers, notifications and logger subsystems use `Maekster*` / `maekster*` (#46).
+  Still named `Minidisc` until their own passes: the Xcode project, targets, schemes, Swift module and
+  source folders, and the storage keys and paths that hold user data (`minidisc.*` defaults,
+  `app.minidisc.*`, `Documents/app.minidisc/…`, SwiftData store names). Don't rename those piecemeal.
+- Credits keep the name: Minidisc (NO HIT Dev) and Cassette are named in the README, NOTICE,
+  COPYRIGHT, acknowledgements and `MaeksterURLs.minidisc`.
+- Earlier versions created server playlists named `maekster Wrapped <year>` / `maekster · <Mood>`.
+  Nothing creates them now. Match them through `WrappedPlaylistService.year(fromPlaylistName:)` and
+  `Mood.isPlaylistName(_:)`, not by comparing strings.
 
 ## Toolchain facts that shape the code
 
@@ -81,13 +83,13 @@ exactly; it covers ad-hoc signing (needed for Keychain), the per-scenario catalo
 ```
 Minidisc.xcodeproj
 Minidisc/                      app target sources
-  App/                         @main app, AppContainer (composition root), MinidiscRuntime, notification names
+  App/                         @main app, AppContainer (composition root), MaeksterRuntime, notification names
   AppIntents/                  App Intents / Siri / Shortcuts (AudioPlaybackIntent, MusicEntity)
   DesignSystem/                tokens (colors, spacing, typography), Components/, Theming/, Platform/ wrappers
-                               README.md, MinidiscColors.md, Platform/CONVENTIONS.md: read before UI work
+                               README.md, MaeksterColors.md, Platform/CONVENTIONS.md: read before UI work
   Keychain/                    KeychainService + ServerCredentials (password, custom headers, AudioMuse token)
   Models/
-    Domain/                    app value types: DisplayableSong, MinidiscError, UserFacingError, sorts, etc.
+    Domain/                    app value types: DisplayableSong, MaeksterError, UserFacingError, sorts, etc.
     Persistence/               SwiftData @Model types (ServerConfig, DownloadedTrack, CachedTrack, LibraryIndexModels…)
     Navigation/ Integrations/ ListenBrainz/ Recommendations/ Wrapped/
   ObservableState/             @Observable @MainActor state + settings (PlayerState, ServerState, *Settings)
@@ -119,10 +121,10 @@ Scripts/Testing/               UX fixture server + instructions
 There is no DI framework. `AppContainer` (`App/AppContainer.swift`) is a `@MainActor` class that
 builds the entire service graph in one `init`, in dependency order, and owns long-lived lifecycle tasks.
 
-- `MinidiscRuntime.shared` builds the container exactly once. **UI and headless App Intents share it**,
+- `MaeksterRuntime.shared` builds the container exactly once. **UI and headless App Intents share it**,
   so there is one player and one engine. It is registered with `AppDependencyManager`, and intents get it
-  through `@Dependency private var runtime: MinidiscRuntime`.
-- `MinidiscApp.makeContainer` runs the boot sequence. Order matters:
+  through `@Dependency private var runtime: MaeksterRuntime`.
+- `MaeksterApp.makeContainer` runs the boot sequence. Order matters:
   `setup()` (wires PlayerService ↔ NowPlayingService) → `serverService.loadPersistedState()` →
   `networkMonitor.start` → `nowPlayingService.start()` → cache invalidation and migrations →
   `playerService.restoreSession()` → background sync and BGTask scheduling.
@@ -155,8 +157,8 @@ builds the entire service graph in one `init`, in dependency order, and owns lon
 - Cancellation is handled explicitly: `catch is CancellationError { throw CancellationError() }`,
   `try Task.checkCancellation()`, bounded `TaskGroup`s (typically 5 in flight).
 - No Combine in new code. `NotificationCenter` is used for cross-screen events (names in
-  `App/MinidiscNotifications.swift`, e.g. `.minidiscFavoritesChanged`, `.minidiscOfflineLibraryChanged`,
-  `.minidiscNavigateToAlbum`). Post them from the main actor.
+  `App/MaeksterNotifications.swift`, e.g. `.maeksterFavoritesChanged`, `.maeksterOfflineLibraryChanged`,
+  `.maeksterNavigateToAlbum`). Post them from the main actor.
 
 ### Server layer
 
@@ -204,7 +206,7 @@ ViewModels ─▶ LibraryService (actor, LibraryServiceProtocol = many small pro
   migration plan `LibraryIndexSchemaV3` / `LibraryIndexMigrationPlan`). It is a discardable cache, kept
   apart from user data. The playback session is also in its own store (`minidisc-session`) so frequent
   position saves stay out of the main observation graph. The main store schema is in
-  `ModelContainer.minidisc`.
+  `ModelContainer.maekster`.
 - Offline fallbacks only happen for network-class errors (`UserFacingError.noNetwork`,
   `.serverUnreachable`, `.contentUnavailableOffline`), never on cancellation.
 
@@ -265,31 +267,31 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   default-isolation note above).
 - Re-validate generation / connection version after every `await` that can race with a user action or
   a server switch.
-- Errors: throw `MinidiscError` internally and map to `UserFacingError.from(error)` for display. Don't
+- Errors: throw `MaeksterError` internally and map to `UserFacingError.from(error)` for display. Don't
   surface raw `localizedDescription`.
 
 **Logging and privacy**
-- Use the `Logger` categories in `Utilities/Logger+Minidisc.swift` (`Logger.player`, `.library`,
+- Use the `Logger` categories in `Utilities/Logger+Maekster.swift` (`Logger.player`, `.library`,
   `.server`, …). Add a new `nonisolated static let` there instead of creating ad-hoc loggers.
 - Song/album IDs are logged `privacy: .public`. URLs, hosts and credentials are `.private` or omitted.
   Never log `ServerCredentials`, custom header values or full stream URLs. Diagnostics
   (`PlaybackDiagnostics`, `AudioEngineFailure`) store only domain/code pairs, never `userInfo`.
 - Bracketed tags are used in log messages, e.g. `[TRANSITION]`, `[CLIENT]`, `[ExtMigration]`.
 
-**UI / design system** (details in `Minidisc/DesignSystem/README.md` and `MinidiscColors.md`)
-- No magic numbers: `MinidiscSpacing`, `MinidiscCornerRadius`, `.minidisc*` fonts from
-  `MinidiscTypography`.
-- Colors: semantic SwiftUI colors for text and backgrounds. `minidiscAccent` is for primary interactive
-  elements only. New colors go into `Assets.xcassets` plus `MinidiscColors.md`.
+**UI / design system** (details in `Minidisc/DesignSystem/README.md` and `MaeksterColors.md`)
+- No magic numbers: `MaeksterSpacing`, `MaeksterCornerRadius`, `.maekster*` fonts from
+  `MaeksterTypography`.
+- Colors: semantic SwiftUI colors for text and backgrounds. `maeksterAccent` is for primary interactive
+  elements only. New colors go into `Assets.xcassets` plus `MaeksterColors.md`.
 - Plain SF Pro only (no `design: .rounded`) outside Wrapped and the generated-cover renderers. Favourites
   are hearts. Player, album, artist and local-collection pages are always dark (`ArtworkSurfacePalette`).
-- Round buttons on those screens use `.buttonStyle(.minidiscCircle(...))` with `MinidiscControlSize`.
+- Round buttons on those screens use `.buttonStyle(.maeksterCircle(...))` with `MaeksterControlSize`.
   Track rows have no "…" button; row actions live in the context menu and swipe actions.
 - Design direction, decisions and deferred items: `docs/DesignOverhaul.md`.
-- Cover art goes through `CoverArtCard` (or `CoverArtView` + `.minidiscCoverStyle` in flexible grids).
+- Cover art goes through `CoverArtCard` (or `CoverArtView` + `.maeksterCoverStyle` in flexible grids).
   Use `EmptyStateView` instead of `ContentUnavailableView` in screens. Reuse `SongRow`, `AlbumRow`,
   `PlayButton` and `SectionHeader`.
-- Platform-specific APIs go behind `minidisc`-prefixed modifiers in `DesignSystem/Platform/` (see
+- Platform-specific APIs go behind `maekster`-prefixed modifiers in `DesignSystem/Platform/` (see
   `CONVENTIONS.md`). Keep `#if os(...)` out of view bodies.
 - User-facing strings are localized through the String Catalogs (`LocalizedStringResource` /
   `String(localized:)`; local-music strings use `table: "LocalMusic"`). Don't hard-code English in
@@ -301,7 +303,7 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
 - Use Swift Testing only: `import Testing`, `@testable import Minidisc`, `@Suite("Name") @MainActor struct …`,
   `@Test func subject_condition_expectation()`, `#expect`, `await #expect(throws:)`.
 - Swift Testing runs tests in parallel, so each test creates its **own** in-memory stores:
-  `ModelContainer.minidisc(inMemory: true)` (also `.libraryIndex` / `.session`), or
+  `ModelContainer.maekster(inMemory: true)` (also `.libraryIndex` / `.session`), or
   `AppContainer(inMemory: true, userDefaults: <isolated suite>)`. Never share containers or
   `UserDefaults.standard` between tests.
 - Fakes are hand-written next to the suite that first needs them (e.g. `MockKeychain` and

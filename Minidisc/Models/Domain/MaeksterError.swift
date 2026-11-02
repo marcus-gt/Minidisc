@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum MinidiscError: Error, Sendable {
+nonisolated enum MaeksterError: Error, Sendable {
     case serverNotConfigured
     case connectionFailed(underlying: any Error & Sendable)
     case mediaNotFound(songId: String)
@@ -29,7 +29,7 @@ nonisolated enum MinidiscError: Error, Sendable {
     case playbackPositionUnavailable
 }
 
-extension MinidiscError: LocalizedError {
+extension MaeksterError: LocalizedError {
     nonisolated var errorDescription: String? {
         switch self {
         case .serverNotConfigured:

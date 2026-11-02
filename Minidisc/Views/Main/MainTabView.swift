@@ -86,7 +86,7 @@ struct MainTabView: View {
                         SearchView(searchQuery: $searchText, path: $searchPath)
                             .navigationTitle("Search")
                             .toolbarTitleDisplayMode(.inlineLarge)
-                            .minidiscSettingsToolbar()
+                            .maeksterSettingsToolbar()
                     }
                     .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always),
                                 prompt: "Artists, albums, songs, playlists…")
@@ -94,7 +94,7 @@ struct MainTabView: View {
             }
         }
         .onAppear { if container?.serverState.activeServer == nil { selectedTab = .library } }
-        .accentColor(.minidiscAccent)
+        .accentColor(.maeksterAccent)
         .preferredColorScheme(theme.colorScheme)
         .onChange(of: container?.serverState.activeServer?.id) {
             homePath = NavigationPath()
@@ -106,12 +106,12 @@ struct MainTabView: View {
         .onChange(of: lidarrConnected, initial: true) {
             if !lidarrConnected, selectedTab == .lidarr { selectedTab = .home }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscNavigateToLibrary)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterNavigateToLibrary)) { _ in
             playerPresentation.reset()
             libraryPath = NavigationPath()
             selectedTab = .library
         }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscNavigateToDownloads)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterNavigateToDownloads)) { _ in
             playerPresentation.reset()
             libraryPath = NavigationPath([HomeDestination.libraryDownloads])
             selectedTab = .library
@@ -121,7 +121,7 @@ struct MainTabView: View {
             guard container?.serverState.isOnline == true else { return }
             try? await container?.favoritesService.syncFromServer()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscNavigateToArtist)) { note in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterNavigateToArtist)) { note in
             guard let id   = note.userInfo?["artistId"]   as? String,
                   let name = note.userInfo?["artistName"] as? String else { return }
             let coverArtId = note.userInfo?["coverArtId"] as? String
@@ -131,7 +131,7 @@ struct MainTabView: View {
                 inCurrentTab: note.userInfo?["inCurrentTab"] as? Bool == true
             )
         }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscNavigateToAlbum)) { note in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterNavigateToAlbum)) { note in
             guard let id   = note.userInfo?["albumId"]   as? String,
                   let name = note.userInfo?["albumName"] as? String else { return }
             let coverArtId = note.userInfo?["coverArtId"] as? String
@@ -141,7 +141,7 @@ struct MainTabView: View {
                 inCurrentTab: note.userInfo?["inCurrentTab"] as? Bool == true
             )
         }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscNavigateToPlaylist)) { note in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterNavigateToPlaylist)) { note in
             guard let id   = note.userInfo?["playlistId"] as? String,
                   let name = note.userInfo?["name"]       as? String else { return }
             let coverArtId = note.userInfo?["coverArtId"] as? String

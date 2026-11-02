@@ -51,7 +51,7 @@ struct MediaAvailabilityTests {
         )
         do {
             _ = try await client.getSong(id: "deleted")
-            throw MinidiscError.notImplemented
+            throw MaeksterError.notImplemented
         } catch { return error }
     }
 
@@ -79,7 +79,7 @@ struct MediaAvailabilityTests {
     }
 
     @Test func cachedSongRemainsAvailableAfterServerDeletionEvenOffline() async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let server = MockServerService()
         server.state.isOnline = false
         let cache = MockAudioStreamCache()
@@ -97,7 +97,7 @@ struct MediaAvailabilityTests {
     }
 
     @Test func authoritativeLookupUsesTheRequestedServer() async throws {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let server = MockServerService()
         let snapshot = ServerSnapshot(from: ServerConfig(displayName: "Test", baseURL: "https://example.invalid", username: "test"))
         server.connection = try ServerConnection(
@@ -118,7 +118,7 @@ struct MediaAvailabilityTests {
     // MARK: - Empty song ids (#7)
 
     private func onlineResolver(songLookup: @escaping @Sendable (ServerConnection, String) async throws -> Void) throws -> (MediaResolver, UUID) {
-        let container = try ModelContainer.minidisc(inMemory: true)
+        let container = try ModelContainer.maekster(inMemory: true)
         let server = MockServerService()
         let snapshot = ServerSnapshot(from: ServerConfig(displayName: "Test", baseURL: "https://example.invalid", username: "test"))
         server.connection = try ServerConnection(
@@ -153,7 +153,7 @@ struct MediaAvailabilityTests {
         await #expect {
             _ = try await resolver.resolve(songId: songId, serverId: serverID)
         } throws: { error in
-            guard case .mediaNotFound = error as? MinidiscError else { return false }
+            guard case .mediaNotFound = error as? MaeksterError else { return false }
             return true
         }
     }

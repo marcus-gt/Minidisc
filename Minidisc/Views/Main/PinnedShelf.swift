@@ -13,7 +13,7 @@ struct PinnedShelf: View {
         if !items.isEmpty {
             switch layout {
             case .carousel:
-                MinidiscShelf {
+                MaeksterShelf {
                     header
                 } content: {
                     ForEach(items) { item in
@@ -25,7 +25,7 @@ struct PinnedShelf: View {
                 .accessibilityIdentifier(HomeSection.pinned.shelfIdentifier)
                 .playlistRenameAlert($renameRequest)
             case .grid:
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                     header
                     HomeShelfGrid(items) { item in
                         if let destination = Self.destination(for: item) {
@@ -44,7 +44,7 @@ struct PinnedShelf: View {
     }
 
     private var header: some View {
-        MinidiscCarouselHeader(HomeSection.pinned.title, showsChevron: false)
+        MaeksterCarouselHeader(HomeSection.pinned.title, showsChevron: false)
             .accessibilityAddTraits(.isHeader)
     }
 
@@ -108,10 +108,10 @@ private struct PinnedCover: View {
                                    coverArtId: item.coverArtId ?? item.itemId, title: item.displayName, size: side)
         case .artist:
             CoverArtView(id: item.coverArtId ?? item.itemId, size: Int(side * 2), placeholderSystemImage: "person.fill")
-                .minidiscCoverStyle(cornerRadius: cornerRadius)
+                .maeksterCoverStyle(cornerRadius: cornerRadius)
         default:
             CoverArtView(id: item.coverArtId ?? item.itemId, size: Int(side * 2))
-                .minidiscCoverStyle(cornerRadius: cornerRadius)
+                .maeksterCoverStyle(cornerRadius: cornerRadius)
         }
     }
 }
@@ -124,19 +124,19 @@ private struct PinnedGridTile: View {
     var body: some View {
         NavigationLink(value: destination) {
             HomeGridTileChrome {
-                PinnedCover(item: item, side: HomeShelfLayout.gridTileCoverSide, cornerRadius: MinidiscCornerRadius.large)
+                PinnedCover(item: item, side: HomeShelfLayout.gridTileCoverSide, cornerRadius: MaeksterCornerRadius.large)
                     .frame(width: HomeShelfLayout.gridTileCoverSide, height: HomeShelfLayout.gridTileCoverSide)
             } detail: {
                 VStack(alignment: .leading, spacing: 2) {
                     // Two lines: pinned names like "Techno - Peak Time" are often longer than half a row.
                     Text(item.displayName)
-                        .font(.minidiscCellTitle)
+                        .font(.maeksterCellTitle)
                         .foregroundStyle(.primary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                     if let subtitle = pinnedSubtitle(item) {
                         Text(subtitle)
-                            .font(.minidiscCaption)
+                            .font(.maeksterCaption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
@@ -159,8 +159,8 @@ private struct PinnedShelfCard: View {
 
     var body: some View {
         NavigationLink(value: destination) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
-                PinnedCover(item: item, side: side, cornerRadius: MinidiscCornerRadius.standard)
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
+                PinnedCover(item: item, side: side, cornerRadius: MaeksterCornerRadius.standard)
                     .frame(width: side, height: side)
                 CoverCardMetadata(title: item.displayName, subtitle: pinnedSubtitle(item))
             }

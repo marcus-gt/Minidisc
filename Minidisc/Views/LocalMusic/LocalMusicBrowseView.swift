@@ -99,7 +99,7 @@ struct LocalMusicBrowseView: View {
                     } else if gridLayout {
                         ScrollView {
                             LocalMusicGrid(groups: groups, category: category)
-                                .padding(MinidiscSpacing.l)
+                                .padding(MaeksterSpacing.l)
                         }
                         .miniPlayerBottomMargin()
                         .refreshable { await container?.localMusic.refresh() }
@@ -108,12 +108,12 @@ struct LocalMusicBrowseView: View {
                             NavigationLink {
                                 LocalMusicCollectionView(group: group, category: category)
                             } label: {
-                                HStack(spacing: MinidiscSpacing.m) {
+                                HStack(spacing: MaeksterSpacing.m) {
                                     LocalMusicArtwork(id: group.artworkID, isArtist: category == .artists)
                                         .frame(width: 56, height: 56)
                                     CoverCardMetadata(title: group.name, subtitle: category == .albums ? group.tracks.first?.song.artist : nil)
                                 }
-                                .padding(.vertical, MinidiscSpacing.xs)
+                                .padding(.vertical, MaeksterSpacing.xs)
                             }
                             .id(group.scrollID)
                         }
@@ -123,7 +123,7 @@ struct LocalMusicBrowseView: View {
                 }
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle(Text(category.title))
         .toolbarTitleDisplayMode(.inline)
         .searchable(text: $search)
@@ -142,7 +142,7 @@ struct LocalMusicBrowseView: View {
             }
             if category != .songs {
                 ToolbarItem(placement: .primaryAction) {
-                    MinidiscMoreMenu {
+                    MaeksterMoreMenu {
                         Button(gridLayout ? "List view" : "Grid view", systemImage: gridLayout ? "list.bullet" : "square.grid.2x2") {
                             if category == .albums { albumGrid.toggle() }
                             else { artistGrid.toggle() }

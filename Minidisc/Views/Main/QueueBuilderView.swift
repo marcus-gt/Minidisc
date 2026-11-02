@@ -43,15 +43,15 @@ struct QueueBuilderView: View {
             )
         case .ready:
             ScrollView {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.xxl) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.xxl) {
                     genreSection(vm)
                     decadeSection(vm)
                     if vm.isMoodAvailable { moodSection(vm) }
                     lengthSection(vm)
                     buildSection(vm)
                 }
-                .padding(.top, MinidiscSpacing.m)
-                .padding(.bottom, MinidiscSpacing.miniPlayerBottomMargin)
+                .padding(.top, MaeksterSpacing.m)
+                .padding(.bottom, MaeksterSpacing.miniPlayerBottomMargin)
             }
             .refreshable { await vm.load() }
         }
@@ -61,19 +61,19 @@ struct QueueBuilderView: View {
 
     private func genreSection(_ vm: QueueBuilderViewModel) -> some View {
         @Bindable var vm = vm
-        return VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        return VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header("Genres", isClearable: vm.selection.hasGenre) { vm.clearGenres() }
             TextField("Filter genres", text: $vm.searchText)
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled()
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: MinidiscSpacing.s) {
+                LazyHStack(alignment: .top, spacing: MaeksterSpacing.s) {
                     ForEach(vm.visibleColumns) { column in
                         GenreColumn(column: column, viewModel: vm)
                     }
                 }
-                .padding(.horizontal, MinidiscSpacing.l)
+                .padding(.horizontal, MaeksterSpacing.l)
             }
             hint(vm.selection.hasGenre
                  ? "Songs with any picked genre are included. Tap a column title to pick the whole genre."
@@ -84,9 +84,9 @@ struct QueueBuilderView: View {
     // MARK: - Decades
 
     private func decadeSection(_ vm: QueueBuilderViewModel) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header("Decades", isClearable: !vm.selection.decades.isEmpty) { vm.clearDecades() }
-            MetadataChipFlow(spacing: MinidiscSpacing.s, centersRows: false) {
+            MetadataChipFlow(spacing: MaeksterSpacing.s, centersRows: false) {
                 ForEach(vm.decades, id: \.self) { decade in
                     SelectablePill(
                         title: "\(String(decade))s",
@@ -97,7 +97,7 @@ struct QueueBuilderView: View {
                     }
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
             hint(vm.selection.decades.isEmpty
                  ? "No decade picked: every year is included. Uses each album's original release year when known."
                  : "Songs from any picked decade are included, by each album's original release year when known.")
@@ -108,9 +108,9 @@ struct QueueBuilderView: View {
 
     /// Only shown when AudioMuse is set up for this server; the builder works without it.
     private func moodSection(_ vm: QueueBuilderViewModel) -> some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header("Mood", isClearable: !vm.selection.moods.isEmpty) { vm.clearMoods() }
-            MetadataChipFlow(spacing: MinidiscSpacing.s, centersRows: false) {
+            MetadataChipFlow(spacing: MaeksterSpacing.s, centersRows: false) {
                 ForEach(QueueBuilderMood.allCases) { mood in
                     SelectablePill(
                         title: String(localized: mood.title),
@@ -121,7 +121,7 @@ struct QueueBuilderView: View {
                     }
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
             hint(vm.selection.moods.isEmpty
                  ? "No mood picked: no mood ranking. Moods come from AudioMuse's analysis of each song."
                  : "The songs that match your genres and decades best for every picked mood are kept. Songs AudioMuse hasn't analysed are left out.")
@@ -132,9 +132,9 @@ struct QueueBuilderView: View {
 
     private func lengthSection(_ vm: QueueBuilderViewModel) -> some View {
         @Bindable var vm = vm
-        return VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        return VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             SectionHeader(title: "Length")
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 Slider(
                     value: $vm.length,
                     in: QueueBuilderViewModel.lengthRange,
@@ -143,16 +143,16 @@ struct QueueBuilderView: View {
                 .accessibilityLabel("Queue length")
                 .accessibilityValue(Text("\(Int(vm.length)) songs"))
                 Text("\(Int(vm.length)) songs")
-                    .font(.minidiscMetadata)
+                    .font(.maeksterMetadata)
                     .foregroundStyle(.secondary)
                     .fixedSize()
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
         }
     }
 
     private func buildSection(_ vm: QueueBuilderViewModel) -> some View {
-        VStack(spacing: MinidiscSpacing.s) {
+        VStack(spacing: MaeksterSpacing.s) {
             PlayButton(
                 action: { Task { await vm.build() } },
                 label: vm.isBuilding ? "Building…" : "Build Queue",
@@ -166,12 +166,12 @@ struct QueueBuilderView: View {
                     Text("Counts are approximate until your library has finished indexing.")
                 }
             }
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 
     // MARK: - Pieces
@@ -179,21 +179,21 @@ struct QueueBuilderView: View {
     private func header(_ title: LocalizedStringKey, isClearable: Bool, clear: @escaping () -> Void) -> some View {
         HStack {
             Text(title)
-                .font(.minidiscSectionTitle)
+                .font(.maeksterSectionTitle)
             Spacer()
             if isClearable {
                 Button("Clear", action: clear)
-                    .font(.minidiscCellSubtitle)
+                    .font(.maeksterCellSubtitle)
             }
         }
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 
     private func hint(_ text: LocalizedStringKey) -> some View {
         Text(text)
-            .font(.minidiscCaption)
+            .font(.maeksterCaption)
             .foregroundStyle(.secondary)
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
     }
 }
 
@@ -205,7 +205,7 @@ private struct GenreColumn: View {
     private var tint: Color? { GenreTint.color(for: column.id) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             SelectablePill(
                 title: column.name,
                 count: column.songCount,
@@ -216,7 +216,7 @@ private struct GenreColumn: View {
                 viewModel.toggle(main: column.id)
             }
             ScrollView(.vertical, showsIndicators: true) {
-                LazyVStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+                LazyVStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                     ForEach(column.pills) { pill in
                         SelectablePill(
                             title: pill.name,
@@ -231,9 +231,9 @@ private struct GenreColumn: View {
             }
             .frame(height: QueueBuilderMetrics.columnListHeight)
         }
-        .padding(MinidiscSpacing.s)
+        .padding(MaeksterSpacing.s)
         .frame(width: QueueBuilderMetrics.columnWidth, alignment: .leading)
-        .background((tint ?? Color.secondary).opacity(0.08), in: RoundedRectangle(cornerRadius: MinidiscCornerRadius.large))
+        .background((tint ?? Color.secondary).opacity(0.08), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.large))
     }
 }
 
@@ -249,25 +249,25 @@ private struct SelectablePill: View {
 
     var body: some View {
         let appearance = PillAppearance(tint: tint, isSelected: isSelected)
-        let shape = RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+        let shape = RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
         Button {
             HapticFeedback.light.trigger()
             action()
         } label: {
-            HStack(spacing: MinidiscSpacing.xs) {
+            HStack(spacing: MaeksterSpacing.xs) {
                 Text(verbatim: title)
-                    .font(isProminent ? .minidiscCellTitle : .minidiscCellSubtitle)
+                    .font(isProminent ? .maeksterCellTitle : .maeksterCellSubtitle)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 if let count {
                     Text(verbatim: "(\(count))")
-                        .font(.minidiscMetadata)
-                        .foregroundStyle(isSelected ? Color.minidiscAccentText.opacity(0.85) : .secondary)
+                        .font(.maeksterMetadata)
+                        .foregroundStyle(isSelected ? Color.maeksterAccentText.opacity(0.85) : .secondary)
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.m)
-            .padding(.vertical, MinidiscSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.m)
+            .padding(.vertical, MaeksterSpacing.s)
             .frame(maxWidth: isProminent ? .infinity : nil, alignment: .leading)
             .foregroundStyle(appearance.foreground)
             .background(appearance.fill, in: shape)
@@ -284,7 +284,7 @@ struct QueueBuilderCard: View {
     let viewModel: QueueBuilderViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header
             switch viewModel.phase {
             case .loading:
@@ -292,8 +292,8 @@ struct QueueBuilderCard: View {
                     .frame(maxWidth: .infinity, minHeight: QueueBuilderMetrics.cardLoadingHeight)
             case .failed:
                 Button("Couldn't load genres. Try again") { Task { await viewModel.load() } }
-                    .font(.minidiscCellSubtitle)
-                    .padding(.horizontal, MinidiscSpacing.l)
+                    .font(.maeksterCellSubtitle)
+                    .padding(.horizontal, MaeksterSpacing.l)
             case .ready:
                 rows
             }
@@ -303,11 +303,11 @@ struct QueueBuilderCard: View {
     }
 
     private var header: some View {
-        HStack(spacing: MinidiscSpacing.s) {
+        HStack(spacing: MaeksterSpacing.s) {
             NavigationLink {
                 QueueBuilderView(viewModel: viewModel)
             } label: {
-                MinidiscCarouselHeader("Queue Builder", showsChevron: true, horizontalPadding: 0)
+                MaeksterCarouselHeader("Queue Builder", showsChevron: true, horizontalPadding: 0)
             }
             .buttonStyle(.plain)
             .accessibilityHint("Opens the full Queue Builder")
@@ -317,7 +317,7 @@ struct QueueBuilderCard: View {
                     HapticFeedback.light.trigger()
                     viewModel.reset()
                 }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.compact))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.compact))
             }
             Button {
                 HapticFeedback.medium.trigger()
@@ -329,11 +329,11 @@ struct QueueBuilderCard: View {
                     Label("Play", systemImage: "play.fill")
                 }
             }
-            .buttonStyle(.minidiscCircle(isProminent: true))
+            .buttonStyle(.maeksterCircle(isProminent: true))
             .disabled(!viewModel.canBuild)
             .accessibilityLabel("Play queue")
         }
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 
     @ViewBuilder
@@ -388,18 +388,18 @@ struct QueueBuilderCard: View {
 
     private var summary: some View {
         Text(verbatim: viewModel.summary)
-        .font(.minidiscCaption)
+        .font(.maeksterCaption)
         .foregroundStyle(.secondary)
         .lineLimit(2)
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 
     private func pillRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: MinidiscSpacing.s) {
+            LazyHStack(spacing: MaeksterSpacing.s) {
                 content()
             }
-            .padding(.horizontal, MinidiscSpacing.l)
+            .padding(.horizontal, MaeksterSpacing.l)
         }
     }
 }
@@ -420,18 +420,18 @@ private struct CardPill: View {
             HapticFeedback.light.trigger()
             action()
         } label: {
-            HStack(spacing: MinidiscSpacing.xs) {
+            HStack(spacing: MaeksterSpacing.xs) {
                 Text(verbatim: title)
-                    .font(.minidiscCellSubtitle.weight(isSelected ? .semibold : .regular))
+                    .font(.maeksterCellSubtitle.weight(isSelected ? .semibold : .regular))
                     .lineLimit(1)
                 if isExpanded {
                     Image(systemName: "chevron.down")
-                        .font(.minidiscCaption2.weight(.bold))
+                        .font(.maeksterCaption2.weight(.bold))
                         .accessibilityHidden(true)
                 }
             }
-            .padding(.horizontal, MinidiscSpacing.m)
-            .padding(.vertical, MinidiscSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.m)
+            .padding(.vertical, MaeksterSpacing.s)
             .foregroundStyle(appearance.foreground)
             .background(appearance.fill, in: Capsule())
             .overlay(Capsule().strokeBorder(appearance.stroke, lineWidth: 1))
@@ -487,7 +487,7 @@ private nonisolated struct PreviewMoodScorer: MoodScoring {
 
 #Preview("Queue Builder") {
     let container = AppContainer.preview()
-    return MinidiscPreview(container: container) {
+    return MaeksterPreview(container: container) {
         NavigationStack { QueueBuilderView(viewModel: previewModel(container)) }
     }
 }
@@ -500,7 +500,7 @@ private nonisolated struct PreviewMoodScorer: MoodScoring {
         decades: [1990, 2000],
         moods: [.relaxed]
     )
-    return MinidiscPreview(container: container) {
+    return MaeksterPreview(container: container) {
         NavigationStack { QueueBuilderView(viewModel: previewModel(container, picked: picked)) }
     }
 }
@@ -511,7 +511,7 @@ private nonisolated struct PreviewMoodScorer: MoodScoring {
         mains: ["Hip Hop"], tags: [GenreTaxonomy.discogs.resolve("Modal").key], decades: [1990], moods: [.relaxed]
     ))
     model.tapMainInCard("Jazz")
-    return MinidiscPreview(container: container) {
+    return MaeksterPreview(container: container) {
         NavigationStack {
             ScrollView { QueueBuilderCard(viewModel: model) }
         }

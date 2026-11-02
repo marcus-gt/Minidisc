@@ -16,7 +16,7 @@ struct DiscographySection: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header
             if isExpanded {
                 LazyVStack(spacing: 0) {
@@ -30,17 +30,17 @@ struct DiscographySection: View {
     }
 
     private var header: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             Button {
                 withAnimation(reduceMotion ? nil : .smooth(duration: 0.25)) { isExpanded.toggle() }
             } label: {
-                HStack(spacing: MinidiscSpacing.s) {
+                HStack(spacing: MaeksterSpacing.s) {
                     Text(title)
-                        .font(.minidiscShelfTitle)
+                        .font(.maeksterShelfTitle)
                         .foregroundStyle(.primary)
                         .lineLimit(2)
                     Image(systemName: "chevron.down")
-                        .font(.minidiscCaption.weight(.bold))
+                        .font(.maeksterCaption.weight(.bold))
                         .foregroundStyle(.secondary)
                         .rotationEffect(.degrees(isExpanded ? 0 : -90))
                         .accessibilityHidden(true)
@@ -52,16 +52,16 @@ struct DiscographySection: View {
             .accessibilityHint(Text("Shows or hides these albums"))
             .accessibilityAddTraits(.isHeader)
 
-            Spacer(minLength: MinidiscSpacing.s)
+            Spacer(minLength: MaeksterSpacing.s)
 
             Button("Play", systemImage: "play.fill") { onPlay() }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.compact, isProminent: true))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.compact, isProminent: true))
                 .disabled(isPlayLoading || albums.isEmpty)
             Button("Shuffle", systemImage: "shuffle") { onShuffle() }
-                .buttonStyle(.minidiscCircle(diameter: MinidiscControlSize.compact))
+                .buttonStyle(.maeksterCircle(diameter: MaeksterControlSize.compact))
                 .disabled(isPlayLoading || albums.isEmpty)
         }
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 }
 
@@ -82,28 +82,28 @@ struct DiscographyAlbumRow: View {
 
     var body: some View {
         NavigationLink(value: HomeDestination.album(album)) {
-            HStack(spacing: MinidiscSpacing.m) {
+            HStack(spacing: MaeksterSpacing.m) {
                 CoverArtCard(id: album.coverArt ?? album.id, size: Self.artworkSize)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: album.name)
-                        .font(.minidiscTrackTitle)
+                        .font(.maeksterTrackTitle)
                         .foregroundStyle(.primary)
                         .lineLimit(2)
                     if !subtitle.isEmpty {
                         Text(verbatim: subtitle)
-                            .font(.minidiscMetadata)
+                            .font(.maeksterMetadata)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
                 }
-                Spacer(minLength: MinidiscSpacing.s)
+                Spacer(minLength: MaeksterSpacing.s)
                 Image(systemName: "chevron.right")
-                    .font(.minidiscCaption.weight(.semibold))
+                    .font(.maeksterCaption.weight(.semibold))
                     .foregroundStyle(.tertiary)
                     .accessibilityHidden(true)
             }
-            .padding(.horizontal, MinidiscSpacing.l)
-            .padding(.vertical, MinidiscSpacing.s)
+            .padding(.horizontal, MaeksterSpacing.l)
+            .padding(.vertical, MaeksterSpacing.s)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -115,10 +115,10 @@ struct DiscographyAlbumRow: View {
 #Preview {
     @Previewable @State var albumsExpanded = true
     @Previewable @State var singlesExpanded = false
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.section) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.section) {
                     DiscographySection(
                         title: "Albums",
                         albums: [PreviewFixtures.tidalRooms, PreviewFixtures.paperLanterns].map(PreviewFixtures.withoutSongs),
@@ -142,7 +142,7 @@ struct DiscographyAlbumRow: View {
                         onShuffle: {}
                     )
                 }
-                .padding(.vertical, MinidiscSpacing.l)
+                .padding(.vertical, MaeksterSpacing.l)
             }
             .background(ArtworkSurfaceBackground(tint: ArtworkSurfacePalette.tint(from: .teal)))
         }

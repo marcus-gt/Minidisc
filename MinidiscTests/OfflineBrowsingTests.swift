@@ -39,7 +39,7 @@ struct OfflineBrowsingTests {
     }
 
     @Test func readsActualFilesAcrossManualFavoritesAndCacheWithoutChangingSavedCatalog() async throws {
-        let models = try ModelContainer.minidisc(inMemory: true)
+        let models = try ModelContainer.maekster(inMemory: true)
         let index = LibraryIndexStore(modelContainer: try ModelContainer.libraryIndex(inMemory: true))
         let server = MockServerService()
         let account = ServerSnapshot(from: ServerConfig(displayName: "Fixture", baseURL: "https://example.invalid", username: "fixture"))

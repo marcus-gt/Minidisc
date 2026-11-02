@@ -124,12 +124,12 @@ actor LibraryService: LibraryServiceProtocol {
 
     func star(songIds: [String], albumIds: [String], artistIds: [String]) async throws {
         try await client().star(songIds: songIds, albumIds: albumIds, artistIds: artistIds)
-        await MainActor.run { NotificationCenter.default.post(name: .minidiscFavoritesChanged, object: nil) }
+        await MainActor.run { NotificationCenter.default.post(name: .maeksterFavoritesChanged, object: nil) }
     }
 
     func unstar(songIds: [String], albumIds: [String], artistIds: [String]) async throws {
         try await client().unstar(songIds: songIds, albumIds: albumIds, artistIds: artistIds)
-        await MainActor.run { NotificationCenter.default.post(name: .minidiscFavoritesChanged, object: nil) }
+        await MainActor.run { NotificationCenter.default.post(name: .maeksterFavoritesChanged, object: nil) }
     }
 
     func getStarred2() async throws -> Starred2 {
@@ -316,7 +316,7 @@ actor LibraryService: LibraryServiceProtocol {
 
         guard !collected.isEmpty else {
             Logger.library.error("[ARTIST-TRACKS] all fetches failed artistId=\(artistID, privacy: .public)")
-            throw MinidiscError.artistTracksUnavailable
+            throw MaeksterError.artistTracksUnavailable
         }
 
         Logger.library.debug("[ARTIST-TRACKS] fetched \(collected.count)/\(albums.count) albums artistId=\(artistID, privacy: .public)")
@@ -770,7 +770,7 @@ actor LibraryService: LibraryServiceProtocol {
     ) async throws -> [AlbumID3] {
         guard limit > 0 else { return [] }
         let activeServerID = await serverService.activeConnectionVersion()?.serverID
-        guard activeServerID == serverID else { throw MinidiscError.serverNotConfigured }
+        guard activeServerID == serverID else { throw MaeksterError.serverNotConfigured }
 
         let recommendations = try await fetchAlbumRecommendations(
             to: albumID,

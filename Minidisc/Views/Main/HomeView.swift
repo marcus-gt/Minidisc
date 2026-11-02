@@ -37,7 +37,7 @@ struct HomeView: View {
         }
         .navigationTitle("Home")
         .toolbarTitleDisplayMode(.inlineLarge)
-        .minidiscSettingsToolbar()
+        .maeksterSettingsToolbar()
         .navigationDestination(for: HomeDestination.self) { destination in
             resolve(destination)
         }
@@ -54,7 +54,7 @@ struct HomeView: View {
             }
             await viewModel?.load(isOnline: isOnline)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterPlaylistsChanged)) { _ in
             Task { await viewModel?.load(isOnline: isOnline, preserveLayout: true) }
         }
         // Pins keep a snapshot of the name; a playlist renamed elsewhere catches up here.
@@ -78,7 +78,7 @@ struct HomeView: View {
         }
         if !vm.isLoading, vm.isEmpty, !isOnline {
             ScrollView {
-                VStack(alignment: .leading, spacing: MinidiscSpacing.section) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.section) {
                     OfflineHomeInfo()
                     HomeFavoriteSongsSection(songs: favorites.songs)
                     HomeAlbumSection(title: "Albums", albums: container?.offlineLibrary.snapshot.albums ?? [], identifier: "home.offlineAlbums")
@@ -100,7 +100,7 @@ struct HomeView: View {
         } else {
             ScrollView {
                 // A stable VStack height avoids lazy-height estimates leaving the refresh inset open.
-                VStack(alignment: .leading, spacing: MinidiscSpacing.section) {
+                VStack(alignment: .leading, spacing: MaeksterSpacing.section) {
                     if !isOnline {
                         OfflineHomeInfo()
                     } else if vm.hasPartialFailure {
@@ -111,16 +111,16 @@ struct HomeView: View {
                             Button("Retry") { Task { await vm.load(isOnline: isOnline, preserveLayout: true) } }
                                 .frame(minHeight: 44)
                         }
-                        .padding(.horizontal, MinidiscSpacing.l)
+                        .padding(.horizontal, MaeksterSpacing.l)
                     }
                     ForEach(homeLayout.visibleSections) { section in
                         feedSection(section, vm: vm, picks: picks, favorites: favorites, genres: genres)
                     }
                 }
-                .padding(.top, MinidiscSpacing.m)
-                .padding(.bottom, MinidiscSpacing.xl)
+                .padding(.top, MaeksterSpacing.m)
+                .padding(.bottom, MaeksterSpacing.xl)
             }
-            .minidiscSongSwipeContainer()
+            .maeksterSongSwipeContainer()
             .refreshable { await vm.load(isOnline: isOnline, preserveLayout: true) }
         }
     }
@@ -190,16 +190,16 @@ struct HomeView: View {
         let title: LocalizedStringResource = "Your Playlists"
         switch playlistShelfLayout {
         case .carousel:
-            MinidiscShelf {
+            MaeksterShelf {
                 playlistShelfHeader(title, shown: shown)
             } content: {
-                ForEach(Array(shown.prefix(MinidiscCarouselMetrics.previewLimit))) { playlist in
+                ForEach(Array(shown.prefix(MaeksterCarouselMetrics.previewLimit))) { playlist in
                     TopPickCard(playlist: playlist, namespace: homeZoomNamespace)
                 }
             }
             .accessibilityIdentifier("home.playlists")
         case .grid:
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 playlistShelfHeader(title, shown: shown)
                 HomeShelfGrid(shown.prefix(HomeShelfLayout.gridLimit)) { playlist in
                     PlaylistGridTile(playlist: playlist, namespace: homeZoomNamespace)
@@ -210,7 +210,7 @@ struct HomeView: View {
     }
 
     private func playlistShelfHeader(_ title: LocalizedStringResource, shown: [Playlist]) -> some View {
-        MinidiscCarouselHeaderLink(title, itemCount: shown.count, visibleLimit: playlistShelfLayout.visibleLimit) {
+        MaeksterCarouselHeaderLink(title, itemCount: shown.count, visibleLimit: playlistShelfLayout.visibleLimit) {
             PlaylistCarouselCollectionView(title, playlists: shown)
         }
     }
@@ -289,10 +289,10 @@ private struct PlaylistGridTile: View {
                     title: playlist.name,
                     size: HomeShelfLayout.gridTileCoverSide
                 )
-                .minidiscMatchedTransitionSource(id: playlist.id, in: namespace)
+                .maeksterMatchedTransitionSource(id: playlist.id, in: namespace)
             } detail: {
                 Text(playlist.name)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
@@ -315,7 +315,7 @@ private struct TopPickCard: View {
 
     var body: some View {
         NavigationLink(value: HomeDestination.playlist(playlist)) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 PlaylistCoverThumbnail(
                     playlistId: playlist.id,
                     serverId: nil,
@@ -323,7 +323,7 @@ private struct TopPickCard: View {
                     title: playlist.name,
                     size: side
                 )
-                .minidiscMatchedTransitionSource(id: playlist.id, in: namespace)
+                .maeksterMatchedTransitionSource(id: playlist.id, in: namespace)
                 CoverCardMetadata(
                     title: playlist.name,
                     subtitle: playlist.changed.map { String(localized: "Updated \($0.formatted(.relative(presentation: .named)))") },
@@ -343,7 +343,7 @@ private struct OfflineHomeInfo: View {
     @Environment(\.appContainer) private var container
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             OfflineHomeCard(
                 isManual: container?.serverState.isOfflineModeEnabled == true,
                 songCount: container?.offlineLibrary.snapshot.songs.count ?? 0,
@@ -354,9 +354,9 @@ private struct OfflineHomeInfo: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, MinidiscSpacing.m)
+                .padding(.horizontal, MaeksterSpacing.m)
         }
-        .padding(.horizontal, MinidiscSpacing.l)
+        .padding(.horizontal, MaeksterSpacing.l)
     }
 }
 
@@ -364,12 +364,12 @@ private struct HomeShelfPlaceholder: View {
     let title: LocalizedStringResource
     let side: CGFloat
     var body: some View {
-        MinidiscShelf {
-            MinidiscCarouselHeader(title, showsChevron: false)
+        MaeksterShelf {
+            MaeksterCarouselHeader(title, showsChevron: false)
         } content: {
             ForEach(0..<3) { _ in
-                VStack(alignment: .leading, spacing: MinidiscSpacing.s) {
-                    RoundedRectangle(cornerRadius: MinidiscCornerRadius.standard)
+                VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+                    RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard)
                         .fill(.quaternary).frame(width: side, height: side)
                     Text("Loading…").font(.subheadline)
                     Text("Loading…").font(.caption)
@@ -387,7 +387,7 @@ private struct HomeShelfPlaceholder: View {
 
 #if DEBUG
 #Preview("Home") {
-    MinidiscPreview(container: .preview()) {
+    MaeksterPreview(container: .preview()) {
         NavigationStack {
             HomeView(viewModel: .preview())
         }

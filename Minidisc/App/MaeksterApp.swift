@@ -5,16 +5,16 @@ import Foundation
 import AppIntents
 
 @main
-struct MinidiscApp: App {
-    @UIApplicationDelegateAdaptor(MinidiscAppDelegate.self) private var appDelegate
+struct MaeksterApp: App {
+    @UIApplicationDelegateAdaptor(MaeksterAppDelegate.self) private var appDelegate
     @State private var launchState: AppLaunchState = .launching
     @State private var launchAttempt = 1
     @Environment(\.scenePhase) private var scenePhase
-    private let runtime = MinidiscRuntime.shared
+    private let runtime = MaeksterRuntime.shared
     private var playbackDiagnostics: PlaybackDiagnostics { runtime.diagnostics }
 
     init() {
-        let intentRuntime = MinidiscRuntime.shared
+        let intentRuntime = MaeksterRuntime.shared
         AppDependencyManager.shared.add(dependency: intentRuntime)
     }
 
@@ -34,7 +34,7 @@ struct MinidiscApp: App {
                         try await container.libraryCatalog.prepare(
                             automaticRefreshAllowed: snapshot.automaticRefreshAllowed
                         )
-                        MinidiscShortcuts.updateAppShortcutParameters()
+                        MaeksterShortcuts.updateAppShortcutParameters()
                     } catch is CancellationError {
                     } catch {
                         // The persistent cache remains usable; a later reconnect or manual
@@ -52,17 +52,17 @@ struct MinidiscApp: App {
                     let event = container.serverState.networkPathEvent
                     Task { await container.playerService.handleNetworkPathChanged(event) }
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .minidiscOfflineLibraryChanged)) { _ in
+                .onReceive(NotificationCenter.default.publisher(for: .maeksterOfflineLibraryChanged)) { _ in
                     activeContainer?.offlineLibrary.revision += 1
                 }
                 .task(id: activeContainer?.offlineFavoritesSync.request) {
                     await activeContainer?.offlineFavoritesSync.synchronize()
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .minidiscFavoritesChanged)) { _ in
+                .onReceive(NotificationCenter.default.publisher(for: .maeksterFavoritesChanged)) { _ in
                     activeContainer?.offlineFavoritesSync.revision += 1
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistsChanged)) { _ in
-                    MinidiscShortcuts.updateAppShortcutParameters()
+                .onReceive(NotificationCenter.default.publisher(for: .maeksterPlaylistsChanged)) { _ in
+                    MaeksterShortcuts.updateAppShortcutParameters()
                 }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -268,7 +268,7 @@ private struct AppLaunchFailureView: View {
 
             Button("Retry", action: retryAction)
                 .buttonStyle(.borderedProminent)
-                .tint(MinidiscColors.accent)
+                .tint(MaeksterColors.accent)
         }
     }
 }

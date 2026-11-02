@@ -408,7 +408,7 @@ actor LibraryCatalog {
             )
         }
         await MainActor.run {
-            NotificationCenter.default.post(name: .minidiscPlaylistsChanged, object: nil)
+            NotificationCenter.default.post(name: .maeksterPlaylistsChanged, object: nil)
         }
     }
 

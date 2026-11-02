@@ -6,7 +6,7 @@ struct MetadataChip: View {
     var systemImage: String?
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.xs) {
+        HStack(spacing: MaeksterSpacing.xs) {
             if let systemImage {
                 Image(systemName: systemImage)
                     .imageScale(.small)
@@ -15,10 +15,10 @@ struct MetadataChip: View {
             Text(verbatim: text)
                 .lineLimit(1)
         }
-        .font(.minidiscMetadata.weight(.medium))
+        .font(.maeksterMetadata.weight(.medium))
         .foregroundStyle(.primary)
-        .padding(.horizontal, MinidiscSpacing.m)
-        .padding(.vertical, MinidiscSpacing.s - 2)
+        .padding(.horizontal, MaeksterSpacing.m)
+        .padding(.vertical, MaeksterSpacing.s - 2)
         .background(Capsule().fill(.primary.opacity(0.12)))
     }
 }
@@ -26,7 +26,7 @@ struct MetadataChip: View {
 /// Lays chips out in rows, wrapping when they don't fit (long genres, large text). Rows are centred
 /// unless `centersRows` is false (pickers that line up with leading-aligned headers).
 struct MetadataChipFlow: Layout {
-    var spacing: CGFloat = MinidiscSpacing.s
+    var spacing: CGFloat = MaeksterSpacing.s
     var centersRows = true
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

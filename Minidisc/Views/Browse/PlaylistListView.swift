@@ -23,17 +23,17 @@ struct PlaylistListView: View {
                 LoadingStateView()
             }
         }
-        .minidiscContentWidth()
+        .maeksterContentWidth()
         .navigationTitle("Playlists")
         .toolbarTitleDisplayMode(.inline)
-        .minidiscFilterable(text: $filterText, prompt: "Filter playlists")
+        .maeksterFilterable(text: $filterText, prompt: "Filter playlists")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 PlaylistListSortMenu(sort: $sort)
                     .tint(.primary)
             }
             ToolbarItem(placement: .primaryAction) {
-                MinidiscMoreMenu {
+                MaeksterMoreMenu {
                     Button("New Playlist", systemImage: "plus") {
                         showCreateSheet = true
                     }
@@ -60,7 +60,7 @@ struct PlaylistListView: View {
         }
         .onAppear { refreshLastUsed() }
         // Reload after confirmed deletion without refetching on every navigation.
-        .onReceive(NotificationCenter.default.publisher(for: .minidiscPlaylistDeleted)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .maeksterPlaylistDeleted)) { _ in
             Task { await viewModel?.load() }
         }
     }
@@ -147,20 +147,20 @@ private struct OnlinePlaylistRow: View {
     }
 
     var body: some View {
-        HStack(spacing: MinidiscSpacing.m) {
+        HStack(spacing: MaeksterSpacing.m) {
             PlaylistCoverThumbnail(playlistId: playlist.id, serverId: nil, coverArtId: playlist.coverArt ?? playlist.id, title: playlist.name, size: 56)
-                .minidiscMatchedTransitionSource(id: playlist.id, in: namespace)
+                .maeksterMatchedTransitionSource(id: playlist.id, in: namespace)
             VStack(alignment: .leading, spacing: 2) {
                 Text(playlist.name)
-                    .font(.minidiscCellTitle)
+                    .font(.maeksterCellTitle)
                     .lineLimit(1)
                 Text("\(playlist.songCount) tracks")
-                    .font(.minidiscCaption)
+                    .font(.maeksterCaption)
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, MinidiscSpacing.xs)
+        .padding(.vertical, MaeksterSpacing.xs)
         .task(id: playlist.id) {
             coverImage = await artworkImageCache.load(coverArtId: playlist.coverArt ?? playlist.id)
         }

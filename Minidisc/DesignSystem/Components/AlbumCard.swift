@@ -10,7 +10,7 @@ struct AlbumCard: View {
     private var cardSize: CGFloat { dynamicTypeSize.isAccessibilitySize ? 260 : 140 }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
             CoverArtCard(id: album.coverArt ?? album.id, size: cardSize)
             CoverCardMetadata(title: album.name, subtitle: album.artist)
         }
@@ -40,10 +40,10 @@ struct AlbumShelfCard: View {
 
     var body: some View {
         NavigationLink(value: HomeDestination.album(album)) {
-            VStack(alignment: .leading, spacing: MinidiscSpacing.xs) {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 CoverArtView(id: album.coverArt ?? album.id, size: Int(side * 2))
                     .frame(width: side, height: side)
-                    .minidiscCoverStyle(cornerRadius: MinidiscCornerRadius.standard)
+                    .maeksterCoverStyle(cornerRadius: MaeksterCornerRadius.standard)
                 CoverCardMetadata(
                     title: album.name,
                     subtitle: metadataSubtitle ?? album.artist

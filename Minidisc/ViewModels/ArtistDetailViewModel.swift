@@ -174,7 +174,7 @@ final class ArtistDetailViewModel {
             roles: loadedArtist.roles,
             album: releases
         )
-        let grouped = Dictionary(grouping: releases, by: \.minidiscReleaseCategory)
+        let grouped = Dictionary(grouping: releases, by: \.maeksterReleaseCategory)
         releaseShelves = AlbumReleaseCategory.allCases.compactMap { category in
             guard let albums = grouped[category], !albums.isEmpty else { return nil }
             return ArtistReleaseShelf(category: category, albums: albums)

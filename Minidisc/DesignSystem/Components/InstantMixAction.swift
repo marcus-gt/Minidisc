@@ -14,7 +14,7 @@ func runInstantMix(from seed: InstantMixSeed, using container: AppContainer?, st
             from: seed, startingWith: seedTrack,
             source: .instantMix(seed: seed, title: title ?? seedTrack?.title)
         )
-    } catch MinidiscError.instantMixEmpty {
+    } catch MaeksterError.instantMixEmpty {
         container.toastService.show(
             "No similar tracks found for an Instant Mix yet.",
             style: .info,
