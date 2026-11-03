@@ -48,6 +48,7 @@ struct MacSidePanel: View {
                 MacQueueView()
             }
         }
+        .background { MacSidebarMaterial().ignoresSafeArea() }
     }
 }
 

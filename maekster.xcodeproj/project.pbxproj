@@ -117,6 +117,9 @@
 				"MacViews/MacSearchView.swift" = (
 					macos,
 				);
+				"MacViews/MacSidebarMaterial.swift" = (
+					macos,
+				);
 				"MacViews/MacSignInView.swift" = (
 					macos,
 				);

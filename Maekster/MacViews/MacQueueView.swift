@@ -74,6 +74,8 @@ struct MacQueueView: View {
                 Task { await container?.playerService.moveQueueTrack(entry.selection, toIndex: target) }
             }
         }
+        // The side panel's material shows through, like the left sidebar.
+        .scrollContentBackground(.hidden)
         .contextMenu(forSelectionType: Entry.ID.self) { ids in
             if let entry = entries.first(where: { ids.contains($0.id) }) {
                 Button("Play", systemImage: "play.fill") { select(entry) }
