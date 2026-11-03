@@ -42,6 +42,10 @@ struct MacMainView: View {
     @SceneStorage("mac.sidebarSelection") private var selection: MacSidebarItem = .albums
     @State private var navigator = MacNavigator()
     @State private var playlistAddition = PlaylistAddition()
+    @State private var searchText = ""
+    @State private var searchSubmitCount = 0
+    @FocusState private var isSearchFocused: Bool
+    @Environment(\.appContainer) private var container
 
     var body: some View {
         NavigationSplitView {
@@ -56,9 +60,37 @@ struct MacMainView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
             NavigationStack(path: $navigator.path) {
-                section(selection)
-                    .navigationDestination(for: MacRoute.self, destination: page)
+                Group {
+                    if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                        section(selection)
+                    } else {
+                        MacSearchView(query: searchText, submitCount: searchSubmitCount)
+                    }
+                }
+                .navigationDestination(for: MacRoute.self, destination: page)
             }
+        }
+        .searchable(text: $searchText, placement: .toolbar, prompt: "Artists, albums, songs, playlists…")
+        .searchFocused($isSearchFocused)
+        .searchSuggestions {
+            if searchText.isEmpty, let serverId = container?.serverState.activeServer?.id.uuidString {
+                MacRecentSearches(serverId: serverId) { route in
+                    isSearchFocused = false
+                    navigator.open(route)
+                }
+            }
+        }
+        .onSubmit(of: .search) { searchSubmitCount += 1 }
+        .onChange(of: searchText) { _, _ in
+            // A new search starts from its results, not from a page opened from the last one.
+            if !navigator.path.isEmpty { navigator.path = NavigationPath() }
+        }
+        .background {
+            // ⌘F focuses the search field, as in the Music app.
+            Button("Search") { isSearchFocused = true }
+                .keyboardShortcut("f")
+                .opacity(0)
+                .accessibilityHidden(true)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             MacPlayerBar()
@@ -77,7 +109,10 @@ struct MacMainView: View {
         Binding(
             get: { selection },
             set: { newValue in
-                guard let newValue, newValue != selection else { return }
+                guard let newValue else { return }
+                // Picking a section leaves search, even the section already selected.
+                searchText = ""
+                guard newValue != selection else { return }
                 selection = newValue
                 navigator.path = NavigationPath()
             }
