@@ -323,6 +323,10 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
 - iOS-only behaviour: the audio session (`SystemAudioSessionController` does nothing on macOS, and
   route/interruption handling is compiled out), SiriKit media intents and the Siri audio entities
   (macOS 27+ API), the background-download app delegate, haptics.
+- The Mac uses the data protection keychain (`kSecUseDataProtectionKeychain` in `KeychainService`, plus
+  `keychain-access-groups` in the Mac entitlements), like iOS. It shares the default access group with the
+  iPhone build, so credentials saved by the iPhone app running on a Mac ("Designed for iPhone", same
+  bundle ID and container) stay readable.
 - Unit tests stay iOS-only. Check the Mac side with the macOS build above.
 - User-facing strings are localized through the String Catalogs (`LocalizedStringResource` /
   `String(localized:)`; local-music strings use `table: "LocalMusic"`). Don't hard-code English in
