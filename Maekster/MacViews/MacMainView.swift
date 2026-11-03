@@ -42,6 +42,7 @@ struct MacMainView: View {
     @SceneStorage("mac.sidebarSelection") private var selection: MacSidebarItem = .albums
     @State private var navigator = MacNavigator()
     @State private var playlistAddition = PlaylistAddition()
+    @State private var panels = MacPlayerPanels()
     @State private var searchText = ""
     @State private var searchSubmitCount = 0
     @FocusState private var isSearchFocused: Bool
@@ -61,13 +62,19 @@ struct MacMainView: View {
         } detail: {
             NavigationStack(path: $navigator.path) {
                 Group {
-                    if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                    if panels.showsNowPlaying {
+                        MacNowPlayingView()
+                    } else if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
                         section(selection)
                     } else {
                         MacSearchView(query: searchText, submitCount: searchSubmitCount)
                     }
                 }
                 .navigationDestination(for: MacRoute.self, destination: page)
+            }
+            .inspector(isPresented: $panels.showsQueue) {
+                MacQueueView()
+                    .inspectorColumnWidth(min: 260, ideal: 320, max: 480)
             }
         }
         .searchable(text: $searchText, placement: .toolbar, prompt: "Artists, albums, songs, playlists…")
@@ -84,6 +91,7 @@ struct MacMainView: View {
         .onChange(of: searchText) { _, _ in
             // A new search starts from its results, not from a page opened from the last one.
             if !navigator.path.isEmpty { navigator.path = NavigationPath() }
+            panels.showsNowPlaying = false
         }
         .background {
             // ⌘F focuses the search field, as in the Music app.
@@ -97,6 +105,7 @@ struct MacMainView: View {
         }
         .environment(navigator)
         .environment(playlistAddition)
+        .environment(panels)
         .sheet(item: $playlistAddition.request) { request in
             AddToPlaylistSheet(request: request)
                 .frame(minWidth: 420, minHeight: 480)
@@ -110,8 +119,9 @@ struct MacMainView: View {
             get: { selection },
             set: { newValue in
                 guard let newValue else { return }
-                // Picking a section leaves search, even the section already selected.
+                // Picking a section leaves search and Now Playing, even the section already selected.
                 searchText = ""
+                panels.showsNowPlaying = false
                 guard newValue != selection else { return }
                 selection = newValue
                 navigator.path = NavigationPath()

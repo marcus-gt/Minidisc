@@ -2464,6 +2464,18 @@ actor PlayerService: PlayerServiceProtocol {
         return true
     }
 
+    /// Removes every song after the playing one (the Mac queue's Clear). The playing song keeps playing.
+    func clearUpcoming() async {
+        let generation = queueGeneration
+        let previousNextTrackID = await queuedNextTrackID()
+        let removed = await MainActor.run { QueueEditing.clearUpcoming(in: state) }
+        guard removed > 0, generation == queueGeneration else { return }
+        originalQueueOrder = nil
+        Logger.player.info("Cleared \(removed) upcoming song(s)")
+        await invalidatePrefetchIfNextTrackChanged(from: previousNextTrackID, reason: "queue cleared")
+        await saveSession()
+    }
+
     func moveQueueTrack(_ selection: QueueTrackSelection, toIndex: Int) async {
         guard selection.queueGeneration == queueGeneration else { return }
         let previousNextTrackID = await queuedNextTrackID()

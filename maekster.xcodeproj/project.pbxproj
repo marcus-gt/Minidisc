@@ -96,6 +96,9 @@
 				"MacViews/MacMainView.swift" = (
 					macos,
 				);
+				"MacViews/MacNowPlayingView.swift" = (
+					macos,
+				);
 				"MacViews/MacPages.swift" = (
 					macos,
 				);
@@ -103,6 +106,9 @@
 					macos,
 				);
 				"MacViews/MacPlaylists.swift" = (
+					macos,
+				);
+				"MacViews/MacQueueView.swift" = (
 					macos,
 				);
 				"MacViews/MacRootView.swift" = (
