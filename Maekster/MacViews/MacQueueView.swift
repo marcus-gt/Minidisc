@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// The queue inspector: where the music is playing from, then the songs up next. Drag to reorder,
+/// The queue panel beside the page: where the music is playing from, then the songs up next. Drag to reorder,
 /// double-click to jump to a song, right-click to remove it (with Undo, as on iPhone), and Clear
 /// to drop everything after the playing song.
 struct MacQueueView: View {
     @Environment(\.appContainer) private var container
+    @State private var selection = Set<Entry.ID>()
 
     /// An upcoming song and the captured intent to act on it, like the iPhone queue rows: a stale
     /// selection (the queue changed meanwhile) is rejected by the player instead of hitting the
@@ -57,16 +58,12 @@ struct MacQueueView: View {
         .padding(MaeksterSpacing.m)
     }
 
+    /// Selection-based double-click and menu, so a row drag stays free for reordering.
     private func list(_ entries: [Entry], queueCount: Int) -> some View {
-        List {
+        List(selection: $selection) {
             ForEach(entries) { entry in
                 row(entry.song)
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { select(entry) }
-                    .contextMenu {
-                        Button("Play", systemImage: "play.fill") { select(entry) }
-                        Button("Remove from Queue", systemImage: "minus.circle", role: .destructive) { remove(entry) }
-                    }
+                    .tag(entry.id)
             }
             .onMove { sources, destination in
                 guard let source = sources.first, entries.indices.contains(source) else { return }
@@ -76,6 +73,15 @@ struct MacQueueView: View {
                     : queueCount
                 Task { await container?.playerService.moveQueueTrack(entry.selection, toIndex: target) }
             }
+        }
+        .contextMenu(forSelectionType: Entry.ID.self) { ids in
+            if let entry = entries.first(where: { ids.contains($0.id) }) {
+                Button("Play", systemImage: "play.fill") { select(entry) }
+                Button("Remove from Queue", systemImage: "minus.circle", role: .destructive) { remove(entry) }
+            }
+        } primaryAction: { ids in
+            guard let entry = entries.first(where: { ids.contains($0.id) }) else { return }
+            select(entry)
         }
     }
 

@@ -60,6 +60,8 @@ struct MacMainView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
+            // The queue sits beside the page, below the toolbar, so it stays open on every page.
+            HStack(spacing: 0) {
             NavigationStack(path: $navigator.path) {
                 Group {
                     if panels.showsNowPlaying {
@@ -72,10 +74,14 @@ struct MacMainView: View {
                 }
                 .navigationDestination(for: MacRoute.self, destination: page)
             }
-            .inspector(isPresented: $panels.showsQueue) {
+            if panels.showsQueue {
+                Divider()
                 MacQueueView()
-                    .inspectorColumnWidth(min: 260, ideal: 320, max: 480)
+                    .frame(width: 320)
+                    .transition(.move(edge: .trailing))
             }
+            }
+            .animation(.easeInOut(duration: 0.2), value: panels.showsQueue)
         }
         .searchable(text: $searchText, placement: .toolbar, prompt: "Artists, albums, songs, playlists…")
         .searchFocused($isSearchFocused)

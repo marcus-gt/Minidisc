@@ -3,7 +3,7 @@ import SwiftSonic
 import SwiftUI
 
 /// What the player bar opens: the Now Playing view in the content area, its lyrics, and the queue
-/// inspector.
+/// panel.
 @Observable
 final class MacPlayerPanels {
     var showsNowPlaying = false
@@ -31,6 +31,7 @@ struct MacNowPlayingView: View {
                                    startPoint: .top, endPoint: .bottom)
                         .ignoresSafeArea()
                 }
+                .overlay(alignment: .topTrailing) { closeButton }
                 .environment(\.colorScheme, .dark)
                 .task(id: coverArtId(state)) {
                     await colors.updateColors(for: coverArtId(state), colorExtractor: colorExtractor,
@@ -130,6 +131,23 @@ struct MacNowPlayingView: View {
         } else {
             LoadingStateView()
         }
+    }
+
+    /// Closes Now Playing; Esc does too.
+    private var closeButton: some View {
+        Button {
+            panels.showsNowPlaying = false
+        } label: {
+            Label("Close", systemImage: "xmark")
+                .labelStyle(.iconOnly)
+                .font(.title3.weight(.semibold))
+                .frame(width: 32, height: 32)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.cancelAction)
+        .help("Close")
+        .padding(MaeksterSpacing.l)
     }
 
     /// Opens an artist or album page, leaving Now Playing.
