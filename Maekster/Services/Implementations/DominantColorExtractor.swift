@@ -2,7 +2,11 @@ import SwiftUI
 import CoreImage
 import OSLog
 
+#if os(macOS)
+import AppKit
+#else
 import UIKit
+#endif
 
 /// Caches average artwork colors. UserDefaults permits synchronous cold-start hydration.
 @MainActor
@@ -108,8 +112,7 @@ final class DominantColorExtractor {
     }
 
     private static func pack(_ color: Color) -> Int? {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        guard UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
+        guard let (r, g, b, _) = PlatformColor(color).rgba() else { return nil }
         return (Int(max(0, min(1, r)) * 255) << 16) | (Int(max(0, min(1, g)) * 255) << 8) | Int(max(0, min(1, b)) * 255)
     }
 

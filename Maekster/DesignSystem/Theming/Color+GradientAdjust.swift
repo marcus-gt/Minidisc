@@ -3,16 +3,14 @@ import SwiftUI
 extension Color {
     /// sRGB components in `0...1`, or `nil` if the color can't be resolved to RGB.
     var rgbComponents: (red: Double, green: Double, blue: Double)? {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        guard UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
-        return (Double(r), Double(g), Double(b))
+        guard let rgba = PlatformColor(self).rgba() else { return nil }
+        return (Double(rgba.red), Double(rgba.green), Double(rgba.blue))
     }
 
     /// An HSB-adjusted variant — hue wraps, saturation/brightness clamp to `0...1`. Used to derive gradient
     /// stops (lighter/darker/hue-shifted) from a single base color. Returns `self` if the color can't resolve.
     func adjusted(hue dh: Double = 0, saturation ds: Double = 0, brightness db: Double = 0) -> Color {
-        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        guard UIColor(self).getHue(&h, saturation: &s, brightness: &b, alpha: &a) else { return self }
+        guard let (h, s, b, _) = PlatformColor(self).hsba() else { return self }
         var hue = (Double(h) + dh).truncatingRemainder(dividingBy: 1)
         if hue < 0 { hue += 1 }
         return Color(
@@ -25,8 +23,7 @@ extension Color {
     /// Boosts low saturation more than high saturation, with a brightness floor for dark averages.
     /// Returns self when HSB conversion fails.
     func vibranceBoosted(_ k: Double = 0.5) -> Color {
-        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        guard UIColor(self).getHue(&h, saturation: &s, brightness: &b, alpha: &a) else { return self }
+        guard let (h, s, b, _) = PlatformColor(self).hsba() else { return self }
         let boosted = Double(s) + (1 - Double(s)) * max(0, k)
         return Color(
             hue: Double(h),

@@ -1,7 +1,11 @@
 import Foundation
 import ImageIO
 import OSLog
+#if os(macOS)
+import AppKit
+#else
 import UIKit
+#endif
 
 // MARK: - ArtworkTier
 
@@ -959,6 +963,10 @@ final class ArtworkImageCache {
               let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
             return PlatformImage(data: data)
         }
+        #if os(macOS)
+        return NSImage(cgImage: cgImage, size: CGSize(width: cgImage.width, height: cgImage.height))
+        #else
         return UIImage(cgImage: cgImage)
+        #endif
     }
 }

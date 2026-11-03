@@ -15,28 +15,22 @@ enum ArtworkSurfacePalette {
     static func tint(from coverColor: Color) -> Color {
         guard coverColor != .clear, let rgb = coverColor.rgbComponents else { return neutral }
 
-        var hue: CGFloat = 0
-        var saturation: CGFloat = 0
-        var brightness: CGFloat = 0
-        var alpha: CGFloat = 0
-        UIColor(red: rgb.red, green: rgb.green, blue: rgb.blue, alpha: 1)
-            .getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+        let hsba = PlatformColor(red: rgb.red, green: rgb.green, blue: rgb.blue, alpha: 1).hsba()
+        let (hue, saturation, brightness) = (hsba?.hue ?? 0, hsba?.saturation ?? 0, hsba?.brightness ?? 0)
 
         // Near-grey covers stay neutral; chromatic ones get a little more colour so the tint reads after darkening.
         let isChromatic = saturation >= 0.08
         let adjustedSaturation = isChromatic ? min(saturation * 1.3, 0.85) : saturation
-        var color = UIColor(hue: hue, saturation: adjustedSaturation, brightness: max(brightness, 0.2), alpha: 1)
+        let color = PlatformColor(hue: hue, saturation: adjustedSaturation, brightness: max(brightness, 0.2), alpha: 1)
 
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
-        color.getRed(&r, green: &g, blue: &b, alpha: &alpha)
-        var red = Double(r), green = Double(g), blue = Double(b)
+        let rgba = color.rgba()
+        var red = Double(rgba?.red ?? 0), green = Double(rgba?.green ?? 0), blue = Double(rgba?.blue ?? 0)
         while PlayerBackgroundPalette.luminance(red: red, green: green, blue: blue) > maxTintLuminance {
             red *= 0.95
             green *= 0.95
             blue *= 0.95
         }
-        color = UIColor(red: red, green: green, blue: blue, alpha: 1)
-        return Color(uiColor: color)
+        return Color(platformColor: PlatformColor(red: red, green: green, blue: blue, alpha: 1))
     }
 
     /// The near-black bottom colour that pairs with `tint(from:)`.

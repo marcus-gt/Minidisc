@@ -25,11 +25,23 @@ out of view bodies and service layer.
 ## Files
 
 - `NavigationTitle+Maekster.swift` — `navigationBarTitleDisplayModeInline/Large()` wrappers (no-op on macOS)
-- `ListStyles+Maekster.swift` — `maeksterSheetListStyle()` for cross-platform list styles in sheets
-- `NavigationTransitions+Maekster.swift` — `maeksterZoomTransition()` (zoom transition iOS 18+, no-op on macOS)
+- `ListStyles+Maekster.swift` — `maeksterSheetListStyle()` (inset grouped on iOS, inset on macOS)
+- `NavigationTransitions+Maekster.swift` — `maeksterZoomTransition()` (zoom transition on iOS, no-op on macOS)
+- `FullScreenCover+Maekster.swift` — `maeksterFullScreenCover()` (a sheet on macOS)
+- `PlatformColor.swift` — `PlatformColor` typealias (`UIColor`/`NSColor`), `rgba()` / `hsba()` that also
+  work for `NSColor`, and `Color.init(platformColor:)`
+- `PlatformPasteboard.swift` — copying text to the general pasteboard
+- `Color+Maekster.swift` — platform system colors (`maeksterSystemBackground`)
+
+## macOS
+
+maekster builds for macOS from the same target (#100). The iPhone UI in `Views/` is iOS-only and the Mac
+UI in `MacViews/` macOS-only, file by file (Target Membership → platform). Everything else must compile
+for both, which is what these wrappers are for.
 
 ## Related
 
-- `Utilities/PlatformImage.swift` — `PlatformImage` typealias (`UIImage`/`NSImage`) and `Image.init(platformImage:)`;
-  lives in Utilities because it is used by both the service layer and the UI layer
+- `Utilities/PlatformImage.swift` — `PlatformImage` typealias (`UIImage`/`NSImage`), `Image.init(platformImage:)`,
+  `ImageRenderer.platformImage` and `NSImage.cgImage`; lives in Utilities because it is used by both the
+  service layer and the UI layer
 - `DesignSystem/Platform/Color+Maekster.swift` — platform-specific system color wrappers

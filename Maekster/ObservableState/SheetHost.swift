@@ -14,6 +14,9 @@ extension EnvironmentValues {
 /// Opens the Song Path sheet from anywhere: Discover, Home, a song's menu or the player (#65).
 @MainActor @Observable
 final class SongPathLauncher {
+    /// The SF Symbol for Song Path, in menus and on the card.
+    static let symbol = "point.topleft.down.to.point.bottomright.curvepath"
+
     struct Request: Identifiable {
         let id = UUID()
         let host: SheetHost

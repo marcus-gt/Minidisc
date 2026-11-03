@@ -11,6 +11,7 @@ nonisolated enum AudioSessionInterruptionEvent: Sendable {
     case began(routeDisconnected: Bool)
     case ended(shouldResume: Bool)
 
+    #if os(iOS)
     init?(notification: Notification) {
         guard let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return nil }
@@ -30,6 +31,7 @@ nonisolated enum AudioSessionInterruptionEvent: Sendable {
             return nil
         }
     }
+    #endif
 }
 
 nonisolated enum NetworkPlaybackRecoveryAction: Equatable, Sendable {
@@ -97,7 +99,7 @@ actor PlayerService: PlayerServiceProtocol {
         let startedAt: Date
         var requiresPersonalRoute: Bool
         var expectedPersonalRouteUIDs: Set<String>
-        var expectedPersonalPortTypes: Set<AVAudioSession.Port>
+        var expectedPersonalPortTypes: Set<AudioOutputPort>
     }
 
     nonisolated let state: PlayerState
@@ -3885,8 +3887,8 @@ actor PlayerService: PlayerServiceProtocol {
     /// Returns true when the route outputs represent a personal listening device whose
     /// disconnection must auto-pause playback (never continue on the built-in speaker).
     /// Includes AirPlay/CarPlay so their disconnects keep today's pause behavior.
-    nonisolated static func isPersonalAudioRoute(portTypes: [AVAudioSession.Port]) -> Bool {
-        let personal: Set<AVAudioSession.Port> = [
+    nonisolated static func isPersonalAudioRoute(portTypes: [AudioOutputPort]) -> Bool {
+        let personal: Set<AudioOutputPort> = [
             .headphones, .bluetoothA2DP, .bluetoothLE, .bluetoothHFP, .airPlay, .carAudio
         ]
         return portTypes.contains(where: { personal.contains($0) })
@@ -3895,8 +3897,8 @@ actor PlayerService: PlayerServiceProtocol {
     /// An ambiguous route notification must never manufacture a user pause. Suspend only when a
     /// known personal output disappeared and iOS actually fell back to a non-personal route.
     nonisolated static func shouldSuspendForRouteDisconnect(
-        previous: [AVAudioSession.Port],
-        current: [AVAudioSession.Port]
+        previous: [AudioOutputPort],
+        current: [AudioOutputPort]
     ) -> Bool {
         !previous.isEmpty
             && isPersonalAudioRoute(portTypes: previous)
@@ -3906,8 +3908,8 @@ actor PlayerService: PlayerServiceProtocol {
     /// Automatic route recovery is allowed only on a personal output compatible with the one that
     /// disappeared. An explicit Play remains available if the user deliberately wants the speaker.
     nonisolated static func canResumeOnPersonalRoute(
-        expected: [AVAudioSession.Port],
-        current: [AVAudioSession.Port]
+        expected: [AudioOutputPort],
+        current: [AudioOutputPort]
     ) -> Bool {
         guard isPersonalAudioRoute(portTypes: current) else { return false }
         let expectedPersonal = expected.filter { isPersonalAudioRoute(portTypes: [$0]) }
@@ -4588,6 +4590,7 @@ extension PlayerService {
     }
 
     func configureAudioSessionIfNeeded() {
+        #if os(iOS)
         if mediaServicesResetObserver == nil {
             mediaServicesResetObserver = NotificationCenter.default.addObserver(
                 forName: AVAudioSession.mediaServicesWereResetNotification,
@@ -4597,6 +4600,7 @@ extension PlayerService {
                 Task { await self?.handleMediaServicesReset() }
             }
         }
+        #endif
         do {
             try activateAudioSession()
         } catch let error as NSError {
@@ -4610,6 +4614,7 @@ extension PlayerService {
                 await self?.retryAudioSessionActivation()
             }
         }
+        #if os(iOS)
         if interruptionObserver == nil {
             interruptionObserver = NotificationCenter.default.addObserver(
                 forName: AVAudioSession.interruptionNotification,
@@ -4645,6 +4650,7 @@ extension PlayerService {
                 }
             }
         }
+        #endif
     }
 
     private func cancelAudioSystemRecovery() {
@@ -4964,9 +4970,10 @@ extension PlayerService {
         }
     }
 
+    #if os(iOS)
     func handleRouteChange(
         _ reason: AVAudioSession.RouteChangeReason,
-        previousOutputs: [AVAudioSession.Port] = []
+        previousOutputs: [AudioOutputPort] = []
     ) async {
         await handleRouteChange(
             reason,
@@ -5033,6 +5040,7 @@ extension PlayerService {
             break
         }
     }
+    #endif
 
     private func currentAudioRouteOutputs() -> [AudioRouteOutputSnapshot] {
         audioSession.outputs
@@ -5159,7 +5167,7 @@ extension PlayerService {
     }
 
     private nonisolated static func diagnosticAudioOutputKind(
-        _ port: AVAudioSession.Port
+        _ port: AudioOutputPort
     ) -> PlaybackDiagnostics.AudioOutputKind {
         switch port {
         case .airPlay: .airPlay
@@ -5219,6 +5227,7 @@ nonisolated final class AudioEngineBridge: AudioEngineDelegate, Sendable {
 
 // MARK: - iOS logging helpers (file-private)
 
+#if os(iOS)
 private extension AVAudioSession.RouteChangeReason {
     nonisolated var logDescription: String {
         switch self {
@@ -5234,3 +5243,4 @@ private extension AVAudioSession.RouteChangeReason {
         }
     }
 }
+#endif

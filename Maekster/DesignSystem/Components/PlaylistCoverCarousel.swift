@@ -173,6 +173,6 @@ struct PlaylistCoverCarousel: View {
     }
 
     private func platformImage(_ image: PlatformImage) -> Image {
-        Image(uiImage: image)
+        Image(platformImage: image)
     }
 }

@@ -1,6 +1,8 @@
 import Foundation
 import Synchronization
+#if os(iOS)
 import UIKit
+#endif
 
 nonisolated struct CompletedDownload: Codable, Sendable {
     let jobID: UUID
@@ -141,13 +143,18 @@ private nonisolated final class DownloadSessionDelegate: NSObject, URLSessionDow
         continuation.yield(.waiting(id))
     }
 
+    #if os(iOS)
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
         // Every preceding completion has a durable receipt. Processing is replayable if iOS
         // suspends us while validating/remuxing/committing metadata.
         Task { @MainActor in MaeksterAppDelegate.finishDownloadEvents() }
     }
+    #endif
 }
 
+#if os(iOS)
+/// iOS relaunches the app to deliver background download events; macOS keeps the app running,
+/// so it has no delegate.
 @MainActor
 final class MaeksterAppDelegate: NSObject, UIApplicationDelegate {
     private static var completion: (() -> Void)?
@@ -173,3 +180,4 @@ final class MaeksterAppDelegate: NSObject, UIApplicationDelegate {
         handler()
     }
 }
+#endif

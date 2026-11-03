@@ -20,7 +20,7 @@ enum PlaylistGradientRenderer {
         let renderer = ImageRenderer(content: view)
         renderer.scale = 1.0
 
-        return renderer.uiImage?.jpegData(compressionQuality: compression)
+        return renderer.platformImage?.jpgData(quality: compression)
     }
 
     /// Same ratios as the picker preview, so the raster matches what was chosen at any size. The block starts

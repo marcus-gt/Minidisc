@@ -149,7 +149,7 @@ struct SongContextMenuModifier: ViewModifier {
                 Button {
                     container?.songPathLauncher.open(from: .song(song), in: sheetHost)
                 } label: {
-                    Label("Song Path from Here", systemImage: SongPathSheet.symbol)
+                    Label("Song Path from Here", systemImage: SongPathLauncher.symbol)
                 }
             }
 

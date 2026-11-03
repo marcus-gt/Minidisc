@@ -41,6 +41,386 @@
 			membershipExceptions = (
 				Info.plist,
 			);
+			platformFiltersByRelativePath = {
+				"AppIntents/SiriAudioEntities.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/DocumentImagePicker.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/ImagePickerController.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/JustifiedText.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/MaeksterToolbarItems.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/PlaylistFeaturedArtistsShelf.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/QuickPlaylistMenu.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/SimilarArtistsShelf.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/SongRow.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/SongSelectionSheet.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/SquareCropView.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/SwipeBackEnabler.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/SystemShareSheet.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/SystemVolumeView.swift" = (
+					ios,
+				);
+				"DesignSystem/Components/TrackSkipSwipeModifier.swift" = (
+					ios,
+				);
+				"MacViews/MacRootView.swift" = (
+					macos,
+				);
+				"Services/Intents/SiriMediaIntentHandler.swift" = (
+					ios,
+				);
+				"Views/Browse/AddToPlaylistSheet.swift" = (
+					ios,
+				);
+				"Views/Browse/AlbumCollectionView.swift" = (
+					ios,
+				);
+				"Views/Browse/AlbumDetailView.swift" = (
+					ios,
+				);
+				"Views/Browse/AlbumsListView.swift" = (
+					ios,
+				);
+				"Views/Browse/ArtistBestOfView.swift" = (
+					ios,
+				);
+				"Views/Browse/ArtistDetailView.swift" = (
+					ios,
+				);
+				"Views/Browse/ArtistInformationSheet.swift" = (
+					ios,
+				);
+				"Views/Browse/ArtistListView.swift" = (
+					ios,
+				);
+				"Views/Browse/CreatePlaylistSheet.swift" = (
+					ios,
+				);
+				"Views/Browse/DownloadActivitySection.swift" = (
+					ios,
+				);
+				"Views/Browse/DownloadedView.swift" = (
+					ios,
+				);
+				"Views/Browse/EditPlaylistSheet.swift" = (
+					ios,
+				);
+				"Views/Browse/FavoritesView.swift" = (
+					ios,
+				);
+				"Views/Browse/FeaturedArtistAvatar.swift" = (
+					ios,
+				);
+				"Views/Browse/GenreListView.swift" = (
+					ios,
+				);
+				"Views/Browse/OfflineBrowsingEmptyView.swift" = (
+					ios,
+				);
+				"Views/Browse/PlaylistCoverPicker.swift" = (
+					ios,
+				);
+				"Views/Browse/PlaylistDetailView.swift" = (
+					ios,
+				);
+				"Views/Browse/PlaylistListView.swift" = (
+					ios,
+				);
+				"Views/Browse/RadioListView.swift" = (
+					ios,
+				);
+				"Views/Browse/RecentlyAddedView.swift" = (
+					ios,
+				);
+				"Views/Browse/RecordLabelListView.swift" = (
+					ios,
+				);
+				"Views/Browse/SongsListView.swift" = (
+					ios,
+				);
+				"Views/Discover/MoodArtwork.swift" = (
+					ios,
+				);
+				"Views/Discover/MoodCard.swift" = (
+					ios,
+				);
+				"Views/Discover/SongPathViews.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrAlbumDetailView.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrArtistDetailView.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrCoverImage.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrInteractiveSearchView.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrLibraryView.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrManualImportView.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrQueueDetailSheet.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrQueueView.swift" = (
+					ios,
+				);
+				"Views/Lidarr/LidarrReleaseDetailView.swift" = (
+					ios,
+				);
+				"Views/LocalMusic/LocalMusicBrowseView.swift" = (
+					ios,
+				);
+				"Views/LocalMusic/LocalMusicCollectionView.swift" = (
+					ios,
+				);
+				"Views/LocalMusic/LocalMusicFoldersView.swift" = (
+					ios,
+				);
+				"Views/LocalMusic/LocalMusicView.swift" = (
+					ios,
+				);
+				"Views/Main/AllFreshReleasesView.swift" = (
+					ios,
+				);
+				"Views/Main/ArtistShelf.swift" = (
+					ios,
+				);
+				"Views/Main/CarouselCollectionViews.swift" = (
+					ios,
+				);
+				"Views/Main/DiscoverListeningCards.swift" = (
+					ios,
+				);
+				"Views/Main/DiscoverView.swift" = (
+					ios,
+				);
+				"Views/Main/FreshReleaseDetailSheet.swift" = (
+					ios,
+				);
+				"Views/Main/FreshReleasesCard.swift" = (
+					ios,
+				);
+				"Views/Main/FullPlayerView.swift" = (
+					ios,
+				);
+				"Views/Main/HomeListeningSections.swift" = (
+					ios,
+				);
+				"Views/Main/HomeView.swift" = (
+					ios,
+				);
+				"Views/Main/InlineQueueList.swift" = (
+					ios,
+				);
+				"Views/Main/LibraryView.swift" = (
+					ios,
+				);
+				"Views/Main/MainTabView.swift" = (
+					ios,
+				);
+				"Views/Main/MiniPlayerAccessoryView.swift" = (
+					ios,
+				);
+				"Views/Main/OfflineHomeCard.swift" = (
+					ios,
+				);
+				"Views/Main/PinnedShelf.swift" = (
+					ios,
+				);
+				"Views/Main/PlayerContainer.swift" = (
+					ios,
+				);
+				"Views/Main/QueueBuilderView.swift" = (
+					ios,
+				);
+				"Views/Main/RootView.swift" = (
+					ios,
+				);
+				"Views/Main/SearchResultsContent.swift" = (
+					ios,
+				);
+				"Views/Main/SearchView.swift" = (
+					ios,
+				);
+				"Views/Main/TrackInformationSheet.swift" = (
+					ios,
+				);
+				"Views/Onboarding/ConnectionErrorView.swift" = (
+					ios,
+				);
+				"Views/Onboarding/OnboardingCompleteView.swift" = (
+					ios,
+				);
+				"Views/Onboarding/OnboardingView.swift" = (
+					ios,
+				);
+				"Views/Onboarding/OnboardingWelcomeView.swift" = (
+					ios,
+				);
+				"Views/Onboarding/ServerFormView.swift" = (
+					ios,
+				);
+				"Views/Settings/AcknowledgementsView.swift" = (
+					ios,
+				);
+				"Views/Settings/DiscoverLayoutSettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/EditServerView.swift" = (
+					ios,
+				);
+				"Views/Settings/HomeLayoutSettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/Integrations/AudioMuseSettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/Integrations/ExternalProviderEditView.swift" = (
+					ios,
+				);
+				"Views/Settings/Integrations/ExternalProvidersSettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/Integrations/LidarrAddArtistSheet.swift" = (
+					ios,
+				);
+				"Views/Settings/Integrations/LidarrArtistSearchView.swift" = (
+					ios,
+				);
+				"Views/Settings/Integrations/LidarrSettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/ListenBrainzSettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/PlaybackDiagnosticsView.swift" = (
+					ios,
+				);
+				"Views/Settings/Sections/CrossfadeSettingsSection.swift" = (
+					ios,
+				);
+				"Views/Settings/Sections/MoodPlaylistSettingsSection.swift" = (
+					ios,
+				);
+				"Views/Settings/Sections/OfflineFavoritesSettingsSection.swift" = (
+					ios,
+				);
+				"Views/Settings/Sections/QuickPlaylistsSettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/Sections/ReplayGainSettingsSection.swift" = (
+					ios,
+				);
+				"Views/Settings/SettingsView.swift" = (
+					ios,
+				);
+				"Views/Settings/SiriSettingsSection.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedInsightsCarousel.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedPeriodPicker.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedRadio.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedStatHero.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedTopAlbumsSection.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedTopArtistsSection.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedTopTracksSection.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Components/WrappedYearTile.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedClosingSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedDiscoveriesSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedIntroSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedMinutesSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedTopAlbumSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedTopArtistSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedTopGenreSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/Slides/WrappedTopTrackSlide.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/WrappedShareCardView.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/WrappedSlideEntrance.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/WrappedStoryArtwork.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/WrappedStoryAudio.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/WrappedStoryPlayerView.swift" = (
+					ios,
+				);
+				"Views/Wrapped/Story/WrappedStoryProgressBar.swift" = (
+					ios,
+				);
+				"Views/Wrapped/WrappedView.swift" = (
+					ios,
+				);
+				"Views/Wrapped/WrappedYearlyListView.swift" = (
+					ios,
+				);
+			};
 			target = DBA4A7502F9BBFCB008BC5A9 /* Maekster */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -433,10 +813,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Maekster/Maekster.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Maekster/Maekster-macOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 27;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = B89CWFXD65;
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Maekster/Info.plist;
@@ -457,12 +839,14 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
 				MARKETING_VERSION = 26.9.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.marcus-gt.maekster";
 				PRODUCT_NAME = Maekster;
-				SDKROOT = iphoneos;
+				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -483,10 +867,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Maekster/Maekster.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Maekster/Maekster-macOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 27;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = B89CWFXD65;
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Maekster/Info.plist;
@@ -507,12 +893,14 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
 				MARKETING_VERSION = 26.9.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.marcus-gt.maekster";
 				PRODUCT_NAME = Maekster;
-				SDKROOT = iphoneos;
+				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

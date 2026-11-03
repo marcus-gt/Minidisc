@@ -6,7 +6,9 @@ import AppIntents
 
 @main
 struct MaeksterApp: App {
+    #if os(iOS)
     @UIApplicationDelegateAdaptor(MaeksterAppDelegate.self) private var appDelegate
+    #endif
     @State private var launchState: AppLaunchState = .launching
     @State private var launchAttempt = 1
     @Environment(\.scenePhase) private var scenePhase
