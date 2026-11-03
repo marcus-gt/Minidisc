@@ -838,17 +838,10 @@ private struct AlbumDownloadActionButton: View {
         if mode == .downloadedOnly {
             return downloadedAlbumTracks.isEmpty ? .unavailable : .removeDownloaded
         }
-        guard let viewModel, !viewModel.isOffline else { return .unavailable }
-        if viewModel.isDownloadingAlbum { return .cancel }
-
-        switch AlbumDownloadState(songs: viewModel.songs) {
-        case .notDownloaded:
-            return viewModel.songs.isEmpty ? .unavailable : .download
-        case .partiallyDownloaded:
-            return .downloadMissing
-        case .fullyDownloaded:
-            return .removeDownloaded
-        }
+        guard let viewModel else { return .unavailable }
+        return AlbumDownloadControlState(
+            songs: viewModel.songs, isOffline: viewModel.isOffline, isDownloading: viewModel.isDownloadingAlbum
+        )
     }
 
     var body: some View {
@@ -862,14 +855,7 @@ private struct AlbumDownloadActionButton: View {
         .accessibilityIdentifier("album.detail.download")
     }
 
-    private var actionLabel: LocalizedStringResource {
-        switch state {
-        case .unavailable, .download: "Download Album"
-        case .downloadMissing: "Download Missing Tracks"
-        case .cancel: "Cancel Download"
-        case .removeDownloaded: "Remove Download"
-        }
-    }
+    private var actionLabel: LocalizedStringResource { state.title }
 
     private func performAction() {
         switch state {
@@ -935,48 +921,6 @@ private struct AlbumTrackSkeletonRows: View {
             }
             .padding(.vertical, MaeksterSpacing.s)
             .padding(.horizontal, MaeksterSpacing.l)
-        }
-    }
-}
-
-// MARK: - Download state
-
-private nonisolated enum AlbumDownloadState {
-    case notDownloaded
-    case partiallyDownloaded
-    case fullyDownloaded
-
-    init(songs: [DisplayableSong]) {
-        guard !songs.isEmpty else {
-            self = .notDownloaded
-            return
-        }
-        let downloaded = songs.lazy.filter(\.isDownloaded).count
-        if downloaded == 0 {
-            self = .notDownloaded
-        } else if downloaded == songs.count {
-            self = .fullyDownloaded
-        } else {
-            self = .partiallyDownloaded
-        }
-    }
-}
-
-private nonisolated enum AlbumDownloadControlState: Equatable {
-    case unavailable
-    case download
-    case downloadMissing
-    case cancel
-    case removeDownloaded
-
-    var systemImage: String {
-        switch self {
-        case .unavailable, .download, .downloadMissing:
-            "arrow.down"
-        case .cancel:
-            "xmark"
-        case .removeDownloaded:
-            "trash"
         }
     }
 }

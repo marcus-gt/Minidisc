@@ -32,13 +32,18 @@ enum MacRoute: Hashable {
     case album(id: String)
     case artist(id: String, name: String)
     case playlist(id: String)
+    /// A main genre, with its styles.
+    case genre(MainGenreSummary)
+    /// The albums tagged with any of `tags` (a genre style).
+    case genreStyle(name: String, tags: [String])
 }
 
 /// The main window: library sections in the sidebar, the chosen section (and the pages opened from
 /// it) on the right, and the player bar along the bottom.
 struct MacMainView: View {
     @SceneStorage("mac.sidebarSelection") private var selection: MacSidebarItem = .albums
-    @State private var path = NavigationPath()
+    @State private var navigator = MacNavigator()
+    @State private var playlistAddition = PlaylistAddition()
 
     var body: some View {
         NavigationSplitView {
@@ -52,13 +57,19 @@ struct MacMainView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
-            NavigationStack(path: $path) {
+            NavigationStack(path: $navigator.path) {
                 section(selection)
                     .navigationDestination(for: MacRoute.self, destination: page)
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             MacPlayerBar()
+        }
+        .environment(navigator)
+        .environment(playlistAddition)
+        .sheet(item: $playlistAddition.request) { request in
+            AddToPlaylistSheet(request: request)
+                .frame(minWidth: 420, minHeight: 480)
         }
         .modifier(MacSpacebarPlayPause())
     }
@@ -70,7 +81,7 @@ struct MacMainView: View {
             set: { newValue in
                 guard let newValue, newValue != selection else { return }
                 selection = newValue
-                path = NavigationPath()
+                navigator.path = NavigationPath()
             }
         )
     }
@@ -92,6 +103,8 @@ struct MacMainView: View {
         case .album(let id): MacAlbumView(albumId: id)
         case .artist(let id, let name): MacArtistView(artistId: id, artistName: name)
         case .playlist(let id): MacPlaylistView(playlistId: id)
+        case .genre(let genre): MacGenreView(genre: genre)
+        case .genreStyle(let name, let tags): MacGenreAlbumsView(title: name, tags: tags)
         }
     }
 }

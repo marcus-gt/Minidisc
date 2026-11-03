@@ -205,6 +205,21 @@ final class PlaylistDetailViewModel {
         }
     }
 
+    /// Removes several rows in one server call (a multi-row selection on the Mac).
+    func removeTracks(at offsets: IndexSet) async {
+        let valid = offsets.filter(songs.indices.contains)
+        guard !valid.isEmpty else { return }
+        let originalSongs = songs
+        songs.remove(atOffsets: IndexSet(valid))
+        do {
+            try await playlistService.removeTracks(playlistId: playlistId, indices: Array(valid))
+        } catch {
+            songs = originalSongs
+            Logger.playlist.error("PlaylistDetailViewModel: remove tracks failed: \(error)")
+            toastService.showError("Failed to remove track")
+        }
+    }
+
     func moveTracks(from source: IndexSet, to destination: Int) async {
         let originalSongs = songs
         songs.move(fromOffsets: source, toOffset: destination)
