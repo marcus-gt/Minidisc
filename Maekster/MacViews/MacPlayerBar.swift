@@ -157,7 +157,7 @@ struct MacPlayerBar: View {
     }
 
     private func isShowing(_ panel: MacPlayerPanels.SidePanel) -> Bool {
-        panels.sidePanel == panel && !panels.showsNowPlaying
+        panels.sidePanel == panel
     }
 
     private func volumeControl(playerService: any PlayerServiceProtocol) -> some View {

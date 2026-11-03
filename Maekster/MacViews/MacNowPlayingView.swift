@@ -14,10 +14,8 @@ final class MacPlayerPanels {
     var sidePanel: SidePanel?
 
     /// The player bar's Queue and Lyrics buttons: open that tab, or close the panel if it's showing.
-    /// Either one leaves Now Playing, which would cover the panel.
     func toggle(_ panel: SidePanel) {
-        sidePanel = (sidePanel == panel && !showsNowPlaying) ? nil : panel
-        showsNowPlaying = false
+        sidePanel = sidePanel == panel ? nil : panel
     }
 }
 
@@ -135,9 +133,10 @@ struct MacLyricsContent: View {
     }
 }
 
-/// Over the content and side panel: large artwork on the artwork-coloured background, like the
+/// Over the page, beside the side panel: large artwork on the artwork-coloured background, like the
 /// iPhone player, with the song (links to its artist and album), a heart, Smart Shuffle and Instant
-/// Mix, and the synced lyrics beside the cover. × or Esc closes it.
+/// Mix, and the synced lyrics beside the cover unless the side panel already shows them. × or Esc
+/// closes it.
 struct MacNowPlayingView: View {
     @Environment(\.appContainer) private var container
     @Environment(MacNavigator.self) private var navigator
@@ -166,8 +165,10 @@ struct MacNowPlayingView: View {
             }
             .frame(maxWidth: .infinity)
 
-            MacLyricsContent()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if panels.sidePanel != .lyrics {
+                MacLyricsContent()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
         .padding(MaeksterSpacing.xxxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

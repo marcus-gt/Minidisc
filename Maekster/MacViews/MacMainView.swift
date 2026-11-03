@@ -61,7 +61,7 @@ struct MacMainView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
             // The side panel (queue or lyrics) sits beside the page, below the toolbar, so it stays
-            // open on every page. Now Playing covers both, whatever page is open.
+            // open on every page and beside Now Playing, which covers the page whatever is open.
             HStack(spacing: 0) {
                 NavigationStack(path: $navigator.path) {
                     Group {
@@ -74,18 +74,18 @@ struct MacMainView: View {
                     .navigationDestination(for: MacRoute.self, destination: page)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay {
+                    if panels.showsNowPlaying {
+                        MacNowPlayingView()
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
 
                 if panels.sidePanel != nil {
                     Divider()
                     MacSidePanel()
                         .frame(width: 340)
                         .transition(.move(edge: .trailing))
-                }
-            }
-            .overlay {
-                if panels.showsNowPlaying {
-                    MacNowPlayingView()
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: panels.sidePanel)
