@@ -117,8 +117,9 @@ nonisolated struct SessionPayload: Sendable {
     let queue: [DisplayableSong]
     let currentTrack: DisplayableSong?
     let repeatMode: RepeatMode
-    var queueSource: QueueSource? = nil
-    var originalQueueEndIndex: Int? = nil
+    /// No defaults: a save that leaves these out would wipe the queue's label (#95).
+    let queueSource: QueueSource?
+    let originalQueueEndIndex: Int?
 }
 
 // MARK: - RestoredSession

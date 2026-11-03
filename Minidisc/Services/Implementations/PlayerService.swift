@@ -2553,6 +2553,17 @@ actor PlayerService: PlayerServiceProtocol {
         await sessionService.savePosition(pos)
     }
 
+    /// The full save when the app goes to the background. Radio leaves the last music session
+    /// alone. Uses the same snapshot as every other save, so the queue keeps its source (#95).
+    func saveSessionForBackground() async {
+        let hasMusicSession = await MainActor.run { state.currentRadio == nil && state.currentTrack != nil }
+        guard hasMusicSession else {
+            Logger.session.info("App backgrounded during radio — preserving the last music session")
+            return
+        }
+        await saveSession()
+    }
+
     private func saveSession() async {
         let snapshot = await MainActor.run {
             SessionPayload(

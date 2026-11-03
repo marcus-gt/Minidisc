@@ -112,7 +112,7 @@ struct NavidromeCompatibilityTests {
         let song = try JSONDecoder().decode(Song.self, from: Data("{\"id\":\"\(legacy)\",\"title\":\"Track\",\"isDir\":false,\"duration\":200}".utf8))
         let track = DisplayableSong(from: song)
         await service.save(playerState: SessionPayload(currentIndex: 1, currentPosition: 73,
-            queue: [track, track], currentTrack: track, repeatMode: .all))
+            queue: [track, track], currentTrack: track, repeatMode: .all, queueSource: nil, originalQueueEndIndex: nil))
         try await service.migrateNavidromeIDs()
         let restored = try #require(await service.loadRestoredSession())
         #expect(restored.queue.map(\.id) == [canonical, canonical])
@@ -270,7 +270,7 @@ struct NavidromeCompatibilityTests {
         try await index.upsertTracks([song], serverID: config.id, generation: "old", serverOrderStart: 0)
         let track = DisplayableSong(from: song)
         await sessions.save(playerState: SessionPayload(currentIndex: 0, currentPosition: 47,
-            queue: [track], currentTrack: track, repeatMode: .off))
+            queue: [track], currentTrack: track, repeatMode: .off, queueSource: nil, originalQueueEndIndex: nil))
         let credentials = ServerCredentials(password: "fixture", customHeaders: [:])
         let connection = try ServerConnection(version: .init(serverID: config.id, revision: 1),
             server: ServerSnapshot(from: config), credentials: credentials)

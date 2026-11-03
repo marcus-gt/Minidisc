@@ -215,7 +215,8 @@ private struct RecoveryHarness {
         localMusicStore: LocalMusicStore? = nil,
         configureServer: Bool = true,
         library: (any AlbumBrowsing & ArtistBrowsing & PlaybackQueueBuilding & PlaybackReporting)? = nil,
-        playingNowDelay: TimeInterval = 3
+        playingNowDelay: TimeInterval = 3,
+        sessionContainer: ModelContainer? = nil
     ) throws {
         let container = try ModelContainer.maekster(inMemory: true)
         let server = MockServerService()
@@ -232,7 +233,7 @@ private struct RecoveryHarness {
             state: state,
             mediaResolver: resolver,
             serverService: server,
-            sessionService: PlaybackSessionService(modelContainer: try ModelContainer.session(inMemory: true)),
+            sessionService: PlaybackSessionService(modelContainer: try sessionContainer ?? ModelContainer.session(inMemory: true)),
             artworkImageCache: ArtworkImageCache(
                 coverArtURLProvider: { _, _ in nil },
                 dataLoader: { _ in throw URLError(.unsupportedURL) },
@@ -1303,5 +1304,35 @@ struct SongPathPlaybackTests {
         try await h.player.play(tracks: try tracks("x", 3), startIndex: 0, source: nil)
         try await h.waitUntil { h.state.queue.count > 3 }
         await h.player.stop()
+    }
+}
+
+
+@Suite("Queue source after a relaunch (#95)", .serialized)
+@MainActor
+struct QueueSourceRelaunchTests {
+    private func tracks(_ ids: [String]) throws -> [DisplayableSong] {
+        try ids.map { id in
+            DisplayableSong(from: try JSONDecoder().decode(Song.self, from: Data(
+                "{\"id\":\"\(id)\",\"title\":\"t\",\"isDir\":false,\"duration\":120}".utf8
+            )))
+        }
+    }
+
+    /// "Now playing · Playlist · Jazz tunes" is still there when the app starts again.
+    @Test func restoredQueue_keepsItsSource() async throws {
+        let sessions = try ModelContainer.session(inMemory: true)
+        let before = try RecoveryHarness(sessionContainer: sessions)
+        let source = QueueSource.playlist(id: "p1", name: "Jazz tunes")
+        try await before.player.play(tracks: try tracks(["a", "b", "c"]), startIndex: 1, source: source)
+        try await before.waitUntil { before.engine.playCount == 1 }
+        // Going to the background saves the session in full: the save that used to drop the source.
+        await before.player.saveSessionForBackground()
+
+        let after = try RecoveryHarness(sessionContainer: sessions)
+        await after.player.restoreSession()
+        #expect(after.state.queue.map(\.id) == ["a", "b", "c"])
+        #expect(after.state.queueSource == source)
+        #expect(after.state.playingFromLabel?.title == "Playlist · Jazz tunes")
     }
 }

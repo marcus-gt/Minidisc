@@ -55,6 +55,8 @@ protocol PlayerServiceProtocol: AnyObject, Sendable {
     func setVolume(_ volume: Float) async
     func togglePlayPause() async
     func saveCurrentPosition() async
+    /// The full session save when the app goes to the background (#95).
+    func saveSessionForBackground() async
     /// Re-reads ReplayGainSettings and reapplies gain to the current track.
     /// Call this whenever the user changes any ReplayGain setting.
     func replayGainSettingsDidChange() async
@@ -77,6 +79,8 @@ nonisolated struct PreparedPlaybackQueue: Sendable {
 typealias QueueRefill = @Sendable (_ excluded: Set<String>, _ count: Int) async throws -> [DisplayableSong]
 
 extension PlayerServiceProtocol {
+    func saveSessionForBackground() async {}
+
     nonisolated func playUntilEnd(_ tracks: [DisplayableSong], source: QueueSource?) async throws {
         try await play(tracks: tracks, startIndex: 0, source: source)
     }
