@@ -1,0 +1,110 @@
+import AppIntents
+
+struct PlayMaeksterMusicIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Play Music"
+    static let description = IntentDescription("Play a song, album, artist or playlist from your maekster library.")
+    static var supportedModes: IntentModes { .background }
+    @Parameter(title: "Music") var music: MaeksterMusicEntity
+    @Parameter(title: "Shuffle", default: false) var shuffle: Bool
+    @Dependency private var runtime: MaeksterRuntime
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Play \(\.$music)") { \.$shuffle }
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let service = MusicIntentService(container: try await runtime.container())
+        try await service.play(id: music.id, shuffle: shuffle)
+        return .result()
+    }
+}
+
+struct PlayMaeksterMoodIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Play a Mood"
+    static let description = IntentDescription("Play a radio of songs from your library that fit a mood.")
+    static var supportedModes: IntentModes { .background }
+    @Parameter(title: "Mood") var mood: Mood
+    @Dependency private var runtime: MaeksterRuntime
+    static var parameterSummary: some ParameterSummary { Summary("Play \(\.$mood)") }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let service = MusicIntentService(container: try await runtime.container())
+        try await service.play(mood: mood)
+        return .result()
+    }
+}
+
+struct MaeksterSmartShuffleIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Smart Shuffle"
+    static var supportedModes: IntentModes { .background }
+    @Dependency private var runtime: MaeksterRuntime
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let container = try await runtime.container()
+        try Task.checkCancellation()
+        guard container.serverState.activeServer != nil else { throw MusicIntentError.noServer }
+        do { try await container.playerService.playSmartShuffle() }
+        catch is CancellationError { throw CancellationError() }
+        catch { throw MusicIntentError.unavailable }
+        return .result()
+    }
+}
+
+struct ResumeMaeksterIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Resume Playback"
+    static var supportedModes: IntentModes { .background }
+    @Dependency private var runtime: MaeksterRuntime
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let container = try await runtime.container()
+        try Task.checkCancellation()
+        guard container.playerState.currentTrack != nil || container.playerState.currentRadio != nil else {
+            throw MusicIntentError.nothingToResume
+        }
+        await container.playerService.resume()
+        return .result()
+    }
+}
+
+struct PauseMaeksterIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Pause Playback"
+    static var supportedModes: IntentModes { .background }
+    @Dependency private var runtime: MaeksterRuntime
+
+    func perform() async throws -> some IntentResult {
+        let container = try await runtime.container()
+        try Task.checkCancellation()
+        await container.playerService.pause()
+        return .result()
+    }
+}
+
+struct NextMaeksterTrackIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Next Track"
+    static var supportedModes: IntentModes { .background }
+    @Dependency private var runtime: MaeksterRuntime
+
+    func perform() async throws -> some IntentResult {
+        let container = try await runtime.container()
+        try Task.checkCancellation()
+        try await container.playerService.skipToNext()
+        return .result()
+    }
+}
+
+struct PreviousMaeksterTrackIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Previous Track"
+    static var supportedModes: IntentModes { .background }
+    @Dependency private var runtime: MaeksterRuntime
+
+    func perform() async throws -> some IntentResult {
+        let container = try await runtime.container()
+        try Task.checkCancellation()
+        try await container.playerService.skipToPrevious()
+        return .result()
+    }
+}

@@ -93,7 +93,7 @@ selection and old/new offline cache formats. PlayerRecoveryIntegrationTests also
 Next through PlayerService, and retain the recovery/deleted-track cases.
 
 UI verification uses only `Scripts/Testing/ux-fixture-server.py` and the disposable simulator named
-Minidisc UX Verification. No real Navidrome library or downloads are used as fixture data.
+maekster UX Verification. No real Navidrome library or downloads are used as fixture data.
 
 Verified on 5 September 2026: the targeted unit suites and integration checks passed, as did the UI
 flows for all search scopes, existing/new playlist additions, immediate search refresh, queue Undo,

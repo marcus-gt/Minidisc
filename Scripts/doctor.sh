@@ -116,17 +116,17 @@ for command_name in git plutil xcodebuild; do
     fi
 done
 
-project='Minidisc.xcodeproj'
-scheme='Minidisc'
-info_plist='Minidisc/Info.plist'
-privacy_manifest='Minidisc/PrivacyInfo.xcprivacy'
-package_resolution='Minidisc.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
+project='maekster.xcodeproj'
+scheme='Maekster'
+info_plist='Maekster/Info.plist'
+privacy_manifest='Maekster/PrivacyInfo.xcprivacy'
+package_resolution='maekster.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
 project_file="$project/project.pbxproj"
 
 if [ -d "$project" ] && [ -f "$project_file" ]; then
     pass 'Xcode project is present'
 else
-    problem 'Minidisc.xcodeproj is missing or incomplete'
+    problem 'maekster.xcodeproj is missing or incomplete'
 fi
 
 if [ -f "$info_plist" ] && plutil -lint "$info_plist" >/dev/null 2>&1; then

@@ -24,10 +24,12 @@ The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as r
   `app.maekster.*` defaults, the `app.maekster.server-credentials` Keychain service,
   `Documents/app.maekster/…`, `maekster-*` stores) use maekster (#46). `StorageMigration` moved
   data saved under the old `minidisc` names once, at launch; it is the only code that still names
-  them. Still `Minidisc` until their own pass: the Xcode project, targets, schemes, Swift module and
-  source folders.
-- Credits keep the name: Minidisc (NO HIT Dev) and Cassette are named in the README, NOTICE,
-  COPYRIGHT, acknowledgements and `MaeksterURLs.minidisc`.
+  them.
+- The project is `maekster.xcodeproj`. Targets, schemes, the Swift module and the source folders use
+  `Maekster` (`Maekster`, `MaeksterTests`, `MaeksterUITests`), because Swift identifiers can't contain
+  æ and module names are capitalised.
+- Only credits and `Branding/` still say Minidisc: Minidisc (NO HIT Dev) and Cassette are named in the
+  README, NOTICE, COPYRIGHT, acknowledgements and `MaeksterURLs.minidisc`.
 - Earlier versions created server playlists named `maekster Wrapped <year>` / `maekster · <Mood>`.
   Nothing creates them now. Match them through `WrappedPlaylistService.year(fromPlaylistName:)` and
   `Mood.isPlaylistName(_:)`, not by comparing strings.
@@ -48,43 +50,43 @@ The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as r
 
 Inside Xcode, use the xcode-tools MCP commands. They are faster and pick up the active scheme:
 
-- Build: `BuildProject` (scheme **Minidisc**)
+- Build: `BuildProject` (scheme **Maekster**)
 - Quick type check of one file: `XcodeRefreshCodeIssuesInFile`
-- Unit tests: the **Minidisc** scheme has no test action; run tests through the `MinidiscTests` scheme
+- Unit tests: the **Maekster** scheme has no test action; run tests through the `MaeksterTests` scheme
 
-From the command line (the project is `Minidisc.xcodeproj` at the repo root; there is no workspace):
+From the command line (the project is `maekster.xcodeproj` at the repo root; there is no workspace):
 
 ```sh
 # Build
-xcodebuild build -project Minidisc.xcodeproj -scheme Minidisc \
+xcodebuild build -project maekster.xcodeproj -scheme Maekster \
   -destination 'platform=iOS Simulator,name=<any iPhone simulator>'
 
-# Unit tests (MinidiscTests, Swift Testing)
-xcodebuild test -project Minidisc.xcodeproj -scheme MinidiscTests \
+# Unit tests (MaeksterTests, Swift Testing)
+xcodebuild test -project maekster.xcodeproj -scheme MaeksterTests \
   -destination 'platform=iOS Simulator,name=<any iPhone simulator>' \
-  -only-testing:MinidiscTests
+  -only-testing:MaeksterTests
 
 # One suite or test
-  -only-testing:MinidiscTests/ServerServiceTests
-  -only-testing:MinidiscTests/ServerServiceTests/addServer_firstServer_becomesActive()
+  -only-testing:MaeksterTests/ServerServiceTests
+  -only-testing:MaeksterTests/ServerServiceTests/addServer_firstServer_becomesActive()
 
 ```
 
-Shared schemes: `Minidisc`, `MinidiscTests`, `MinidiscUITests`.
+Shared schemes: `Maekster`, `MaeksterTests`, `MaeksterUITests`.
 
 ### UX verification (opt-in UI tests)
 
-`MinidiscUITests/MinidiscUXVerificationTests` drives the real app against a local fake Subsonic server,
+`MaeksterUITests/MaeksterUXVerificationTests` drives the real app against a local fake Subsonic server,
 `Scripts/Testing/ux-fixture-server.py` (loopback port 18992). It needs a dedicated simulator named
-**Minidisc UX Verification**. The tests skip any other device. Follow `Scripts/Testing/README.md`
+**maekster UX Verification**. The tests skip any other device. Follow `Scripts/Testing/README.md`
 exactly; it covers ad-hoc signing (needed for Keychain), the per-scenario catalogue modes and the
 `rtk proxy` command prefix. Don't point that simulator at a real server.
 
 ## Folder map
 
 ```
-Minidisc.xcodeproj
-Minidisc/                      app target sources
+maekster.xcodeproj
+Maekster/                      app target sources
   App/                         @main app, AppContainer (composition root), MaeksterRuntime, notification names
   AppIntents/                  App Intents / Siri / Shortcuts (AudioPlaybackIntent, MusicEntity)
   DesignSystem/                tokens (colors, spacing, typography), Components/, Theming/, Platform/ wrappers
@@ -110,9 +112,9 @@ Minidisc/                      app target sources
   Views/                       SwiftUI screens: Main/ (tabs, player, home, search), Browse/, Discover/,
                                Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
   Utilities/                   Logger categories, formatting, HeaderValidator, PlatformImage, haptics
-  *.xcstrings, Info.plist, Minidisc.entitlements, PrivacyInfo.xcprivacy, AppIntentVocabulary.plist
-MinidiscTests/                 ~110 Swift Testing files (no XCTest)
-MinidiscUITests/               XCTest UI tests incl. MinidiscUXVerificationTests
+  *.xcstrings, Info.plist, Maekster.entitlements, PrivacyInfo.xcprivacy, AppIntentVocabulary.plist
+MaeksterTests/                 ~110 Swift Testing files (no XCTest)
+MaeksterUITests/               XCTest UI tests incl. MaeksterUXVerificationTests
 Scripts/Testing/               UX fixture server + instructions
 ```
 
@@ -280,7 +282,7 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   (`PlaybackDiagnostics`, `AudioEngineFailure`) store only domain/code pairs, never `userInfo`.
 - Bracketed tags are used in log messages, e.g. `[TRANSITION]`, `[CLIENT]`, `[ExtMigration]`.
 
-**UI / design system** (details in `Minidisc/DesignSystem/README.md` and `MaeksterColors.md`)
+**UI / design system** (details in `Maekster/DesignSystem/README.md` and `MaeksterColors.md`)
 - No magic numbers: `MaeksterSpacing`, `MaeksterCornerRadius`, `.maekster*` fonts from
   `MaeksterTypography`.
 - Colors: semantic SwiftUI colors for text and backgrounds. `maeksterAccent` is for primary interactive
@@ -301,8 +303,8 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
 - The DesignSystem README mentions an "MPL-2.0 header" for new components. No source file has one, so
   don't add it.
 
-**Tests** (`MinidiscTests`)
-- Use Swift Testing only: `import Testing`, `@testable import Minidisc`, `@Suite("Name") @MainActor struct …`,
+**Tests** (`MaeksterTests`)
+- Use Swift Testing only: `import Testing`, `@testable import Maekster`, `@Suite("Name") @MainActor struct …`,
   `@Test func subject_condition_expectation()`, `#expect`, `await #expect(throws:)`.
 - Swift Testing runs tests in parallel, so each test creates its **own** in-memory stores:
   `ModelContainer.maekster(inMemory: true)` (also `.libraryIndex` / `.session`), or

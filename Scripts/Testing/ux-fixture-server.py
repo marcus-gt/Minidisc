@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Disposable loopback-only Subsonic fixture for Minidisc UX verification."""
+"""Disposable loopback-only Subsonic fixture for maekster UX verification."""
 import base64
 import io
 import json
@@ -22,15 +22,15 @@ DELETED_PLAYLISTS = set()
 MUTATIONS = []
 REQUESTS = []
 SONGS = [
-    {"id": "ux-song-1", "title": "Matin tranquille", "artist": "Atelier Minidisc", "artistId": "ux-artist", "album": "Horizons de test", "albumId": "ux-album", "duration": 30, "track": 1, "size": 960044, "suffix": "wav", "contentType": "audio/wav", "isDir": False, "coverArt": "ux-cover"},
-    {"id": "ux-song-2", "title": "Une très longue promenade au bord de la mer pour vérifier la lisibilité", "artist": "Atelier Minidisc, Iris Ensemble", "artistId": "ux-artist", "album": "Horizons de test", "albumId": "ux-album", "duration": 30, "track": 2, "size": 960044, "suffix": "wav", "contentType": "audio/wav", "isDir": False, "coverArt": "ux-cover",
+    {"id": "ux-song-1", "title": "Matin tranquille", "artist": "Atelier maekster", "artistId": "ux-artist", "album": "Horizons de test", "albumId": "ux-album", "duration": 30, "track": 1, "size": 960044, "suffix": "wav", "contentType": "audio/wav", "isDir": False, "coverArt": "ux-cover"},
+    {"id": "ux-song-2", "title": "Une très longue promenade au bord de la mer pour vérifier la lisibilité", "artist": "Atelier maekster, Iris Ensemble", "artistId": "ux-artist", "album": "Horizons de test", "albumId": "ux-album", "duration": 30, "track": 2, "size": 960044, "suffix": "wav", "contentType": "audio/wav", "isDir": False, "coverArt": "ux-cover",
      # OpenSubsonic credits: a guest besides the album artist, so album rows show a tappable artists line.
-     "artists": [{"id": "ux-artist", "name": "Atelier Minidisc"}, {"id": "ux-browse-favorite-artist", "name": "Iris Ensemble"}],
-     "albumArtists": [{"id": "ux-artist", "name": "Atelier Minidisc"}]},
+     "artists": [{"id": "ux-artist", "name": "Atelier maekster"}, {"id": "ux-browse-favorite-artist", "name": "Iris Ensemble"}],
+     "albumArtists": [{"id": "ux-artist", "name": "Atelier maekster"}]},
 ]
-ALBUM = {"id": "ux-album", "name": "Horizons de test", "artist": "Atelier Minidisc", "artistId": "ux-artist", "songCount": 2, "duration": 60, "created": "2026-09-01T12:00:00Z", "coverArt": "ux-cover", "genre": "Ambient", "year": 2026}
+ALBUM = {"id": "ux-album", "name": "Horizons de test", "artist": "Atelier maekster", "artistId": "ux-artist", "songCount": 2, "duration": 60, "created": "2026-09-01T12:00:00Z", "coverArt": "ux-cover", "genre": "Ambient", "year": 2026}
 PLAYLIST = {"id": "ux-playlist", "name": "Escapade temporaire", "comment": "Données locales de vérification", "owner": "test", "public": False, "songCount": 2, "duration": 60, "created": "2026-09-01T12:00:00Z", "changed": "2026-09-01T12:00:00Z", "coverArt": "ux-cover"}
-ARTIST = {"id": "ux-artist", "name": "Atelier Minidisc", "albumCount": 1, "coverArt": "ux-cover"}
+ARTIST = {"id": "ux-artist", "name": "Atelier maekster", "albumCount": 1, "coverArt": "ux-cover"}
 
 # A dedicated profile leaves every existing probe's catalog unchanged. Its bright
 # artwork has distinct corners so screenshots expose cropping, tinting and blur.
@@ -106,9 +106,9 @@ BROWSE_FAVORITE_ARTIST = {**ARTIST, "id": "ux-browse-favorite-artist", "name": "
 UNSCANNED_ALBUM = {**ALBUM, "id": "ux-unscanned-album", "name": "Archives tardives", "songCount": 1, "duration": 30,
                    "coverArt": "ux-cover", "year": 2025}
 UNSCANNED_SONG = {**SONGS[0], "id": "ux-unscanned-song", "title": "Pièce retrouvée", "album": UNSCANNED_ALBUM["name"],
-                  "albumId": UNSCANNED_ALBUM["id"], "artist": "Atelier Minidisc, Iris Ensemble",
-                  "artists": [{"id": "ux-artist", "name": "Atelier Minidisc"}, {"id": BROWSE_FAVORITE_ARTIST["id"], "name": "Iris Ensemble"}],
-                  "albumArtists": [{"id": "ux-artist", "name": "Atelier Minidisc"}], "year": 2025}
+                  "albumId": UNSCANNED_ALBUM["id"], "artist": "Atelier maekster, Iris Ensemble",
+                  "artists": [{"id": "ux-artist", "name": "Atelier maekster"}, {"id": BROWSE_FAVORITE_ARTIST["id"], "name": "Iris Ensemble"}],
+                  "albumArtists": [{"id": "ux-artist", "name": "Atelier maekster"}], "year": 2025}
 
 
 def fixture_catalog(state):
@@ -305,7 +305,7 @@ class Handler(BaseHTTPRequestHandler):
     def send(self, body, content_type="application/json", status=200, slow=False):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
-        self.send_header("X-Minidisc-UX-Fixture", "1")
+        self.send_header("X-Maekster-UX-Fixture", "1")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Accept-Ranges", "bytes")
         self.end_headers()
@@ -506,5 +506,5 @@ class Handler(BaseHTTPRequestHandler):
         return self.send(json.dumps({"subsonic-response": response}).encode())
 
 if __name__ == "__main__":
-    print("Minidisc UX fixture on http://127.0.0.1:18992", flush=True)
+    print("maekster UX fixture on http://127.0.0.1:18992", flush=True)
     ThreadingHTTPServer(("127.0.0.1", 18992), Handler).serve_forever()
