@@ -40,11 +40,12 @@ struct MacSidePanel: View {
 
             switch panels.sidePanel {
             case .lyrics?:
+                // Part of the same panel as the queue, so the same surface and text colour.
                 MacLyricsContent()
                     .padding(.horizontal, MaeksterSpacing.m)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background { MacArtworkBackground() }
-                    .environment(\.colorScheme, .dark)
+                    .environment(\.maeksterLyricsColor, .primary)
+                    .environment(\.maeksterLyricsFont, .system(.title3, weight: .bold))
             default:
                 MacQueueView()
             }
@@ -83,8 +84,8 @@ func macCoverArtId(_ state: PlayerState) -> String? {
 }
 
 /// Synced lyrics for the playing song (LRCLIB or server, per the lyrics setting) through the shared
-/// `LyricsView`: one view model per song, like the iPhone player. White text, so it sits on an
-/// artwork background.
+/// `LyricsView`: one view model per song, like the iPhone player. White text on the artwork
+/// background unless `maeksterLyricsColor` says otherwise.
 struct MacLyricsContent: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: LyricsViewModel?

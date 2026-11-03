@@ -11,6 +11,9 @@ struct LyricsLineView: View {
     let isTappable: Bool
     let onTap: () -> Void
 
+    @Environment(\.maeksterLyricsColor) private var color
+    @Environment(\.maeksterLyricsFont) private var lineFont
+
     private var distance: Int {
         guard let currentIndex else { return 0 }
         return abs(index - currentIndex)
@@ -49,16 +52,12 @@ struct LyricsLineView: View {
         return distance == 0 ? 1.0 : 0.95
     }
 
-    private var lineFont: Font {
-        .system(.title, weight: .bold)
-    }
-
     var body: some View {
         Text(value)
             .font(lineFont)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .foregroundStyle(.white.opacity(opacity))
+            .foregroundStyle(color.opacity(opacity))
             .blur(radius: blurRadius)
             .scaleEffect(scale, anchor: .leading)
             .animation(.easeInOut(duration: 0.25), value: currentIndex)
