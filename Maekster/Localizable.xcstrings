@@ -11482,9 +11482,6 @@
         }
       }
     },
-    "Connected to %@." : {
-
-    },
     "Connected, but the search returned nothing. Has the sonic analysis been run?" : {
       "localizations" : {
         "de" : {
@@ -25663,9 +25660,6 @@
         }
       }
     },
-    "maekster for Mac is on its way" : {
-
-    },
     "maekster forgets the address and the API key. Your Lidarr instance is not changed." : {
       "localizations" : {
         "de" : {
@@ -30586,9 +30580,6 @@
           }
         }
       }
-    },
-    "No server is set up yet." : {
-
     },
     "No similar tracks found for an Instant Mix. Your server may not have similarity data for this yet." : {
       "localizations" : {

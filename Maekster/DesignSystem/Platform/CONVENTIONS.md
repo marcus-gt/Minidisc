@@ -28,6 +28,8 @@ out of view bodies and service layer.
 - `ListStyles+Maekster.swift` — `maeksterSheetListStyle()` (inset grouped on iOS, inset on macOS)
 - `NavigationTransitions+Maekster.swift` — `maeksterZoomTransition()` (zoom transition on iOS, no-op on macOS)
 - `FullScreenCover+Maekster.swift` — `maeksterFullScreenCover()` (a sheet on macOS)
+- `TextInput+Maekster.swift` — `maeksterPlainTextInput()` (no autocorrection or capitalisation) and
+  `maeksterURLInput()` (URL keyboard on iOS)
 - `PlatformColor.swift` — `PlatformColor` typealias (`UIColor`/`NSColor`), `rgba()` / `hsba()` that also
   work for `NSColor`, and `Color.init(platformColor:)`
 - `PlatformPasteboard.swift` — copying text to the general pasteboard

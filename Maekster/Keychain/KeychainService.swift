@@ -8,11 +8,7 @@ actor KeychainService: KeychainServiceProtocol {
     func store<T: Codable & Sendable>(_ value: T, forKey key: String) async throws {
         let data = try JSONEncoder().encode(value)
 
-        let itemQuery: [String: Any] = [
-            kSecClass as String:       kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key
-        ]
+        let itemQuery = self.itemQuery(forKey: key)
         let attributes: [String: Any] = [
             kSecValueData as String:      data,
             // AfterFirstUnlock allows Keychain reads while the screen is locked,
@@ -39,13 +35,9 @@ actor KeychainService: KeychainServiceProtocol {
     }
 
     func retrieve<T: Codable & Sendable>(_ type: T.Type, forKey key: String) async throws -> T? {
-        let query: [String: Any] = [
-            kSecClass as String:       kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String:  true,
-            kSecMatchLimit as String:  kSecMatchLimitOne
-        ]
+        var query = itemQuery(forKey: key)
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
 
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
@@ -61,16 +53,27 @@ actor KeychainService: KeychainServiceProtocol {
     }
 
     func delete(forKey key: String) async throws {
-        let query: [String: Any] = [
-            kSecClass as String:       kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key
-        ]
+        let query = itemQuery(forKey: key)
 
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             Logger.keychain.error("Keychain delete failed for key '\(key, privacy: .public)' — OSStatus \(status)")
             throw MaeksterError.keychainDeleteFailed(status)
         }
+    }
+
+    /// Identifies one credential. On macOS this asks for the data protection keychain, the one iOS
+    /// always uses: without it a Mac app reads the legacy login keychain and can't see credentials
+    /// saved by maekster's iPhone build running on the same Mac (#102).
+    private func itemQuery(forKey key: String) -> [String: Any] {
+        var query: [String: Any] = [
+            kSecClass as String:       kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key
+        ]
+        #if os(macOS)
+        query[kSecUseDataProtectionKeychain as String] = true
+        #endif
+        return query
     }
 }

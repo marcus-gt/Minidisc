@@ -116,7 +116,9 @@ Maekster/                      app target sources
   ViewModels/                  @Observable @MainActor screen view models
   Views/                       iPhone screens (iOS-only): Main/ (tabs, player, home, search), Browse/,
                                Discover/, Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
-  MacViews/                    Mac screens (macOS-only); MacRootView.swift defines the Mac `RootView`
+  MacViews/                    Mac screens (macOS-only): MacRootView (the Mac `RootView`), MacSignInView,
+                               MacMainView (sidebar + routes), library lists, pages, MacTrackTable,
+                               MacPlayerBar
   Utilities/                   Logger categories, formatting, HeaderValidator, PlatformImage, haptics
   *.xcstrings, Info.plist, Maekster.entitlements, PrivacyInfo.xcprivacy, AppIntentVocabulary.plist
 MaeksterTests/                 ~110 Swift Testing files (no XCTest)
@@ -316,9 +318,15 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   `Scripts/doctor.sh` fails when one is missing. A few shared components that still open iPhone
   sheets are iOS-only too, until the Mac needs them.
 - The Mac `RootView` (in `MacViews/`) takes the iOS one's name so `MaeksterApp` needs no `#if`.
+  Mac screens reuse the iPhone view models and shared components (`ServerFormView`, `AlbumGridCell`,
+  `CoverArtCard`, …) and the iPhone app's existing strings where the wording fits.
 - iOS-only behaviour: the audio session (`SystemAudioSessionController` does nothing on macOS, and
   route/interruption handling is compiled out), SiriKit media intents and the Siri audio entities
   (macOS 27+ API), the background-download app delegate, haptics.
+- The Mac uses the data protection keychain (`kSecUseDataProtectionKeychain` in `KeychainService`, plus
+  `keychain-access-groups` in the Mac entitlements), like iOS. It shares the default access group with the
+  iPhone build, so credentials saved by the iPhone app running on a Mac ("Designed for iPhone", same
+  bundle ID and container) stay readable.
 - Unit tests stay iOS-only. Check the Mac side with the macOS build above.
 - User-facing strings are localized through the String Catalogs (`LocalizedStringResource` /
   `String(localized:)`; local-music strings use `table: "LocalMusic"`). Don't hard-code English in

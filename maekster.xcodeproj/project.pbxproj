@@ -87,7 +87,31 @@
 				"DesignSystem/Components/TrackSkipSwipeModifier.swift" = (
 					ios,
 				);
+				"MacViews/MacAppDelegate.swift" = (
+					macos,
+				);
+				"MacViews/MacLibraryViews.swift" = (
+					macos,
+				);
+				"MacViews/MacMainView.swift" = (
+					macos,
+				);
+				"MacViews/MacPages.swift" = (
+					macos,
+				);
+				"MacViews/MacPlayerBar.swift" = (
+					macos,
+				);
 				"MacViews/MacRootView.swift" = (
+					macos,
+				);
+				"MacViews/MacSignInView.swift" = (
+					macos,
+				);
+				"MacViews/MacSpacebarPlayPause.swift" = (
+					macos,
+				);
+				"MacViews/MacTrackTable.swift" = (
 					macos,
 				);
 				"Services/Intents/SiriMediaIntentHandler.swift" = (
@@ -276,9 +300,6 @@
 				"Views/Main/TrackInformationSheet.swift" = (
 					ios,
 				);
-				"Views/Onboarding/ConnectionErrorView.swift" = (
-					ios,
-				);
 				"Views/Onboarding/OnboardingCompleteView.swift" = (
 					ios,
 				);
@@ -286,9 +307,6 @@
 					ios,
 				);
 				"Views/Onboarding/OnboardingWelcomeView.swift" = (
-					ios,
-				);
-				"Views/Onboarding/ServerFormView.swift" = (
 					ios,
 				);
 				"Views/Settings/AcknowledgementsView.swift" = (
