@@ -176,10 +176,25 @@ struct MacSongsView: View {
 
 // MARK: - Genres
 
-/// Genres and their album counts; each opens its genre page.
+/// Genres as a column browser, like the Music app: genres, then the chosen genre's styles ("All
+/// <genre>" first, with the iPhone's style sort), then the albums for that choice. Each album opens
+/// its page.
 struct MacGenresView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: GenreListViewModel?
+    @SceneStorage("mac.genres.selectedGenre") private var selectedGenreName: String?
+    @State private var selectedStyle: StyleChoice? = .all
+    @AppStorage("maekster.genreStyleSort") private var styleSort: GenreListSort = .mostAlbums
+
+    /// "All <genre>" or one of its styles, by name.
+    enum StyleChoice: Hashable {
+        case all
+        case style(String)
+    }
+
+    private var selectedGenre: MainGenreSummary? {
+        viewModel?.genres.first { $0.name == selectedGenreName }
+    }
 
     var body: some View {
         Group {
@@ -201,14 +216,7 @@ struct MacGenresView: View {
                 )
             case .loaded?:
                 if let genres = viewModel?.genres, !genres.isEmpty {
-                    List(genres) { genre in
-                        NavigationLink(value: MacRoute.genre(genre)) {
-                            GenreRow(
-                                title: GenreRow.title(genre.isOther ? nil : genre.name),
-                                albumCount: genre.albumCount, coverArtId: genre.coverArtId
-                            )
-                        }
-                    }
+                    browser(genres)
                 } else {
                     EmptyStateView(
                         systemImage: "guitars",
@@ -219,57 +227,91 @@ struct MacGenresView: View {
             }
         }
         .navigationTitle("Genres")
+        .toolbar {
+            if (selectedGenre?.styles.count ?? 0) > 1 {
+                LibrarySortMenu(sort: $styleSort)
+            }
+        }
         .task {
             guard viewModel == nil, let container else { return }
             let vm = GenreListViewModel(library: container.libraryService)
             viewModel = vm
             await vm.load()
+            if selectedGenre == nil { selectedGenreName = vm.genres.first?.name }
         }
     }
-}
 
-/// One main genre, like the iPhone page: "All <genre>", then its styles with their own sort. Each
-/// opens its albums.
-struct MacGenreView: View {
-    let genre: MainGenreSummary
-    @AppStorage("maekster.genreStyleSort") private var sort: GenreListSort = .mostAlbums
+    private func browser(_ genres: [MainGenreSummary]) -> some View {
+        HSplitView {
+            List(genres, selection: $selectedGenreName) { genre in
+                GenreRow(
+                    title: GenreRow.title(genre.isOther ? nil : genre.name),
+                    albumCount: genre.albumCount, coverArtId: genre.coverArtId
+                )
+                .tag(genre.name)
+            }
+            .frame(minWidth: 200, idealWidth: 240)
 
-    private var title: String { genre.isOther ? String(localized: "Other") : genre.name }
-
-    var body: some View {
-        List {
-            Section {
-                NavigationLink(value: MacRoute.genreAlbums(name: title, tags: genre.tags)) {
-                    GenreRow(
-                        title: genre.isOther ? Text("All Other Genres") : Text("All \(genre.name)"),
-                        albumCount: genre.albumCount,
-                        coverArtId: genre.coverArtId
-                    )
+            Group {
+                if let genre = selectedGenre {
+                    styleColumn(genre)
+                } else {
+                    Color.clear
                 }
             }
+            .frame(minWidth: 200, idealWidth: 260)
+
+            Group {
+                if let genre = selectedGenre {
+                    MacGenreAlbumsColumn(title: title(of: genre), tags: tags(of: genre))
+                        .id(tags(of: genre))
+                } else {
+                    Color.clear
+                }
+            }
+            .frame(minWidth: 300, maxWidth: .infinity)
+        }
+        .onChange(of: selectedGenreName) { _, _ in selectedStyle = .all }
+    }
+
+    private func styleColumn(_ genre: MainGenreSummary) -> some View {
+        List(selection: $selectedStyle) {
+            GenreRow(
+                title: genre.isOther ? Text("All Other Genres") : Text("All \(genre.name)"),
+                albumCount: genre.albumCount,
+                coverArtId: genre.coverArtId
+            )
+            .tag(StyleChoice.all)
+
             if !genre.styles.isEmpty {
                 Section("Styles") {
-                    ForEach(sort.sorted(genre.styles)) { style in
-                        NavigationLink(value: MacRoute.genreAlbums(name: style.name, tags: style.tags)) {
-                            GenreRow(title: GenreRow.title(style.name), albumCount: style.albumCount,
-                                     coverArtId: style.coverArtId)
-                        }
+                    ForEach(styleSort.sorted(genre.styles)) { style in
+                        GenreRow(title: GenreRow.title(style.name), albumCount: style.albumCount,
+                                 coverArtId: style.coverArtId)
+                            .tag(StyleChoice.style(style.name))
                     }
                 }
             }
         }
-        .navigationTitle(title)
-        .toolbar {
-            if genre.styles.count > 1 {
-                LibrarySortMenu(sort: $sort)
-            }
+    }
+
+    private func title(of genre: MainGenreSummary) -> String {
+        if case .style(let name) = selectedStyle { return name }
+        return genre.isOther ? String(localized: "Other") : genre.name
+    }
+
+    /// The tags whose albums show: the chosen style's, or the whole genre's.
+    private func tags(of genre: MainGenreSummary) -> [String] {
+        if case .style(let name) = selectedStyle, let style = genre.styles.first(where: { $0.name == name }) {
+            return style.tags
         }
+        return genre.tags
     }
 }
 
-/// The albums tagged with any of `tags` (a whole genre or one style), through the same view model
-/// as the iPhone genre pages.
-struct MacGenreAlbumsView: View {
+/// The albums tagged with any of `tags`, as a list, through the same view model as the iPhone genre
+/// pages. Rebuilt (by `.id`) whenever the tags change.
+private struct MacGenreAlbumsColumn: View {
     let title: String
     let tags: [String]
 
@@ -295,10 +337,14 @@ struct MacGenreAlbumsView: View {
                     action: .init(label: "Retry") { Task { await viewModel?.load() } }
                 )
             case .loaded?:
-                MacAlbumGrid(albums: viewModel?.albums ?? [])
+                List(viewModel?.albums ?? [], id: \.id) { album in
+                    NavigationLink(value: MacRoute.album(id: album.id)) {
+                        AlbumRow(albumId: album.id, name: album.name, artist: album.artist,
+                                 year: album.year, coverArtId: album.coverArt)
+                    }
+                }
             }
         }
-        .navigationTitle(title)
         .task {
             guard viewModel == nil, let container else { return }
             let vm = AlbumCollectionViewModel(kind: .genreGroup(name: title, tags: tags), library: container.libraryService)
