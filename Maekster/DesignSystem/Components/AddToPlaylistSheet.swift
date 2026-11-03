@@ -202,6 +202,8 @@ private struct NewPlaylistDestinationForm: View {
                 .accessibilityIdentifier("playlist.new.save")
             }
         }
+        // Grouped is already the iPhone default; on the Mac it lays the form out like Settings.
+        .formStyle(.grouped)
         .navigationTitle("New Playlist")
         .navigationBarTitleDisplayModeInline()
         .navigationBarBackButtonHidden(vm.isSaving)

@@ -102,10 +102,19 @@
 				"MacViews/MacPlayerBar.swift" = (
 					macos,
 				);
+				"MacViews/MacPlaylists.swift" = (
+					macos,
+				);
 				"MacViews/MacRootView.swift" = (
 					macos,
 				);
 				"MacViews/MacSignInView.swift" = (
+					macos,
+				);
+				"MacViews/MacSongMenu.swift" = (
+					macos,
+				);
+				"MacViews/MacSongRows.swift" = (
 					macos,
 				);
 				"MacViews/MacSpacebarPlayPause.swift" = (
@@ -115,9 +124,6 @@
 					macos,
 				);
 				"Services/Intents/SiriMediaIntentHandler.swift" = (
-					ios,
-				);
-				"Views/Browse/AddToPlaylistSheet.swift" = (
 					ios,
 				);
 				"Views/Browse/AlbumCollectionView.swift" = (

@@ -117,8 +117,8 @@ Maekster/                      app target sources
   Views/                       iPhone screens (iOS-only): Main/ (tabs, player, home, search), Browse/,
                                Discover/, Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
   MacViews/                    Mac screens (macOS-only): MacRootView (the Mac `RootView`), MacSignInView,
-                               MacMainView (sidebar + routes), library lists, pages, MacTrackTable,
-                               MacPlayerBar
+                               MacMainView (sidebar, `MacRoute`s), library lists, album/artist/genre
+                               pages, MacPlaylists, MacTrackTable + MacSongMenu, MacPlayerBar
   Utilities/                   Logger categories, formatting, HeaderValidator, PlatformImage, haptics
   *.xcstrings, Info.plist, Maekster.entitlements, PrivacyInfo.xcprivacy, AppIntentVocabulary.plist
 MaeksterTests/                 ~110 Swift Testing files (no XCTest)
@@ -318,7 +318,8 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   `Scripts/doctor.sh` fails when one is missing. A few shared components that still open iPhone
   sheets are iOS-only too, until the Mac needs them.
 - The Mac `RootView` (in `MacViews/`) takes the iOS one's name so `MaeksterApp` needs no `#if`.
-  Mac screens reuse the iPhone view models and shared components (`ServerFormView`, `AlbumGridCell`,
+  Pages open other pages through `MacNavigator` (in the environment). Mac screens reuse the iPhone view
+  models and shared components (`ServerFormView`, `AlbumGridCell`,
   `CoverArtCard`, …) and the iPhone app's existing strings where the wording fits.
 - iOS-only behaviour: the audio session (`SystemAudioSessionController` does nothing on macOS, and
   route/interruption handling is compiled out), SiriKit media intents and the Siri audio entities

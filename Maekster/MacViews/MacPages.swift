@@ -1,37 +1,52 @@
+import SwiftData
 import SwiftSonic
 import SwiftUI
 
-/// Cover, title and Play / Shuffle above an album's or playlist's songs.
-struct MacPageHeader: View {
+/// Cover, title and Play / Shuffle above an album's or playlist's songs, with room for page-specific
+/// buttons (a heart, a download button, …) after them.
+struct MacPageHeader<Accessories: View>: View {
     let coverArtId: String?
     let title: String
     var subtitle: String?
-    var detail: String?
+    /// Makes the subtitle a link (the album's artist).
+    var onSubtitle: (() -> Void)?
+    var details: [String] = []
     let onPlay: () -> Void
     let onShuffle: () -> Void
+    @ViewBuilder var accessories: () -> Accessories
 
     var body: some View {
         HStack(alignment: .bottom, spacing: MaeksterSpacing.xl) {
-            CoverArtCard(id: coverArtId ?? "", size: 180, tier: .hero)
+            CoverArtCard(id: coverArtId ?? "", size: 200, tier: .hero)
             VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
                 Text(title)
                     .font(.largeTitle.bold())
                     .lineLimit(2)
+                    .textSelection(.enabled)
                 if let subtitle {
-                    Text(subtitle)
-                        .font(.title2)
+                    if let onSubtitle {
+                        Button(subtitle, action: onSubtitle)
+                            .buttonStyle(.link)
+                            .font(.title2)
+                    } else {
+                        Text(subtitle)
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if !details.isEmpty {
+                    Text(details.joined(separator: " · "))
                         .foregroundStyle(.secondary)
                 }
-                if let detail {
-                    Text(detail)
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
+                HStack(spacing: MaeksterSpacing.m) {
                     Button("Play", systemImage: "play.fill", action: onPlay)
                         .buttonStyle(.borderedProminent)
                         .tint(Color.maeksterAccent)
                     Button("Shuffle", systemImage: "shuffle", action: onShuffle)
                         .buttonStyle(.bordered)
+                    accessories()
+                        .buttonStyle(.bordered)
+                        .labelStyle(.iconOnly)
                 }
                 .controlSize(.large)
                 .padding(.top, MaeksterSpacing.s)
@@ -42,13 +57,37 @@ struct MacPageHeader: View {
     }
 }
 
+extension MacPageHeader where Accessories == EmptyView {
+    init(coverArtId: String?, title: String, subtitle: String? = nil, details: [String] = [],
+         onPlay: @escaping () -> Void, onShuffle: @escaping () -> Void) {
+        self.init(coverArtId: coverArtId, title: title, subtitle: subtitle, details: details,
+                  onPlay: onPlay, onShuffle: onShuffle) { EmptyView() }
+    }
+}
+
+/// The total length of some songs, like "1 hr 4 min".
+func macTotalDuration(_ songs: [DisplayableSong]) -> String {
+    let seconds = songs.reduce(0) { $0 + $1.duration }
+    return Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
+}
+
 // MARK: - Album
 
 struct MacAlbumView: View {
     let albumId: String
 
     @Environment(\.appContainer) private var container
+    @Environment(MacNavigator.self) private var navigator
     @State private var viewModel: AlbumDetailViewModel?
+    @State private var confirmsRemoval = false
+    /// Observed, like the iPhone album page, so the heart follows every star and unstar.
+    @Query private var favoriteMatches: [FavoriteRecord]
+
+    init(albumId: String) {
+        self.albumId = albumId
+        let compositeId = "\(FavoriteType.album.rawValue):\(albumId)"
+        _favoriteMatches = Query(filter: #Predicate<FavoriteRecord> { $0.id == compositeId })
+    }
 
     var body: some View {
         Group {
@@ -62,15 +101,10 @@ struct MacAlbumView: View {
                     )
                 } else {
                     VStack(spacing: 0) {
-                        MacPageHeader(
-                            coverArtId: vm.coverArtId,
-                            title: vm.albumName,
-                            subtitle: vm.artistName,
-                            detail: vm.year.map(String.init),
-                            onPlay: { play(vm.songs, from: 0, source: source(vm)) },
-                            onShuffle: { play(vm.songs.shuffled(), from: 0, source: source(vm)) }
-                        )
-                        MacTrackTable(songs: vm.songs, showsAlbum: false) { index in
+                        header(vm)
+                        MacTrackTable(
+                            songs: vm.songs, showsAlbum: false, groupsByDisc: true, discTitles: vm.discTitles
+                        ) { index in
                             play(vm.songs, from: index, source: source(vm))
                         }
                     }
@@ -80,6 +114,12 @@ struct MacAlbumView: View {
             }
         }
         .navigationTitle(viewModel?.albumName ?? "")
+        .alert("Remove downloaded album?", isPresented: $confirmsRemoval) {
+            Button("Remove", role: .destructive) { Task { await viewModel?.deleteDownload() } }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("The audio files will be deleted from this device.")
+        }
         .task {
             guard viewModel == nil, let container else { return }
             let vm = AlbumDetailViewModel(
@@ -93,6 +133,69 @@ struct MacAlbumView: View {
             viewModel = vm
             await vm.load()
         }
+    }
+
+    private func header(_ vm: AlbumDetailViewModel) -> some View {
+        var details: [String] = []
+        if let year = vm.year { details.append(String(year)) }
+        if let genre = vm.genres.first ?? vm.genre { details.append(genre) }
+        if !vm.songs.isEmpty {
+            details.append(String(localized: "\(vm.songs.count) songs"))
+            details.append(macTotalDuration(vm.songs))
+        }
+        return MacPageHeader(
+            coverArtId: vm.coverArtId,
+            title: vm.albumName,
+            subtitle: vm.artistName,
+            onSubtitle: vm.artistId.map { artistId in
+                { navigator.open(.artist(id: artistId, name: vm.artistName ?? "")) }
+            },
+            details: details,
+            onPlay: { play(vm.songs, from: 0, source: source(vm)) },
+            onShuffle: { play(vm.songs.shuffled(), from: 0, source: source(vm)) }
+        ) {
+            favoriteButton
+            downloadButton(vm)
+        }
+    }
+
+    @ViewBuilder
+    private var favoriteButton: some View {
+        if let favorites = container?.favoritesService {
+            let isFavorite = !favoriteMatches.isEmpty
+            Button(isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                   systemImage: isFavorite ? "heart.fill" : "heart") {
+                Task {
+                    if isFavorite {
+                        try? await favorites.unstar(itemType: .album, itemId: albumId)
+                    } else {
+                        try? await favorites.star(itemType: .album, itemId: albumId)
+                    }
+                }
+            }
+            .foregroundStyle(isFavorite ? Color.maeksterAccent : .primary)
+            .help(isFavorite ? "Remove from Favorites" : "Add to Favorites")
+        }
+    }
+
+    /// The same states as the iPhone album page (`AlbumDownloadControlState`).
+    private func downloadButton(_ vm: AlbumDetailViewModel) -> some View {
+        let state = AlbumDownloadControlState(
+            songs: vm.songs, isOffline: vm.isOffline, isDownloading: vm.isDownloadingAlbum
+        )
+        return Button {
+            switch state {
+            case .unavailable: break
+            case .download: Task { await vm.downloadAlbum() }
+            case .downloadMissing: Task { await vm.downloadMissingTracks() }
+            case .cancel: Task { await vm.cancelAlbumDownload() }
+            case .removeDownloaded: confirmsRemoval = true
+            }
+        } label: {
+            Label(state.title, systemImage: state.systemImage)
+        }
+        .disabled(state == .unavailable)
+        .help(Text(state.title))
     }
 
     private func source(_ vm: AlbumDetailViewModel) -> QueueSource {
@@ -109,92 +212,18 @@ struct MacAlbumView: View {
     }
 }
 
-// MARK: - Playlist
-
-struct MacPlaylistView: View {
-    let playlistId: String
-
-    @Environment(\.appContainer) private var container
-    @State private var viewModel: PlaylistDetailViewModel?
-
-    var body: some View {
-        Group {
-            if let vm = viewModel, !(vm.isLoading && vm.songs.isEmpty) {
-                if let error = vm.error, vm.songs.isEmpty {
-                    EmptyStateView(
-                        systemImage: "exclamationmark.triangle",
-                        title: "Unable to Load Playlist",
-                        subtitle: LocalizedStringKey(error.displayMessage),
-                        action: .init(label: "Retry") { Task { await vm.load() } }
-                    )
-                } else {
-                    VStack(spacing: 0) {
-                        MacPageHeader(
-                            coverArtId: vm.coverArtId ?? playlistId,
-                            title: vm.name,
-                            onPlay: { play(vm.songs, from: 0) },
-                            onShuffle: { play(vm.songs.shuffled(), from: 0) }
-                        )
-                        MacTrackTable(songs: vm.songs) { index in
-                            play(vm.songs, from: index)
-                        }
-                    }
-                }
-            } else {
-                LoadingStateView()
-            }
-        }
-        .navigationTitle(viewModel?.name ?? "")
-        .task {
-            guard viewModel == nil, let container else { return }
-            let vm = PlaylistDetailViewModel(
-                playlistId: playlistId,
-                libraryService: container.libraryService,
-                downloadService: container.downloadService,
-                playlistService: container.playlistService,
-                toastService: container.toastService,
-                serverState: container.serverState,
-                offlineReader: container.offlineBrowsingReader
-            )
-            viewModel = vm
-            await vm.load()
-        }
-    }
-
-    /// Like the iPhone playlist page: the queue is re-read from the server first, so songs removed
-    /// elsewhere aren't played, and a late result can't override Pause or another Play.
-    private func play(_ requested: [DisplayableSong], from index: Int) {
-        guard requested.indices.contains(index), let vm = viewModel, let container else { return }
-        let selectedID = requested[index].id
-        let source = QueueSource.playlist(id: playlistId, name: vm.name)
-        Task {
-            do {
-                try await container.playerService.play(preparingQueue: {
-                    let refreshed = await vm.playbackSongs(from: requested)
-                    guard let start = refreshed.firstIndex(where: { $0.id == selectedID }) else {
-                        throw UserFacingError.contentRemoved
-                    }
-                    return PreparedPlaybackQueue(tracks: refreshed, startIndex: start, source: source)
-                })
-                container.recordPlaylistUse(playlistId)
-            } catch {
-                if !UserFacingError.isCancellation(error), !vm.isRemovedFromServer {
-                    container.toastService.showError(UserFacingError.from(error).displayMessage)
-                }
-            }
-        }
-    }
-}
-
 // MARK: - Artist
 
-/// The artist's albums for now; top songs, similar artists and the rest come with #103.
+/// Portrait, Play / Shuffle and the biography, then top songs, the artist's releases by category,
+/// albums they appear on, and similar artists in the library.
 struct MacArtistView: View {
     let artistId: String
     let artistName: String
 
     @Environment(\.appContainer) private var container
     @State private var viewModel: ArtistDetailViewModel?
+
+    private var source: QueueSource { .artist(id: artistId, name: artistName) }
 
     var body: some View {
         Group {
@@ -206,14 +235,8 @@ struct MacArtistView: View {
                         subtitle: LocalizedStringKey(error.displayMessage),
                         action: .init(label: "Retry") { Task { await vm.load() } }
                     )
-                } else if let albums = vm.artist?.album, !albums.isEmpty {
-                    MacAlbumGrid(albums: albums)
                 } else {
-                    EmptyStateView(
-                        systemImage: "square.stack",
-                        title: "No Albums",
-                        subtitle: "This artist has no albums in the library."
-                    )
+                    content(vm)
                 }
             } else {
                 LoadingStateView()
@@ -233,7 +256,146 @@ struct MacArtistView: View {
                 offlineReader: container.offlineBrowsingReader
             )
             viewModel = vm
+            // Same order as the iPhone artist page.
             await vm.load()
+            await vm.loadAppearances()
+            async let artistInfo: Void = vm.loadArtistInfo()
+            await vm.loadTopSongs()
+            await vm.loadSimilarArtists()
+            await artistInfo
+        }
+    }
+
+    private func content(_ vm: ArtistDetailViewModel) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xxl) {
+                header(vm)
+
+                if !vm.topSongs.isEmpty {
+                    section("Top Songs") {
+                        let songs = Array(vm.topSongs.prefix(10))
+                        MacSongRows(songs: songs) { index in play(songs, from: index) }
+                    }
+                }
+
+                ForEach(vm.releaseShelves) { shelf in
+                    section(shelf.category.title) {
+                        MacAlbumGridContent(albums: shelf.albums)
+                    }
+                }
+
+                if !vm.appearsOn.isEmpty {
+                    section("Appears On") {
+                        MacAlbumGridContent(albums: vm.appearsOn)
+                    }
+                }
+
+                let similar = vm.similarArtists.filter(\.inLibrary)
+                if !similar.isEmpty {
+                    section("Similar Artists") {
+                        ScrollView(.horizontal) {
+                            HStack(alignment: .top, spacing: MaeksterSpacing.l) {
+                                ForEach(similar) { artist in
+                                    NavigationLink(value: MacRoute.artist(id: artist.id, name: artist.name)) {
+                                        SimilarArtistCell(
+                                            recommendation: artist, externalImageURL: nil, size: 120,
+                                            onOutOfLibraryTap: {}
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .scrollIndicators(.never)
+                    }
+                }
+            }
+            .padding(MaeksterSpacing.xl)
+        }
+    }
+
+    private func header(_ vm: ArtistDetailViewModel) -> some View {
+        HStack(alignment: .center, spacing: MaeksterSpacing.xl) {
+            CoverArtView(id: vm.artist?.coverArt ?? artistId, size: 360, placeholderSystemImage: "person.fill")
+                .frame(width: 180, height: 180)
+                .clipShape(Circle())
+            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+                Text(vm.artist?.name ?? artistName)
+                    .font(.largeTitle.bold())
+                    .textSelection(.enabled)
+                if let count = vm.artist?.albumCount, count > 0 {
+                    Text("\(count) albums")
+                        .foregroundStyle(.secondary)
+                }
+                if let biography = vm.biography {
+                    Text(biography)
+                        .lineLimit(4)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: 640, alignment: .leading)
+                        .help(biography)
+                }
+                HStack(spacing: MaeksterSpacing.m) {
+                    Button("Play", systemImage: "play.fill") { Task { await playAll(vm, shuffled: false) } }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color.maeksterAccent)
+                    Button("Shuffle", systemImage: "shuffle") { Task { await playAll(vm, shuffled: true) } }
+                        .buttonStyle(.bordered)
+                    if vm.isPlayLoading { ProgressView().controlSize(.small) }
+                }
+                .controlSize(.large)
+                .padding(.top, MaeksterSpacing.s)
+            }
+        }
+    }
+
+    private func section<Content: View>(
+        _ title: LocalizedStringResource, @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.m) {
+            Text(title)
+                .font(.title2.bold())
+            content()
+        }
+    }
+
+    private func play(_ songs: [DisplayableSong], from index: Int) {
+        guard let container, songs.indices.contains(index) else { return }
+        Task {
+            await container.toastService.perform {
+                try await container.playerService.play(tracks: songs, startIndex: index, source: source)
+            }
+        }
+    }
+
+    /// Like the iPhone artist page: downloaded tracks offline, credited tracks for a credit-only
+    /// artist, otherwise every track the server has for the artist.
+    private func playAll(_ vm: ArtistDetailViewModel, shuffled: Bool) async {
+        guard let container else { return }
+        vm.isPlayLoading = true
+        defer { vm.isPlayLoading = false }
+        var tracks: [DisplayableSong]
+        if vm.isOffline, !vm.offlineTracks.isEmpty {
+            tracks = vm.offlineTracks
+        } else if vm.isCreditOnly, !vm.appearanceSongs.isEmpty {
+            tracks = vm.appearanceSongs
+        } else {
+            do {
+                tracks = try await container.libraryService.fetchAllTracks(forArtistID: artistId)
+            } catch MaeksterError.artistTracksUnavailable {
+                container.toastService.showError(
+                    String(localized: "Unable to load artist tracks. Please check your connection and try again.")
+                )
+                return
+            } catch {
+                if !UserFacingError.isCancellation(error) {
+                    container.toastService.showError(String(localized: "Playback failed. Please try again."))
+                }
+                return
+            }
+        }
+        if shuffled { tracks.shuffle() }
+        await container.toastService.perform {
+            try await container.playerService.play(tracks: tracks, startIndex: 0, source: source)
         }
     }
 }
