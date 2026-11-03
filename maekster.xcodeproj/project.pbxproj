@@ -108,6 +108,9 @@
 				"MacViews/MacRootView.swift" = (
 					macos,
 				);
+				"MacViews/MacSearchView.swift" = (
+					macos,
+				);
 				"MacViews/MacSignInView.swift" = (
 					macos,
 				);
