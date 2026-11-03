@@ -9,7 +9,7 @@ struct PlaylistListView: View {
     @State private var viewModel: PlaylistListViewModel?
     @State private var showCreateSheet = false
     @State private var filterText = ""
-    @AppStorage("minidisc.playlistListSort") private var sort: PlaylistListSort = .lastUsed
+    @AppStorage("maekster.playlistListSort") private var sort: PlaylistListSort = .lastUsed
     /// Snapshot of local "added to or played" dates, refreshed whenever the list appears.
     @State private var lastUsed: [String: Date] = [:]
     /// Set once a playlist is created, to open it so songs and a cover can be added.

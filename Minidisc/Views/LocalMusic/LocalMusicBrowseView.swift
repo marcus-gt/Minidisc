@@ -17,8 +17,8 @@ private enum LocalMusicSort: String, CaseIterable {
 struct LocalMusicBrowseView: View {
     let category: LocalMusicCategory
     @Environment(\.appContainer) private var container
-    @AppStorage("minidisc.localAlbumGrid") private var albumGrid = false
-    @AppStorage("minidisc.localArtistGrid") private var artistGrid = false
+    @AppStorage("maekster.localAlbumGrid") private var albumGrid = false
+    @AppStorage("maekster.localArtistGrid") private var artistGrid = false
     @State private var sort: LocalMusicSort = .name
     @State private var search = ""
 

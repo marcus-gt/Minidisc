@@ -23,7 +23,7 @@ actor AudioStreamCache: AudioStreamCacheProtocol {
         self.maxBytes = max(Self.minMaxBytes, min(Self.maxMaxBytes, maxBytes))
 
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        self.cacheDirectory = caches.appendingPathComponent("app.minidisc/audio", isDirectory: true)
+        self.cacheDirectory = caches.appendingPathComponent("app.maekster/audio", isDirectory: true)
 
         do {
             try FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)

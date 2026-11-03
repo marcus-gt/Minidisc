@@ -6,7 +6,7 @@ struct SongsListView: View {
     @Environment(\.appContainer) private var container
     @State private var songSelection: SongSelectionRequest?
     @State private var viewModel: SongsListViewModel?
-    @AppStorage("minidisc.songSort") private var songSort: SongSort = .title
+    @AppStorage("maekster.songSort") private var songSort: SongSort = .title
     @State private var filterText = ""
     /// Songs matching `filterText`, or `nil` with no filter. Computed off the main actor: a library
     /// can hold hundreds of thousands of songs.

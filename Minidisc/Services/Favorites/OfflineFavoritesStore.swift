@@ -27,7 +27,7 @@ actor OfflineFavoritesStore {
     private let directory: URL
     private var snapshots: [UUID: Snapshot] = [:]
 
-    init(directory: URL = URL.applicationSupportDirectory.appendingPathComponent("minidisc-offline-favorites")) {
+    init(directory: URL = URL.applicationSupportDirectory.appendingPathComponent("maekster-offline-favorites")) {
         self.directory = directory
     }
 

@@ -141,6 +141,8 @@ struct MaeksterApp: App {
     }
 
     static func makeContainer(diagnostics: PlaybackDiagnostics) async throws -> AppContainer {
+        // Before anything opens storage: data saved under the pre-rebrand names moves first (#46).
+        StorageMigration.runIfNeeded()
         let newContainer = try AppContainer(playbackDiagnostics: diagnostics)
         await newContainer.setup()
         // Detect an upgraded Navidrome before any cache maintenance or queue

@@ -4,7 +4,7 @@ struct RootView: View {
     @Environment(\.appContainer) private var container
     @AppStorage("onboardingComplete") private var onboardingComplete = false
 
-    @AppStorage("minidisc.localMusicEnabled") private var localMusicEnabled = false
+    @AppStorage("maekster.localMusicEnabled") private var localMusicEnabled = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {

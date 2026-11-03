@@ -23,7 +23,7 @@ struct AudioStreamCacheTests {
 
     private func makeTemporaryFile(size: Int) throws -> URL {
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("minidisc-cache-\(UUID().uuidString).tmp")
+            .appendingPathComponent("maekster-cache-\(UUID().uuidString).tmp")
         try Data(repeating: 0x41, count: size).write(to: url)
         return url
     }
@@ -36,7 +36,7 @@ struct AudioStreamCacheTests {
         let cache = AudioStreamCache(modelContainer: container)
         let serverID = UUID()
         let sourceURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("minidisc-cache-\(UUID().uuidString).tmp")
+            .appendingPathComponent("maekster-cache-\(UUID().uuidString).tmp")
         let payload = Data("ID3 playable audio payload".utf8)
         try payload.write(to: sourceURL)
         defer { try? FileManager.default.removeItem(at: sourceURL) }

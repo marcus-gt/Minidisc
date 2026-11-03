@@ -6,7 +6,7 @@ struct GenreListView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: GenreListViewModel?
     @State private var filterText = ""
-    @AppStorage("minidisc.genreListSort") private var sort: GenreListSort = .mostAlbums
+    @AppStorage("maekster.genreListSort") private var sort: GenreListSort = .mostAlbums
 
     /// `viewModel` is for Previews: a supplied model is loaded instead of one built from the container.
     init(viewModel: GenreListViewModel? = nil) {
@@ -94,7 +94,7 @@ struct GenreListView: View {
 /// One main genre: "All <genre>", then its styles, with their own Sort.
 struct GenreDetailView: View {
     let genre: MainGenreSummary
-    @AppStorage("minidisc.genreStyleSort") private var sort: GenreListSort = .mostAlbums
+    @AppStorage("maekster.genreStyleSort") private var sort: GenreListSort = .mostAlbums
 
     var body: some View {
         List {

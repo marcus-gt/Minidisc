@@ -20,10 +20,12 @@ The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as r
   `INAlternativeAppNames` stays "Mackster".
 - In the app, use the mark (`Image("BrandMark")`) and plain text. Never use the wordmark.
 - Names sent to external services come from `MaeksterBrand` (`Utilities/MaeksterBrand.swift`).
-- Types, tokens, modifiers, notifications and logger subsystems use `Maekster*` / `maekster*` (#46).
-  Still named `Minidisc` until their own passes: the Xcode project, targets, schemes, Swift module and
-  source folders, and the storage keys and paths that hold user data (`minidisc.*` defaults,
-  `app.minidisc.*`, `Documents/app.minidisc/…`, SwiftData store names). Don't rename those piecemeal.
+- Types, tokens, modifiers, notifications, logger subsystems and stored names (`maekster.*` /
+  `app.maekster.*` defaults, the `app.maekster.server-credentials` Keychain service,
+  `Documents/app.maekster/…`, `maekster-*` stores) use maekster (#46). `StorageMigration` moved
+  data saved under the old `minidisc` names once, at launch; it is the only code that still names
+  them. Still `Minidisc` until their own pass: the Xcode project, targets, schemes, Swift module and
+  source folders.
 - Credits keep the name: Minidisc (NO HIT Dev) and Cassette are named in the README, NOTICE,
   COPYRIGHT, acknowledgements and `MaeksterURLs.minidisc`.
 - Earlier versions created server playlists named `maekster Wrapped <year>` / `maekster · <Mood>`.
@@ -202,9 +204,9 @@ ViewModels ─▶ LibraryService (actor, LibraryServiceProtocol = many small pro
 - `LibraryCatalog` answers browse and search from the persisted index once a scan is complete, and only
   goes to the network otherwise. Automatic full index walks run only on an unmetered, unconstrained path
   (`ServerState.libraryIndexPreparationSnapshot`). Pull-to-refresh works on any online path.
-- The library index lives in its own `ModelContainer` (`minidisc-library-index`, versioned schema and
+- The library index lives in its own `ModelContainer` (`maekster-library-index`, versioned schema and
   migration plan `LibraryIndexSchemaV3` / `LibraryIndexMigrationPlan`). It is a discardable cache, kept
-  apart from user data. The playback session is also in its own store (`minidisc-session`) so frequent
+  apart from user data. The playback session is also in its own store (`maekster-session`) so frequent
   position saves stay out of the main observation graph. The main store schema is in
   `ModelContainer.maekster`.
 - Offline fallbacks only happen for network-class errors (`UserFacingError.noNetwork`,
@@ -247,13 +249,13 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
 
 - **Downloads**: `DownloadService` (actor) with `BackgroundDownloadTransport` (a background URLSession)
   and `DownloadQueueController`. It publishes `progressStream`, which AppContainer mirrors into
-  `DownloadActivityState`. Files live under `Documents/app.minidisc/downloads`.
+  `DownloadActivityState`. Files live under `Documents/app.maekster/downloads`.
 - **Artwork**: `ArtworkImageCache` (thumb/hero tiers, `@thumb` / `@hero` filename suffixes). The cache
   version in `AppContainer.currentCoverArtCacheVersion` must be bumped when the tiering changes.
 - **Radios**: Wrapped years/months and moods play as radios, not server playlists. `RadioQueue` queues
   the first picks, refills from the rest and then continues with Instant Mix around seed tracks.
   Nothing runs in the background any more (no BGTask).
-- **Migrations** are one-shot, keyed by UserDefaults flags (`minidisc.*_vN`) in `AppContainer`
+- **Migrations** are one-shot, keyed by UserDefaults flags (`maekster.*_vN`) in `AppContainer`
   extensions. Add a new flag; don't reuse an old one.
 
 ## Conventions

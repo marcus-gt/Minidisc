@@ -13,7 +13,7 @@ nonisolated final class PlaylistUsageStore: Sendable {
     }
 
     static func key(serverID: String) -> String {
-        "minidisc.playlistLastUsed.\(serverID)"
+        "maekster.playlistLastUsed.\(serverID)"
     }
 
     func lastUsed(serverID: String) -> [String: Date] {

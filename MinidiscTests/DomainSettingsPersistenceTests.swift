@@ -79,7 +79,7 @@ struct DomainSettingsPersistenceTests {
     func cacheCapacityMigration() {
         let (defaults, suiteName) = isolatedDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
-        defaults.set(4, forKey: "minidisc.cache.maxTracks")
+        defaults.set(4, forKey: "maekster.cache.maxTracks")
 
         let settings = CacheSettings(defaults: defaults)
         #expect(settings.capacityMegabytes == 256)
@@ -112,7 +112,7 @@ struct DomainSettingsPersistenceTests {
     }
 
     private func isolatedDefaults() -> (UserDefaults, String) {
-        let suiteName = "app.minidisc.tests.settings.\(UUID().uuidString)"
+        let suiteName = "app.maekster.tests.settings.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
         return (defaults, suiteName)

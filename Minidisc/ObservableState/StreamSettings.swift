@@ -83,13 +83,13 @@ final class StreamSettings {
     /// Downloads were always the original file before the setting existed.
     static let defaultDownloadQuality: StreamQuality = .original
 
-    private static let wifiKey = "minidisc.stream.wifiQuality"
-    private static let cellularKey = "minidisc.stream.cellularQuality"
-    private static let downloadKey = "minidisc.download.quality"
-    private static let streamOverDownloadsWifiKey = "minidisc.download.streamInsteadOnWifi"
-    private static let streamOverDownloadsCellularKey = "minidisc.download.streamInsteadOnCellular"
+    private static let wifiKey = "maekster.stream.wifiQuality"
+    private static let cellularKey = "maekster.stream.cellularQuality"
+    private static let downloadKey = "maekster.download.quality"
+    private static let streamOverDownloadsWifiKey = "maekster.download.streamInsteadOnWifi"
+    private static let streamOverDownloadsCellularKey = "maekster.download.streamInsteadOnCellular"
     /// Pre-split single-quality key; used to seed both tiers on upgrade.
-    private static let legacyKey = "minidisc.stream.quality"
+    private static let legacyKey = "maekster.stream.quality"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults

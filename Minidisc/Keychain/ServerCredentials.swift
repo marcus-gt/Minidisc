@@ -18,7 +18,7 @@ nonisolated struct ServerCredentials: Codable, Sendable {
     }
 
     static func keychainKey(for serverId: UUID) -> String {
-        "minidisc.server.\(serverId.uuidString)"
+        "maekster.server.\(serverId.uuidString)"
     }
 }
 

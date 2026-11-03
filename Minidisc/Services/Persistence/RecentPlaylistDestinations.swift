@@ -9,7 +9,7 @@ final class RecentPlaylistDestinations {
 
     init(serverID: String, defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        key = "minidisc.recentPlaylistDestinations.\(serverID)"
+        key = "maekster.recentPlaylistDestinations.\(serverID)"
     }
 
     var ids: [String] { defaults.stringArray(forKey: key) ?? [] }

@@ -29,7 +29,7 @@ nonisolated final class NetworkPathEventReducer: Sendable {
 @MainActor
 final class NetworkMonitor {
     private let monitor = NWPathMonitor()
-    private let queue = DispatchQueue(label: "app.minidisc.network", qos: .utility)
+    private let queue = DispatchQueue(label: "app.maekster.network", qos: .utility)
     private let reducer = NetworkPathEventReducer()
     private let playbackDiagnostics: PlaybackDiagnostics
     private var updateTask: Task<Void, Never>?

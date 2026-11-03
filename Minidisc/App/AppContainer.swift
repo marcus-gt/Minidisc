@@ -79,8 +79,8 @@ final class AppContainer {
         userDefaults: UserDefaults = .standard
     ) throws {
         let localStore = LocalMusicStore(directory: inMemory
-            ? URL.temporaryDirectory.appendingPathComponent("minidisc-local-\(UUID())")
-            : URL.applicationSupportDirectory.appendingPathComponent("minidisc-local-music"))
+            ? URL.temporaryDirectory.appendingPathComponent("maekster-local-\(UUID())")
+            : URL.applicationSupportDirectory.appendingPathComponent("maekster-local-music"))
         localMusic = LocalMusicLibrary(store: localStore)
         serverState = ServerState(defaults: userDefaults)
         let playbackPreferences = PlaybackPreferences(defaults: userDefaults)
@@ -105,8 +105,8 @@ final class AppContainer {
         lidarrSettings = LidarrSettings(keychain: keychain, defaults: userDefaults)
 
         let favoritesStore = OfflineFavoritesStore(directory: inMemory
-            ? URL.temporaryDirectory.appendingPathComponent("minidisc-favorites-\(UUID())")
-            : URL.applicationSupportDirectory.appendingPathComponent("minidisc-offline-favorites"))
+            ? URL.temporaryDirectory.appendingPathComponent("maekster-favorites-\(UUID())")
+            : URL.applicationSupportDirectory.appendingPathComponent("maekster-offline-favorites"))
         offlineFavoritesStore = favoritesStore
         let cache = AudioStreamCache(modelContainer: modelContainer, maxBytes: cacheSettings.capacityBytes, offlineFavorites: favoritesStore)
         audioStreamCache = cache
@@ -209,8 +209,8 @@ final class AppContainer {
 
         let listenHistory = ListenHistoryStore(
             directory: inMemory
-                ? URL.temporaryDirectory.appendingPathComponent("minidisc-listen-history-\(UUID())")
-                : URL.applicationSupportDirectory.appendingPathComponent("minidisc-listen-history"),
+                ? URL.temporaryDirectory.appendingPathComponent("maekster-listen-history-\(UUID())")
+                : URL.applicationSupportDirectory.appendingPathComponent("maekster-listen-history"),
             fetchPage: { user, maxTs in try await lbClient.listens(forUser: user, maxTs: maxTs) },
             fetchOldest: { user in try await lbClient.oldestListen(forUser: user) }
         )
@@ -285,8 +285,8 @@ final class AppContainer {
             activeServerID: { await MainActor.run { activeServerState.activeServer?.id.uuidString } },
             client: MusicBrainzReleaseClient(rateLimiter: musicBrainzLimiter),
             directory: inMemory
-                ? URL.temporaryDirectory.appendingPathComponent("minidisc-new-releases-\(UUID())")
-                : URL.applicationSupportDirectory.appendingPathComponent("minidisc-new-releases"),
+                ? URL.temporaryDirectory.appendingPathComponent("maekster-new-releases-\(UUID())")
+                : URL.applicationSupportDirectory.appendingPathComponent("maekster-new-releases"),
             onChange: { await MainActor.run { NotificationCenter.default.post(name: .maeksterFreshReleasesChanged, object: nil) } }
         )
         newReleasesService = newReleases
@@ -396,7 +396,7 @@ extension ModelContainer {
     /// - Parameter inMemory: Pass `true` in tests.
     static func session(inMemory: Bool = false) throws -> ModelContainer {
         let schema = Schema([PlaybackSession.self])
-        let config = ModelConfiguration("minidisc-session", schema: schema, isStoredInMemoryOnly: inMemory)
+        let config = ModelConfiguration("maekster-session", schema: schema, isStoredInMemoryOnly: inMemory)
         return try ModelContainer(for: schema, configurations: config)
     }
 
@@ -405,7 +405,7 @@ extension ModelContainer {
     static func libraryIndex(inMemory: Bool = false) throws -> ModelContainer {
         let schema = Schema(versionedSchema: LibraryIndexSchemaV3.self)
         let config = ModelConfiguration(
-            "minidisc-library-index",
+            "maekster-library-index",
             schema: schema,
             isStoredInMemoryOnly: inMemory
         )
@@ -420,7 +420,7 @@ extension ModelContainer {
 // MARK: - Cover art cache invalidation
 
 extension AppContainer {
-    private static let coverArtCacheVersionKey = "minidisc.coverArtCacheVersion"
+    private static let coverArtCacheVersionKey = "maekster.coverArtCacheVersion"
     private static let currentCoverArtCacheVersion = 5
 
     /// Invalidates older artwork tiers so full-resolution files cannot bypass thumbnail decoding.
@@ -431,7 +431,7 @@ extension AppContainer {
         artworkCache.clearCache()
         artworkCache.clearRevalidationMetadata()
         let coverArtsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("app.minidisc/coverarts")
+            .appendingPathComponent("app.maekster/coverarts")
         try? FileManager.default.removeItem(at: coverArtsDir)
         try? FileManager.default.createDirectory(at: coverArtsDir, withIntermediateDirectories: true)
         URLCache.shared.removeAllCachedResponses()
@@ -444,7 +444,7 @@ extension AppContainer {
 // MARK: - Legacy cover art sweep
 
 extension AppContainer {
-    private static let artworkLegacySweepKey = "minidisc.artworkLegacySweep_v2"
+    private static let artworkLegacySweepKey = "maekster.artworkLegacySweep_v2"
 
     /// Removes legacy artwork files without @thumb or @hero suffixes.
     @discardableResult
@@ -454,7 +454,7 @@ extension AppContainer {
         return Task.detached(priority: .utility) {
             let fm = FileManager.default
             guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-            let coverArtsDir = docs.appendingPathComponent("app.minidisc/coverarts", isDirectory: true)
+            let coverArtsDir = docs.appendingPathComponent("app.maekster/coverarts", isDirectory: true)
 
             guard let items = try? fm.contentsOfDirectory(at: coverArtsDir, includingPropertiesForKeys: nil) else { return }
 
@@ -482,7 +482,7 @@ extension AppContainer {
 // MARK: - Audio extension migration
 
 extension AppContainer {
-    private static let audioExtMigrationKey = "minidisc.audioExtMigration_v1"
+    private static let audioExtMigrationKey = "maekster.audioExtMigration_v1"
 
     /// Repairs downloads saved as .mpeg: AVPlayer treats that extension as video, not MP3.
     /// Clears the stream cache and updates downloaded file paths after renaming.
@@ -496,7 +496,7 @@ extension AppContainer {
         Logger.migration.info("[ExtMigration] Ephemeral audio cache cleared")
 
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let downloadsDir = docs.appendingPathComponent("app.minidisc/downloads", isDirectory: true)
+        let downloadsDir = docs.appendingPathComponent("app.maekster/downloads", isDirectory: true)
 
         let ctx = ModelContext(modelContainer)
         let tracks = (try? ctx.fetch(FetchDescriptor<DownloadedTrack>())) ?? []
@@ -544,8 +544,8 @@ extension AppContainer {
     }
 
     // v2 completed prematurely on empty download stores. Reset the marker and retry counter together.
-    private static let m4aFaststartMigrationKey = "minidisc.m4aFaststartMigration_v3"
-    private static let m4aFaststartAttemptsKey = "minidisc.m4aFaststartMigration_v3_attempts"
+    private static let m4aFaststartMigrationKey = "maekster.m4aFaststartMigration_v3"
+    private static let m4aFaststartAttemptsKey = "maekster.m4aFaststartMigration_v3_attempts"
     private static let m4aFaststartMaxAttempts = 3
 
     /// Remuxes downloaded M4A files with trailing moov atoms. Detects the container from its bytes.
@@ -555,7 +555,7 @@ extension AppContainer {
         guard !UserDefaults.standard.bool(forKey: m4aFaststartMigrationKey) else { return }
 
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let downloadsDir = docs.appendingPathComponent("app.minidisc/downloads", isDirectory: true)
+        let downloadsDir = docs.appendingPathComponent("app.maekster/downloads", isDirectory: true)
 
         let ctx = ModelContext(modelContainer)
         let tracks = (try? ctx.fetch(FetchDescriptor<DownloadedTrack>())) ?? []

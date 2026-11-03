@@ -12,8 +12,8 @@ struct LidarrLibraryView: View {
     @State private var showSearch = false
     @State private var showActivity = false
     // Keep Lidarr’s sort preference separate from the music-server library.
-    @AppStorage("minidisc.lidarrArtistSort") private var artistSort: ArtistSort = .name
-    @AppStorage("minidisc.lidarrLibraryGrid") private var gridLayout = true
+    @AppStorage("maekster.lidarrArtistSort") private var artistSort: ArtistSort = .name
+    @AppStorage("maekster.lidarrLibraryGrid") private var gridLayout = true
 
     private let columns = [GridItem(.adaptive(minimum: 140, maximum: 180), spacing: MaeksterSpacing.m)]
 

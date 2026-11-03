@@ -177,12 +177,12 @@ nonisolated private enum ReentrancyKeychainError: Error, Sendable {
 }
 
 private let reentrancyRecommendationKey = "listenbrainz-username"
-private let reentrancyTokenKey = "app.minidisc.listenbrainz.token"
-private let reentrancyScrobblingUsernameKey = "app.minidisc.listenbrainz.username"
+private let reentrancyTokenKey = "app.maekster.listenbrainz.token"
+private let reentrancyScrobblingUsernameKey = "app.maekster.listenbrainz.username"
 private let reentrancyScrobblingEnabledKey =
-    "app.minidisc.listenbrainz.scrobbling.isEnabled"
+    "app.maekster.listenbrainz.scrobbling.isEnabled"
 private let reentrancyScrobblingRootURLKey =
-    "app.minidisc.listenbrainz.scrobbling.serverRootURL"
+    "app.maekster.listenbrainz.scrobbling.serverRootURL"
 private let reentrancyDefaultRoot = URL(string: ListenBrainzService.defaultScrobblingServerURL)!
 private let reentrancyUsernameSuccessBody = Data(#"{"payload":{"count":0}}"#.utf8)
 

@@ -205,8 +205,8 @@ actor DownloadService: DownloadServiceProtocol {
         self.transferTransport = transferTransport
         self.diagnostics = diagnostics
         self.journalURL = journalURL ?? (transferTransport == nil
-            ? URL.temporaryDirectory.appendingPathComponent("minidisc-test-downloads-\(UUID())/queue.json")
-            : URL.applicationSupportDirectory.appendingPathComponent("minidisc-downloads/queue.json"))
+            ? URL.temporaryDirectory.appendingPathComponent("maekster-test-downloads-\(UUID())/queue.json")
+            : URL.applicationSupportDirectory.appendingPathComponent("maekster-downloads/queue.json"))
 
         let sessionConfig = URLSessionConfiguration.default
         sessionConfig.timeoutIntervalForRequest = 30
@@ -215,7 +215,7 @@ actor DownloadService: DownloadServiceProtocol {
         self.downloadSession = URLSession(configuration: sessionConfig)
 
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let base = docs.appendingPathComponent("app.minidisc", isDirectory: true)
+        let base = docs.appendingPathComponent("app.maekster", isDirectory: true)
         let downloadsDirectory = base.appendingPathComponent("downloads", isDirectory: true)
         self.downloadsDirectory = downloadsDirectory
         self.coverArtsDirectory = base.appendingPathComponent("coverarts", isDirectory: true)

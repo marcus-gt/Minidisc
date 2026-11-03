@@ -908,7 +908,7 @@ private struct IntegrationsSettingsView: View {
 
 private struct ApplicationSettingsView: View {
     @Environment(\.appContainer) private var container
-    @AppStorage("minidisc.appTheme") private var theme: AppTheme = .system
+    @AppStorage("maekster.appTheme") private var theme: AppTheme = .system
 
     var body: some View {
         Form {

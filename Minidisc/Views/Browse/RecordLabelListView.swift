@@ -5,7 +5,7 @@ struct RecordLabelListView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: RecordLabelListViewModel?
     @State private var filterText = ""
-    @AppStorage("minidisc.recordLabelSort") private var sort: RecordLabelListSort = .name
+    @AppStorage("maekster.recordLabelSort") private var sort: RecordLabelListSort = .name
 
     /// `viewModel` is for Previews: a supplied model is loaded instead of one built from the container.
     init(viewModel: RecordLabelListViewModel? = nil) {

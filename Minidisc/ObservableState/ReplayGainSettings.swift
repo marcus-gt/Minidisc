@@ -88,10 +88,10 @@ final class ReplayGainSettings {
     static let minPreAmp: Double = -15
     static let maxPreAmp: Double = 15
 
-    private static let enabledKey = "minidisc.replayGain.enabled"
-    private static let modeKey = "minidisc.replayGain.mode"
-    private static let preAmpKey = "minidisc.replayGain.preAmp"
-    private static let preventClippingKey = "minidisc.replayGain.preventClipping"
+    private static let enabledKey = "maekster.replayGain.enabled"
+    private static let modeKey = "maekster.replayGain.mode"
+    private static let preAmpKey = "maekster.replayGain.preAmp"
+    private static let preventClippingKey = "maekster.replayGain.preventClipping"
 
     // MARK: - Derived
 

@@ -11,7 +11,7 @@ final class QuickPlaylists {
         var name: String
     }
 
-    static let alsoLikesKey = "minidisc.quickPlaylists.alsoLikes"
+    static let alsoLikesKey = "maekster.quickPlaylists.alsoLikes"
 
     /// Like the song as well when it's added from the heart's menu. On by default: the flow this
     /// replaces was "like, then add to a playlist".
@@ -30,7 +30,7 @@ final class QuickPlaylists {
         alsoLikes = defaults.object(forKey: Self.alsoLikesKey) as? Bool ?? true
     }
 
-    static func key(serverID: String) -> String { "minidisc.quickPlaylists.\(serverID)" }
+    static func key(serverID: String) -> String { "maekster.quickPlaylists.\(serverID)" }
 
     func entries(serverID: String) -> [Entry] {
         if let loaded = byServer[serverID] { return loaded }

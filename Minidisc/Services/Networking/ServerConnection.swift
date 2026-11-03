@@ -52,7 +52,7 @@ nonisolated struct ServerConnection: Sendable {
             ),
             transport: CustomHeadersTransport(headers: credentials.customHeaders),
             retryPolicy: retryPolicy,
-            logSubsystem: "app.minidisc.server"
+            logSubsystem: "app.maekster.server"
         )
     }
 

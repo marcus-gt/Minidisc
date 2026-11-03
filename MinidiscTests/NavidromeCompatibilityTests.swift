@@ -141,9 +141,9 @@ struct NavidromeCompatibilityTests {
         let config = ServerConfig(displayName: "Test", baseURL: "https://music.example.invalid", username: "fixture")
         let connection = try ServerConnection(version: .init(serverID: config.id, revision: 1),
             server: ServerSnapshot(from: config), credentials: ServerCredentials(password: "fixture", customHeaders: [:]))
-        let moodKey = "minidisc.mood.playlistId.night.\(config.id)"
-        let wrappedKey = "minidisc.wrapped.playlistId.2026.\(config.id)"
-        let recentKey = "minidisc.recentPlaylistDestinations.\(config.id)"
+        let moodKey = "maekster.mood.playlistId.night.\(config.id)"
+        let wrappedKey = "maekster.wrapped.playlistId.2026.\(config.id)"
+        let recentKey = "maekster.recentPlaylistDestinations.\(config.id)"
         defaults.set(playlist, forKey: moodKey)
         defaults.set(playlist, forKey: wrappedKey)
         defaults.set([playlist], forKey: recentKey)
@@ -277,7 +277,7 @@ struct NavidromeCompatibilityTests {
         await #expect(throws: (any Error).self) {
             try await compatibility.prepare(connection, restoringSession: true)
         }
-        #expect(!defaults.dictionaryRepresentation().keys.contains { $0.hasPrefix("minidisc.navidrome.canonicalIDs") })
+        #expect(!defaults.dictionaryRepresentation().keys.contains { $0.hasPrefix("maekster.navidrome.canonicalIDs") })
         #expect(try await index.counts(for: config.id).tracks == 1)
         try Data("[]".utf8).write(to: journal)
         let keychain = MockKeychain()

@@ -307,7 +307,7 @@ actor ServerService: ServerServiceProtocol {
             configuration: ServerConfiguration(serverURL: serverURL, username: username, password: password),
             transport: transport,
             retryPolicy: .none,
-            logSubsystem: "app.minidisc.server"
+            logSubsystem: "app.maekster.server"
         )
         do {
             try await client.ping()

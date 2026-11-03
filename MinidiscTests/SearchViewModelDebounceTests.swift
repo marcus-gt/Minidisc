@@ -55,9 +55,9 @@ struct SearchViewModelDebounceTests {
             superseded.cancel()
             await superseded.value
         }
-        await vm.search(query: "minidisc")
+        await vm.search(query: "maekster")
 
-        #expect(stub.searchCalls == ["minidisc"])
+        #expect(stub.searchCalls == ["maekster"])
         #expect(vm.searchError == nil)
         #expect(vm.isSearching == false)
         #expect(vm.searchResults != nil)
@@ -70,10 +70,10 @@ struct SearchViewModelDebounceTests {
         state.isOnline = false
         let vm = SearchViewModel(libraryService: stub, serverState: state)
 
-        await vm.search(query: "minidisc")
+        await vm.search(query: "maekster")
 
         #expect(vm.isOffline == false)
-        #expect(stub.searchCalls == ["minidisc"])
+        #expect(stub.searchCalls == ["maekster"])
         #expect(vm.searchResults != nil)
         #expect(vm.searchError == nil)
         #expect(vm.isSearching == false)
@@ -87,7 +87,7 @@ struct SearchViewModelDebounceTests {
         state.isOnline = false
         let vm = SearchViewModel(libraryService: stub, serverState: state)
 
-        await vm.search(query: "minidisc")
+        await vm.search(query: "maekster")
 
         #expect(vm.isOffline)
         #expect(vm.searchResults == nil)
@@ -102,7 +102,7 @@ struct SearchViewModelDebounceTests {
         state.isOnline = false
         let vm = SearchViewModel(libraryService: stub, serverState: state)
 
-        await vm.search(query: "minidisc")
+        await vm.search(query: "maekster")
         #expect(vm.isOffline)
         await vm.search(query: "")
         #expect(vm.isOffline == false)
@@ -116,15 +116,15 @@ struct SearchViewModelDebounceTests {
         state.isOnline = false
         let vm = SearchViewModel(libraryService: stub, serverState: state)
 
-        await vm.search(query: "minidisc")
-        #expect(stub.searchCalls == ["minidisc"])
+        await vm.search(query: "maekster")
+        #expect(stub.searchCalls == ["maekster"])
 
         state.isOnline = true
         stub.behavior = .succeed
-        await vm.search(query: "minidisc")
+        await vm.search(query: "maekster")
 
         #expect(vm.isOffline == false)
-        #expect(stub.searchCalls == ["minidisc", "minidisc"])
+        #expect(stub.searchCalls == ["maekster", "maekster"])
     }
 
     @Test("empty or whitespace query clears state without any request")
@@ -155,7 +155,7 @@ struct SearchViewModelDebounceTests {
             stub.behavior = .fail(error)
             let vm = SearchViewModel(libraryService: stub, serverState: onlineState())
 
-            await vm.search(query: "minidisc")
+            await vm.search(query: "maekster")
 
             #expect(vm.searchError == nil, "\(error) must not surface to the UI")
             #expect(vm.isSearching == false)
@@ -168,7 +168,7 @@ struct SearchViewModelDebounceTests {
         stub.behavior = .fail(URLError(.timedOut))
         let vm = SearchViewModel(libraryService: stub, serverState: onlineState())
 
-        await vm.search(query: "minidisc")
+        await vm.search(query: "maekster")
 
         #expect(vm.searchError != nil)
         #expect(vm.isSearching == false)

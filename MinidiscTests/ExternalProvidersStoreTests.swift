@@ -75,7 +75,7 @@ struct ExternalProvidersStoreTests {
     @Test("corrupt JSON in UserDefaults returns empty gracefully without crashing")
     func corruptJSONGraceful() {
         let defaults = UserDefaults(suiteName: "test.corrupt.\(UUID().uuidString)")!
-        defaults.set(Data("not-valid-json".utf8), forKey: "app.minidisc.integrations.external-providers")
+        defaults.set(Data("not-valid-json".utf8), forKey: "app.maekster.integrations.external-providers")
         let store = ExternalProvidersStore(defaults: defaults)
         #expect(store.load().isEmpty)
     }

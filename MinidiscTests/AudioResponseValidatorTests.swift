@@ -6,7 +6,7 @@ import OSLog
 @Suite("AudioResponseValidator — accept/reject")
 struct AudioResponseValidatorTests {
 
-    private let logger = Logger(subsystem: "app.minidisc.tests", category: "AudioResponseValidatorTests")
+    private let logger = Logger(subsystem: "app.maekster.tests", category: "AudioResponseValidatorTests")
 
     private static let id3Header: [UInt8] = [0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00]
     private static let mp3FrameSync: [UInt8] = [0xFF, 0xFB, 0x90, 0x64, 0x00, 0x0F, 0xF0, 0x00]

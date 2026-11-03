@@ -17,7 +17,7 @@ rtk proxy xcodebuild test \
   -project Minidisc.xcodeproj \
   -scheme MinidiscUITests \
   -destination 'platform=iOS Simulator,name=Minidisc UX Verification' \
-  -derivedDataPath /tmp/minidisc-ux-tests \
+  -derivedDataPath /tmp/maekster-ux-tests \
   -parallel-testing-enabled NO \
   -collect-test-diagnostics never \
   -only-testing:MinidiscUITests/MinidiscUXVerificationTests \

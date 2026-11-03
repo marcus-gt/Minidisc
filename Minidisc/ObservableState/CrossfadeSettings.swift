@@ -50,8 +50,8 @@ final class CrossfadeSettings {
     static let minDuration: Double = 0
     static let maxDuration: Double = 12
 
-    private static let durationKey = "minidisc.crossfade.duration"
-    private static let disableForGaplessKey = "minidisc.crossfade.disableForGapless"
+    private static let durationKey = "maekster.crossfade.duration"
+    private static let disableForGaplessKey = "maekster.crossfade.disableForGapless"
 
     // MARK: - Derived
 

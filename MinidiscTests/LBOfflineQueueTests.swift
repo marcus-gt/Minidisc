@@ -117,9 +117,9 @@ struct QueueFileTests {
         let t2 = ProgrammableTransport(fallback: 503)
         let keychain = SubmitMockKeychain()
         let defaults = UserDefaults(suiteName: "test.queue.\(UUID().uuidString)")!
-        try await keychain.store("tok", forKey: "app.minidisc.listenbrainz.token")
-        try await keychain.store("alice", forKey: "app.minidisc.listenbrainz.username")
-        defaults.set(true, forKey: "app.minidisc.listenbrainz.scrobbling.isEnabled")
+        try await keychain.store("tok", forKey: "app.maekster.listenbrainz.token")
+        try await keychain.store("alice", forKey: "app.maekster.listenbrainz.username")
+        defaults.set(true, forKey: "app.maekster.listenbrainz.scrobbling.isEnabled")
         let s2 = ListenBrainzService(
             client: ListenBrainzClient(transport: t2),
             keychain: keychain,

@@ -23,8 +23,8 @@ actor NavidromeCompatibility {
     init(modelContainer: ModelContainer, sessionService: PlaybackSessionService,
          indexStore: LibraryIndexStore, defaults: UserDefaults = .standard,
          homeCache: HomeFeedCache = .shared,
-         coversDirectory: URL = URL.documentsDirectory.appendingPathComponent("app.minidisc/coverarts"),
-         journalURL: URL = URL.applicationSupportDirectory.appendingPathComponent("minidisc-downloads/queue.json"),
+         coversDirectory: URL = URL.documentsDirectory.appendingPathComponent("app.maekster/coverarts"),
+         journalURL: URL = URL.applicationSupportDirectory.appendingPathComponent("maekster-downloads/queue.json"),
          probe: @escaping CapabilitiesProbe = NavidromeCompatibility.fetchCapabilities) {
         self.modelContainer = modelContainer
         self.sessionService = sessionService
@@ -90,7 +90,7 @@ actor NavidromeCompatibility {
     private nonisolated static func marker(for connection: ServerConnection) -> String {
         let identity = connection.server.baseURL + "\u{0}" + connection.server.username
         let hash = SHA256.hash(data: Data(identity.utf8)).map { String(format: "%02x", $0) }.joined()
-        return "minidisc.navidrome.canonicalIDs.v1.\(connection.server.id).\(hash)"
+        return "maekster.navidrome.canonicalIDs.v1.\(connection.server.id).\(hash)"
     }
 
     @MainActor
@@ -177,11 +177,11 @@ actor NavidromeCompatibility {
         // Only these namespaces contain resource IDs. Cycle dates, mood names,
         // user settings, credentials and external MusicBrainz IDs stay untouched.
         for key in defaults.keys() where key.hasSuffix(suffix) {
-            if key.hasPrefix("minidisc.mood.playlistId.") || key.hasPrefix("minidisc.wrapped.playlistId."),
+            if key.hasPrefix("maekster.mood.playlistId.") || key.hasPrefix("maekster.wrapped.playlistId."),
                let id = defaults.string(forKey: key) {
                 let replacement = NavidromeCanonicalID.convert(id)
                 if id != replacement { defaults.set(replacement, forKey: key) }
-            } else if key == "minidisc.recentPlaylistDestinations" + suffix, let ids = defaults.stringArray(forKey: key) {
+            } else if key == "maekster.recentPlaylistDestinations" + suffix, let ids = defaults.stringArray(forKey: key) {
                 let replacement = ids.map(NavidromeCanonicalID.convert)
                 if ids != replacement { defaults.set(replacement, forKey: key) }
             } else if key == PlaylistUsageStore.key(serverID: serverID.uuidString),
