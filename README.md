@@ -88,7 +88,7 @@ Do these steps:
     ```bash
     git clone https://github.com/marcus-gt/maekster.git
     cd maekster
-    open Minidisc.xcodeproj
+    open maekster.xcodeproj
     ```
     Swift Package Manager gets the dependencies (SwiftSonic), so you do not have to do more setup.
 2. Select your team in **Signing & Capabilities**.

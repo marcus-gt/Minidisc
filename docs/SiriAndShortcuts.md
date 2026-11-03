@@ -81,7 +81,7 @@ Weekly, resolves it through the playlist entity query, and plays its first song
 through the installed app's shortcut.
 
 `testFixtureMusicShortcutsColdStart` uses AppIntentsTesting on the dedicated
-**Minidisc UX Verification** simulator with the local fixture described in
+**maekster UX Verification** simulator with the local fixture described in
 [Scripts/Testing/README.md](../Scripts/Testing/README.md). It invokes the installed
 app out of process, resolves music, starts playback, opens the app and exercises
 Pause/Resume. It does not validate microphone recognition or Siri's spoken replies.

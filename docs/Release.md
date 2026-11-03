@@ -5,7 +5,7 @@ the signed archive and Xcode's merged privacy report on a physical device.
 
 ## Privacy contract
 
-`Minidisc/PrivacyInfo.xcprivacy` declares the app's current required-reason APIs:
+`Maekster/PrivacyInfo.xcprivacy` declares the app's current required-reason APIs:
 
 - `UserDefaults` stores app-only preferences (`CA92.1`).
 - File timestamps and metadata are read only for files inside the app container
