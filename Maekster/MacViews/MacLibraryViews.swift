@@ -203,12 +203,10 @@ struct MacGenresView: View {
                 if let genres = viewModel?.genres, !genres.isEmpty {
                     List(genres) { genre in
                         NavigationLink(value: MacRoute.genre(genre)) {
-                            LabeledContent {
-                                Text(genre.albumCount, format: .number)
-                                    .foregroundStyle(.secondary)
-                            } label: {
-                                genre.isOther ? Text("Other") : Text(verbatim: genre.name)
-                            }
+                            GenreRow(
+                                title: GenreRow.title(genre.isOther ? nil : genre.name),
+                                albumCount: genre.albumCount, coverArtId: genre.coverArtId
+                            )
                         }
                     }
                 } else {
@@ -230,94 +228,82 @@ struct MacGenresView: View {
     }
 }
 
-/// One main genre: its styles as toggles that filter the albums below (any selected style), or
-/// every album in the genre when none is selected.
+/// One main genre, like the iPhone page: "All <genre>", then its styles with their own sort. Each
+/// opens its albums.
 struct MacGenreView: View {
     let genre: MainGenreSummary
-
-    @Environment(\.appContainer) private var container
-    @State private var selectedStyles: Set<String> = []
-    @State private var viewModel: AlbumCollectionViewModel?
+    @AppStorage("maekster.genreStyleSort") private var sort: GenreListSort = .mostAlbums
 
     private var title: String { genre.isOther ? String(localized: "Other") : genre.name }
-    private var styles: [GenreStyleSummary] { genre.styles.sorted { $0.albumCount > $1.albumCount } }
-
-    /// The tags whose albums are shown: the selected styles', or the whole genre's.
-    private var tags: [String] {
-        let chosen = genre.styles.filter { selectedStyles.contains($0.id) }
-        return chosen.isEmpty ? genre.tags : chosen.flatMap(\.tags)
-    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
-                if styles.count > 1 {
-                    styleFilter
+        List {
+            Section {
+                NavigationLink(value: MacRoute.genreAlbums(name: title, tags: genre.tags)) {
+                    GenreRow(
+                        title: genre.isOther ? Text("All Other Genres") : Text("All \(genre.name)"),
+                        albumCount: genre.albumCount,
+                        coverArtId: genre.coverArtId
+                    )
                 }
-                albums
             }
-            .padding(MaeksterSpacing.l)
+            if !genre.styles.isEmpty {
+                Section("Styles") {
+                    ForEach(sort.sorted(genre.styles)) { style in
+                        NavigationLink(value: MacRoute.genreAlbums(name: style.name, tags: style.tags)) {
+                            GenreRow(title: GenreRow.title(style.name), albumCount: style.albumCount,
+                                     coverArtId: style.coverArtId)
+                        }
+                    }
+                }
+            }
         }
         .navigationTitle(title)
-        .task(id: selectedStyles) {
-            guard let container else { return }
+        .toolbar {
+            if genre.styles.count > 1 {
+                LibrarySortMenu(sort: $sort)
+            }
+        }
+    }
+}
+
+/// The albums tagged with any of `tags` (a whole genre or one style), through the same view model
+/// as the iPhone genre pages.
+struct MacGenreAlbumsView: View {
+    let title: String
+    let tags: [String]
+
+    @Environment(\.appContainer) private var container
+    @State private var viewModel: AlbumCollectionViewModel?
+
+    var body: some View {
+        Group {
+            switch viewModel?.state {
+            case nil, .loading?:
+                LoadingStateView()
+            case .waitingForIndex?:
+                EmptyStateView(
+                    systemImage: "guitars",
+                    title: "Still Indexing Your Library",
+                    subtitle: "Genres appear once maekster has indexed every album. Try again shortly."
+                )
+            case .failed(let error)?:
+                EmptyStateView(
+                    systemImage: "exclamationmark.triangle",
+                    title: "Unable to Load Albums",
+                    subtitle: LocalizedStringKey(error.displayMessage),
+                    action: .init(label: "Retry") { Task { await viewModel?.load() } }
+                )
+            case .loaded?:
+                MacAlbumGrid(albums: viewModel?.albums ?? [])
+            }
+        }
+        .navigationTitle(title)
+        .task {
+            guard viewModel == nil, let container else { return }
             let vm = AlbumCollectionViewModel(kind: .genreGroup(name: title, tags: tags), library: container.libraryService)
-            // The first load shows the loading state; later ones keep the current albums until the
-            // new set is ready, so toggling a style doesn't blank the grid.
-            if viewModel == nil { viewModel = vm }
-            await vm.load()
-            guard !Task.isCancelled else { return }
             viewModel = vm
-        }
-    }
-
-    private var styleFilter: some View {
-        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
-            HStack {
-                Text("Styles")
-                    .font(.title3.bold())
-                if !selectedStyles.isEmpty {
-                    Button("Clear") { selectedStyles.removeAll() }
-                        .buttonStyle(.link)
-                }
-            }
-            MetadataChipFlow(centersRows: false) {
-                ForEach(styles) { style in
-                    Toggle(isOn: Binding(
-                        get: { selectedStyles.contains(style.id) },
-                        set: { isOn in
-                            if isOn { selectedStyles.insert(style.id) } else { selectedStyles.remove(style.id) }
-                        }
-                    )) {
-                        Text(verbatim: style.name)
-                    }
-                    .toggleStyle(.button)
-                    .tint(Color.maeksterAccent)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var albums: some View {
-        switch viewModel?.state {
-        case nil, .loading?:
-            LoadingStateView()
-        case .waitingForIndex?:
-            EmptyStateView(
-                systemImage: "guitars",
-                title: "Still Indexing Your Library",
-                subtitle: "Genres appear once maekster has indexed every album. Try again shortly."
-            )
-        case .failed(let error)?:
-            EmptyStateView(
-                systemImage: "exclamationmark.triangle",
-                title: "Unable to Load Albums",
-                subtitle: LocalizedStringKey(error.displayMessage),
-                action: .init(label: "Retry") { Task { await viewModel?.load() } }
-            )
-        case .loaded?:
-            MacAlbumGridContent(albums: viewModel?.albums ?? [])
+            await vm.load()
         }
     }
 }
