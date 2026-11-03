@@ -60,6 +60,7 @@ struct MacMainView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             MacPlayerBar()
         }
+        .modifier(MacSpacebarPlayPause())
     }
 
     /// Picking a section starts it from its list, not from a page opened earlier.

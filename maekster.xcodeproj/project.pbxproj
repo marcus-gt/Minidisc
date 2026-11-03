@@ -87,6 +87,9 @@
 				"DesignSystem/Components/TrackSkipSwipeModifier.swift" = (
 					ios,
 				);
+				"MacViews/MacAppDelegate.swift" = (
+					macos,
+				);
 				"MacViews/MacLibraryViews.swift" = (
 					macos,
 				);
@@ -103,6 +106,9 @@
 					macos,
 				);
 				"MacViews/MacSignInView.swift" = (
+					macos,
+				);
+				"MacViews/MacSpacebarPlayPause.swift" = (
 					macos,
 				);
 				"MacViews/MacTrackTable.swift" = (
