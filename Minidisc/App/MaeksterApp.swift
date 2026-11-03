@@ -75,19 +75,7 @@ struct MaeksterApp: App {
                 Logger.session.info("App inactive — position flushed (iOS kill guard)")
             }
             guard newPhase == .background, let container = activeContainer else { return }
-            guard container.playerState.currentRadio == nil,
-                  container.playerState.currentTrack != nil else {
-                Logger.session.info("App backgrounded during radio — preserving the last music session")
-                return
-            }
-            let snapshot = SessionPayload(
-                currentIndex: container.playerState.currentIndex,
-                currentPosition: container.playerState.position,
-                queue: container.playerState.queue,
-                currentTrack: container.playerState.currentTrack,
-                repeatMode: container.playerState.repeatMode
-            )
-            Task { await container.sessionService.save(playerState: snapshot) }
+            Task { await container.playerService.saveSessionForBackground() }
             Logger.session.info("App backgrounded — session flushed")
         }
     }
