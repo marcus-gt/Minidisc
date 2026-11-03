@@ -177,10 +177,11 @@ struct MacSongsView: View {
 // MARK: - Genres
 
 /// Genres as a column browser, like the Music app: genres, then the chosen genre's styles ("All
-/// <genre>" first, with the iPhone's style sort), then the albums for that choice. Each album opens
-/// its page.
+/// <genre>" first, with the iPhone's style sort), then the albums for that choice. Double-clicking a
+/// genre or style opens all its albums on their own page.
 struct MacGenresView: View {
     @Environment(\.appContainer) private var container
+    @Environment(MacNavigator.self) private var navigator
     @State private var viewModel: GenreListViewModel?
     @SceneStorage("mac.genres.selectedGenre") private var selectedGenreName: String?
     @State private var selectedStyle: StyleChoice? = .all
@@ -250,6 +251,12 @@ struct MacGenresView: View {
                 )
                 .tag(genre.name)
             }
+            .contextMenu(forSelectionType: String.self) { _ in
+                EmptyView()
+            } primaryAction: { names in
+                guard let genre = genres.first(where: { names.contains($0.name) }) else { return }
+                navigator.open(.genreAlbums(name: genre.isOther ? String(localized: "Other") : genre.name, tags: genre.tags))
+            }
             .frame(minWidth: 200, idealWidth: 240)
 
             Group {
@@ -263,13 +270,13 @@ struct MacGenresView: View {
 
             Group {
                 if let genre = selectedGenre {
-                    MacGenreAlbumsColumn(title: title(of: genre), tags: tags(of: genre))
-                        .id(tags(of: genre))
+                    MacGenreAlbums(title: title(of: genre, selectedStyle), tags: tags(of: genre, selectedStyle))
+                        .id(tags(of: genre, selectedStyle))
                 } else {
                     Color.clear
                 }
             }
-            .frame(minWidth: 300, maxWidth: .infinity)
+            .frame(minWidth: 360, maxWidth: .infinity)
         }
         .onChange(of: selectedGenreName) { _, _ in selectedStyle = .all }
     }
@@ -293,25 +300,32 @@ struct MacGenresView: View {
                 }
             }
         }
+        .contextMenu(forSelectionType: StyleChoice.self) { _ in
+            EmptyView()
+        } primaryAction: { choices in
+            guard let choice = choices.first else { return }
+            navigator.open(.genreAlbums(name: title(of: genre, choice), tags: tags(of: genre, choice)))
+        }
     }
 
-    private func title(of genre: MainGenreSummary) -> String {
-        if case .style(let name) = selectedStyle { return name }
+    private func title(of genre: MainGenreSummary, _ choice: StyleChoice?) -> String {
+        if case .style(let name) = choice { return name }
         return genre.isOther ? String(localized: "Other") : genre.name
     }
 
     /// The tags whose albums show: the chosen style's, or the whole genre's.
-    private func tags(of genre: MainGenreSummary) -> [String] {
-        if case .style(let name) = selectedStyle, let style = genre.styles.first(where: { $0.name == name }) {
+    private func tags(of genre: MainGenreSummary, _ choice: StyleChoice?) -> [String] {
+        if case .style(let name) = choice, let style = genre.styles.first(where: { $0.name == name }) {
             return style.tags
         }
         return genre.tags
     }
 }
 
-/// The albums tagged with any of `tags`, as a list, through the same view model as the iPhone genre
-/// pages. Rebuilt (by `.id`) whenever the tags change.
-private struct MacGenreAlbumsColumn: View {
+/// The albums tagged with any of `tags` as a cover grid, through the same view model as the iPhone
+/// genre pages: the browser's third column (rebuilt by `.id` when the tags change) and the page a
+/// double-clicked genre or style opens.
+struct MacGenreAlbums: View {
     let title: String
     let tags: [String]
 
@@ -337,14 +351,10 @@ private struct MacGenreAlbumsColumn: View {
                     action: .init(label: "Retry") { Task { await viewModel?.load() } }
                 )
             case .loaded?:
-                List(viewModel?.albums ?? [], id: \.id) { album in
-                    NavigationLink(value: MacRoute.album(id: album.id)) {
-                        AlbumRow(albumId: album.id, name: album.name, artist: album.artist,
-                                 year: album.year, coverArtId: album.coverArt)
-                    }
-                }
+                MacAlbumGrid(albums: viewModel?.albums ?? [])
             }
         }
+        .navigationTitle(title)
         .task {
             guard viewModel == nil, let container else { return }
             let vm = AlbumCollectionViewModel(kind: .genreGroup(name: title, tags: tags), library: container.libraryService)

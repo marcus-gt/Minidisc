@@ -32,6 +32,8 @@ enum MacRoute: Hashable {
     case album(id: String)
     case artist(id: String, name: String)
     case playlist(id: String)
+    /// Every album tagged with any of `tags`: a whole genre or one of its styles.
+    case genreAlbums(name: String, tags: [String])
 }
 
 /// The main window: library sections in the sidebar, the chosen section (and the pages opened from
@@ -99,6 +101,7 @@ struct MacMainView: View {
         case .album(let id): MacAlbumView(albumId: id)
         case .artist(let id, let name): MacArtistView(artistId: id, artistName: name)
         case .playlist(let id): MacPlaylistView(playlistId: id)
+        case .genreAlbums(let name, let tags): MacGenreAlbums(title: name, tags: tags)
         }
     }
 }
