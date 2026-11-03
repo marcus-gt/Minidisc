@@ -2,15 +2,6 @@ import OSLog
 import SwiftSonic
 import SwiftUI
 
-/// Song Path needs AudioMuse on the active server, and the server itself (#65).
-@MainActor
-enum SongPathAvailability {
-    static func isAvailable(_ container: AppContainer?) -> Bool {
-        guard let container, container.serverState.isOnline else { return false }
-        return container.serverState.activeServer?.audioMuseURL?.trimmingCharacters(in: .whitespaces).isEmpty == false
-    }
-}
-
 /// The Discover (and optional Home) card (#65): the path itself. Tap From or To to choose an end,
 /// set the length and play, without opening a sheet.
 struct SongPathCard: View {
@@ -35,7 +26,7 @@ struct SongPathCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             HStack {
-                Label("Song Path", systemImage: SongPathSheet.symbol)
+                Label("Song Path", systemImage: SongPathLauncher.symbol)
                     .font(.subheadline.weight(.semibold))
                 Spacer()
                 Button("Swap", systemImage: "arrow.up.arrow.down") {
@@ -192,8 +183,6 @@ struct SongPathCard: View {
 
 /// From, To and length, then Play (#65). The path stops at its last song.
 struct SongPathSheet: View {
-    static let symbol = "point.topleft.down.to.point.bottomright.curvepath"
-
     @Environment(\.appContainer) private var container
     @Environment(\.dismiss) private var dismiss
     @State private var from: SongPathService.End?

@@ -2,7 +2,8 @@
 import SwiftUI
 import SwiftData
 import SwiftSonic
-import UIKit
+import ImageIO
+import UniformTypeIdentifiers
 
 // Mock library, fake services and an in-memory AppContainer for SwiftUI Previews.
 // Nothing here talks to a server: every cover ID uses the "local:" prefix so ArtworkImageCache
@@ -393,24 +394,31 @@ enum PreviewArtwork {
     static func pngData(for id: String) -> Data? {
         let (top, bottom) = palettes[id] ?? (0x444444, 0x999999)
         let size = CGSize(width: 600, height: 600)
-        return UIGraphicsImageRenderer(size: size).pngData { context in
-            let colors = [color(top).cgColor, color(bottom).cgColor] as CFArray
-            if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1]) {
-                context.cgContext.drawLinearGradient(gradient, start: .zero,
-                                                     end: CGPoint(x: size.width, y: size.height), options: [])
-            }
-            // A faint disc motif so covers read as artwork rather than flat swatches.
-            UIColor.white.withAlphaComponent(0.14).setStroke()
-            for inset in stride(from: 90.0, through: 250.0, by: 40.0) {
-                let ring = UIBezierPath(ovalIn: CGRect(origin: .zero, size: size).insetBy(dx: inset, dy: inset))
-                ring.lineWidth = 6
-                ring.stroke()
-            }
+        let space = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(data: nil, width: Int(size.width), height: Int(size.height),
+                                      bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        let colors = [color(top), color(bottom)] as CFArray
+        if let gradient = CGGradient(colorsSpace: space, colors: colors, locations: [0, 1]) {
+            context.drawLinearGradient(gradient, start: .zero,
+                                       end: CGPoint(x: size.width, y: size.height), options: [])
         }
+        // A faint disc motif so covers read as artwork rather than flat swatches.
+        context.setStrokeColor(CGColor(gray: 1, alpha: 0.14))
+        context.setLineWidth(6)
+        for inset in stride(from: 90.0, through: 250.0, by: 40.0) {
+            context.strokeEllipse(in: CGRect(origin: .zero, size: size).insetBy(dx: inset, dy: inset))
+        }
+        guard let image = context.makeImage() else { return nil }
+        let data = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)
+        else { return nil }
+        CGImageDestinationAddImage(destination, image, nil)
+        return CGImageDestinationFinalize(destination) ? data as Data : nil
     }
 
-    private static func color(_ hex: UInt32) -> UIColor {
-        UIColor(red: CGFloat((hex >> 16) & 0xFF) / 255,
+    private static func color(_ hex: UInt32) -> CGColor {
+        CGColor(red: CGFloat((hex >> 16) & 0xFF) / 255,
                 green: CGFloat((hex >> 8) & 0xFF) / 255,
                 blue: CGFloat(hex & 0xFF) / 255,
                 alpha: 1)

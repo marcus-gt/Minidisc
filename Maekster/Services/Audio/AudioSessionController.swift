@@ -2,10 +2,38 @@ import AVFAudio
 import Foundation
 import Synchronization
 
+#if os(iOS)
+/// An audio output's port type.
+typealias AudioOutputPort = AVAudioSession.Port
+#else
+/// macOS has no `AVAudioSession`, so the Mac never reports route outputs and the route-based
+/// pause and resume rules never fire there. This mirrors the iOS port names the shared player
+/// code refers to.
+nonisolated struct AudioOutputPort: RawRepresentable, Hashable, Sendable {
+    let rawValue: String
+
+    init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+
+    static let airPlay = AudioOutputPort(rawValue: "AirPlay")
+    static let bluetoothA2DP = AudioOutputPort(rawValue: "BluetoothA2DPOutput")
+    static let bluetoothHFP = AudioOutputPort(rawValue: "BluetoothHFP")
+    static let bluetoothLE = AudioOutputPort(rawValue: "BluetoothLE")
+    static let builtInReceiver = AudioOutputPort(rawValue: "Receiver")
+    static let builtInSpeaker = AudioOutputPort(rawValue: "Speaker")
+    static let carAudio = AudioOutputPort(rawValue: "CarAudio")
+    static let headphones = AudioOutputPort(rawValue: "Headphones")
+    static let headsetMic = AudioOutputPort(rawValue: "HeadsetMicrophone")
+    static let HDMI = AudioOutputPort(rawValue: "HDMIOutput")
+    static let usbAudio = AudioOutputPort(rawValue: "USBAudio")
+}
+#endif
+
 /// Value-only route information; system route descriptions never cross the playback actor.
 nonisolated struct AudioRouteOutputSnapshot: Sendable, Equatable {
     let uid: String
-    let portType: AVAudioSession.Port
+    let portType: AudioOutputPort
 }
 
 /// Configuration is invalidated by a media-services reset even when the source is unchanged.
@@ -16,6 +44,7 @@ nonisolated protocol AudioSessionControlling: Sendable {
     func invalidateConfiguration()
 }
 
+#if os(iOS)
 nonisolated final class SystemAudioSessionController: AudioSessionControlling {
     private let configured = Mutex(false)
 
@@ -45,6 +74,15 @@ nonisolated final class SystemAudioSessionController: AudioSessionControlling {
         configured.withLock { $0 = false }
     }
 }
+#else
+/// macOS apps share the system output without a session to configure or activate.
+nonisolated final class SystemAudioSessionController: AudioSessionControlling {
+    var outputs: [AudioRouteOutputSnapshot] { [] }
+    func activate() throws {}
+    func deactivate() {}
+    func invalidateConfiguration() {}
+}
+#endif
 
 nonisolated struct PlaybackAudioRecoveryTiming: Sendable {
     var retryDelay: Duration = .milliseconds(500)

@@ -65,6 +65,6 @@ struct PlaylistThemedBackground: View {
     }
 
     private var systemBackground: Color {
-        Color(UIColor.systemBackground)
+        Color.maeksterSystemBackground
     }
 }

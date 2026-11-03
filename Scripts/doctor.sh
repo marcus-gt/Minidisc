@@ -10,7 +10,7 @@ Checks the release-critical project, Swift, privacy, transport, package, and
 versioning contracts.
 
   --strict   Treat warnings as failures.
-  --build    Also perform an unsigned generic-iOS Release build in a temporary path.
+  --build    Also perform unsigned generic-iOS and generic-macOS Release builds in a temporary path.
   -h, --help Show this help.
 EOF
 }
@@ -210,6 +210,26 @@ else
     problem "Effective Release Swift version is ${swift_version:-missing}"
 fi
 
+# Synchronised folders can't limit a whole folder to one platform, so every file under Views/ carries
+# its own iOS filter and every file under MacViews/ a macOS one. A file without one breaks the other
+# platform's build.
+unfiltered_views=$(
+    cd Maekster 2>/dev/null && find Views MacViews -name '*.swift' 2>/dev/null | while IFS= read -r file; do
+        case "$file" in
+            (Views/*) platform=ios ;;
+            (*) platform=macos ;;
+        esac
+        grep -A1 -F "\"$file\" = (" "../$project_file" | grep -Eq "^[[:space:]]*$platform,$" \
+            || printf '%s (%s)\n' "$file" "$platform"
+    done
+)
+if [ -z "$unfiltered_views" ]; then
+    pass 'Every file in Views/ is iOS-only and every file in MacViews/ is macOS-only'
+else
+    problem 'Views without a platform filter (Target Membership in the File inspector):'
+    printf '%s\n' "$unfiltered_views" | sed 's/^/        /'
+fi
+
 if [ -n "$(git status --porcelain --untracked-files=normal 2>/dev/null)" ]; then
     warn 'Worktree has uncommitted changes; review them before release'
 else
@@ -230,6 +250,19 @@ if [ "$run_build" = true ]; then
         pass 'Unsigned generic-iOS Release build succeeds'
     else
         problem 'Unsigned generic-iOS Release build failed (last 40 lines follow)'
+        tail -n 40 "$build_log"
+    fi
+    if xcodebuild \
+        -project "$project" \
+        -scheme "$scheme" \
+        -configuration Release \
+        -destination 'generic/platform=macOS' \
+        -derivedDataPath "$doctor_temp/DerivedData" \
+        CODE_SIGNING_ALLOWED=NO \
+        build >"$build_log" 2>&1; then
+        pass 'Unsigned generic-macOS Release build succeeds'
+    else
+        problem 'Unsigned generic-macOS Release build failed (last 40 lines follow)'
         tail -n 40 "$build_log"
     fi
     rm -rf "$doctor_temp"

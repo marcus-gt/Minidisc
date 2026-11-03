@@ -2,7 +2,11 @@ import Foundation
 import MediaPlayer
 import OSLog
 
+#if os(macOS)
+import AppKit
+#else
 import UIKit
+#endif
 
 /// Keeps MediaPlayer objects on MainActor; only snapshots and artwork bytes cross actors.
 @MainActor

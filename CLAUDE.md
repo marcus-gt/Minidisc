@@ -2,7 +2,8 @@
 
 maekster is an iPhone music player for Subsonic / OpenSubsonic servers (Navidrome first). It also plays
 local folders the user references through Files, and integrates with ListenBrainz, Lidarr, AudioMuse-AI,
-LRCLIB lyrics, Siri / App Intents and a yearly "Wrapped" recap.
+LRCLIB lyrics, Siri / App Intents and a yearly "Wrapped" recap. A native macOS app is being built from
+the same target (plan and steps in #100).
 
 ## Naming
 
@@ -38,7 +39,7 @@ The brand kit and full rules are in `Branding/README.md`; treat `Branding/` as r
 
 | Setting | Value | Consequence |
 |---|---|---|
-| Platform | iOS 26.1+, iPhone only (`TARGETED_DEVICE_FAMILY = 1`), portrait | No iPad/macOS layouts to maintain (platform wrappers still exist, see below) |
+| Platform | iOS 26.1+, iPhone only (`TARGETED_DEVICE_FAMILY = 1`), portrait; **macOS 26.1+**, native SwiftUI (not Catalyst), from the same `Maekster` target | No iPad layout. Shared code compiles for both; the iPhone UI (`Views/`) is iOS-only and the Mac UI (`MacViews/`) macOS-only (see "macOS" below) |
 | Swift | 6.0, `SWIFT_STRICT_CONCURRENCY = complete`, approachable concurrency | All concurrency diagnostics are on |
 | `SWIFT_DEFAULT_ACTOR_ISOLATION` | **MainActor** | Every type is MainActor unless it says otherwise. Value types and helpers used from service actors **must be declared `nonisolated`** (`nonisolated struct …`, `nonisolated enum …`, `nonisolated static let` on `Logger`) |
 | `SWIFT_TREAT_WARNINGS_AS_ERRORS` | YES | A warning fails the build. Don't leave unused vars or `try?` results that trigger warnings |
@@ -60,6 +61,10 @@ From the command line (the project is `maekster.xcodeproj` at the repo root; the
 # Build
 xcodebuild build -project maekster.xcodeproj -scheme Maekster \
   -destination 'platform=iOS Simulator,name=<any iPhone simulator>'
+
+# Build the Mac app (unsigned is enough to check it compiles)
+xcodebuild build -project maekster.xcodeproj -scheme Maekster \
+  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
 # Unit tests (MaeksterTests, Swift Testing)
 xcodebuild test -project maekster.xcodeproj -scheme MaeksterTests \
@@ -109,8 +114,9 @@ Maekster/                      app target sources
     LocalMusic/                security-scoped local folder library
     Cache/ Diagnostics/ Intents/ Lidarr/ ListenBrainz/ Lyrics/ Recommendations/ Integrations/ Persistence/
   ViewModels/                  @Observable @MainActor screen view models
-  Views/                       SwiftUI screens: Main/ (tabs, player, home, search), Browse/, Discover/,
-                               Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
+  Views/                       iPhone screens (iOS-only): Main/ (tabs, player, home, search), Browse/,
+                               Discover/, Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
+  MacViews/                    Mac screens (macOS-only); MacRootView.swift defines the Mac `RootView`
   Utilities/                   Logger categories, formatting, HeaderValidator, PlatformImage, haptics
   *.xcstrings, Info.plist, Maekster.entitlements, PrivacyInfo.xcprivacy, AppIntentVocabulary.plist
 MaeksterTests/                 ~110 Swift Testing files (no XCTest)
@@ -297,6 +303,23 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   `PlayButton` and `SectionHeader`.
 - Platform-specific APIs go behind `maekster`-prefixed modifiers in `DesignSystem/Platform/` (see
   `CONVENTIONS.md`). Keep `#if os(...)` out of view bodies.
+
+**macOS** (#100)
+- One target, two platforms: macOS is a supported destination of `Maekster`, with its own sandbox
+  entitlements (`Maekster-macOS.entitlements`). Shared code (models, services, state, view models,
+  design system) compiles for both. Use `PlatformImage` / `PlatformColor` and the `DesignSystem/Platform/`
+  wrappers instead of UIKit/AppKit types; put small platform differences in `#if os(iOS)` /
+  `#if os(macOS)` inside services and utilities, not in view bodies.
+- Synchronised folders can't limit a folder to one platform, so **each file** under `Views/` is
+  iOS-only and each file under `MacViews/` macOS-only (File inspector → Target Membership → platform,
+  stored as `platformFiltersByRelativePath` in the project). A new view file needs that filter.
+  `Scripts/doctor.sh` fails when one is missing. A few shared components that still open iPhone
+  sheets are iOS-only too, until the Mac needs them.
+- The Mac `RootView` (in `MacViews/`) takes the iOS one's name so `MaeksterApp` needs no `#if`.
+- iOS-only behaviour: the audio session (`SystemAudioSessionController` does nothing on macOS, and
+  route/interruption handling is compiled out), SiriKit media intents and the Siri audio entities
+  (macOS 27+ API), the background-download app delegate, haptics.
+- Unit tests stay iOS-only. Check the Mac side with the macOS build above.
 - User-facing strings are localized through the String Catalogs (`LocalizedStringResource` /
   `String(localized:)`; local-music strings use `table: "LocalMusic"`). Don't hard-code English in
   services that produce UI text.

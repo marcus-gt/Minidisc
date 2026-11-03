@@ -1,15 +1,25 @@
+#if os(macOS)
+import AppKit
+#else
 import SafariServices
 import UIKit
+#endif
 
 enum ExternalLinkOpener {
+    /// Shows the page in an in-app Safari sheet on iOS, and in the default browser on macOS.
     @MainActor
     static func open(_ url: URL) {
+        #if os(macOS)
+        NSWorkspace.shared.open(url)
+        #else
         guard let presenter = topmostViewController() else { return }
         let safari = SFSafariViewController(url: url)
         safari.modalPresentationStyle = .pageSheet
         presenter.present(safari, animated: true)
+        #endif
     }
 
+    #if os(iOS)
     @MainActor
     private static func topmostViewController() -> UIViewController? {
         guard
@@ -34,4 +44,5 @@ enum ExternalLinkOpener {
         }
         return vc
     }
+    #endif
 }

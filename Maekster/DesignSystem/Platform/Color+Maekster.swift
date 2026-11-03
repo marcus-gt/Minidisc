@@ -2,7 +2,11 @@ import SwiftUI
 
 extension Color {
     nonisolated static var maeksterSystemBackground: Color {
+        #if os(macOS)
+        Color(nsColor: .windowBackgroundColor)
+        #else
         Color(.systemBackground)
+        #endif
     }
 
     nonisolated static let maeksterAccentText = Color.white

@@ -517,7 +517,7 @@ private struct TrackInfoSection: View {
                     }
                     .disabled(container?.serverState.activeServer == nil)
                     if SongPathAvailability.isAvailable(container), let track = playerState.currentTrack, !track.isLocalFile {
-                        Button("Song Path from Here", systemImage: SongPathSheet.symbol) {
+                        Button("Song Path from Here", systemImage: SongPathLauncher.symbol) {
                             container?.songPathLauncher.open(from: .song(track), in: sheetHost)
                         }
                     }

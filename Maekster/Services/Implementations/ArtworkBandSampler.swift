@@ -1,24 +1,19 @@
 import CoreImage.CIFilterBuiltins
+#if os(macOS)
+import AppKit
+#else
 import UIKit
+#endif
 
 actor ArtworkBandSampler {
     private let context = CIContext()
     private let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
 
-    func sample(_ image: UIImage) -> [Int]? {
+    func sample(_ image: PlatformImage) -> [Int]? {
         guard !Task.isCancelled, image.size.width > 0, image.size.height > 0 else { return nil }
         let scale = min(1, 200 / max(image.size.width, image.size.height))
         let size = CGSize(width: max(1, image.size.width * scale), height: max(4, image.size.height * scale))
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        format.opaque = true
-        let thumbnail = UIGraphicsImageRenderer(size: size, format: format).image { renderer in
-            UIColor.black.setFill()
-            renderer.fill(CGRect(origin: .zero, size: size))
-            // Drawing the UIImage also applies its EXIF orientation.
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-        guard let cgImage = thumbnail.cgImage else { return nil }
+        guard let cgImage = Self.opaqueThumbnail(of: image, size: size) else { return nil }
         let input = CIImage(cgImage: cgImage)
         let extent = input.extent
         let height = extent.height / 4
@@ -38,5 +33,31 @@ actor ArtworkBandSampler {
             result.append(Int(bytes[0]) << 16 | Int(bytes[1]) << 8 | Int(bytes[2]))
         }
         return result
+    }
+
+    /// The image drawn at 1x onto black, so transparent artwork samples as dark.
+    private static func opaqueThumbnail(of image: PlatformImage, size: CGSize) -> CGImage? {
+        #if os(macOS)
+        guard let source = image.cgImage,
+              let context = CGContext(data: nil, width: Int(size.width), height: Int(size.height),
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }
+        context.setFillColor(.black)
+        context.fill(CGRect(origin: .zero, size: size))
+        context.draw(source, in: CGRect(origin: .zero, size: size))
+        return context.makeImage()
+        #else
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let thumbnail = UIGraphicsImageRenderer(size: size, format: format).image { renderer in
+            UIColor.black.setFill()
+            renderer.fill(CGRect(origin: .zero, size: size))
+            // Drawing the UIImage also applies its EXIF orientation.
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+        return thumbnail.cgImage
+        #endif
     }
 }
