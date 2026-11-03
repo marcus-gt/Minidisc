@@ -11,6 +11,9 @@ struct MacPlaylistsView: View {
     @Environment(MacNavigator.self) private var navigator
     @State private var viewModel: PlaylistListViewModel?
     @State private var createsPlaylist = false
+    /// Opened once the New Playlist sheet has closed; pushing while it closes left the list drawn
+    /// underneath the new page.
+    @State private var createdPlaylistId: String?
     @State private var renameRequest: PlaylistRenameRequest?
 
     var body: some View {
@@ -43,10 +46,10 @@ struct MacPlaylistsView: View {
         .toolbar {
             Button("New Playlist", systemImage: "plus") { createsPlaylist = true }
         }
-        .sheet(isPresented: $createsPlaylist) {
+        .sheet(isPresented: $createsPlaylist, onDismiss: openCreatedPlaylist) {
             MacNewPlaylistSheet { created in
+                createdPlaylistId = created.id
                 Task { await viewModel?.load() }
-                navigator.open(.playlist(id: created.id))
             }
         }
         .playlistRenameAlert($renameRequest) { Task { await viewModel?.load() } }
@@ -64,6 +67,12 @@ struct MacPlaylistsView: View {
             viewModel = vm
             await vm.load()
         }
+    }
+
+    private func openCreatedPlaylist() {
+        guard let id = createdPlaylistId else { return }
+        createdPlaylistId = nil
+        navigator.open(.playlist(id: id))
     }
 }
 
@@ -226,12 +235,20 @@ struct MacPlaylistView: View {
                 } else {
                     VStack(spacing: 0) {
                         header(vm)
-                        MacTrackTable(
-                            songs: vm.songs,
-                            onPlay: { play(vm.songs, from: $0) },
-                            onRemove: { offsets in Task { await vm.removeTracks(at: offsets) } },
-                            onMove: { source, destination in Task { await vm.moveTracks(from: source, to: destination) } }
-                        )
+                        if vm.songs.isEmpty {
+                            EmptyStateView(
+                                systemImage: "music.note.list",
+                                title: "Empty Playlist",
+                                subtitle: "This playlist doesn't have any tracks yet."
+                            )
+                        } else {
+                            MacTrackTable(
+                                songs: vm.songs,
+                                onPlay: { play(vm.songs, from: $0) },
+                                onRemove: { offsets in Task { await vm.removeTracks(at: offsets) } },
+                                onMove: { source, destination in Task { await vm.moveTracks(from: source, to: destination) } }
+                            )
+                        }
                     }
                 }
             } else {

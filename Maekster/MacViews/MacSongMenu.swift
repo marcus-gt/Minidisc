@@ -1,4 +1,4 @@
-import OSLog
+import SwiftData
 import SwiftUI
 
 /// The current section's navigation stack, so menus deep in a page can open another page (an album
@@ -123,6 +123,14 @@ struct MacArtistMenu: View {
     let artistName: String
 
     @Environment(\.appContainer) private var container
+    @Query private var favoriteMatches: [FavoriteRecord]
+
+    init(artistId: String, artistName: String) {
+        self.artistId = artistId
+        self.artistName = artistName
+        let compositeId = "\(FavoriteType.artist.rawValue):\(artistId)"
+        _favoriteMatches = Query(filter: #Predicate<FavoriteRecord> { $0.id == compositeId })
+    }
 
     var body: some View {
         Button("Play", systemImage: "play.fill") { playAll(shuffled: false) }
@@ -132,7 +140,7 @@ struct MacArtistMenu: View {
         }
         if let favorites = container?.favoritesService {
             Divider()
-            let isFavorite = favorites.isFavorite(itemType: .artist, itemId: artistId)
+            let isFavorite = !favoriteMatches.isEmpty
             Button(isFavorite ? "Remove from Favorites" : "Add to Favorites",
                    systemImage: isFavorite ? "heart.slash" : "heart") {
                 Task {

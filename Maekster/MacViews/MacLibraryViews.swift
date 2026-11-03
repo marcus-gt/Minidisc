@@ -230,53 +230,71 @@ struct MacGenresView: View {
     }
 }
 
-/// One main genre: its styles as buttons, then every album in the genre.
+/// One main genre: its styles as toggles that filter the albums below (any selected style), or
+/// every album in the genre when none is selected.
 struct MacGenreView: View {
     let genre: MainGenreSummary
 
-    var body: some View {
-        MacGenreAlbumsView(
-            title: genre.isOther ? String(localized: "Other") : genre.name,
-            tags: genre.tags,
-            styles: genre.styles.sorted { $0.albumCount > $1.albumCount }
-        )
-    }
-}
-
-/// The albums tagged with any of `tags`, through the same view model as the iPhone genre pages.
-struct MacGenreAlbumsView: View {
-    let title: String
-    let tags: [String]
-    var styles: [GenreStyleSummary] = []
-
     @Environment(\.appContainer) private var container
+    @State private var selectedStyles: Set<String> = []
     @State private var viewModel: AlbumCollectionViewModel?
+
+    private var title: String { genre.isOther ? String(localized: "Other") : genre.name }
+    private var styles: [GenreStyleSummary] { genre.styles.sorted { $0.albumCount > $1.albumCount } }
+
+    /// The tags whose albums are shown: the selected styles', or the whole genre's.
+    private var tags: [String] {
+        let chosen = genre.styles.filter { selectedStyles.contains($0.id) }
+        return chosen.isEmpty ? genre.tags : chosen.flatMap(\.tags)
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
                 if styles.count > 1 {
-                    Text("Styles")
-                        .font(.title3.bold())
-                    MetadataChipFlow(centersRows: false) {
-                        ForEach(styles) { style in
-                            NavigationLink(value: MacRoute.genreStyle(name: style.name, tags: style.tags)) {
-                                Text(verbatim: style.name)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
+                    styleFilter
                 }
                 albums
             }
             .padding(MaeksterSpacing.l)
         }
         .navigationTitle(title)
-        .task {
-            guard viewModel == nil, let container else { return }
+        .task(id: selectedStyles) {
+            guard let container else { return }
             let vm = AlbumCollectionViewModel(kind: .genreGroup(name: title, tags: tags), library: container.libraryService)
-            viewModel = vm
+            // The first load shows the loading state; later ones keep the current albums until the
+            // new set is ready, so toggling a style doesn't blank the grid.
+            if viewModel == nil { viewModel = vm }
             await vm.load()
+            guard !Task.isCancelled else { return }
+            viewModel = vm
+        }
+    }
+
+    private var styleFilter: some View {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            HStack {
+                Text("Styles")
+                    .font(.title3.bold())
+                if !selectedStyles.isEmpty {
+                    Button("Clear") { selectedStyles.removeAll() }
+                        .buttonStyle(.link)
+                }
+            }
+            MetadataChipFlow(centersRows: false) {
+                ForEach(styles) { style in
+                    Toggle(isOn: Binding(
+                        get: { selectedStyles.contains(style.id) },
+                        set: { isOn in
+                            if isOn { selectedStyles.insert(style.id) } else { selectedStyles.remove(style.id) }
+                        }
+                    )) {
+                        Text(verbatim: style.name)
+                    }
+                    .toggleStyle(.button)
+                    .tint(Color.maeksterAccent)
+                }
+            }
         }
     }
 

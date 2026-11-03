@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftSonic
 import SwiftUI
 
@@ -79,6 +80,14 @@ struct MacAlbumView: View {
     @Environment(MacNavigator.self) private var navigator
     @State private var viewModel: AlbumDetailViewModel?
     @State private var confirmsRemoval = false
+    /// Observed, like the iPhone album page, so the heart follows every star and unstar.
+    @Query private var favoriteMatches: [FavoriteRecord]
+
+    init(albumId: String) {
+        self.albumId = albumId
+        let compositeId = "\(FavoriteType.album.rawValue):\(albumId)"
+        _favoriteMatches = Query(filter: #Predicate<FavoriteRecord> { $0.id == compositeId })
+    }
 
     var body: some View {
         Group {
@@ -153,7 +162,7 @@ struct MacAlbumView: View {
     @ViewBuilder
     private var favoriteButton: some View {
         if let favorites = container?.favoritesService {
-            let isFavorite = favorites.isFavorite(itemType: .album, itemId: albumId)
+            let isFavorite = !favoriteMatches.isEmpty
             Button(isFavorite ? "Remove from Favorites" : "Add to Favorites",
                    systemImage: isFavorite ? "heart.fill" : "heart") {
                 Task {
