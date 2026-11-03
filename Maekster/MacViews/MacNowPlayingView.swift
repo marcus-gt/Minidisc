@@ -2,49 +2,160 @@ import SwiftData
 import SwiftSonic
 import SwiftUI
 
-/// What the player bar opens: the Now Playing view in the content area, its lyrics, and the queue
-/// panel.
+/// What the player bar opens: Now Playing over the content, and the side panel with the queue or
+/// the lyrics.
 @Observable
 final class MacPlayerPanels {
+    enum SidePanel: Hashable {
+        case queue, lyrics
+    }
+
     var showsNowPlaying = false
-    var showsLyrics = false
-    var showsQueue = false
+    var sidePanel: SidePanel?
+
+    /// The player bar's Queue and Lyrics buttons: open that tab, or close the panel if it's showing.
+    /// Either one leaves Now Playing, which would cover the panel.
+    func toggle(_ panel: SidePanel) {
+        sidePanel = (sidePanel == panel && !showsNowPlaying) ? nil : panel
+        showsNowPlaying = false
+    }
 }
 
-/// Large artwork on the artwork-coloured background, like the iPhone player: the song with links to
-/// its artist and album, a heart, Smart Shuffle and Instant Mix, and synced lyrics beside the cover
-/// when they're switched on.
-struct MacNowPlayingView: View {
+/// The right-hand panel beside the page, below the toolbar: Queue and Lyrics tabs, like the Music app.
+struct MacSidePanel: View {
+    @Environment(MacPlayerPanels.self) private var panels
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Picker("Queue", selection: Binding(
+                get: { panels.sidePanel ?? .queue },
+                set: { panels.sidePanel = $0 }
+            )) {
+                Text("Queue").tag(MacPlayerPanels.SidePanel.queue)
+                Text("Lyrics").tag(MacPlayerPanels.SidePanel.lyrics)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(MaeksterSpacing.m)
+
+            switch panels.sidePanel {
+            case .lyrics?:
+                MacLyricsContent()
+                    .padding(.horizontal, MaeksterSpacing.m)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background { MacArtworkBackground() }
+                    .environment(\.colorScheme, .dark)
+            default:
+                MacQueueView()
+            }
+        }
+    }
+}
+
+/// The playing song's artwork colours as a gradient, like the iPhone player (the shared
+/// `FullPlayerViewModel` and `PlayerBackgroundPalette`).
+struct MacArtworkBackground: View {
     @Environment(\.appContainer) private var container
     @Environment(DominantColorExtractor.self) private var colorExtractor
-    @Environment(MacNavigator.self) private var navigator
-    @Environment(MacPlayerPanels.self) private var panels
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var colors = FullPlayerViewModel()
-    @State private var lyricsViewModel: LyricsViewModel?
+
+    var body: some View {
+        LinearGradient(colors: PlayerBackgroundPalette.colors(from: colors.backgroundColors),
+                       startPoint: .top, endPoint: .bottom)
+            .ignoresSafeArea()
+            .task(id: coverArtId) {
+                await colors.updateColors(for: coverArtId, colorExtractor: colorExtractor,
+                                          container: container, reduceMotion: reduceMotion)
+            }
+    }
+
+    private var coverArtId: String? {
+        guard let state = container?.playerState else { return nil }
+        return macCoverArtId(state)
+    }
+}
+
+/// The cover of what's playing: the radio's or the song's.
+@MainActor
+func macCoverArtId(_ state: PlayerState) -> String? {
+    state.isLiveStream ? state.currentRadio?.coverArt : (state.currentTrack?.coverArtId ?? state.currentTrack?.id)
+}
+
+/// Synced lyrics for the playing song (LRCLIB or server, per the lyrics setting) through the shared
+/// `LyricsView`: one view model per song, like the iPhone player. White text, so it sits on an
+/// artwork background.
+struct MacLyricsContent: View {
+    @Environment(\.appContainer) private var container
+    @State private var viewModel: LyricsViewModel?
+
+    var body: some View {
+        Group {
+            if container?.playerState.currentTrack?.isLocalFile == true || container?.playerState.isLiveStream == true {
+                EmptyStateView(systemImage: "music.note.list", title: "No lyrics available")
+            } else if let viewModel {
+                LyricsView(viewModel: viewModel)
+                    .mask(
+                        LinearGradient(stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black, location: 0.06),
+                            .init(color: .black, location: 0.92),
+                            .init(color: .clear, location: 1)
+                        ], startPoint: .top, endPoint: .bottom)
+                    )
+            } else {
+                LoadingStateView()
+            }
+        }
+        .task(id: loadKey) { await load() }
+    }
+
+    private var loadKey: String {
+        "\(container?.playerState.currentTrack?.id ?? "")|\(container?.lyricsSettings.source.rawValue ?? "")"
+    }
+
+    private func load() async {
+        guard let container, let track = container.playerState.currentTrack, !track.isLocalFile,
+              let serverId = container.serverState.activeServer?.id else {
+            viewModel = nil
+            return
+        }
+        let vm = LyricsViewModel(
+            track: track,
+            serverId: serverId,
+            source: container.lyricsSettings.source,
+            lyricsService: container.lyricsService,
+            playerService: container.playerService,
+            playerState: container.playerState,
+            settings: container.lyricsSettings
+        )
+        viewModel = vm
+        await vm.load()
+    }
+}
+
+/// Over the content and side panel: large artwork on the artwork-coloured background, like the
+/// iPhone player, with the song (links to its artist and album), a heart, Smart Shuffle and Instant
+/// Mix, and the synced lyrics beside the cover. × or Esc closes it.
+struct MacNowPlayingView: View {
+    @Environment(\.appContainer) private var container
+    @Environment(MacNavigator.self) private var navigator
+    @Environment(MacPlayerPanels.self) private var panels
 
     var body: some View {
         if let state = container?.playerState {
             content(state)
-                .background {
-                    LinearGradient(colors: PlayerBackgroundPalette.colors(from: colors.backgroundColors),
-                                   startPoint: .top, endPoint: .bottom)
-                        .ignoresSafeArea()
-                }
+                .background { MacArtworkBackground() }
                 .overlay(alignment: .topTrailing) { closeButton }
                 .environment(\.colorScheme, .dark)
-                .task(id: coverArtId(state)) {
-                    await colors.updateColors(for: coverArtId(state), colorExtractor: colorExtractor,
-                                              container: container, reduceMotion: reduceMotion)
-                }
-                .task(id: lyricsKey(state)) { await loadLyrics(state) }
         }
     }
 
     private func content(_ state: PlayerState) -> some View {
         HStack(spacing: MaeksterSpacing.xxxl) {
             VStack(alignment: .leading, spacing: MaeksterSpacing.l) {
-                CoverArtView(id: coverArtId(state) ?? "", size: 1200, tier: .hero, cornerRadius: MaeksterCornerRadius.large)
+                CoverArtView(id: macCoverArtId(state) ?? "", size: 1200, tier: .hero,
+                             cornerRadius: MaeksterCornerRadius.large)
                     .aspectRatio(1, contentMode: .fit)
                     .frame(maxWidth: 520, maxHeight: 520)
                     .shadow(radius: 24, y: 8)
@@ -54,15 +165,11 @@ struct MacNowPlayingView: View {
             }
             .frame(maxWidth: .infinity)
 
-            if panels.showsLyrics {
-                lyrics(state)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(.opacity)
-            }
+            MacLyricsContent()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(MaeksterSpacing.xxxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .animation(.easeInOut(duration: 0.2), value: panels.showsLyrics)
     }
 
     private func details(_ track: DisplayableSong) -> some View {
@@ -114,25 +221,6 @@ struct MacNowPlayingView: View {
         .frame(maxWidth: 520, alignment: .leading)
     }
 
-    @ViewBuilder
-    private func lyrics(_ state: PlayerState) -> some View {
-        if state.currentTrack?.isLocalFile == true {
-            EmptyStateView(systemImage: "quote.bubble", title: "Lyrics")
-        } else if let lyricsViewModel {
-            LyricsView(viewModel: lyricsViewModel)
-                .mask(
-                    LinearGradient(stops: [
-                        .init(color: .clear, location: 0),
-                        .init(color: .black, location: 0.06),
-                        .init(color: .black, location: 0.92),
-                        .init(color: .clear, location: 1)
-                    ], startPoint: .top, endPoint: .bottom)
-                )
-        } else {
-            LoadingStateView()
-        }
-    }
-
     /// Closes Now Playing; Esc does too.
     private var closeButton: some View {
         Button {
@@ -154,34 +242,6 @@ struct MacNowPlayingView: View {
     private func open(_ route: MacRoute) {
         panels.showsNowPlaying = false
         navigator.open(route)
-    }
-
-    private func coverArtId(_ state: PlayerState) -> String? {
-        state.isLiveStream ? state.currentRadio?.coverArt : (state.currentTrack?.coverArtId ?? state.currentTrack?.id)
-    }
-
-    private func lyricsKey(_ state: PlayerState) -> String {
-        "\(panels.showsLyrics)|\(state.currentTrack?.id ?? "")|\(container?.lyricsSettings.source.rawValue ?? "")"
-    }
-
-    /// One view model per song, like the iPhone player; only while lyrics are shown.
-    private func loadLyrics(_ state: PlayerState) async {
-        guard panels.showsLyrics, let track = state.currentTrack, !track.isLocalFile, let container,
-              let serverId = container.serverState.activeServer?.id else {
-            lyricsViewModel = nil
-            return
-        }
-        let vm = LyricsViewModel(
-            track: track,
-            serverId: serverId,
-            source: container.lyricsSettings.source,
-            lyricsService: container.lyricsService,
-            playerService: container.playerService,
-            playerState: state,
-            settings: container.lyricsSettings
-        )
-        lyricsViewModel = vm
-        await vm.load()
     }
 }
 

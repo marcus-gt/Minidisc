@@ -62,8 +62,10 @@ struct LyricsView: View {
                 }
             }
             .onScrollPhaseChange { _, newPhase in
-                if Self.isUserScroll(newPhase) { viewModel.userStartedScrolling() }
+                if newPhase == .interacting { viewModel.userStartedScrolling() }
             }
+            // The Mac's trackpad and mouse wheel don't reach the phase callback reliably.
+            .maeksterOnScrollWheel { viewModel.userStartedScrolling() }
             .safeAreaInset(edge: .top, spacing: 0) {
                 header
             }
@@ -71,16 +73,6 @@ struct LyricsView: View {
                 followButton(proxy: proxy)
             }
         }
-    }
-
-    /// A touch drag on iOS reports `.interacting`. A Mac trackpad or scroll wheel reports other
-    /// phases, so there any scroll that isn't the view's own animation counts as reading.
-    private static func isUserScroll(_ phase: ScrollPhase) -> Bool {
-        #if os(macOS)
-        phase != .idle && phase != .animating
-        #else
-        phase == .interacting
-        #endif
     }
 
     // MARK: - Header
