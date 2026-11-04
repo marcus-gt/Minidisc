@@ -7,6 +7,19 @@ import SwiftUI
 final class MacPlayerPanels {
     var showsNowPlaying = false
     var showsQueue = false
+    /// Whether Now Playing shows the lyrics beside the cover.
+    var showsLyrics = true
+
+    /// The player bar's lyrics button: shows or hides the lyrics in Now Playing, opening it (with
+    /// lyrics) if it's closed.
+    func toggleLyrics() {
+        if showsNowPlaying {
+            showsLyrics.toggle()
+        } else {
+            showsLyrics = true
+            showsNowPlaying = true
+        }
+    }
 }
 
 /// The queue beside the page, below the toolbar, on the same see-through material as the left
@@ -102,7 +115,8 @@ struct MacLyricsContent: View {
 
 /// Over the page, beside the queue panel: large artwork on the artwork-coloured background, like
 /// the iPhone player, with the song (links to its artist and album), a heart, Smart Shuffle and
-/// Instant Mix, and the synced lyrics beside the cover. × or Esc closes it.
+/// Instant Mix, and the synced lyrics beside the cover (the lyrics button hides them). × or Esc
+/// closes it.
 struct MacNowPlayingView: View {
     @Environment(\.appContainer) private var container
     @Environment(MacNavigator.self) private var navigator
@@ -131,9 +145,13 @@ struct MacNowPlayingView: View {
             }
             .frame(maxWidth: .infinity)
 
-            MacLyricsContent()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if panels.showsLyrics {
+                MacLyricsContent()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: panels.showsLyrics)
         .padding(MaeksterSpacing.xxxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

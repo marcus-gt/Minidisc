@@ -132,15 +132,16 @@ struct MacPlayerBar: View {
         .foregroundStyle(.secondary)
     }
 
-    /// Lyrics live in Now Playing, so the lyrics button opens (or closes) it; the queue is a panel.
+    /// Lyrics live in Now Playing: the lyrics button shows or hides them there (opening it if
+    /// needed). The queue is a panel.
     private func panelToggles(_ state: PlayerState) -> some View {
         HStack(spacing: MaeksterSpacing.s) {
             Button {
-                panels.showsNowPlaying.toggle()
+                panels.toggleLyrics()
             } label: {
                 Label("Lyrics", systemImage: "quote.bubble")
             }
-            .foregroundStyle(panels.showsNowPlaying ? Color.maeksterAccent : .secondary)
+            .foregroundStyle(panels.showsNowPlaying && panels.showsLyrics ? Color.maeksterAccent : .secondary)
             .disabled(state.currentTrack == nil)
             .help("Lyrics")
 
