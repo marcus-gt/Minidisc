@@ -56,6 +56,12 @@ struct MacPlaylistsView: View {
         .onReceive(NotificationCenter.default.publisher(for: .maeksterPlaylistDeleted)) { _ in
             Task { await viewModel?.load() }
         }
+        // File › New Playlist (⌘N).
+        .onChange(of: navigator.requestsNewPlaylist, initial: true) { _, requested in
+            guard requested else { return }
+            navigator.requestsNewPlaylist = false
+            createsPlaylist = true
+        }
         // Returning from a playlist picks up its new name or song count.
         .onAppear {
             guard let viewModel else { return }

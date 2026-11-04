@@ -90,10 +90,16 @@
 				"MacViews/MacAppDelegate.swift" = (
 					macos,
 				);
+				"MacViews/MacCommands.swift" = (
+					macos,
+				);
 				"MacViews/MacLibraryViews.swift" = (
 					macos,
 				);
 				"MacViews/MacMainView.swift" = (
+					macos,
+				);
+				"MacViews/MacMiniPlayer.swift" = (
 					macos,
 				);
 				"MacViews/MacNowPlayingView.swift" = (

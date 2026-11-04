@@ -84,10 +84,19 @@ struct MaeksterApp: App {
         }
 
         #if os(macOS)
+        .commands { MacCommands() }
+        #endif
+
+        #if os(macOS)
         // ⌘, opens the Mac settings window; iOS keeps its settings in the app.
         Settings {
             MacSettingsView(container: activeContainer)
         }
+        Window("Mini Player", id: MacMiniPlayer.windowID) {
+            MacMiniPlayer(container: activeContainer)
+        }
+        .windowResizability(.contentSize)
+        .windowLevel(.floating)
         #endif
     }
 
