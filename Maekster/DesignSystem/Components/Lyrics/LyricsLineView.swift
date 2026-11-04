@@ -16,7 +16,11 @@ struct LyricsLineView: View {
         return abs(index - currentIndex)
     }
 
+    /// The Mac dims lines without blurring them: at desktop sizes the blur reads as out of focus.
     private var blurRadius: CGFloat {
+        #if os(macOS)
+        return 0
+        #else
         guard isSynced, isFollowing, currentIndex != nil else { return 0 }
         switch distance {
         case 0: return 0
@@ -24,6 +28,7 @@ struct LyricsLineView: View {
         case 2: return 3.5
         default: return 6
         }
+        #endif
     }
 
     private var opacity: Double {

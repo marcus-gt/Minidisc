@@ -4,6 +4,7 @@ import SwiftUI
 /// volume. It reads `PlayerState` (the listener's intent) and sends everything to `PlayerService`.
 struct MacPlayerBar: View {
     @Environment(\.appContainer) private var container
+    @Environment(MacPlayerPanels.self) private var panels
     /// Where the seek bar is held while dragging; the player only seeks on release.
     @State private var scrubPosition: TimeInterval?
     @State private var volume: Double = Double(PlaybackPreferences.defaultVolume)
@@ -27,8 +28,11 @@ struct MacPlayerBar: View {
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity)
 
-            volumeControl(playerService: playerService)
-                .frame(width: 160)
+            HStack(spacing: MaeksterSpacing.m) {
+                panelToggles(state)
+                volumeControl(playerService: playerService)
+                    .frame(width: 140)
+            }
         }
         .padding(.horizontal, MaeksterSpacing.l)
         .padding(.vertical, MaeksterSpacing.s)
@@ -36,7 +40,19 @@ struct MacPlayerBar: View {
         .overlay(alignment: .top) { Divider() }
     }
 
+    /// Clicking the song opens (or closes) Now Playing.
     private func nowPlaying(_ state: PlayerState) -> some View {
+        Button {
+            panels.showsNowPlaying.toggle()
+        } label: {
+            nowPlayingLabel(state)
+        }
+        .buttonStyle(.plain)
+        .disabled(state.currentTrack == nil && state.currentRadio == nil)
+        .help("Now Playing")
+    }
+
+    private func nowPlayingLabel(_ state: PlayerState) -> some View {
         HStack(spacing: MaeksterSpacing.m) {
             CoverArtCard(id: state.currentTrack?.coverArtId ?? "", size: 44, cornerRadius: MaeksterCornerRadius.s)
             VStack(alignment: .leading, spacing: 2) {
@@ -114,6 +130,32 @@ struct MacPlayerBar: View {
         .font(.caption)
         .monospacedDigit()
         .foregroundStyle(.secondary)
+    }
+
+    /// Lyrics live in Now Playing: the lyrics button shows or hides them there (opening it if
+    /// needed). The queue is a panel.
+    private func panelToggles(_ state: PlayerState) -> some View {
+        HStack(spacing: MaeksterSpacing.s) {
+            Button {
+                panels.toggleLyrics()
+            } label: {
+                Label("Lyrics", systemImage: "quote.bubble")
+            }
+            .foregroundStyle(panels.showsNowPlaying && panels.showsLyrics ? Color.maeksterAccent : .secondary)
+            .disabled(state.currentTrack == nil)
+            .help("Lyrics")
+
+            Button {
+                panels.showsQueue.toggle()
+            } label: {
+                Label("Queue", systemImage: "list.bullet")
+            }
+            .foregroundStyle(panels.showsQueue ? Color.maeksterAccent : .secondary)
+            .help("Queue")
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.plain)
+        .imageScale(.large)
     }
 
     private func volumeControl(playerService: any PlayerServiceProtocol) -> some View {

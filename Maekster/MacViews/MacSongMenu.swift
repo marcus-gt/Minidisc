@@ -6,9 +6,26 @@ import SwiftUI
 @Observable
 final class MacNavigator {
     var path = NavigationPath()
+    /// The pages set aside while Now Playing shows.
+    private var setAside: NavigationPath?
 
     func open(_ route: MacRoute) {
         path.append(route)
+    }
+
+    /// Now Playing takes the stack's root, but the split view keeps drawing a pushed page on top of
+    /// it, so the open pages are set aside while it shows…
+    func setAsideForNowPlaying() {
+        guard setAside == nil else { return }
+        setAside = path
+        path = NavigationPath()
+    }
+
+    /// …and come back when it closes.
+    func restoreAfterNowPlaying() {
+        guard let pages = setAside else { return }
+        setAside = nil
+        path = pages
     }
 }
 

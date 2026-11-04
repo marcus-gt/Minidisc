@@ -6,6 +6,22 @@ import Testing
 @Suite("Queue editing and undo")
 @MainActor
 struct QueueEditingTests {
+    @Test("Clear removes only the songs after the playing one")
+    func clearsUpcoming() throws {
+        let state = try makeState(["a", "b", "c", "d"])
+        state.currentIndex = 1
+        state.currentTrack = state.queue[1]
+        state.originalQueueEndIndex = 3
+        #expect(QueueEditing.clearUpcoming(in: state) == 2)
+        #expect(state.queue.map(\.id) == ["a", "b"])
+        #expect(state.currentIndex == 1)
+        #expect(state.currentTrack?.id == "b")
+        #expect(state.position == 42)
+        #expect(state.playbackState == .playing)
+        #expect(state.originalQueueEndIndex == nil)
+        #expect(QueueEditing.clearUpcoming(in: state) == 0)
+    }
+
     @Test("Undo restores the selected occurrence without changing playback")
     func restoresOneOccurrence() throws {
         let state = try makeState(["a", "b", "b", "c"])

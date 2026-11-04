@@ -42,6 +42,7 @@ struct MacMainView: View {
     @SceneStorage("mac.sidebarSelection") private var selection: MacSidebarItem = .albums
     @State private var navigator = MacNavigator()
     @State private var playlistAddition = PlaylistAddition()
+    @State private var panels = MacPlayerPanels()
     @State private var searchText = ""
     @State private var searchSubmitCount = 0
     @FocusState private var isSearchFocused: Bool
@@ -59,16 +60,39 @@ struct MacMainView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
-            NavigationStack(path: $navigator.path) {
+            // The queue sits beside the page, below the toolbar, so it stays open on every page and
+            // beside Now Playing, which covers the page whatever is open.
+            HStack(spacing: 0) {
+                // Now Playing takes the page's place. The navigator sets the open pages aside while it
+                // shows (the split view would keep drawing them on top) and restores them after.
                 Group {
-                    if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
-                        section(selection)
+                    if panels.showsNowPlaying {
+                        MacNowPlayingView()
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     } else {
-                        MacSearchView(query: searchText, submitCount: searchSubmitCount)
+                        NavigationStack(path: $navigator.path) {
+                            Group {
+                                if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                                    section(selection)
+                                } else {
+                                    MacSearchView(query: searchText, submitCount: searchSubmitCount)
+                                }
+                            }
+                            .navigationDestination(for: MacRoute.self, destination: page)
+                        }
                     }
                 }
-                .navigationDestination(for: MacRoute.self, destination: page)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if panels.showsQueue {
+                    Divider()
+                    MacQueuePanel()
+                        .frame(width: 340)
+                        .transition(.move(edge: .trailing))
+                }
             }
+            .animation(.easeInOut(duration: 0.2), value: panels.showsQueue)
+            .animation(.easeInOut(duration: 0.25), value: panels.showsNowPlaying)
         }
         .searchable(text: $searchText, placement: .toolbar, prompt: "Artists, albums, songs, playlists…")
         .searchFocused($isSearchFocused)
@@ -83,6 +107,7 @@ struct MacMainView: View {
         .onSubmit(of: .search) { searchSubmitCount += 1 }
         .onChange(of: searchText) { _, _ in
             // A new search starts from its results, not from a page opened from the last one.
+            panels.showsNowPlaying = false
             if !navigator.path.isEmpty { navigator.path = NavigationPath() }
         }
         .background {
@@ -97,6 +122,8 @@ struct MacMainView: View {
         }
         .environment(navigator)
         .environment(playlistAddition)
+        .environment(panels)
+        .onAppear { panels.navigator = navigator }
         .sheet(item: $playlistAddition.request) { request in
             AddToPlaylistSheet(request: request)
                 .frame(minWidth: 420, minHeight: 480)
@@ -110,8 +137,9 @@ struct MacMainView: View {
             get: { selection },
             set: { newValue in
                 guard let newValue else { return }
-                // Picking a section leaves search, even the section already selected.
+                // Picking a section leaves search and Now Playing, even the section already selected.
                 searchText = ""
+                panels.showsNowPlaying = false
                 guard newValue != selection else { return }
                 selection = newValue
                 navigator.path = NavigationPath()

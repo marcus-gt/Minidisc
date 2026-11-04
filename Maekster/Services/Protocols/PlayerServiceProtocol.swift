@@ -29,6 +29,8 @@ protocol PlayerServiceProtocol: AnyObject, Sendable {
     func removeQueueTrack(_ selection: QueueTrackSelection) async -> QueueRemoval?
     func restoreQueueTrack(_ removal: QueueRemoval) async -> Bool
     func moveQueueTrack(_ selection: QueueTrackSelection, toIndex: Int) async
+    /// Removes every song after the playing one.
+    func clearUpcoming() async
     func moveInQueue(fromIndex: Int, toIndex: Int) async
     func restoreSession() async
     /// Invalidates network-bound playback resources after a meaningful path transition.
@@ -80,6 +82,7 @@ typealias QueueRefill = @Sendable (_ excluded: Set<String>, _ count: Int) async 
 
 extension PlayerServiceProtocol {
     func saveSessionForBackground() async {}
+    func clearUpcoming() async {}
 
     nonisolated func playUntilEnd(_ tracks: [DisplayableSong], source: QueueSource?) async throws {
         try await play(tracks: tracks, startIndex: 0, source: source)

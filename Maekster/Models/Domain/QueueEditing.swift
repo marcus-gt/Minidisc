@@ -52,4 +52,17 @@ enum QueueEditing {
         state.originalQueueEndIndex = nil
         return true
     }
+
+    /// Removes every song after the playing one; returns how many went. The playing song, its
+    /// position and the playback state are untouched.
+    static func clearUpcoming(in state: PlayerState) -> Int {
+        guard !state.isLiveStream else { return 0 }
+        let keep = min(state.currentIndex + 1, state.queue.count)
+        let count = state.queue.count - keep
+        guard count > 0 else { return 0 }
+        state.queue.removeSubrange(keep...)
+        // The auto-extend boundary pointed into the removed tail; nothing past it remains.
+        state.originalQueueEndIndex = nil
+        return count
+    }
 }

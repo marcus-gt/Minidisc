@@ -64,6 +64,8 @@ struct LyricsView: View {
             .onScrollPhaseChange { _, newPhase in
                 if newPhase == .interacting { viewModel.userStartedScrolling() }
             }
+            // The Mac's trackpad and mouse wheel don't reach the phase callback reliably.
+            .maeksterOnScrollWheel { viewModel.userStartedScrolling() }
             .safeAreaInset(edge: .top, spacing: 0) {
                 header
             }
