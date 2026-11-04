@@ -132,32 +132,29 @@ struct MacPlayerBar: View {
         .foregroundStyle(.secondary)
     }
 
-    /// Open the side panel on Lyrics or Queue; clicking the open one closes it.
+    /// Lyrics live in Now Playing, so the lyrics button opens (or closes) it; the queue is a panel.
     private func panelToggles(_ state: PlayerState) -> some View {
         HStack(spacing: MaeksterSpacing.s) {
             Button {
-                panels.toggle(.lyrics)
+                panels.showsNowPlaying.toggle()
             } label: {
                 Label("Lyrics", systemImage: "quote.bubble")
             }
-            .foregroundStyle(isShowing(.lyrics) ? Color.maeksterAccent : .secondary)
+            .foregroundStyle(panels.showsNowPlaying ? Color.maeksterAccent : .secondary)
+            .disabled(state.currentTrack == nil)
             .help("Lyrics")
 
             Button {
-                panels.toggle(.queue)
+                panels.showsQueue.toggle()
             } label: {
                 Label("Queue", systemImage: "list.bullet")
             }
-            .foregroundStyle(isShowing(.queue) ? Color.maeksterAccent : .secondary)
+            .foregroundStyle(panels.showsQueue ? Color.maeksterAccent : .secondary)
             .help("Queue")
         }
         .labelStyle(.iconOnly)
         .buttonStyle(.plain)
         .imageScale(.large)
-    }
-
-    private func isShowing(_ panel: MacPlayerPanels.SidePanel) -> Bool {
-        panels.sidePanel == panel
     }
 
     private func volumeControl(playerService: any PlayerServiceProtocol) -> some View {

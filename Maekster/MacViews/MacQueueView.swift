@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The side panel's Queue tab: where the music is playing from, then the songs up next. Drag to reorder,
+/// The queue panel: where the music is playing from, then the songs up next. Drag to reorder,
 /// double-click to jump to a song, right-click to remove it (with Undo, as on iPhone), and Clear
 /// to drop everything after the playing song.
 struct MacQueueView: View {

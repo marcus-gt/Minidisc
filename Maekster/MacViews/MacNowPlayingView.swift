@@ -2,53 +2,19 @@ import SwiftData
 import SwiftSonic
 import SwiftUI
 
-/// What the player bar opens: Now Playing over the content, and the side panel with the queue or
-/// the lyrics.
+/// What the player bar opens: Now Playing over the page, and the queue panel beside it.
 @Observable
 final class MacPlayerPanels {
-    enum SidePanel: Hashable {
-        case queue, lyrics
-    }
-
     var showsNowPlaying = false
-    var sidePanel: SidePanel?
-
-    /// The player bar's Queue and Lyrics buttons: open that tab, or close the panel if it's showing.
-    func toggle(_ panel: SidePanel) {
-        sidePanel = sidePanel == panel ? nil : panel
-    }
+    var showsQueue = false
 }
 
-/// The right-hand panel beside the page, below the toolbar: Queue and Lyrics tabs, like the Music app.
-struct MacSidePanel: View {
-    @Environment(MacPlayerPanels.self) private var panels
-
+/// The queue beside the page, below the toolbar, on the same see-through material as the left
+/// sidebar.
+struct MacQueuePanel: View {
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("Queue", selection: Binding(
-                get: { panels.sidePanel ?? .queue },
-                set: { panels.sidePanel = $0 }
-            )) {
-                Text("Queue").tag(MacPlayerPanels.SidePanel.queue)
-                Text("Lyrics").tag(MacPlayerPanels.SidePanel.lyrics)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .padding(MaeksterSpacing.m)
-
-            switch panels.sidePanel {
-            case .lyrics?:
-                // Part of the same panel as the queue, so the same surface and text colour.
-                MacLyricsContent()
-                    .padding(.horizontal, MaeksterSpacing.m)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .environment(\.maeksterLyricsColor, .primary)
-                    .environment(\.maeksterLyricsFont, .system(.title3, weight: .bold))
-            default:
-                MacQueueView()
-            }
-        }
-        .background { MacSidebarMaterial().ignoresSafeArea() }
+        MacQueueView()
+            .background { MacSidebarMaterial().ignoresSafeArea() }
     }
 }
 
@@ -83,8 +49,8 @@ func macCoverArtId(_ state: PlayerState) -> String? {
 }
 
 /// Synced lyrics for the playing song (LRCLIB or server, per the lyrics setting) through the shared
-/// `LyricsView`: one view model per song, like the iPhone player. White text on the artwork
-/// background unless `maeksterLyricsColor` says otherwise.
+/// `LyricsView`: one view model per song, like the iPhone player. White text, so it sits on the
+/// artwork background.
 struct MacLyricsContent: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: LyricsViewModel?
@@ -134,10 +100,9 @@ struct MacLyricsContent: View {
     }
 }
 
-/// Over the page, beside the side panel: large artwork on the artwork-coloured background, like the
-/// iPhone player, with the song (links to its artist and album), a heart, Smart Shuffle and Instant
-/// Mix, and the synced lyrics beside the cover unless the side panel already shows them. × or Esc
-/// closes it.
+/// Over the page, beside the queue panel: large artwork on the artwork-coloured background, like
+/// the iPhone player, with the song (links to its artist and album), a heart, Smart Shuffle and
+/// Instant Mix, and the synced lyrics beside the cover. × or Esc closes it.
 struct MacNowPlayingView: View {
     @Environment(\.appContainer) private var container
     @Environment(MacNavigator.self) private var navigator
@@ -166,10 +131,8 @@ struct MacNowPlayingView: View {
             }
             .frame(maxWidth: .infinity)
 
-            if panels.sidePanel != .lyrics {
-                MacLyricsContent()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+            MacLyricsContent()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(MaeksterSpacing.xxxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

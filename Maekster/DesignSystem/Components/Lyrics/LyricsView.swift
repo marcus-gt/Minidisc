@@ -3,7 +3,6 @@ import SwiftSonic
 
 struct LyricsView: View {
     @Bindable var viewModel: LyricsViewModel
-    @Environment(\.maeksterLyricsColor) private var color
 
     var body: some View {
         Group {
@@ -95,7 +94,7 @@ struct LyricsView: View {
                         Text(displayName(for: viewModel.selectedLanguage ?? "und"))
                     }
                     .font(.callout)
-                    .foregroundStyle(color.opacity(0.8))
+                    .foregroundStyle(.white.opacity(0.8))
                 }
                 .accessibilityLabel(Text("Lyrics language"))
 
@@ -121,7 +120,7 @@ struct LyricsView: View {
                     .padding(.horizontal, MaeksterSpacing.m)
                     .padding(.vertical, MaeksterSpacing.s)
                     .background(.ultraThinMaterial, in: Capsule())
-                    .foregroundStyle(color)
+                    .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
             .padding(.bottom, MaeksterSpacing.m)
