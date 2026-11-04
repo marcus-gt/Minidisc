@@ -310,6 +310,16 @@ struct MacPlaylistView: View {
                         playlistId: playlistId, currentName: vm.name, coverArtId: vm.coverArtId
                     )
                 }
+                Divider()
+                if vm.isDownloadingPlaylist {
+                    Button("Cancel Download", systemImage: "xmark") { Task { await vm.cancelPlaylistDownload() } }
+                } else if !vm.songs.isEmpty, vm.songs.allSatisfy(\.isDownloaded) {
+                    Button("Remove Download", systemImage: "trash") { Task { await vm.deleteDownload() } }
+                } else {
+                    Button("Download Playlist", systemImage: "arrow.down.circle") { Task { await vm.downloadPlaylist() } }
+                        .disabled(vm.songs.isEmpty)
+                }
+                Divider()
                 Button("Delete Playlist", systemImage: "trash", role: .destructive) { confirmsDelete = true }
             } label: {
                 Label("Edit Playlist", systemImage: "ellipsis")

@@ -1,18 +1,24 @@
 import SwiftUI
 
-/// The library sections in the sidebar.
+/// The sections in the sidebar: the server library, then what's on this Mac.
 enum MacSidebarItem: String, CaseIterable, Identifiable, Hashable {
     case albums, artists, songs, playlists, genres
+    case downloads, localFiles
 
     var id: String { rawValue }
 
-    var title: LocalizedStringKey {
+    static let library: [Self] = [.albums, .artists, .songs, .playlists, .genres]
+    static let onThisMac: [Self] = [.downloads, .localFiles]
+
+    var title: Text {
         switch self {
-        case .albums: "Albums"
-        case .artists: "Artists"
-        case .songs: "Songs"
-        case .playlists: "Playlists"
-        case .genres: "Genres"
+        case .albums: Text("Albums")
+        case .artists: Text("Artists")
+        case .songs: Text("Songs")
+        case .playlists: Text("Playlists")
+        case .genres: Text("Genres")
+        case .downloads: Text("Downloaded")
+        case .localFiles: Text("Local Files", tableName: "LocalMusic")
         }
     }
 
@@ -23,6 +29,8 @@ enum MacSidebarItem: String, CaseIterable, Identifiable, Hashable {
         case .songs: "music.note"
         case .playlists: "music.note.list"
         case .genres: "guitars"
+        case .downloads: "arrow.down.circle"
+        case .localFiles: "folder"
         }
     }
 }
@@ -47,13 +55,20 @@ struct MacMainView: View {
     @State private var searchSubmitCount = 0
     @FocusState private var isSearchFocused: Bool
     @Environment(\.appContainer) private var container
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationSplitView {
             List(selection: sidebarSelection) {
                 Section("Library") {
-                    ForEach(MacSidebarItem.allCases) { item in
-                        Label(item.title, systemImage: item.systemImage)
+                    ForEach(MacSidebarItem.library) { item in
+                        Label { item.title } icon: { Image(systemName: item.systemImage) }
+                            .tag(item)
+                    }
+                }
+                Section("Downloads") {
+                    ForEach(MacSidebarItem.onThisMac) { item in
+                        Label { item.title } icon: { Image(systemName: item.systemImage) }
                             .tag(item)
                     }
                 }
@@ -124,6 +139,14 @@ struct MacMainView: View {
         .environment(playlistAddition)
         .environment(panels)
         .onAppear { panels.navigator = navigator }
+        // Picks up files added to or removed from the local music folders, like the iPhone app.
+        .task(id: scenePhase) {
+            guard scenePhase == .active, let library = container?.localMusic else { return }
+            while !Task.isCancelled {
+                await library.refresh()
+                do { try await Task.sleep(for: .seconds(30)) } catch { break }
+            }
+        }
         .focusedSceneValue(\.macPanels, panels)
         .focusedSceneValue(\.macNavigator, navigator)
         .onChange(of: navigator.requestedSection) { _, section in
@@ -166,6 +189,8 @@ struct MacMainView: View {
         case .songs: MacSongsView()
         case .playlists: MacPlaylistsView()
         case .genres: MacGenresView()
+        case .downloads: MacDownloadsView()
+        case .localFiles: MacLocalFilesView()
         }
     }
 

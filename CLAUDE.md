@@ -116,8 +116,8 @@ Maekster/                      app target sources
   ViewModels/                  @Observable @MainActor screen view models
   Views/                       iPhone screens (iOS-only): Main/ (tabs, player, home, search), Browse/,
                                Discover/, Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
-  SharedViews/                 screens used by both apps (both platforms): Settings/ pages the iPhone
-                               settings list and the Mac settings window share
+  SharedViews/                 screens used by both apps (both platforms): Settings/ pages, LocalMusic/
+                               folder management, the download activity section
   MacViews/                    Mac screens (macOS-only): MacRootView (the Mac `RootView`), MacSignInView,
                                MacMainView (sidebar, `MacRoute`s), library lists, album/artist/genre
                                pages, MacPlaylists, MacTrackTable + MacSongMenu, MacPlayerBar
@@ -332,6 +332,8 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   `keychain-access-groups` in the Mac entitlements), like iOS. It shares the default access group with the
   iPhone build, so credentials saved by the iPhone app running on a Mac ("Designed for iPhone", same
   bundle ID and container) stay readable.
+- Local music folders: the sandboxed Mac keeps folder access only through security-scoped, read-only
+  bookmarks (`LocalMusicBookmark`); iOS uses minimal bookmarks.
 - Unit tests stay iOS-only. Check the Mac side with the macOS build above.
 - User-facing strings are localized through the String Catalogs (`LocalizedStringResource` /
   `String(localized:)`; local-music strings use `table: "LocalMusic"`). Don't hard-code English in
