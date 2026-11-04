@@ -63,23 +63,29 @@ struct MacMainView: View {
             // The queue sits beside the page, below the toolbar, so it stays open on every page and
             // beside Now Playing, which covers the page whatever is open.
             HStack(spacing: 0) {
-                NavigationStack(path: $navigator.path) {
-                    Group {
-                        if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
-                            section(selection)
-                        } else {
-                            MacSearchView(query: searchText, submitCount: searchSubmitCount)
+                // Now Playing replaces the page rather than drawing over it: a track table is an AppKit
+                // view and drew above a SwiftUI overlay. The page stays loaded, only hidden.
+                ZStack {
+                    NavigationStack(path: $navigator.path) {
+                        Group {
+                            if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                                section(selection)
+                            } else {
+                                MacSearchView(query: searchText, submitCount: searchSubmitCount)
+                            }
                         }
+                        .navigationDestination(for: MacRoute.self, destination: page)
                     }
-                    .navigationDestination(for: MacRoute.self, destination: page)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .overlay {
+                    .opacity(panels.showsNowPlaying ? 0 : 1)
+                    .allowsHitTesting(!panels.showsNowPlaying)
+                    .accessibilityHidden(panels.showsNowPlaying)
+
                     if panels.showsNowPlaying {
                         MacNowPlayingView()
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if panels.showsQueue {
                     Divider()
