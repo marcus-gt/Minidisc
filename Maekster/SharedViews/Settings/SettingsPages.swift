@@ -136,14 +136,16 @@ struct StorageSettingsView: View {
                 }
                 .tint(Color(.systemGreen))
 
-                Toggle(isOn: Binding(
-                    get: { stream.streamsOverDownloadsOnCellular },
-                    set: { stream.streamsOverDownloadsOnCellular = $0 }
-                )) {
-                    Text("Stream instead on cellular")
-                        .foregroundStyle(.primary)
+                if MaeksterPlatform.hasCellularData {
+                    Toggle(isOn: Binding(
+                        get: { stream.streamsOverDownloadsOnCellular },
+                        set: { stream.streamsOverDownloadsOnCellular = $0 }
+                    )) {
+                        Text("Stream instead on cellular")
+                            .foregroundStyle(.primary)
+                    }
+                    .tint(Color(.systemGreen))
                 }
-                .tint(Color(.systemGreen))
             }
             } header: {
                 Text("Downloads")
@@ -199,14 +201,16 @@ struct StorageSettingsView: View {
                     .pickerStyle(.menu)
                     .tint(.secondary)
 
-                    Toggle(isOn: Binding(
-                        get: { cacheSettings.cacheOverCellular },
-                        set: { cacheSettings.cacheOverCellular = $0 }
-                    )) {
-                        Text("Use cellular data")
-                            .foregroundStyle(.primary)
+                    if MaeksterPlatform.hasCellularData {
+                        Toggle(isOn: Binding(
+                            get: { cacheSettings.cacheOverCellular },
+                            set: { cacheSettings.cacheOverCellular = $0 }
+                        )) {
+                            Text("Use cellular data")
+                                .foregroundStyle(.primary)
+                        }
+                        .tint(Color(.systemGreen))
                     }
-                    .tint(Color(.systemGreen))
                 }
 
                 Button(role: .destructive) {
@@ -617,25 +621,27 @@ struct PlaybackSettingsView: View {
                             Text(quality.displayName).tag(quality)
                         }
                     } label: {
-                        Text("Quality on Wi-Fi")
+                        Text(MaeksterPlatform.hasCellularData ? LocalizedStringKey("Quality on Wi-Fi") : "Quality")
                             .foregroundStyle(.primary)
                     }
                     .pickerStyle(.menu)
                     .tint(.secondary)
 
-                    Picker(selection: Binding(
-                        get: { stream.cellularQuality },
-                        set: { stream.cellularQuality = $0 }
-                    )) {
-                        ForEach(StreamQuality.allCases) { quality in
-                            Text(quality.displayName).tag(quality)
+                    if MaeksterPlatform.hasCellularData {
+                        Picker(selection: Binding(
+                            get: { stream.cellularQuality },
+                            set: { stream.cellularQuality = $0 }
+                        )) {
+                            ForEach(StreamQuality.allCases) { quality in
+                                Text(quality.displayName).tag(quality)
+                            }
+                        } label: {
+                            Text("Quality on cellular")
+                                .foregroundStyle(.primary)
                         }
-                    } label: {
-                        Text("Quality on cellular")
-                            .foregroundStyle(.primary)
+                        .pickerStyle(.menu)
+                        .tint(.secondary)
                     }
-                    .pickerStyle(.menu)
-                    .tint(.secondary)
                 }
             } header: {
                 Text("Streaming")
