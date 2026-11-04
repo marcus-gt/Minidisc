@@ -5,7 +5,16 @@ import SwiftUI
 /// What the player bar opens: Now Playing over the page, and the queue panel beside it.
 @Observable
 final class MacPlayerPanels {
-    var showsNowPlaying = false
+    /// Set aside the open pages when Now Playing opens, and bring them back when it closes, in
+    /// the same moment, so whatever changes the path right after (a sidebar section, a link in Now
+    /// Playing) applies on top of the restored pages.
+    var showsNowPlaying = false {
+        didSet {
+            guard showsNowPlaying != oldValue else { return }
+            if showsNowPlaying { navigator?.setAsideForNowPlaying() } else { navigator?.restoreAfterNowPlaying() }
+        }
+    }
+    weak var navigator: MacNavigator?
     var showsQueue = false
     /// Whether Now Playing shows the lyrics beside the cover.
     var showsLyrics = true

@@ -63,9 +63,8 @@ struct MacMainView: View {
             // The queue sits beside the page, below the toolbar, so it stays open on every page and
             // beside Now Playing, which covers the page whatever is open.
             HStack(spacing: 0) {
-                // Now Playing takes the page's place: a track table is an AppKit view that drew over
-                // SwiftUI layered on top and ignored being faded out. The path lives in the navigator,
-                // so closing Now Playing rebuilds the same pages.
+                // Now Playing takes the page's place. The navigator sets the open pages aside while it
+                // shows (the split view would keep drawing them on top) and restores them after.
                 Group {
                     if panels.showsNowPlaying {
                         MacNowPlayingView()
@@ -108,8 +107,8 @@ struct MacMainView: View {
         .onSubmit(of: .search) { searchSubmitCount += 1 }
         .onChange(of: searchText) { _, _ in
             // A new search starts from its results, not from a page opened from the last one.
-            if !navigator.path.isEmpty { navigator.path = NavigationPath() }
             panels.showsNowPlaying = false
+            if !navigator.path.isEmpty { navigator.path = NavigationPath() }
         }
         .background {
             // ⌘F focuses the search field, as in the Music app.
@@ -124,6 +123,7 @@ struct MacMainView: View {
         .environment(navigator)
         .environment(playlistAddition)
         .environment(panels)
+        .onAppear { panels.navigator = navigator }
         .sheet(item: $playlistAddition.request) { request in
             AddToPlaylistSheet(request: request)
                 .frame(minWidth: 420, minHeight: 480)
