@@ -93,7 +93,7 @@ private struct MacServerSettings: View {
             .sheet(isPresented: Binding(get: { editing != nil }, set: { if !$0 { editing = nil } })) {
                 if let server = editing {
                     NavigationStack {
-                        EditServerDestinationView(server: server, serverService: container.serverService)
+                        EditServerDestinationView(server: server, serverService: container.serverService, isSheet: true)
                     }
                     .frame(minWidth: 480, minHeight: 520)
                 }
@@ -109,6 +109,11 @@ private struct MacServerSettings: View {
                     Task {
                         await container.toastService.perform {
                             try await container.serverService.removeServer(id: server.id)
+                            // Switch to another server rather than leaving none active.
+                            if container.serverState.activeServer == nil,
+                               let next = container.serverState.servers.first {
+                                try await container.serverService.setActiveServer(id: next.id)
+                            }
                         }
                     }
                 }
