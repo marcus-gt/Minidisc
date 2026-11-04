@@ -52,7 +52,7 @@ struct AcknowledgementsView: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Acknowledgements")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayModeInline()
     }
 
     /// A project credit that opens its repository. Project and author names are proper nouns and aren't localized.

@@ -116,6 +116,8 @@ Maekster/                      app target sources
   ViewModels/                  @Observable @MainActor screen view models
   Views/                       iPhone screens (iOS-only): Main/ (tabs, player, home, search), Browse/,
                                Discover/, Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
+  SharedViews/                 screens used by both apps (both platforms): Settings/ pages the iPhone
+                               settings list and the Mac settings window share
   MacViews/                    Mac screens (macOS-only): MacRootView (the Mac `RootView`), MacSignInView,
                                MacMainView (sidebar, `MacRoute`s), library lists, album/artist/genre
                                pages, MacPlaylists, MacTrackTable + MacSongMenu, MacPlayerBar
@@ -318,6 +320,8 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
   `Scripts/doctor.sh` fails when one is missing. A few shared components that still open iPhone
   sheets are iOS-only too, until the Mac needs them.
 - The Mac `RootView` (in `MacViews/`) takes the iOS one's name so `MaeksterApp` needs no `#if`.
+  A screen both apps use goes in `SharedViews/` (shared components stay in `DesignSystem/Components/`);
+  use the `maekster*` text-input and title wrappers instead of iOS-only modifiers there.
   Pages open other pages through `MacNavigator` (in the environment). Mac screens reuse the iPhone view
   models and shared components (`ServerFormView`, `AlbumGridCell`,
   `CoverArtCard`, …) and the iPhone app's existing strings where the wording fits.

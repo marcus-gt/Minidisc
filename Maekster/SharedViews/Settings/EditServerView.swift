@@ -16,7 +16,7 @@ struct EditServerView: View {
             }
         }
         .navigationTitle("Server Configuration")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayModeInline()
         .navigationBarBackButtonHidden(viewModel.hasUnsavedChanges)
         .toolbar { toolbar }
         .alert("Discard Changes?", isPresented: $showDiscardAlert) {
@@ -90,9 +90,8 @@ struct EditServerView: View {
     private var serverSection: some View {
         Section("Server") {
             TextField("https://music.example.com", text: $viewModel.serverURL)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .keyboardType(.URL)
+                .maeksterPlainTextInput()
+                .maeksterURLInput()
             invalidURLHint
             httpWarning
         }
@@ -101,8 +100,7 @@ struct EditServerView: View {
     private var credentialsSection: some View {
         Section("Credentials") {
             TextField("Username", text: $viewModel.username)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
+                .maeksterPlainTextInput()
 
             HStack(spacing: 8) {
                 passwordField
@@ -123,8 +121,7 @@ struct EditServerView: View {
     private var passwordField: some View {
         if isPasswordRevealed {
             TextField("Password", text: $viewModel.password)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
+                .maeksterPlainTextInput()
         } else {
             SecureField("Password", text: $viewModel.password)
         }

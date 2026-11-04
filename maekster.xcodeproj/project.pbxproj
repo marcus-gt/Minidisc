@@ -117,6 +117,9 @@
 				"MacViews/MacSearchView.swift" = (
 					macos,
 				);
+				"MacViews/MacSettingsView.swift" = (
+					macos,
+				);
 				"MacViews/MacSidebarMaterial.swift" = (
 					macos,
 				);
@@ -327,25 +330,10 @@
 				"Views/Onboarding/OnboardingWelcomeView.swift" = (
 					ios,
 				);
-				"Views/Settings/AcknowledgementsView.swift" = (
-					ios,
-				);
 				"Views/Settings/DiscoverLayoutSettingsView.swift" = (
 					ios,
 				);
-				"Views/Settings/EditServerView.swift" = (
-					ios,
-				);
 				"Views/Settings/HomeLayoutSettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/Integrations/AudioMuseSettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/Integrations/ExternalProviderEditView.swift" = (
-					ios,
-				);
-				"Views/Settings/Integrations/ExternalProvidersSettingsView.swift" = (
 					ios,
 				);
 				"Views/Settings/Integrations/LidarrAddArtistSheet.swift" = (
@@ -354,28 +342,13 @@
 				"Views/Settings/Integrations/LidarrArtistSearchView.swift" = (
 					ios,
 				);
-				"Views/Settings/Integrations/LidarrSettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/ListenBrainzSettingsView.swift" = (
-					ios,
-				);
 				"Views/Settings/PlaybackDiagnosticsView.swift" = (
-					ios,
-				);
-				"Views/Settings/Sections/CrossfadeSettingsSection.swift" = (
 					ios,
 				);
 				"Views/Settings/Sections/MoodPlaylistSettingsSection.swift" = (
 					ios,
 				);
-				"Views/Settings/Sections/OfflineFavoritesSettingsSection.swift" = (
-					ios,
-				);
 				"Views/Settings/Sections/QuickPlaylistsSettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/Sections/ReplayGainSettingsSection.swift" = (
 					ios,
 				);
 				"Views/Settings/SettingsView.swift" = (

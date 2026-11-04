@@ -12,6 +12,15 @@ extension View {
         #endif
     }
 
+    /// The ASCII keyboard on iOS (tokens, keys); a no-op on macOS, which has no software keyboard.
+    func maeksterASCIIInput() -> some View {
+        #if os(macOS)
+        self
+        #else
+        self.keyboardType(.asciiCapable)
+        #endif
+    }
+
     /// The URL keyboard on iOS; a no-op on macOS, which has no software keyboard.
     func maeksterURLInput() -> some View {
         #if os(macOS)
