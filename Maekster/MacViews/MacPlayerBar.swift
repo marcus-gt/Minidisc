@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// The bar along the bottom of the window: what's playing, transport controls with a seek bar, and
@@ -5,6 +6,7 @@ import SwiftUI
 struct MacPlayerBar: View {
     @Environment(\.appContainer) private var container
     @Environment(MacPlayerPanels.self) private var panels
+    @Environment(MacNavigator.self) private var navigator
     /// Where the seek bar is held while dragging; the player only seeks on release.
     @State private var scrubPosition: TimeInterval?
 
@@ -39,28 +41,58 @@ struct MacPlayerBar: View {
         .overlay(alignment: .top) { Divider() }
     }
 
-    /// Clicking the song opens (or closes) Now Playing.
+    /// Clicking the cover or title opens (or closes) Now Playing; the artist and album below open
+    /// their pages, like the Music app.
     private func nowPlaying(_ state: PlayerState) -> some View {
-        Button {
-            panels.showsNowPlaying.toggle()
-        } label: {
-            nowPlayingLabel(state)
+        HStack(spacing: MaeksterSpacing.m) {
+            Button {
+                panels.showsNowPlaying.toggle()
+            } label: {
+                CoverArtCard(id: state.currentTrack?.coverArtId ?? "", size: 44, cornerRadius: MaeksterCornerRadius.s)
+            }
+            .help("Now Playing")
+
+            VStack(alignment: .leading, spacing: 2) {
+                Button {
+                    panels.showsNowPlaying.toggle()
+                } label: {
+                    Text(state.currentTrack?.title ?? "")
+                        .font(.headline)
+                }
+                .help("Now Playing")
+
+                HStack(spacing: MaeksterSpacing.xs) {
+                    if let track = state.currentTrack {
+                        link(track.artist, route: track.artistId.map { .artist(id: $0, name: track.artist ?? "") })
+                        if let album = track.albumName, !album.isEmpty {
+                            Text(verbatim: "—")
+                            link(album, route: track.albumId.map { .album(id: $0) })
+                        }
+                    }
+                }
+                .foregroundStyle(.secondary)
+            }
+            .lineLimit(1)
         }
         .buttonStyle(.plain)
         .disabled(state.currentTrack == nil && state.currentRadio == nil)
-        .help("Now Playing")
     }
 
-    private func nowPlayingLabel(_ state: PlayerState) -> some View {
-        HStack(spacing: MaeksterSpacing.m) {
-            CoverArtCard(id: state.currentTrack?.coverArtId ?? "", size: 44, cornerRadius: MaeksterCornerRadius.s)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(state.currentTrack?.title ?? "")
-                    .font(.headline)
-                Text(state.currentTrack?.artist ?? "")
-                    .foregroundStyle(.secondary)
+    /// Text that opens `route` (leaving Now Playing), or plain text when there's no page to open.
+    @ViewBuilder
+    private func link(_ text: String?, route: MacRoute?) -> some View {
+        if let route {
+            Button {
+                panels.showsNowPlaying = false
+                navigator.open(route)
+            } label: {
+                Text(verbatim: text ?? "")
             }
-            .lineLimit(1)
+            .onHover { inside in
+                if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+            }
+        } else {
+            Text(verbatim: text ?? "")
         }
     }
 

@@ -5,6 +5,7 @@ struct AlbumGridCell: View {
     let album: AlbumID3
     var zoomSourceId: String? = nil
     var zoomNamespace: Namespace.ID? = nil
+    var titleLineLimit = 1
 
     @Environment(\.appContainer) private var container
     @State private var isHovered = false
@@ -19,7 +20,7 @@ struct AlbumGridCell: View {
             .aspectRatio(1, contentMode: .fit)
             .maeksterMatchedTransitionSource(id: zoomSourceId, in: zoomNamespace)
 
-            CoverCardMetadata(title: album.name, subtitle: album.artist)
+            CoverCardMetadata(title: album.name, subtitle: album.artist, titleLineLimit: titleLineLimit)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .lazyCollectionContextMenu(

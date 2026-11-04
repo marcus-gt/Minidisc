@@ -58,6 +58,43 @@ struct MacMainView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
+        // The player bar sits below the split view rather than in a safe-area inset: track tables
+        // (AppKit tables) ignore the inset, so their last rows ended up behind the bar.
+        VStack(spacing: 0) {
+            splitView
+            MacPlayerBar()
+        }
+        .environment(navigator)
+        .environment(playlistAddition)
+        .environment(panels)
+        .onAppear { panels.navigator = navigator }
+        // Picks up files added to or removed from the local music folders, like the iPhone app.
+        .task(id: scenePhase) {
+            guard scenePhase == .active, let library = container?.localMusic else { return }
+            while !Task.isCancelled {
+                await library.refresh()
+                do { try await Task.sleep(for: .seconds(30)) } catch { break }
+            }
+        }
+        .focusedSceneValue(\.macPanels, panels)
+        .focusedSceneValue(\.macNavigator, navigator)
+        .onChange(of: navigator.requestedSection) { _, section in
+            // The menu bar asked for a section (File › New Playlist opens Playlists).
+            guard let section else { return }
+            navigator.requestedSection = nil
+            searchText = ""
+            panels.showsNowPlaying = false
+            selection = section
+            navigator.path = NavigationPath()
+        }
+        .sheet(item: $playlistAddition.request) { request in
+            AddToPlaylistSheet(request: request)
+                .frame(minWidth: 420, minHeight: 480)
+        }
+        .modifier(MacSpacebarPlayPause())
+    }
+
+    private var splitView: some View {
         NavigationSplitView {
             List(selection: sidebarSelection) {
                 Section("Library") {
@@ -132,37 +169,6 @@ struct MacMainView: View {
                 .opacity(0)
                 .accessibilityHidden(true)
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            MacPlayerBar()
-        }
-        .environment(navigator)
-        .environment(playlistAddition)
-        .environment(panels)
-        .onAppear { panels.navigator = navigator }
-        // Picks up files added to or removed from the local music folders, like the iPhone app.
-        .task(id: scenePhase) {
-            guard scenePhase == .active, let library = container?.localMusic else { return }
-            while !Task.isCancelled {
-                await library.refresh()
-                do { try await Task.sleep(for: .seconds(30)) } catch { break }
-            }
-        }
-        .focusedSceneValue(\.macPanels, panels)
-        .focusedSceneValue(\.macNavigator, navigator)
-        .onChange(of: navigator.requestedSection) { _, section in
-            // The menu bar asked for a section (File › New Playlist opens Playlists).
-            guard let section else { return }
-            navigator.requestedSection = nil
-            searchText = ""
-            panels.showsNowPlaying = false
-            selection = section
-            navigator.path = NavigationPath()
-        }
-        .sheet(item: $playlistAddition.request) { request in
-            AddToPlaylistSheet(request: request)
-                .frame(minWidth: 420, minHeight: 480)
-        }
-        .modifier(MacSpacebarPlayPause())
     }
 
     /// Picking a section starts it from its list, not from a page opened earlier.

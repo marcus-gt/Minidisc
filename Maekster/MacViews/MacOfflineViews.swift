@@ -8,6 +8,11 @@ struct MacDownloadsView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: DownloadsViewModel?
 
+    private struct ReloadKey: Equatable {
+        let transfers: Int
+        let offlineRevision: Int
+    }
+
     var body: some View {
         Group {
             if let vm = viewModel, let serverID = container?.serverState.activeServer?.id {
@@ -26,8 +31,10 @@ struct MacDownloadsView: View {
             }
         }
         .navigationTitle("Downloads")
-        .task(id: container?.downloadActivity.transfers.count) {
-            // Reloads as transfers finish, so new downloads appear.
+        .task(id: ReloadKey(transfers: container?.downloadActivity.transfers.count ?? 0,
+                            offlineRevision: container?.offlineLibrary.revision ?? 0)) {
+            // Reloads as transfers finish, so new downloads appear, and when a download is removed
+            // anywhere (song menu, album page), so it disappears.
             guard let container else { return }
             if viewModel == nil {
                 viewModel = DownloadsViewModel(

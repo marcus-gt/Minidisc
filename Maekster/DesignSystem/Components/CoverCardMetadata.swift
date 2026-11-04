@@ -7,13 +7,15 @@ struct CoverCardMetadata: View {
     var detail: String? = nil
     var titleColor: Color = .primary
     var secondaryColor: Color = .secondary
+    /// Lines the title may wrap to; the Mac's album grids allow two, like the Music app.
+    var titleLineLimit = 1
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: title)
                 .font(.maeksterCellTitle)
                 .foregroundStyle(titleColor)
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : titleLineLimit)
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
 

@@ -73,18 +73,20 @@ struct MacAlbumGrid: View {
     }
 }
 
-/// The grid itself, for pages that scroll several sections together.
+/// The grid itself, for pages that scroll several sections together. Like the Music app: large
+/// covers, with the title (up to two lines) and the artist below.
 struct MacAlbumGridContent: View {
     let albums: [AlbumID3]
 
     var body: some View {
         LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 160, maximum: 220), spacing: MaeksterSpacing.l)],
+            columns: [GridItem(.adaptive(minimum: 180, maximum: 280), spacing: MaeksterSpacing.l)],
             spacing: MaeksterSpacing.l
         ) {
             ForEach(albums, id: \.id) { album in
                 NavigationLink(value: MacRoute.album(id: album.id)) {
-                    AlbumGridCell(album: album)
+                    AlbumGridCell(album: album, titleLineLimit: 2)
+                        .frame(maxHeight: .infinity, alignment: .top)
                 }
                 .buttonStyle(.plain)
             }
@@ -257,7 +259,7 @@ struct MacGenresView: View {
                 guard let genre = genres.first(where: { names.contains($0.name) }) else { return }
                 navigator.open(.genreAlbums(name: genre.isOther ? String(localized: "Other") : genre.name, tags: genre.tags))
             }
-            .frame(minWidth: 200, idealWidth: 240)
+            .frame(minWidth: 170, idealWidth: 200, maxWidth: 360)
 
             Group {
                 if let genre = selectedGenre {
@@ -266,7 +268,7 @@ struct MacGenresView: View {
                     Color.clear
                 }
             }
-            .frame(minWidth: 200, idealWidth: 260)
+            .frame(minWidth: 170, idealWidth: 200, maxWidth: 360)
 
             Group {
                 if let genre = selectedGenre {
@@ -277,6 +279,7 @@ struct MacGenresView: View {
                 }
             }
             .frame(minWidth: 360, maxWidth: .infinity)
+            .layoutPriority(1)
         }
         .onChange(of: selectedGenreName) { _, _ in selectedStyle = .all }
     }
