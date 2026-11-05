@@ -5,9 +5,16 @@ import SwiftUI
 /// The Discover (and optional Home) card (#65): the path itself. Tap From or To to choose an end,
 /// set the length and play, without opening a sheet.
 struct SongPathCard: View {
+    /// Stretch to the height offered, so the card matches its neighbour in a row (the Mac).
+    var fillsHeight = false
+
     @Environment(\.appContainer) private var container
     @State private var editing: Side?
     @State private var isBuilding = false
+
+    init(fillsHeight: Bool = false) {
+        self.fillsHeight = fillsHeight
+    }
 
     private enum Side: String, Identifiable {
         case from, to
@@ -62,7 +69,7 @@ struct SongPathCard: View {
         }
         .foregroundStyle(.white)
         .padding(MaeksterSpacing.m)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: fillsHeight ? .infinity : nil, alignment: .topLeading)
         .background(LinearGradient(colors: [Self.gradientStart, Color(red: 0.16, green: 0.52, blue: 0.58)],
                                    startPoint: .topLeading, endPoint: .bottomTrailing))
         .clipShape(RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
@@ -237,7 +244,7 @@ struct SongPathSheet: View {
                             .disabled(!canPlay)
                     }
                 }
-                ToolbarItem(placement: .bottomBar) {
+                ToolbarItem(placement: .maeksterBottomBar) {
                     Button("Swap", systemImage: "arrow.up.arrow.down") { (from, to) = (to, from) }
                         .disabled(from == nil && to == nil)
                 }

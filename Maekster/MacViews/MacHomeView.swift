@@ -129,7 +129,7 @@ struct MacHomeView: View {
         }
     }
 
-    /// One section of the feed. Queue Builder and Song Path come with Discover (#119).
+    /// One section of the feed.
     @ViewBuilder
     private func feedSection(_ section: HomeSection, vm: HomeFeedViewModel, favorites: HomeFavorites) -> some View {
         switch section {
@@ -167,8 +167,17 @@ struct MacHomeView: View {
                 albumShelf(Text(verbatim: shelf.name), title: shelf.name,
                            albums: container?.visibleAlbums(shelf.albums) ?? [], source: .genre(name: shelf.name))
             }
-        case .queueBuilder, .songPath:
-            EmptyView()
+        case .queueBuilder:
+            if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
+                // The cards pad themselves by `l`; the page margin is `xl`.
+                QueueBuilderCard(viewModel: queueBuilder, isPanel: true)
+                    .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
+            }
+        case .songPath:
+            if SongPathAvailability.isAvailable(container) {
+                SongPathCard()
+                    .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
+            }
         }
     }
 
@@ -282,38 +291,62 @@ struct MacHomeView: View {
 }
 
 /// Home › Home Screen: which sections show and in what order (the iPhone's Settings › Home Screen).
-/// Queue Builder and Song Path aren't listed until the Mac has them (#119).
 private struct MacHomeLayoutSheet: View {
     @AppStorage(HomeLayoutConfiguration.storageKey) private var configuration: HomeLayoutConfiguration = .default
-    @Environment(\.dismiss) private var dismiss
 
-    private static let unavailable: Set<HomeSection> = [.queueBuilder, .songPath]
+    var body: some View {
+        MacSectionLayoutSheet(
+            title: "Home Screen",
+            sections: configuration.order,
+            label: \.title,
+            isVisible: { configuration.isVisible($0) },
+            setVisible: { configuration.setVisible($0, for: $1) },
+            setListedOrder: { configuration.setOrder($0) },
+            reset: { configuration = .default }
+        )
+    }
+}
+
+/// A sheet that shows or hides a page's sections and reorders them by dragging.
+struct MacSectionLayoutSheet<Section: LayoutSection>: View {
+    let title: LocalizedStringKey
+    /// The sections listed, in their current order.
+    let sections: [Section]
+    let label: (Section) -> LocalizedStringResource
+    let isVisible: (Section) -> Bool
+    let setVisible: (Bool, Section) -> Void
+    /// Saves a new order of the listed sections.
+    let setListedOrder: ([Section]) -> Void
+    let reset: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    ForEach(configuration.order.filter { !Self.unavailable.contains($0) }) { section in
-                        Toggle(isOn: Binding(
-                            get: { configuration.isVisible(section) },
-                            set: { configuration.setVisible($0, for: section) }
-                        )) {
-                            Text(section.title)
+                SwiftUI.Section {
+                    ForEach(sections) { section in
+                        Toggle(isOn: Binding(get: { isVisible(section) }, set: { setVisible($0, section) })) {
+                            Text(label(section))
                         }
                         .toggleStyle(.checkbox)
                         .padding(.vertical, MaeksterSpacing.xs)
                     }
-                    .onMove(perform: move)
+                    .onMove { source, destination in
+                        var order = sections
+                        order.move(fromOffsets: source, toOffset: destination)
+                        setListedOrder(order)
+                    }
                 } footer: {
                     Text("Check a section to show it, and drag to change the order.")
                         .foregroundStyle(.secondary)
                 }
             }
             .listStyle(.inset(alternatesRowBackgrounds: true))
-            .navigationTitle("Home Screen")
+            .navigationTitle(title)
             .toolbar {
                 ToolbarItem(placement: .destructiveAction) {
-                    Button("Reset to Default") { configuration = .default }
+                    Button("Reset to Default", action: reset)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
@@ -321,14 +354,5 @@ private struct MacHomeLayoutSheet: View {
             }
         }
         .frame(minWidth: 380, minHeight: 460)
-    }
-
-    /// Moves within the listed sections, keeping the unlisted ones where they were.
-    private func move(from source: IndexSet, to destination: Int) {
-        var listed = configuration.order.filter { !Self.unavailable.contains($0) }
-        listed.move(fromOffsets: source, toOffset: destination)
-        var remaining = listed.makeIterator()
-        let order = configuration.order.map { Self.unavailable.contains($0) ? $0 : (remaining.next() ?? $0) }
-        configuration.setOrder(order)
     }
 }

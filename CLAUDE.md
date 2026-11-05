@@ -117,9 +117,9 @@ Maekster/                      app target sources
   Views/                       iPhone screens (iOS-only): Main/ (tabs, player, home, search), Browse/,
                                Discover/, Settings/, Onboarding/, LocalMusic/, Lidarr/, Wrapped/
   SharedViews/                 screens used by both apps (both platforms): Settings/ pages, LocalMusic/
-                               folder management, the download activity section
+                               folder management, Discover/ cards and pages, the download activity section
   MacViews/                    Mac screens (macOS-only): MacRootView (the Mac `RootView`), MacSignInView,
-                               MacMainView (sidebar, `MacRoute`s), MacHomeView + MacShelf (cover
+                               MacMainView (sidebar, `MacRoute`s), MacHomeView, MacDiscoverView, MacShelf (cover
                                shelves), library lists, album/artist/genre pages, MacPlaylists,
                                MacTrackTable + MacSongMenu, MacPlayerBar
   Utilities/                   Logger categories, formatting, HeaderValidator, PlatformImage, haptics

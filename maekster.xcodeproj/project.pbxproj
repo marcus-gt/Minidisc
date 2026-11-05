@@ -96,6 +96,9 @@
 				"MacViews/MacLibraryViews.swift" = (
 					macos,
 				);
+				"MacViews/MacDiscoverView.swift" = (
+					macos,
+				);
 				"MacViews/MacHomeView.swift" = (
 					macos,
 				);
@@ -189,9 +192,6 @@
 				"Views/Browse/FavoritesView.swift" = (
 					ios,
 				);
-				"Views/Browse/FeaturedArtistAvatar.swift" = (
-					ios,
-				);
 				"Views/Browse/GenreListView.swift" = (
 					ios,
 				);
@@ -207,9 +207,6 @@
 				"Views/Browse/PlaylistListView.swift" = (
 					ios,
 				);
-				"Views/Browse/RadioListView.swift" = (
-					ios,
-				);
 				"Views/Browse/RecentlyAddedView.swift" = (
 					ios,
 				);
@@ -217,15 +214,6 @@
 					ios,
 				);
 				"Views/Browse/SongsListView.swift" = (
-					ios,
-				);
-				"Views/Discover/MoodArtwork.swift" = (
-					ios,
-				);
-				"Views/Discover/MoodCard.swift" = (
-					ios,
-				);
-				"Views/Discover/SongPathViews.swift" = (
 					ios,
 				);
 				"Views/Lidarr/LidarrAlbumDetailView.swift" = (
@@ -264,25 +252,13 @@
 				"Views/LocalMusic/LocalMusicView.swift" = (
 					ios,
 				);
-				"Views/Main/AllFreshReleasesView.swift" = (
-					ios,
-				);
 				"Views/Main/ArtistShelf.swift" = (
 					ios,
 				);
 				"Views/Main/CarouselCollectionViews.swift" = (
 					ios,
 				);
-				"Views/Main/DiscoverListeningCards.swift" = (
-					ios,
-				);
 				"Views/Main/DiscoverView.swift" = (
-					ios,
-				);
-				"Views/Main/FreshReleaseDetailSheet.swift" = (
-					ios,
-				);
-				"Views/Main/FreshReleasesCard.swift" = (
 					ios,
 				);
 				"Views/Main/FullPlayerView.swift" = (
@@ -313,9 +289,6 @@
 					ios,
 				);
 				"Views/Main/PlayerContainer.swift" = (
-					ios,
-				);
-				"Views/Main/QueueBuilderView.swift" = (
 					ios,
 				);
 				"Views/Main/RootView.swift" = (

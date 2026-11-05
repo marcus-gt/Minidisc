@@ -18,3 +18,14 @@ extension View {
         #endif
     }
 }
+
+extension ToolbarItemPlacement {
+    /// The bottom toolbar on iOS; the window toolbar on macOS, which has no bottom bar.
+    static var maeksterBottomBar: ToolbarItemPlacement {
+        #if os(macOS)
+        .automatic
+        #else
+        .bottomBar
+        #endif
+    }
+}

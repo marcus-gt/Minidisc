@@ -21,7 +21,7 @@ struct QueueBuilderView: View {
             .navigationBarTitleDisplayModeInline()
             .toolbar {
                 if !viewModel.selection.isEmpty {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItem(placement: .primaryAction) {
                         Button("Reset") { viewModel.reset() }
                     }
                 }
@@ -282,8 +282,22 @@ private struct SelectablePill: View {
 /// Rows: main genres, the focused genre's sub-genres, decades, moods (with AudioMuse).
 struct QueueBuilderCard: View {
     let viewModel: QueueBuilderViewModel
+    /// On a rounded panel, with Play and Reset by the title and fading pill rows (the Mac), instead
+    /// of the iPhone's open shelf.
+    var isPanel = false
 
     var body: some View {
+        if isPanel {
+            card
+                .padding(.vertical, MaeksterSpacing.m)
+                .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: MaeksterCornerRadius.standard))
+                .padding(.horizontal, MaeksterSpacing.l)
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
             header
             switch viewModel.phase {
@@ -311,7 +325,7 @@ struct QueueBuilderCard: View {
             }
             .buttonStyle(.plain)
             .accessibilityHint("Opens the full Queue Builder")
-            Spacer(minLength: 0)
+            if !isPanel { Spacer(minLength: 0) }
             if !viewModel.selection.isEmpty {
                 Button("Reset", systemImage: "arrow.counterclockwise") {
                     HapticFeedback.light.trigger()
@@ -332,6 +346,7 @@ struct QueueBuilderCard: View {
             .buttonStyle(.maeksterCircle(isProminent: true))
             .disabled(!viewModel.canBuild)
             .accessibilityLabel("Play queue")
+            if isPanel { Spacer(minLength: 0) }
         }
         .padding(.horizontal, MaeksterSpacing.l)
     }
@@ -400,6 +415,15 @@ struct QueueBuilderCard: View {
                 content()
             }
             .padding(.horizontal, MaeksterSpacing.l)
+        }
+        // On the panel, the rows fade at the right edge instead of being cut off.
+        .mask {
+            if isPanel {
+                LinearGradient(stops: [.init(color: .black, location: 0.92), .init(color: .clear, location: 1)],
+                               startPoint: .leading, endPoint: .trailing)
+            } else {
+                Color.black
+            }
         }
     }
 }

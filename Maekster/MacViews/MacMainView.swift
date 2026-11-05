@@ -3,19 +3,20 @@ import SwiftUI
 
 /// The sections in the sidebar: the server library, then what's on this Mac.
 enum MacSidebarItem: String, CaseIterable, Identifiable, Hashable {
-    case home
+    case home, discover
     case albums, artists, songs, playlists, genres
     case downloads, localFiles
 
     var id: String { rawValue }
 
-    static let top: [Self] = [.home]
+    static let top: [Self] = [.home, .discover]
     static let library: [Self] = [.albums, .artists, .songs, .playlists, .genres]
     static let onThisMac: [Self] = [.downloads, .localFiles]
 
     var title: Text {
         switch self {
         case .home: Text("Home")
+        case .discover: Text("Discover")
         case .albums: Text("Albums")
         case .artists: Text("Artists")
         case .songs: Text("Songs")
@@ -29,6 +30,7 @@ enum MacSidebarItem: String, CaseIterable, Identifiable, Hashable {
     var systemImage: String {
         switch self {
         case .home: "house"
+        case .discover: "sparkles"
         case .albums: "square.stack"
         case .artists: "music.mic"
         case .songs: "music.note"
@@ -50,6 +52,9 @@ enum MacRoute: Hashable {
     /// A shelf's See All: every album it holds (Recently Added keeps loading older ones).
     case albumCollection(title: String, albums: [AlbumID3], continuesRecentlyAdded: Bool)
     case playlistCollection(title: String, playlists: [Playlist])
+    /// Discover's See All pages.
+    case freshReleases
+    case internetRadio
 }
 
 /// The main window: library sections in the sidebar, the chosen section (and the pages opened from
@@ -203,6 +208,7 @@ struct MacMainView: View {
     private func section(_ item: MacSidebarItem) -> some View {
         switch item {
         case .home: MacHomeView()
+        case .discover: MacDiscoverView()
         case .albums: MacAlbumsView()
         case .artists: MacArtistsView()
         case .songs: MacSongsView()
@@ -224,6 +230,8 @@ struct MacMainView: View {
             MacAlbumCollection(title: title, albums: albums, continuesRecentlyAdded: continuesRecentlyAdded)
         case .playlistCollection(let title, let playlists):
             MacPlaylistCollection(title: title, playlists: playlists)
+        case .freshReleases: MacAllFreshReleases()
+        case .internetRadio: RadioListView()
         }
     }
 }

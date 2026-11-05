@@ -4,11 +4,14 @@ import SwiftUI
 
 /// A titled row of covers that scrolls sideways, like the Music app's Home: swipe with the trackpad
 /// or use the arrows by the title, which move a page at a time. See All opens `seeAll`.
+///
+/// Without a `cellWidth`, covers are sized from the window (150–220 pt) so a whole number of them
+/// fills the row between the page margins: a wider window shows bigger covers, not a cut-off one.
 struct MacShelf<Item: Identifiable, Cell: View>: View where Item.ID: Hashable {
     let title: Text
     let items: [Item]
     var seeAll: MacRoute?
-    var cellWidth: CGFloat = MacShelfMetrics.coverWidth
+    var cellWidth: CGFloat?
     /// Plays everything in the shelf (shuffled or not), from Play and Shuffle by the title.
     var onPlay: ((_ shuffled: Bool) -> Void)?
     @ViewBuilder let cell: (Item) -> Cell
@@ -24,7 +27,7 @@ struct MacShelf<Item: Identifiable, Cell: View>: View where Item.ID: Hashable {
                     LazyHStack(alignment: .top, spacing: MaeksterSpacing.l) {
                         ForEach(items) { item in
                             cell(item)
-                                .frame(width: cellWidth)
+                                .frame(width: itemWidth)
                         }
                     }
                     .scrollTargetLayout()
@@ -83,7 +86,23 @@ struct MacShelf<Item: Identifiable, Cell: View>: View where Item.ID: Hashable {
 
     /// How many covers fit across, so the arrows move by what's on screen.
     private var pageSize: Int {
-        max(1, Int((visibleWidth - 2 * MaeksterSpacing.xl + MaeksterSpacing.l) / (cellWidth + MaeksterSpacing.l)))
+        max(1, Int((rowWidth + MaeksterSpacing.l) / (itemWidth + MaeksterSpacing.l)))
+    }
+
+    /// The row between the page margins.
+    private var rowWidth: CGFloat { visibleWidth - 2 * MaeksterSpacing.xl }
+
+    private var itemWidth: CGFloat {
+        if let cellWidth { return cellWidth }
+        guard rowWidth > MacShelfMetrics.minCoverWidth else { return MacShelfMetrics.minCoverWidth }
+        let spacing = MaeksterSpacing.l
+        var count = max(1, Int((rowWidth + spacing) / (MacShelfMetrics.minCoverWidth + spacing)))
+        var width = (rowWidth - CGFloat(count - 1) * spacing) / CGFloat(count)
+        while width > MacShelfMetrics.maxCoverWidth {
+            count += 1
+            width = (rowWidth - CGFloat(count - 1) * spacing) / CGFloat(count)
+        }
+        return width.rounded(.down)
     }
 
     private var currentIndex: Int {
@@ -97,7 +116,9 @@ struct MacShelf<Item: Identifiable, Cell: View>: View where Item.ID: Hashable {
 }
 
 enum MacShelfMetrics {
-    static let coverWidth: CGFloat = 180
+    /// The range covers are sized in to fill a shelf's row.
+    static let minCoverWidth: CGFloat = 150
+    static let maxCoverWidth: CGFloat = 220
     static let artistWidth: CGFloat = 150
     /// A column of song rows in a song shelf.
     static let songColumnWidth: CGFloat = 340

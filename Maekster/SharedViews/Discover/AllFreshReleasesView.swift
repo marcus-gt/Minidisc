@@ -30,7 +30,7 @@ struct AllFreshReleasesView: View {
             }
         }
         .navigationTitle("Fresh Releases")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayModeInline()
         .task { await vm.loadReleases() }
     }
 

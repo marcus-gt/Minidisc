@@ -3,13 +3,13 @@ import SwiftUI
 /// Rasterizes each mood once to avoid mesh rendering during scrolling.
 struct MoodArtwork: View {
     let mood: Mood
-    @State private var artwork: UIImage?
+    @State private var artwork: PlatformImage?
 
     var body: some View {
         ZStack {
             mood.gradientSpec.baseColor
             if let artwork {
-                Image(uiImage: artwork)
+                Image(platformImage: artwork)
                     .resizable()
                     .scaledToFill()
             }
@@ -22,9 +22,9 @@ struct MoodArtwork: View {
 
 @MainActor
 private enum MoodArtworkRenderer {
-    private static var images: [Mood: UIImage] = [:]
+    private static var images: [Mood: PlatformImage] = [:]
 
-    static func image(for mood: Mood) -> UIImage? {
+    static func image(for mood: Mood) -> PlatformImage? {
         if let image = images[mood] { return image }
         let side: CGFloat = 420
         let renderer = ImageRenderer(content:
@@ -41,7 +41,7 @@ private enum MoodArtworkRenderer {
             .frame(width: side, height: side)
         )
         renderer.scale = 1
-        let image = renderer.uiImage
+        let image = renderer.platformImage
         images[mood] = image
         return image
     }

@@ -50,7 +50,7 @@ struct FreshReleaseDetailView: View {
             .padding(MaeksterSpacing.l)
         }
         .navigationTitle(release.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayModeInline()
         .task(id: release.id) {
             await loadStoreLinks()
             for provider in providers {
