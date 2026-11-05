@@ -221,6 +221,8 @@ struct MacPlaylistView: View {
     @State private var viewModel: PlaylistDetailViewModel?
     @State private var renameRequest: PlaylistRenameRequest?
     @State private var confirmsDelete = false
+    @State private var sortOrder: PlaylistSortOrder = .playlistOrder
+    @State private var sortDirection: PlaylistSortDirection = .ascending
     @Query private var downloadedMatches: [DownloadedPlaylist]
 
     init(playlistId: String) {
@@ -248,11 +250,21 @@ struct MacPlaylistView: View {
                                 subtitle: "This playlist doesn't have any tracks yet."
                             )
                         } else {
+                            // Rows map back to playlist positions, so removing works in any order;
+                            // dragging to reorder only makes sense in the playlist's own order.
+                            let positions = displayOrder(vm.songs)
+                            let songs = positions.map { vm.songs[$0] }
                             MacTrackTable(
-                                songs: vm.songs,
-                                onPlay: { play(vm.songs, from: $0) },
-                                onRemove: { offsets in Task { await vm.removeTracks(at: offsets) } },
-                                onMove: { source, destination in Task { await vm.moveTracks(from: source, to: destination) } }
+                                songs: songs,
+                                rowNumbers: positions.map { $0 + 1 },
+                                onPlay: { play(songs, from: $0) },
+                                onRemove: { offsets in
+                                    let removed = IndexSet(offsets.compactMap { positions.indices.contains($0) ? positions[$0] : nil })
+                                    Task { await vm.removeTracks(at: removed) }
+                                },
+                                onMove: isPlaylistOrder ? { source, destination in
+                                    Task { await vm.moveTracks(from: source, to: destination) }
+                                } : nil
                             )
                         }
                     }
@@ -262,6 +274,8 @@ struct MacPlaylistView: View {
             }
         }
         .navigationTitle(viewModel?.name ?? "")
+        .toolbar { sortMenu }
+        .onChange(of: sortOrder) { _, order in sortDirection = order.defaultDirection }
         .playlistRenameAlert($renameRequest) { Task { await viewModel?.load() } }
         .deletePlaylistConfirmation(
             playlistName: viewModel?.name ?? "",
@@ -291,6 +305,34 @@ struct MacPlaylistView: View {
         }
     }
 
+    /// Playlist order, first to last, is the order songs were added in; last to first puts the
+    /// newest on top.
+    private var isPlaylistOrder: Bool { sortOrder == .playlistOrder && sortDirection == .ascending }
+
+    private func displayOrder(_ songs: [DisplayableSong]) -> [Int] {
+        PlaylistSort.displayOrder(of: songs, by: sortOrder, direction: sortDirection)
+    }
+
+    private var sortMenu: some ToolbarContent {
+        ToolbarItem {
+            Menu {
+                Picker("Sort By", selection: $sortOrder) {
+                    ForEach(PlaylistSortOrder.allCases) { order in
+                        Text(order.label).tag(order)
+                    }
+                }
+                Picker("Direction", selection: $sortDirection) {
+                    ForEach(PlaylistSortDirection.allCases) { direction in
+                        Text(sortOrder.label(for: direction)).tag(direction)
+                    }
+                }
+            } label: {
+                Label("Sort By", systemImage: "arrow.up.arrow.down")
+            }
+            .help("Sort By")
+        }
+    }
+
     private func header(_ vm: PlaylistDetailViewModel) -> some View {
         var details: [String] = []
         if !vm.songs.isEmpty {
@@ -301,7 +343,7 @@ struct MacPlaylistView: View {
             coverArtId: vm.coverArtId ?? playlistId,
             title: vm.name,
             details: details,
-            onPlay: { play(vm.songs, from: 0) },
+            onPlay: { play(displayOrder(vm.songs).map { vm.songs[$0] }, from: 0) },
             onShuffle: { play(vm.songs.shuffled(), from: 0) }
         ) {
             Menu {
@@ -310,6 +352,16 @@ struct MacPlaylistView: View {
                         playlistId: playlistId, currentName: vm.name, coverArtId: vm.coverArtId
                     )
                 }
+                Divider()
+                if vm.isDownloadingPlaylist {
+                    Button("Cancel Download", systemImage: "xmark") { Task { await vm.cancelPlaylistDownload() } }
+                } else if !vm.songs.isEmpty, vm.songs.allSatisfy(\.isDownloaded) {
+                    Button("Remove Download", systemImage: "trash") { Task { await vm.deleteDownload() } }
+                } else {
+                    Button("Download Playlist", systemImage: "arrow.down.circle") { Task { await vm.downloadPlaylist() } }
+                        .disabled(vm.songs.isEmpty)
+                }
+                Divider()
                 Button("Delete Playlist", systemImage: "trash", role: .destructive) { confirmsDelete = true }
             } label: {
                 Label("Edit Playlist", systemImage: "ellipsis")

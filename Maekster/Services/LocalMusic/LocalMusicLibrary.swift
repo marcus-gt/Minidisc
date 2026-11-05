@@ -105,7 +105,7 @@ actor LocalMusicStore {
             guard (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
                 throw LocalMusicError.folderAccess
             }
-            let bookmark = try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
+            let bookmark = try url.bookmarkData(options: LocalMusicBookmark.creationOptions, includingResourceValuesForKeys: nil, relativeTo: nil)
             if let index = updated.folders.firstIndex(where: { (try? resolve($0).standardizedFileURL) == url.standardizedFileURL }) {
                 updated.folders[index].bookmark = bookmark
                 updated.folders[index].isAccessible = true
@@ -154,11 +154,11 @@ actor LocalMusicStore {
             let folder = updated.folders[index]
             do {
                 var stale = false
-                let root = try URL(resolvingBookmarkData: folder.bookmark, options: [.withoutUI], bookmarkDataIsStale: &stale)
+                let root = try URL(resolvingBookmarkData: folder.bookmark, options: LocalMusicBookmark.resolutionOptions, bookmarkDataIsStale: &stale)
                 let scoped = root.startAccessingSecurityScopedResource()
                 defer { if scoped { root.stopAccessingSecurityScopedResource() } }
                 if stale {
-                    updated.folders[index].bookmark = try root.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
+                    updated.folders[index].bookmark = try root.bookmarkData(options: LocalMusicBookmark.creationOptions, includingResourceValuesForKeys: nil, relativeTo: nil)
                 }
                 let files = try Self.listAudioFiles(root)
                 updated.folders[index].isAccessible = true
@@ -296,7 +296,7 @@ actor LocalMusicStore {
 
     private func resolve(_ folder: LocalMusicFolder) throws -> URL {
         var stale = false
-        return try URL(resolvingBookmarkData: folder.bookmark, options: [.withoutUI], bookmarkDataIsStale: &stale)
+        return try URL(resolvingBookmarkData: folder.bookmark, options: LocalMusicBookmark.resolutionOptions, bookmarkDataIsStale: &stale)
     }
 
     private func artworkURL(_ id: String) -> URL { directory.appendingPathComponent(String(id.dropFirst(6)) + ".artwork") }
@@ -341,5 +341,29 @@ final class LocalMusicLibrary {
     func remove(_ folder: LocalMusicFolder) async {
         do { try await store.remove(folder.id); snapshot = await store.current() }
         catch { errorMessage = error.localizedDescription }
+    }
+}
+
+/// How folder bookmarks are made and read. A sandboxed Mac app keeps access to a folder across launches
+/// only through a security-scoped bookmark (read-only, matching its entitlement); iOS keeps access with a
+/// minimal bookmark.
+nonisolated enum LocalMusicBookmark {
+    #if os(macOS)
+    static let creationOptions: URL.BookmarkCreationOptions = [.withSecurityScope, .securityScopeAllowOnlyReadAccess]
+    static let resolutionOptions: URL.BookmarkResolutionOptions = [.withSecurityScope, .withoutUI]
+    #else
+    static let creationOptions: URL.BookmarkCreationOptions = .minimalBookmark
+    static let resolutionOptions: URL.BookmarkResolutionOptions = [.withoutUI]
+    #endif
+}
+
+/// Newest first (when the file was added, else modified), then by title; both apps list local music this way.
+extension LocalMusicTrack {
+    nonisolated var recency: Date { addedAt ?? modified ?? .distantPast }
+
+    nonisolated static func mostRecentFirst(_ lhs: Self, _ rhs: Self) -> Bool {
+        if lhs.recency != rhs.recency { return lhs.recency > rhs.recency }
+        let order = lhs.song.title.localizedStandardCompare(rhs.song.title)
+        return order == .orderedSame ? lhs.id < rhs.id : order == .orderedAscending
     }
 }

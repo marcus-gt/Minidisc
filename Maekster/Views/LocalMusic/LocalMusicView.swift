@@ -129,16 +129,6 @@ struct LocalMusicView: View {
     }
 }
 
-extension LocalMusicTrack {
-    nonisolated var recency: Date { addedAt ?? modified ?? .distantPast }
-
-    nonisolated static func mostRecentFirst(_ lhs: Self, _ rhs: Self) -> Bool {
-        if lhs.recency != rhs.recency { return lhs.recency > rhs.recency }
-        let order = lhs.song.title.localizedStandardCompare(rhs.song.title)
-        return order == .orderedSame ? lhs.id < rhs.id : order == .orderedAscending
-    }
-}
-
 extension LocalMusicGroup {
     nonisolated var addedAt: Date { tracks.map(\.recency).max() ?? .distantPast }
     nonisolated var scrollID: String { id.description }

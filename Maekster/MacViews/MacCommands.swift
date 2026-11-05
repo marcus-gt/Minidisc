@@ -88,6 +88,15 @@ struct MacCommands: Commands {
                 startInstantMix(from: .song(id: track.id), using: container, startingWith: track)
             }
             .disabled(!hasTrack || state?.currentTrack?.isLocalFile == true)
+
+            Divider()
+
+            // Only what's saved on this Mac, even when online (the iPhone's Settings › Offline Mode).
+            Toggle("Offline Mode", isOn: Binding(
+                get: { container?.serverState.isOfflineModeEnabled == true },
+                set: { container?.serverState.isOfflineModeEnabled = $0 }
+            ))
+            .disabled(container == nil)
         }
 
         CommandGroup(after: .sidebar) {

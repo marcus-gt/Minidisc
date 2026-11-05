@@ -11,6 +11,9 @@ struct MacTrackTable: View {
     /// Album pages group multi-disc albums under "Disc 1", "Disc 2", … headers.
     var groupsByDisc = false
     var discTitles: [Int: String] = [:]
+    /// The number shown in the first column of each row, instead of the track number (a sorted
+    /// playlist shows each song's place in the playlist).
+    var rowNumbers: [Int]?
     /// Plays `songs` starting at the given index.
     let onPlay: (Int) -> Void
     /// Set on playlist pages, for "Remove from Playlist". Receives the rows' indices.
@@ -54,7 +57,7 @@ struct MacTrackTable: View {
                 if row.song.id == container?.playerState.currentTrack?.id {
                     Image(systemName: "speaker.wave.2.fill")
                         .foregroundStyle(Color.maeksterAccent)
-                } else if let number = onMove == nil ? row.song.trackNumber : row.index + 1 {
+                } else if let number = rowNumber(row) {
                     Text(number, format: .number)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -138,6 +141,11 @@ struct MacTrackTable: View {
         guard !source.isEmpty, !(source.count == 1 && source.first == destination) else { return }
         selection.removeAll()
         onMove(source, destination)
+    }
+
+    private func rowNumber(_ row: Row) -> Int? {
+        if let rowNumbers, rowNumbers.indices.contains(row.index) { return rowNumbers[row.index] }
+        return onMove == nil ? row.song.trackNumber : row.index + 1
     }
 
     static func time(_ seconds: TimeInterval) -> String {
