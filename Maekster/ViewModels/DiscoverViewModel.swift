@@ -22,6 +22,8 @@ final class DiscoverViewModel {
     private(set) var freshReleases: [AlbumRecommendation] = []
     /// Newest releases on the Discover shelf; the rest are behind "See all".
     static let freshReleasesShelfLimit = 20
+    /// How far back the shelf looks: the same three months as See All.
+    static let freshReleasesWindowDays = 90
     private(set) var isLoadingFreshReleases: Bool = false
 
     init(
@@ -73,35 +75,34 @@ final class DiscoverViewModel {
         loadError = recentResult == nil && frequentResult == nil && starredResult == nil ? URLError(.cannotLoadFromNetwork) : nil
     }
 
+    /// The newest releases of the past `freshReleasesWindowDays` days, as on See All, so the shelf
+    /// isn't nearly empty early in a month. Future and undated releases are left out.
     func loadFreshReleases() async {
         isLoadingFreshReleases = true
         defer { isLoadingFreshReleases = false }
 
         let referenceDate = now()
-        guard let currentMonth = calendar.dateInterval(of: .month, for: referenceDate) else {
+        let today = calendar.startOfDay(for: referenceDate)
+        guard let windowStart = calendar.date(byAdding: .day, value: -(Self.freshReleasesWindowDays - 1), to: today),
+              let windowEnd = calendar.date(byAdding: .day, value: 1, to: today) else {
             freshReleases = []
             return
         }
-        let elapsedDays = calendar.dateComponents(
-            [.day],
-            from: currentMonth.start,
-            to: referenceDate
-        ).day ?? 0
 
         do {
             let fetched = try await recommendationService.freshReleases(
                 limit: .max,
-                daysWindow: max(1, elapsedDays + 1)
+                daysWindow: Self.freshReleasesWindowDays
             )
-            let thisMonth = fetched
+            let recent = fetched
                 .filter { release in
                     guard let releaseDate = release.releaseDate else { return false }
-                    return releaseDate >= currentMonth.start && releaseDate < currentMonth.end
+                    return releaseDate >= windowStart && releaseDate < windowEnd
                 }
                 .sorted {
                     ($0.releaseDate ?? .distantPast) > ($1.releaseDate ?? .distantPast)
                 }
-            freshReleases = Array(thisMonth.prefix(Self.freshReleasesShelfLimit))
+            freshReleases = Array(recent.prefix(Self.freshReleasesShelfLimit))
         } catch {
             Logger.discover.error("Failed to load fresh releases: \(error, privacy: .public)")
         }
