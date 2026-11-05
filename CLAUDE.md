@@ -119,8 +119,9 @@ Maekster/                      app target sources
   SharedViews/                 screens used by both apps (both platforms): Settings/ pages, LocalMusic/
                                folder management, the download activity section
   MacViews/                    Mac screens (macOS-only): MacRootView (the Mac `RootView`), MacSignInView,
-                               MacMainView (sidebar, `MacRoute`s), library lists, album/artist/genre
-                               pages, MacPlaylists, MacTrackTable + MacSongMenu, MacPlayerBar
+                               MacMainView (sidebar, `MacRoute`s), MacHomeView + MacShelf (cover
+                               shelves), library lists, album/artist/genre pages, MacPlaylists,
+                               MacTrackTable + MacSongMenu, MacPlayerBar
   Utilities/                   Logger categories, formatting, HeaderValidator, PlatformImage, haptics
   *.xcstrings, Info.plist, Maekster.entitlements, PrivacyInfo.xcprivacy, AppIntentVocabulary.plist
 MaeksterTests/                 ~110 Swift Testing files (no XCTest)

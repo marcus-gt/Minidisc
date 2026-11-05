@@ -1,17 +1,21 @@
+import SwiftSonic
 import SwiftUI
 
 /// The sections in the sidebar: the server library, then what's on this Mac.
 enum MacSidebarItem: String, CaseIterable, Identifiable, Hashable {
+    case home
     case albums, artists, songs, playlists, genres
     case downloads, localFiles
 
     var id: String { rawValue }
 
+    static let top: [Self] = [.home]
     static let library: [Self] = [.albums, .artists, .songs, .playlists, .genres]
     static let onThisMac: [Self] = [.downloads, .localFiles]
 
     var title: Text {
         switch self {
+        case .home: Text("Home")
         case .albums: Text("Albums")
         case .artists: Text("Artists")
         case .songs: Text("Songs")
@@ -24,6 +28,7 @@ enum MacSidebarItem: String, CaseIterable, Identifiable, Hashable {
 
     var systemImage: String {
         switch self {
+        case .home: "house"
         case .albums: "square.stack"
         case .artists: "music.mic"
         case .songs: "music.note"
@@ -42,12 +47,15 @@ enum MacRoute: Hashable {
     case playlist(id: String)
     /// Every album tagged with any of `tags`: a whole genre or one of its styles.
     case genreAlbums(name: String, tags: [String])
+    /// A shelf's See All: every album it holds (Recently Added keeps loading older ones).
+    case albumCollection(title: String, albums: [AlbumID3], continuesRecentlyAdded: Bool)
+    case playlistCollection(title: String, playlists: [Playlist])
 }
 
 /// The main window: library sections in the sidebar, the chosen section (and the pages opened from
 /// it) on the right, and the player bar along the bottom.
 struct MacMainView: View {
-    @SceneStorage("mac.sidebarSelection") private var selection: MacSidebarItem = .albums
+    @SceneStorage("mac.sidebarSelection") private var selection: MacSidebarItem = .home
     @State private var navigator = MacNavigator()
     @State private var playlistAddition = PlaylistAddition()
     @State private var panels = MacPlayerPanels()
@@ -97,6 +105,10 @@ struct MacMainView: View {
     private var splitView: some View {
         NavigationSplitView {
             List(selection: sidebarSelection) {
+                ForEach(MacSidebarItem.top) { item in
+                    Label { item.title } icon: { Image(systemName: item.systemImage) }
+                        .tag(item)
+                }
                 Section("Library") {
                     ForEach(MacSidebarItem.library) { item in
                         Label { item.title } icon: { Image(systemName: item.systemImage) }
@@ -190,6 +202,7 @@ struct MacMainView: View {
     @ViewBuilder
     private func section(_ item: MacSidebarItem) -> some View {
         switch item {
+        case .home: MacHomeView()
         case .albums: MacAlbumsView()
         case .artists: MacArtistsView()
         case .songs: MacSongsView()
@@ -207,6 +220,10 @@ struct MacMainView: View {
         case .artist(let id, let name): MacArtistView(artistId: id, artistName: name)
         case .playlist(let id): MacPlaylistView(playlistId: id)
         case .genreAlbums(let name, let tags): MacGenreAlbums(title: name, tags: tags)
+        case .albumCollection(let title, let albums, let continuesRecentlyAdded):
+            MacAlbumCollection(title: title, albums: albums, continuesRecentlyAdded: continuesRecentlyAdded)
+        case .playlistCollection(let title, let playlists):
+            MacPlaylistCollection(title: title, playlists: playlists)
         }
     }
 }
