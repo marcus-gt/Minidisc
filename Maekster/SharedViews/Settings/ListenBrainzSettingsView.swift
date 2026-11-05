@@ -69,9 +69,8 @@ struct ListenBrainzSettingsView: View {
         @Bindable var vm = vm
         return Section {
             TextField("Username", text: $vm.usernameInput)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .keyboardType(.asciiCapable)
+                .maeksterPlainTextInput()
+                .maeksterASCIIInput()
                 .onChange(of: vm.usernameInput) { _, _ in
                     vm.validateUsernameInputLocally()
                 }
@@ -235,9 +234,8 @@ struct ListenBrainzSettingsView: View {
                 .textContentType(.password)
 
             TextField("Server URL", text: $vm.serverURLInput)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .keyboardType(.URL)
+                .maeksterPlainTextInput()
+                .maeksterURLInput()
 
             Button {
                 Task { await vm.validateScrobblingToken() }

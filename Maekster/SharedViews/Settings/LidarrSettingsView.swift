@@ -61,9 +61,8 @@ struct LidarrSettingsView: View {
         Section {
             TextField("", text: $urlInput, prompt: Text(verbatim: "http://nas.local:8686"))
                 .textContentType(.URL)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .keyboardType(.URL)
+                .maeksterPlainTextInput()
+                .maeksterURLInput()
             SecureField("API key", text: $apiKeyInput)
                 .textContentType(.password)
                 .autocorrectionDisabled()

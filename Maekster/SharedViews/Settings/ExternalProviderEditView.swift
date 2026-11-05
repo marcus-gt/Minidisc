@@ -86,9 +86,8 @@ struct ExternalProviderEditView: View {
 
             Section {
                 TextField("https://example.com/search?q=%s", text: $urlTemplate, axis: .vertical)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .keyboardType(.URL)
+                    .maeksterPlainTextInput()
+                    .maeksterURLInput()
 
                 if let error = urlErrorMessage {
                     Text(error)
@@ -118,7 +117,7 @@ struct ExternalProviderEditView: View {
         }
         .formStyle(.grouped)
         .navigationTitle(mode.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayModeInline()
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }

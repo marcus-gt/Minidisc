@@ -47,7 +47,7 @@ struct ExternalProvidersSettingsView: View {
             }
         }
         .navigationTitle("Open Releases In")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayModeInline()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add Provider", systemImage: "plus") { showingAdd = true }

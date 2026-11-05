@@ -2,6 +2,9 @@ import SwiftUI
 
 struct EditServerView: View {
     @Bindable var viewModel: EditServerViewModel
+    /// Presented in a sheet (the Mac's Settings window) rather than pushed: always offers Cancel,
+    /// which asks before discarding unsaved changes.
+    var isSheet = false
     @Environment(\.dismiss) private var dismiss
     @State private var showDiscardAlert = false
     @State private var isPasswordRevealed = false
@@ -16,7 +19,7 @@ struct EditServerView: View {
             }
         }
         .navigationTitle("Server Configuration")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayModeInline()
         .navigationBarBackButtonHidden(viewModel.hasUnsavedChanges)
         .toolbar { toolbar }
         .alert("Discard Changes?", isPresented: $showDiscardAlert) {
@@ -30,11 +33,21 @@ struct EditServerView: View {
         }
     }
 
-    // MARK: - Toolbar (iOS only)
+    // MARK: - Toolbar
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        if viewModel.hasUnsavedChanges {
+        if isSheet {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    if viewModel.hasUnsavedChanges {
+                        showDiscardAlert = true
+                    } else {
+                        dismiss()
+                    }
+                }
+            }
+        } else if viewModel.hasUnsavedChanges {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Back", systemImage: "chevron.backward") {
                     showDiscardAlert = true
@@ -90,9 +103,8 @@ struct EditServerView: View {
     private var serverSection: some View {
         Section("Server") {
             TextField("https://music.example.com", text: $viewModel.serverURL)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .keyboardType(.URL)
+                .maeksterPlainTextInput()
+                .maeksterURLInput()
             invalidURLHint
             httpWarning
         }
@@ -101,8 +113,7 @@ struct EditServerView: View {
     private var credentialsSection: some View {
         Section("Credentials") {
             TextField("Username", text: $viewModel.username)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
+                .maeksterPlainTextInput()
 
             HStack(spacing: 8) {
                 passwordField
@@ -123,8 +134,7 @@ struct EditServerView: View {
     private var passwordField: some View {
         if isPasswordRevealed {
             TextField("Password", text: $viewModel.password)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
+                .maeksterPlainTextInput()
         } else {
             SecureField("Password", text: $viewModel.password)
         }
@@ -193,15 +203,17 @@ struct EditServerView: View {
 struct EditServerDestinationView: View {
     let server: ServerSnapshot
     let serverService: any ServerServiceProtocol
+    var isSheet = false
     @State private var viewModel: EditServerViewModel
 
-    init(server: ServerSnapshot, serverService: any ServerServiceProtocol) {
+    init(server: ServerSnapshot, serverService: any ServerServiceProtocol, isSheet: Bool = false) {
         self.server = server
         self.serverService = serverService
+        self.isSheet = isSheet
         self._viewModel = State(initialValue: EditServerViewModel(server: server, serverService: serverService))
     }
 
     var body: some View {
-        EditServerView(viewModel: viewModel)
+        EditServerView(viewModel: viewModel, isSheet: isSheet)
     }
 }

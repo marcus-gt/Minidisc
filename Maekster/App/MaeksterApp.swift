@@ -82,6 +82,13 @@ struct MaeksterApp: App {
             Task { await container.playerService.saveSessionForBackground() }
             Logger.session.info("App backgrounded — session flushed")
         }
+
+        #if os(macOS)
+        // ⌘, opens the Mac settings window; iOS keeps its settings in the app.
+        Settings {
+            MacSettingsView(container: activeContainer)
+        }
+        #endif
     }
 
     private var activeContainer: AppContainer? {

@@ -124,7 +124,8 @@ struct MacPlayerBar: View {
             }
             .controlSize(.small)
             .disabled(duration <= 0 || state.isLiveStream)
-            Text(MacTrackTable.time(duration))
+            // The time left, counting down, like the Music app.
+            Text(verbatim: duration > 0 ? "−" + MacTrackTable.time(duration - shown) : MacTrackTable.time(0))
                 .frame(width: 44, alignment: .leading)
         }
         .font(.caption)
