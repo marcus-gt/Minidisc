@@ -26,11 +26,7 @@ struct MacSettingsView: View {
                 }
             }
             .frame(minWidth: 560, idealWidth: 620, minHeight: 460, idealHeight: 560)
-            .environment(\.appContainer, container)
-            .environment(container.dominantColorExtractor)
-            .environment(container.artworkImageCache)
-            .environment(container.toastService)
-            .modelContainer(container.modelContainer)
+            .macAppEnvironment(container)
         } else {
             ProgressView()
                 .frame(width: 560, height: 460)

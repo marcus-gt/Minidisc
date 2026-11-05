@@ -7,12 +7,11 @@ struct MacPlayerBar: View {
     @Environment(MacPlayerPanels.self) private var panels
     /// Where the seek bar is held while dragging; the player only seeks on release.
     @State private var scrubPosition: TimeInterval?
-    @State private var volume: Double = Double(PlaybackPreferences.defaultVolume)
 
     var body: some View {
         if let container {
             content(container.playerState, playerService: container.playerService)
-                .task { volume = Double(container.playbackPreferences.restoredVolume) }
+                .task { panels.volume = Double(container.playbackPreferences.restoredVolume) }
         }
     }
 
@@ -162,9 +161,9 @@ struct MacPlayerBar: View {
     private func volumeControl(playerService: any PlayerServiceProtocol) -> some View {
         HStack(spacing: MaeksterSpacing.s) {
             Image(systemName: "speaker.fill")
-            Slider(value: $volume, in: 0...1)
+            Slider(value: Binding(get: { panels.volume }, set: { panels.volume = $0 }), in: 0...1)
                 .controlSize(.small)
-                .onChange(of: volume) { _, newValue in
+                .onChange(of: panels.volume) { _, newValue in
                     Task { await playerService.setVolume(Float(newValue)) }
                 }
             Image(systemName: "speaker.wave.3.fill")

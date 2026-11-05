@@ -15,6 +15,13 @@ final class MacPlayerPanels {
         }
     }
     weak var navigator: MacNavigator?
+    /// The player bar's slider, shared so the Controls menu's volume commands move it too.
+    var volume: Double = Double(PlaybackPreferences.defaultVolume)
+
+    /// Increase/Decrease Volume (⌘↑ / ⌘↓): a tenth at a time; the slider applies it to the player.
+    func adjustVolume(by step: Double) {
+        volume = min(1, max(0, volume + step))
+    }
     var showsQueue = false
     /// Whether Now Playing shows the lyrics beside the cover.
     var showsLyrics = true

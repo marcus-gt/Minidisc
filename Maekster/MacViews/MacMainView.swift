@@ -124,6 +124,17 @@ struct MacMainView: View {
         .environment(playlistAddition)
         .environment(panels)
         .onAppear { panels.navigator = navigator }
+        .focusedSceneValue(\.macPanels, panels)
+        .focusedSceneValue(\.macNavigator, navigator)
+        .onChange(of: navigator.requestedSection) { _, section in
+            // The menu bar asked for a section (File › New Playlist opens Playlists).
+            guard let section else { return }
+            navigator.requestedSection = nil
+            searchText = ""
+            panels.showsNowPlaying = false
+            selection = section
+            navigator.path = NavigationPath()
+        }
         .sheet(item: $playlistAddition.request) { request in
             AddToPlaylistSheet(request: request)
                 .frame(minWidth: 420, minHeight: 480)
