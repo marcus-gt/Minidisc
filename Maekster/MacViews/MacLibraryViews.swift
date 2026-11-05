@@ -259,7 +259,7 @@ struct MacGenresView: View {
                 guard let genre = genres.first(where: { names.contains($0.name) }) else { return }
                 navigator.open(.genreAlbums(name: genre.isOther ? String(localized: "Other") : genre.name, tags: genre.tags))
             }
-            .frame(minWidth: 170, idealWidth: 200, maxWidth: 360)
+            .frame(minWidth: 220, idealWidth: 300, maxWidth: 480)
 
             Group {
                 if let genre = selectedGenre {
@@ -268,7 +268,7 @@ struct MacGenresView: View {
                     Color.clear
                 }
             }
-            .frame(minWidth: 170, idealWidth: 200, maxWidth: 360)
+            .frame(minWidth: 220, idealWidth: 300, maxWidth: 480)
 
             Group {
                 if let genre = selectedGenre {
