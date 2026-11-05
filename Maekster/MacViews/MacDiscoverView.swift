@@ -10,6 +10,9 @@ struct MacDiscoverView: View {
     @State private var viewModel: DiscoverViewModel?
     @State private var loadedServerID: UUID?
     @State private var radioStations: [InternetRadioStation] = []
+    /// The past three months of releases: the shelf shows the newest, See All the rest. (The
+    /// iPhone's shelf is this month only, which early in a month can be a single album.)
+    @State private var releases: AllFreshReleasesViewModel?
     @State private var isStartingShuffle = false
     @State private var startingStationID: String?
     /// The library feed's first result is still being prepared (#15): show the shelf as loading.
@@ -66,6 +69,7 @@ struct MacDiscoverView: View {
                 loadedServerID = serverID
                 viewModel = DiscoverViewModel(libraryService: container.libraryService,
                                               recommendationService: container.recommendationService)
+                releases = AllFreshReleasesViewModel(recommendationService: container.recommendationService)
                 radioStations = []
             }
             await refresh(forceRefresh: false)
@@ -73,7 +77,7 @@ struct MacDiscoverView: View {
         .task {
             // The library feed refreshes in the background and says when it has something new (#15).
             for await _ in NotificationCenter.default.notifications(named: .maeksterFreshReleasesChanged) {
-                await viewModel?.loadFreshReleases()
+                await releases?.loadReleases()
                 isPreparingFreshReleases = await container?.newReleasesService.isPreparing() ?? false
             }
         }
@@ -86,7 +90,7 @@ struct MacDiscoverView: View {
     private func discoverSection(_ section: DiscoverSection, vm: DiscoverViewModel) -> some View {
         switch section {
         case .freshReleases:
-            if isOnline { freshReleases(vm) }
+            if isOnline { freshReleases }
         case .stations:
             if isOnline {
                 MacShelf(title: Text(section.title), items: vm.stations, cellWidth: 160) { station in
@@ -194,9 +198,10 @@ struct MacDiscoverView: View {
     }
 
     @ViewBuilder
-    private func freshReleases(_ vm: DiscoverViewModel) -> some View {
-        if !vm.freshReleases.isEmpty {
-            MacShelf(title: Text(DiscoverSection.freshReleases.title), items: vm.freshReleases.map(MacFreshRelease.init),
+    private var freshReleases: some View {
+        let newest = (releases?.groupedReleases ?? []).flatMap(\.items).prefix(DiscoverViewModel.freshReleasesShelfLimit)
+        if !newest.isEmpty {
+            MacShelf(title: Text(DiscoverSection.freshReleases.title), items: newest.map(MacFreshRelease.init),
                      seeAll: .freshReleases) { item in
                 FreshReleaseAlbumCell(release: item.release)
             }
@@ -215,14 +220,14 @@ struct MacDiscoverView: View {
     private func refresh(forceRefresh: Bool) async {
         guard let viewModel, isOnline else { return }
         async let personal: Void = viewModel.load(forceRefresh: forceRefresh)
-        async let releases: Void = refreshFreshReleases(viewModel)
+        async let latest: Void = refreshFreshReleases()
         async let radio: Void = loadRadioStations(forceRefresh: forceRefresh)
-        _ = await (personal, releases, radio)
+        _ = await (personal, latest, radio)
     }
 
     /// New releases by artists in the library, from MusicBrainz (#15).
-    private func refreshFreshReleases(_ model: DiscoverViewModel) async {
-        await model.loadFreshReleases()
+    private func refreshFreshReleases() async {
+        await releases?.loadReleases()
         isPreparingFreshReleases = await container?.newReleasesService.isPreparing() ?? false
     }
 
