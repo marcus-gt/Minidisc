@@ -96,6 +96,9 @@
 				"MacViews/MacLibraryViews.swift" = (
 					macos,
 				);
+				"MacViews/MacHomeView.swift" = (
+					macos,
+				);
 				"MacViews/MacMainView.swift" = (
 					macos,
 				);
@@ -127,6 +130,9 @@
 					macos,
 				);
 				"MacViews/MacSettingsView.swift" = (
+					macos,
+				);
+				"MacViews/MacShelf.swift" = (
 					macos,
 				);
 				"MacViews/MacSidebarMaterial.swift" = (
