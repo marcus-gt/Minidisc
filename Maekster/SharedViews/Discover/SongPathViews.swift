@@ -237,7 +237,7 @@ struct SongPathSheet: View {
                             .disabled(!canPlay)
                     }
                 }
-                ToolbarItem(placement: .bottomBar) {
+                ToolbarItem(placement: .maeksterBottomBar) {
                     Button("Swap", systemImage: "arrow.up.arrow.down") { (from, to) = (to, from) }
                         .disabled(from == nil && to == nil)
                 }

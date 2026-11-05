@@ -21,7 +21,7 @@ struct QueueBuilderView: View {
             .navigationBarTitleDisplayModeInline()
             .toolbar {
                 if !viewModel.selection.isEmpty {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItem(placement: .primaryAction) {
                         Button("Reset") { viewModel.reset() }
                     }
                 }
