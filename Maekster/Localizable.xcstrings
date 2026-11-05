@@ -9580,6 +9580,58 @@
         }
       }
     },
+    "Check a section to show it, and drag to change the order." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markiere einen Bereich, um ihn anzuzeigen, und ziehe, um die Reihenfolge zu ändern."
+          }
+        },
+        "el" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Επιλέξτε μια ενότητα για να εμφανίζεται και σύρετε για να αλλάξετε τη σειρά."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marca una sección para mostrarla y arrastra para cambiar el orden."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cochez une section pour l’afficher, et faites-la glisser pour changer l’ordre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona una sezione per mostrarla e trascinala per cambiarne l’ordine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示するセクションにチェックを入れ、ドラッグして順序を変更します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勾选要显示的部分，拖动以更改顺序。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勾選要顯示的部分，拖移以更改順序。"
+          }
+        }
+      }
+    },
     "Check the format (e.g. https://music.example.com)." : {
       "localizations" : {
         "de" : {

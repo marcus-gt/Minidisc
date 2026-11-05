@@ -82,6 +82,8 @@ struct MacShelf<Item: Identifiable, Cell: View>: View where Item.ID: Hashable {
 enum MacShelfMetrics {
     static let coverWidth: CGFloat = 180
     static let artistWidth: CGFloat = 150
+    /// A column of song rows in a song shelf.
+    static let songColumnWidth: CGFloat = 340
     /// Covers a shelf shows before See All takes over.
     static let limit = 20
 }

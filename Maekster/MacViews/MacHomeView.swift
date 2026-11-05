@@ -11,6 +11,8 @@ struct MacHomeView: View {
     @State private var loadedServerID: UUID?
     @AppStorage(HomeLayoutConfiguration.storageKey) private var homeLayout: HomeLayoutConfiguration = .default
     @Query(sort: \PinnedItem.sortOrder) private var pinnedItems: [PinnedItem]
+    @State private var artistPicks: [ArtistID3] = []
+    @State private var editsLayout = false
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
 
@@ -29,6 +31,12 @@ struct MacHomeView: View {
         }
         .navigationTitle("Home")
         .toolbar {
+            Button {
+                editsLayout = true
+            } label: {
+                Label("Home Screen", systemImage: "slider.horizontal.3")
+            }
+            .help("Home Screen")
             Button {
                 Task { await viewModel?.load(isOnline: isOnline, preserveLayout: true) }
             } label: {
@@ -51,6 +59,12 @@ struct MacHomeView: View {
                 )
             }
             await viewModel?.load(isOnline: isOnline)
+        }
+        .task(id: LoadIdentity(serverID: container?.serverState.activeServer?.id, online: isOnline)) {
+            await loadArtistPicks()
+        }
+        .sheet(isPresented: $editsLayout) {
+            MacHomeLayoutSheet()
         }
         .task {
             // Playlists created, renamed or deleted anywhere refresh the playlist shelf.
@@ -138,7 +152,11 @@ struct MacHomeView: View {
         case .heavyRotation:
             albumShelf(section, albums: container?.visibleAlbums(vm.heavyRotation) ?? [])
         case .artists:
-            if isOnline { MacArtistPicksShelf() }
+            if isOnline {
+                MacShelf(title: Text(section.title), items: artistPicks, cellWidth: MacShelfMetrics.artistWidth) {
+                    MacArtistShelfCell(artist: $0)
+                }
+            }
         case .rediscover:
             albumShelf(section, albums: container?.visibleAlbums(vm.rediscovery) ?? [])
         case .recentlyAdded:
@@ -198,48 +216,102 @@ struct MacHomeView: View {
 
     // MARK: - Favourite songs
 
+    /// Columns of four songs that scroll sideways, like the Music app's song shelves.
+    private struct SongColumn: Identifiable {
+        let id: Int
+        let songs: ArraySlice<DisplayableSong>
+    }
+
     @ViewBuilder
     private func favoriteSongs(_ songs: [Song]) -> some View {
-        if !songs.isEmpty {
-            let tracks = songs.map { DisplayableSong(from: $0) }
-            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
-                Text(HomeSection.favoriteSongs.title)
-                    .font(.maeksterShelfTitle)
-                MacSongRows(songs: Array(tracks.prefix(8))) { index in
-                    guard let container else { return }
-                    Task {
-                        await container.toastService.perform {
-                            try await container.playerService.play(tracks: tracks, startIndex: index, source: .favorites)
-                        }
-                    }
-                }
+        let tracks = songs.map { DisplayableSong(from: $0) }
+        let columns = stride(from: 0, to: tracks.count, by: 4).map {
+            SongColumn(id: $0, songs: tracks[$0..<min($0 + 4, tracks.count)])
+        }
+        MacShelf(title: Text(HomeSection.favoriteSongs.title), items: columns,
+                 cellWidth: MacShelfMetrics.songColumnWidth) { column in
+            MacSongRows(songs: Array(column.songs)) { index in
+                playFavorites(tracks, from: column.id + index)
             }
-            .padding(.horizontal, MaeksterSpacing.xl)
+        }
+    }
+
+    private func playFavorites(_ tracks: [DisplayableSong], from index: Int) {
+        guard let container else { return }
+        Task {
+            await container.toastService.perform {
+                try await container.playerService.play(tracks: tracks, startIndex: index, source: .favorites)
+            }
+        }
+    }
+
+    // MARK: - Artist picks
+
+    /// "Artist Picks": today's blend of favourite, dormant and untried artists (#63). Loaded here
+    /// rather than by the shelf, which draws nothing (and so never runs a task) until it has artists.
+    private func loadArtistPicks() async {
+        guard isOnline, let container, let serverID = container.serverState.activeServer?.id else { return }
+        do {
+            let picked = try await container.artistShelfService.artists(serverID: serverID)
+            // A server switch while loading leaves this pick to the next task.
+            guard !Task.isCancelled, container.serverState.activeServer?.id == serverID else { return }
+            artistPicks = picked
+        } catch {
+            // The shelf stays hidden; the rest of Home doesn't depend on it.
+            guard !UserFacingError.isCancellation(error) else { return }
+            Logger.library.error("[ARTIST-SHELF] load failed: \(error, privacy: .public)")
         }
     }
 }
 
-/// "Artist Picks": today's blend of favourite, dormant and untried artists (#63), as portraits.
-private struct MacArtistPicksShelf: View {
-    @Environment(\.appContainer) private var container
-    @State private var artists: [ArtistID3] = []
+/// Home › Home Screen: which sections show and in what order (the iPhone's Settings › Home Screen).
+/// Queue Builder and Song Path aren't listed until the Mac has them (#119).
+private struct MacHomeLayoutSheet: View {
+    @AppStorage(HomeLayoutConfiguration.storageKey) private var configuration: HomeLayoutConfiguration = .default
+    @Environment(\.dismiss) private var dismiss
+
+    private static let unavailable: Set<HomeSection> = [.queueBuilder, .songPath]
 
     var body: some View {
-        MacShelf(title: Text(HomeSection.artists.title), items: artists, cellWidth: MacShelfMetrics.artistWidth) {
-            MacArtistShelfCell(artist: $0)
-        }
-        .task(id: container?.serverState.activeServer?.id) {
-            guard let container, let serverID = container.serverState.activeServer?.id else { return }
-            do {
-                let picked = try await container.artistShelfService.artists(serverID: serverID)
-                // A server switch while loading leaves this pick to the next task.
-                guard !Task.isCancelled, container.serverState.activeServer?.id == serverID else { return }
-                artists = picked
-            } catch {
-                // The shelf stays hidden; the rest of Home doesn't depend on it.
-                guard !UserFacingError.isCancellation(error) else { return }
-                Logger.library.error("[ARTIST-SHELF] load failed: \(error, privacy: .public)")
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(configuration.order.filter { !Self.unavailable.contains($0) }) { section in
+                        Toggle(isOn: Binding(
+                            get: { configuration.isVisible(section) },
+                            set: { configuration.setVisible($0, for: section) }
+                        )) {
+                            Text(section.title)
+                        }
+                        .toggleStyle(.checkbox)
+                        .padding(.vertical, MaeksterSpacing.xs)
+                    }
+                    .onMove(perform: move)
+                } footer: {
+                    Text("Check a section to show it, and drag to change the order.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .listStyle(.inset(alternatesRowBackgrounds: true))
+            .navigationTitle("Home Screen")
+            .toolbar {
+                ToolbarItem(placement: .destructiveAction) {
+                    Button("Reset to Default") { configuration = .default }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
             }
         }
+        .frame(minWidth: 380, minHeight: 460)
+    }
+
+    /// Moves within the listed sections, keeping the unlisted ones where they were.
+    private func move(from source: IndexSet, to destination: Int) {
+        var listed = configuration.order.filter { !Self.unavailable.contains($0) }
+        listed.move(fromOffsets: source, toOffset: destination)
+        var remaining = listed.makeIterator()
+        let order = configuration.order.map { Self.unavailable.contains($0) ? $0 : (remaining.next() ?? $0) }
+        configuration.setOrder(order)
     }
 }
