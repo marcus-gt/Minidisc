@@ -169,13 +169,13 @@ struct MacHomeView: View {
             }
         case .queueBuilder:
             if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
-                QueueBuilderCard(viewModel: queueBuilder)
+                // The cards pad themselves by `l`; the page margin is `xl`.
+                QueueBuilderCard(viewModel: queueBuilder, isPanel: true)
                     .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
             }
         case .songPath:
             if SongPathAvailability.isAvailable(container) {
                 SongPathCard()
-                    .frame(maxWidth: 640, alignment: .leading)
                     .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
             }
         }

@@ -46,6 +46,8 @@ struct ArtistStationCard: View {
 struct SmartShuffleCard: View {
     let coverIDs: [String]
     let isStarting: Bool
+    /// Stretch to the height offered, so the card matches its neighbour in a row (the Mac).
+    var fillsHeight = false
     let onPlay: () -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -83,7 +85,7 @@ struct SmartShuffleCard: View {
             }
             .foregroundStyle(.white)
             .padding(MaeksterSpacing.l)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: fillsHeight ? .infinity : nil, alignment: .leading)
             .background(LinearGradient(colors: [Color(red: 0.48, green: 0.06, blue: 0.18),
                                                  Color(red: 0.80, green: 0.17, blue: 0.08)],
                                        startPoint: .leading, endPoint: .trailing))

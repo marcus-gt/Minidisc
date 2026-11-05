@@ -15,6 +15,7 @@ struct MacDiscoverView: View {
     /// The library feed's first result is still being prepared (#15): show the shelf as loading.
     @State private var isPreparingFreshReleases = false
     @State private var editsLayout = false
+    @State private var pageWidth: CGFloat = 0
     @AppStorage(DiscoverLayoutConfiguration.storageKey) private var layout: DiscoverLayoutConfiguration = .default
 
     private var isOnline: Bool { container?.serverState.isOnline == true }
@@ -23,13 +24,17 @@ struct MacDiscoverView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: MaeksterSpacing.section) {
                 if let viewModel {
-                    ForEach(layout.visibleSections.filter { MacDiscoverLayoutSheet.listed.contains($0) }) { section in
-                        discoverSection(section, vm: viewModel)
+                    ForEach(blocks) { block in
+                        switch block {
+                        case .section(let section): discoverSection(section, vm: viewModel)
+                        case .cards(let sections): cardRow(sections, vm: viewModel)
+                        }
                     }
                 }
             }
             .padding(.vertical, MaeksterSpacing.l)
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
         .navigationTitle("Discover")
         .navigationDestination(for: AlbumRecommendation.self) { release in
             FreshReleaseDetailView(release: release, providers: container?.externalProvidersStore.load() ?? [])
@@ -90,23 +95,12 @@ struct MacDiscoverView: View {
                     }
                 }
             }
-        case .smartShuffle:
-            if isOnline || container?.offlineLibrary.snapshot.songs.isEmpty == false {
-                SmartShuffleCard(coverIDs: shuffleCoverIDs(vm), isStarting: isStartingShuffle) {
-                    Task { await smartShuffle() }
-                }
-                .frame(maxWidth: MacDiscoverMetrics.cardWidth, alignment: .leading)
-                .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
-            }
+        case .smartShuffle, .songPath:
+            if isAvailable(section) { cardRow([section], vm: vm) }
         case .queueBuilder:
             if isOnline, let queueBuilder = container?.queueBuilderViewModel() {
-                QueueBuilderCard(viewModel: queueBuilder)
-                    .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
-            }
-        case .songPath:
-            if SongPathAvailability.isAvailable(container) {
-                SongPathCard()
-                    .frame(maxWidth: MacDiscoverMetrics.cardWidth, alignment: .leading)
+                // The card pads itself by `l`; the page margin is `xl`.
+                QueueBuilderCard(viewModel: queueBuilder, isPanel: true)
                     .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
             }
         case .moods:
@@ -121,6 +115,80 @@ struct MacDiscoverView: View {
                 }
             }
         case .wrapped:
+            EmptyView()
+        }
+    }
+
+    // MARK: - Cards
+
+    /// A page block: a section on its own, or Smart Shuffle and Song Path side by side when they
+    /// follow each other.
+    private enum Block: Identifiable {
+        case section(DiscoverSection)
+        case cards([DiscoverSection])
+
+        var id: String {
+            switch self {
+            case .section(let section): section.rawValue
+            case .cards(let sections): sections.map(\.rawValue).joined(separator: "+")
+            }
+        }
+    }
+
+    private static let cardSections: Set<DiscoverSection> = [.smartShuffle, .songPath]
+
+    private var blocks: [Block] {
+        var blocks: [Block] = []
+        let shown = layout.visibleSections.filter { MacDiscoverLayoutSheet.listed.contains($0) }
+        for section in shown {
+            if Self.cardSections.contains(section) {
+                guard isAvailable(section) else { continue }
+                if case .cards(let previous) = blocks.last {
+                    blocks[blocks.count - 1] = .cards(previous + [section])
+                } else {
+                    blocks.append(.cards([section]))
+                }
+            } else {
+                blocks.append(.section(section))
+            }
+        }
+        return blocks
+    }
+
+    private func isAvailable(_ section: DiscoverSection) -> Bool {
+        switch section {
+        case .smartShuffle: isOnline || container?.offlineLibrary.snapshot.songs.isEmpty == false
+        case .songPath: SongPathAvailability.isAvailable(container)
+        default: true
+        }
+    }
+
+    /// Cards share a row at equal height when the window is wide enough, and stack when it isn't.
+    private func cardRow(_ sections: [DiscoverSection], vm: DiscoverViewModel) -> some View {
+        let layout = pageWidth >= MacDiscoverMetrics.sideBySideWidth && sections.count > 1
+            ? AnyLayout(HStackLayout(alignment: .top, spacing: 0))
+            : AnyLayout(VStackLayout(spacing: MaeksterSpacing.section))
+        return layout {
+            ForEach(sections) { section in
+                card(section, vm: vm)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        // Each card pads itself by `l`; the page margin is `xl`.
+        .padding(.horizontal, MaeksterSpacing.xl - MaeksterSpacing.l)
+    }
+
+    @ViewBuilder
+    private func card(_ section: DiscoverSection, vm: DiscoverViewModel) -> some View {
+        switch section {
+        case .smartShuffle:
+            SmartShuffleCard(coverIDs: shuffleCoverIDs(vm), isStarting: isStartingShuffle, fillsHeight: true) {
+                Task { await smartShuffle() }
+            }
+        case .songPath:
+            SongPathCard(fillsHeight: true)
+        default:
             EmptyView()
         }
     }
@@ -205,8 +273,8 @@ struct MacDiscoverView: View {
 }
 
 private enum MacDiscoverMetrics {
-    /// Smart Shuffle and Song Path are phone-width cards; wider they'd stretch thin.
-    static let cardWidth: CGFloat = 640
+    /// Below this, Smart Shuffle and Song Path stack instead of sharing a row.
+    static let sideBySideWidth: CGFloat = 900
 }
 
 /// A fresh release as a shelf item (releases have no stable ID of their own).
