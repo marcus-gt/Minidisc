@@ -146,7 +146,7 @@ struct MacHomeView: View {
         case .favoriteSongs:
             favoriteSongs(favorites.songs)
         case .favoriteAlbums:
-            albumShelf(section, albums: favorites.albums)
+            albumShelf(section, albums: favorites.albums, source: .favorites)
         case .recentlyPlayed:
             albumShelf(section, albums: container?.visibleAlbums(vm.recentlyPlayed) ?? [])
         case .heavyRotation:
@@ -160,32 +160,39 @@ struct MacHomeView: View {
         case .rediscover:
             albumShelf(section, albums: container?.visibleAlbums(vm.rediscovery) ?? [])
         case .recentlyAdded:
-            albumShelf(section, albums: container?.visibleAlbums(vm.recentlyAdded) ?? [], continuesRecentlyAdded: true)
+            albumShelf(section, albums: container?.visibleAlbums(vm.recentlyAdded) ?? [], source: .recentlyAdded,
+                       continuesRecentlyAdded: true)
         case .genres:
             ForEach(vm.genreShelves) { shelf in
                 albumShelf(Text(verbatim: shelf.name), title: shelf.name,
-                           albums: container?.visibleAlbums(shelf.albums) ?? [])
+                           albums: container?.visibleAlbums(shelf.albums) ?? [], source: .genre(name: shelf.name))
             }
         case .queueBuilder, .songPath:
             EmptyView()
         }
     }
 
-    private func albumShelf(_ section: HomeSection, albums: [AlbumID3], continuesRecentlyAdded: Bool = false) -> some View {
-        albumShelf(Text(section.title), title: String(localized: section.title), albums: albums,
+    private func albumShelf(_ section: HomeSection, albums: [AlbumID3], source: QueueSource? = nil,
+                            continuesRecentlyAdded: Bool = false) -> some View {
+        albumShelf(Text(section.title), title: String(localized: section.title), albums: albums, source: source,
                    continuesRecentlyAdded: continuesRecentlyAdded)
     }
 
     /// See All appears when the shelf holds back albums, and always for Recently Added, which keeps
     /// loading older albums there.
-    private func albumShelf(_ label: Text, title: String = "", albums: [AlbumID3],
+    private func albumShelf(_ label: Text, title: String = "", albums: [AlbumID3], source: QueueSource? = nil,
                             continuesRecentlyAdded: Bool = false) -> some View {
         let showsAll = albums.count > MacShelfMetrics.limit || (continuesRecentlyAdded && isOnline)
         return MacShelf(
             title: label,
             items: Array(albums.prefix(MacShelfMetrics.limit)),
             seeAll: showsAll && !title.isEmpty
-                ? .albumCollection(title: title, albums: albums, continuesRecentlyAdded: continuesRecentlyAdded) : nil
+                ? .albumCollection(title: title, albums: albums, continuesRecentlyAdded: continuesRecentlyAdded) : nil,
+            // Play and Shuffle take the albums the shelf shows.
+            onPlay: { shuffled in
+                macPlayAlbums(Array(albums.prefix(MacShelfMetrics.limit)), shuffled: shuffled, source: source,
+                              container: container)
+            }
         ) { MacAlbumShelfCell(album: $0) }
     }
 
@@ -229,7 +236,10 @@ struct MacHomeView: View {
             SongColumn(id: $0, songs: tracks[$0..<min($0 + 4, tracks.count)])
         }
         MacShelf(title: Text(HomeSection.favoriteSongs.title), items: columns,
-                 cellWidth: MacShelfMetrics.songColumnWidth) { column in
+                 cellWidth: MacShelfMetrics.songColumnWidth,
+                 onPlay: { shuffled in
+                     playFavorites(shuffled ? tracks.shuffled() : tracks, from: 0)
+                 }) { column in
             MacSongRows(songs: Array(column.songs)) { index in
                 playFavorites(tracks, from: column.id + index)
             }

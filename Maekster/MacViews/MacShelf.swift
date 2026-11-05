@@ -1,3 +1,4 @@
+import OSLog
 import SwiftSonic
 import SwiftUI
 
@@ -8,6 +9,8 @@ struct MacShelf<Item: Identifiable, Cell: View>: View where Item.ID: Hashable {
     let items: [Item]
     var seeAll: MacRoute?
     var cellWidth: CGFloat = MacShelfMetrics.coverWidth
+    /// Plays everything in the shelf (shuffled or not), from Play and Shuffle by the title.
+    var onPlay: ((_ shuffled: Bool) -> Void)?
     @ViewBuilder let cell: (Item) -> Cell
 
     @State private var scrolledID: Item.ID?
@@ -39,6 +42,20 @@ struct MacShelf<Item: Identifiable, Cell: View>: View where Item.ID: Hashable {
             title
                 .font(.maeksterShelfTitle)
                 .lineLimit(1)
+            if let onPlay {
+                HStack(spacing: MaeksterSpacing.s) {
+                    Button { onPlay(false) } label: {
+                        Label("Play", systemImage: "play.fill")
+                    }
+                    .help("Play")
+                    Button { onPlay(true) } label: {
+                        Label("Shuffle", systemImage: "shuffle")
+                    }
+                    .help("Shuffle")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+            }
             Spacer(minLength: MaeksterSpacing.s)
             if let seeAll {
                 NavigationLink(value: seeAll) {
@@ -218,4 +235,58 @@ struct MacPlaylistCollection: View {
 extension MacShelfMetrics {
     /// The same sizes as the library's album grid.
     static let gridColumns = [GridItem(.adaptive(minimum: 180, maximum: 280), spacing: MaeksterSpacing.l)]
+}
+
+// MARK: - Playing a shelf
+
+/// Plays every song of `albums`, album after album (or all shuffled). The albums load five at a
+/// time, in shelf order; a Pause or another Play while they load wins, as with playlists.
+@MainActor
+func macPlayAlbums(_ albums: [AlbumID3], shuffled: Bool, source: QueueSource?, container: AppContainer?) {
+    guard let container, !albums.isEmpty else { return }
+    let library = container.libraryService
+    let ids = albums.map(\.id)
+    Task {
+        do {
+            try await container.playerService.play(preparingQueue: {
+                var tracks = try await macAlbumTracks(ids, library: library)
+                guard !tracks.isEmpty else { throw UserFacingError.contentRemoved }
+                if shuffled { tracks.shuffle() }
+                return PreparedPlaybackQueue(tracks: tracks, startIndex: 0, source: source)
+            })
+        } catch {
+            guard !UserFacingError.isCancellation(error) else { return }
+            Logger.player.error("[SHELF] play failed: \(error, privacy: .public)")
+            container.toastService.showError(UserFacingError.from(error).displayMessage)
+        }
+    }
+}
+
+/// The songs of `ids`, in order. An album that fails to load is skipped; cancellation isn't.
+private nonisolated func macAlbumTracks(_ ids: [String], library: any AlbumBrowsing) async throws -> [DisplayableSong] {
+    var byIndex: [Int: [DisplayableSong]] = [:]
+    try await withThrowingTaskGroup(of: (Int, [DisplayableSong]).self) { group in
+        var next = 0
+        func addNext() {
+            guard next < ids.count else { return }
+            let index = next, id = ids[index]
+            next += 1
+            group.addTask {
+                do {
+                    let album = try await library.album(id: id)
+                    return (index, (album.song ?? []).map { DisplayableSong(from: $0, isDownloaded: false) })
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch {
+                    return (index, [])
+                }
+            }
+        }
+        for _ in 0..<5 { addNext() }
+        while let (index, songs) = try await group.next() {
+            byIndex[index] = songs
+            addNext()
+        }
+    }
+    return ids.indices.flatMap { byIndex[$0] ?? [] }
 }
