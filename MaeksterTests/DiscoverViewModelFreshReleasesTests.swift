@@ -109,8 +109,8 @@ struct DiscoverViewModelFreshReleasesTests {
         #expect(!vm.isLoadingFreshReleases)
     }
 
-    @Test("all releases from the current month are kept without a ten-item cap")
-    func currentMonthIsNotCappedAt10() async {
+    @Test("all recent releases are kept without a ten-item cap")
+    func recentReleasesAreNotCappedAt10() async {
         let manyReleases = (0..<20).map {
             AlbumRecommendation(id: "id-\($0)", title: "Album \($0)", artistName: "Artist",
                                 releaseDate: dvDate(year: 2026, month: 5, day: ($0 % 25) + 1),
@@ -135,15 +135,20 @@ struct DiscoverViewModelFreshReleasesTests {
         #expect(vm.freshReleases.last?.id == "id-6")
     }
 
-    @Test("only releases in the current calendar month are kept")
-    func filtersToCurrentCalendarMonth() async {
+    @Test("only releases from the past 90 days are kept, not future or undated ones")
+    func filtersToPastNinetyDays() async {
+        // Reference date 2026-05-25: the window starts on 2026-02-25.
         let releases = [
-            AlbumRecommendation(id: "previous", title: "Previous", artistName: "Artist",
+            AlbumRecommendation(id: "tooOld", title: "Too Old", artistName: "Artist",
+                                releaseDate: dvDate(year: 2026, month: 2, day: 24), coverArtURL: nil, inLibrary: false),
+            AlbumRecommendation(id: "windowStart", title: "Window Start", artistName: "Artist",
+                                releaseDate: dvDate(year: 2026, month: 2, day: 25), coverArtURL: nil, inLibrary: false),
+            AlbumRecommendation(id: "lastMonth", title: "Last Month", artistName: "Artist",
                                 releaseDate: dvDate(year: 2026, month: 4, day: 30), coverArtURL: nil, inLibrary: false),
-            AlbumRecommendation(id: "current", title: "Current", artistName: "Artist",
-                                releaseDate: dvDate(year: 2026, month: 5, day: 1), coverArtURL: nil, inLibrary: false),
+            AlbumRecommendation(id: "today", title: "Today", artistName: "Artist",
+                                releaseDate: dvDate(year: 2026, month: 5, day: 25), coverArtURL: nil, inLibrary: false),
             AlbumRecommendation(id: "future", title: "Future", artistName: "Artist",
-                                releaseDate: dvDate(year: 2026, month: 6, day: 1), coverArtURL: nil, inLibrary: false),
+                                releaseDate: dvDate(year: 2026, month: 5, day: 26), coverArtURL: nil, inLibrary: false),
             AlbumRecommendation(id: "unknown", title: "Unknown", artistName: "Artist",
                                 releaseDate: nil, coverArtURL: nil, inLibrary: false),
         ]
@@ -151,11 +156,26 @@ struct DiscoverViewModelFreshReleasesTests {
 
         await vm.loadFreshReleases()
 
-        #expect(vm.freshReleases.compactMap(\.id) == ["current"])
+        #expect(vm.freshReleases.compactMap(\.id) == ["today", "lastMonth", "windowStart"])
     }
 
-    @Test("VM requests the elapsed current-month window without truncating results")
-    func requestsCurrentMonthWindow() async {
+    @Test("early in a month the shelf still shows last month's releases")
+    func earlyInMonthKeepsLastMonth() async {
+        let releases = [
+            AlbumRecommendation(id: "thisMonth", title: "This Month", artistName: "Artist",
+                                releaseDate: dvDate(year: 2026, month: 11, day: 2), coverArtURL: nil, inLibrary: false),
+            AlbumRecommendation(id: "lastMonth", title: "Last Month", artistName: "Artist",
+                                releaseDate: dvDate(year: 2026, month: 10, day: 20), coverArtURL: nil, inLibrary: false),
+        ]
+        let vm = makeVM(releases: releases, referenceDate: dvDate(year: 2026, month: 11, day: 5))
+
+        await vm.loadFreshReleases()
+
+        #expect(vm.freshReleases.compactMap(\.id) == ["thisMonth", "lastMonth"])
+    }
+
+    @Test("VM requests the 90-day window without truncating results")
+    func requestsNinetyDayWindow() async {
         let capturing = DVCapturingProvider()
         let service = RecommendationService(providers: [capturing])
         let referenceDate = dvDate(year: 2026, month: 5, day: 25)
@@ -169,7 +189,7 @@ struct DiscoverViewModelFreshReleasesTests {
         let limit = capturing.capturedLimit
         let window = capturing.capturedDaysWindow
         #expect(limit == Int.max)
-        #expect(window == 25)
+        #expect(window == DiscoverViewModel.freshReleasesWindowDays)
     }
 
     @Test("releases sorted by releaseDate descending after load")
