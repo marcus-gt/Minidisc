@@ -210,9 +210,16 @@ struct MacHomeView: View {
                     artist: item.displaySubtitle.isEmpty ? nil : item.displaySubtitle, coverArt: item.coverArtId
                 ))
             case .playlist:
-                MacPlaylistShelfCell(playlist: Playlist(
-                    id: item.itemId, name: item.displayName, songCount: 0, duration: 0, coverArt: item.coverArtId
-                ))
+                // The pin keeps no track count: take it from the loaded playlists, else say "Playlist".
+                if let loaded = viewModel?.topPicks.first(where: { $0.id == item.itemId }) {
+                    MacPlaylistShelfCell(playlist: loaded)
+                } else {
+                    MacPlaylistShelfCell(
+                        playlist: Playlist(id: item.itemId, name: item.displayName, songCount: 0, duration: 0,
+                                           coverArt: item.coverArtId),
+                        subtitle: String(localized: "Playlist")
+                    )
+                }
             case .artist:
                 MacArtistShelfCell(artist: ArtistID3(id: item.itemId, name: item.displayName, coverArt: item.coverArtId))
             case nil:

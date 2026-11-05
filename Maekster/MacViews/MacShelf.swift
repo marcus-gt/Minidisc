@@ -122,6 +122,8 @@ struct MacAlbumShelfCell: View {
 /// A playlist in a shelf or grid: its cover, name and track count; opens the playlist.
 struct MacPlaylistShelfCell: View {
     let playlist: Playlist
+    /// Shown instead of the track count, for a pin's snapshot, which has no count.
+    var subtitle: String?
 
     var body: some View {
         NavigationLink(value: MacRoute.playlist(id: playlist.id)) {
@@ -138,7 +140,7 @@ struct MacPlaylistShelfCell: View {
                 .aspectRatio(1, contentMode: .fit)
                 CoverCardMetadata(
                     title: playlist.name,
-                    subtitle: String(localized: "\(playlist.songCount) tracks"),
+                    subtitle: subtitle ?? String(localized: "\(playlist.songCount) tracks"),
                     titleLineLimit: 2
                 )
             }
