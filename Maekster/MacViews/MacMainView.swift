@@ -129,38 +129,32 @@ struct MacMainView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
-            // The queue sits beside the page, below the toolbar, so it stays open on every page and
-            // beside Now Playing, which covers the page whatever is open.
-            HStack(spacing: 0) {
-                // Now Playing takes the page's place. The navigator sets the open pages aside while it
-                // shows (the split view would keep drawing them on top) and restores them after.
-                Group {
-                    if panels.showsNowPlaying {
-                        MacNowPlayingView()
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    } else {
-                        NavigationStack(path: $navigator.path) {
-                            Group {
-                                if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
-                                    section(selection)
-                                } else {
-                                    MacSearchView(query: searchText, submitCount: searchSubmitCount)
-                                }
+            // Now Playing takes the page's place. The navigator sets the open pages aside while it
+            // shows (the split view would keep drawing them on top) and restores them after.
+            Group {
+                if panels.showsNowPlaying {
+                    MacNowPlayingView()
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else {
+                    NavigationStack(path: $navigator.path) {
+                        Group {
+                            if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                                section(selection)
+                            } else {
+                                MacSearchView(query: searchText, submitCount: searchSubmitCount)
                             }
-                            .navigationDestination(for: MacRoute.self, destination: page)
                         }
+                        .navigationDestination(for: MacRoute.self, destination: page)
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                if panels.showsQueue {
-                    Divider()
-                    MacQueuePanel()
-                        .frame(width: 340)
-                        .transition(.move(edge: .trailing))
-                }
             }
-            .animation(.easeInOut(duration: 0.2), value: panels.showsQueue)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // The queue is an inspector: its own column beside the page and Now Playing, so a pushed
+            // page (which the split view draws on top of its siblings) can't cover it.
+            .inspector(isPresented: $panels.showsQueue) {
+                MacQueuePanel()
+                    .inspectorColumnWidth(min: 280, ideal: 340, max: 480)
+            }
             .animation(.easeInOut(duration: 0.25), value: panels.showsNowPlaying)
         }
         .searchable(text: $searchText, placement: .toolbar, prompt: "Artists, albums, songs, playlists…")
