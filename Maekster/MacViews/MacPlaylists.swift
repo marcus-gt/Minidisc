@@ -241,31 +241,34 @@ struct MacPlaylistView: View {
                         action: .init(label: "Retry") { Task { await vm.load() } }
                     )
                 } else {
-                    VStack(spacing: 0) {
-                        header(vm)
-                        if vm.songs.isEmpty {
+                    if vm.songs.isEmpty {
+                        VStack(spacing: 0) {
+                            header(vm)
                             EmptyStateView(
                                 systemImage: "music.note.list",
                                 title: "Empty Playlist",
                                 subtitle: "This playlist doesn't have any tracks yet."
                             )
-                        } else {
-                            // Rows map back to playlist positions, so removing works in any order;
-                            // dragging to reorder only makes sense in the playlist's own order.
-                            let positions = displayOrder(vm.songs)
-                            let songs = positions.map { vm.songs[$0] }
-                            MacTrackTable(
-                                songs: songs,
-                                rowNumbers: positions.map { $0 + 1 },
-                                onPlay: { play(songs, from: $0) },
-                                onRemove: { offsets in
-                                    let removed = IndexSet(offsets.compactMap { positions.indices.contains($0) ? positions[$0] : nil })
-                                    Task { await vm.removeTracks(at: removed) }
-                                },
-                                onMove: isPlaylistOrder ? { source, destination in
-                                    Task { await vm.moveTracks(from: source, to: destination) }
-                                } : nil
-                            )
+                        }
+                    } else {
+                        // Rows map back to playlist positions, so removing works in any order;
+                        // dragging to reorder only makes sense in the playlist's own order.
+                        let positions = displayOrder(vm.songs)
+                        let songs = positions.map { vm.songs[$0] }
+                        MacSongList(
+                            songs: songs,
+                            rowNumbers: positions.map { $0 + 1 },
+                            showsAlbum: true,
+                            onPlay: { play(songs, from: $0) },
+                            onRemove: { offsets in
+                                let removed = IndexSet(offsets.compactMap { positions.indices.contains($0) ? positions[$0] : nil })
+                                Task { await vm.removeTracks(at: removed) }
+                            },
+                            onMove: isPlaylistOrder ? { source, destination in
+                                Task { await vm.moveTracks(from: source, to: destination) }
+                            } : nil
+                        ) {
+                            header(vm)
                         }
                     }
                 }

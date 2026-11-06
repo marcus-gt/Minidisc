@@ -42,375 +42,130 @@
 				Info.plist,
 			);
 			platformFiltersByRelativePath = {
-				"AppIntents/SiriAudioEntities.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/DocumentImagePicker.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/ImagePickerController.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/JustifiedText.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/MaeksterToolbarItems.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/PlaylistFeaturedArtistsShelf.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/QuickPlaylistMenu.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/SimilarArtistsShelf.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/SongRow.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/SongSelectionSheet.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/SquareCropView.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/SwipeBackEnabler.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/SystemShareSheet.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/SystemVolumeView.swift" = (
-					ios,
-				);
-				"DesignSystem/Components/TrackSkipSwipeModifier.swift" = (
-					ios,
-				);
-				"MacViews/MacAppDelegate.swift" = (
-					macos,
-				);
-				"MacViews/MacCommands.swift" = (
-					macos,
-				);
-				"MacViews/MacLibraryViews.swift" = (
-					macos,
-				);
-				"MacViews/MacDiscoverView.swift" = (
-					macos,
-				);
-				"MacViews/MacHomeView.swift" = (
-					macos,
-				);
-				"MacViews/MacMainView.swift" = (
-					macos,
-				);
-				"MacViews/MacMiniPlayer.swift" = (
-					macos,
-				);
-				"MacViews/MacNowPlayingView.swift" = (
-					macos,
-				);
-				"MacViews/MacOfflineViews.swift" = (
-					macos,
-				);
-				"MacViews/MacPages.swift" = (
-					macos,
-				);
-				"MacViews/MacPlayerBar.swift" = (
-					macos,
-				);
-				"MacViews/MacPlaylists.swift" = (
-					macos,
-				);
-				"MacViews/MacQueueView.swift" = (
-					macos,
-				);
-				"MacViews/MacRootView.swift" = (
-					macos,
-				);
-				"MacViews/MacSearchView.swift" = (
-					macos,
-				);
-				"MacViews/MacSettingsView.swift" = (
-					macos,
-				);
-				"MacViews/MacShelf.swift" = (
-					macos,
-				);
-				"MacViews/MacSidebarMaterial.swift" = (
-					macos,
-				);
-				"MacViews/MacSignInView.swift" = (
-					macos,
-				);
-				"MacViews/MacSongMenu.swift" = (
-					macos,
-				);
-				"MacViews/MacSongRows.swift" = (
-					macos,
-				);
-				"MacViews/MacSpacebarPlayPause.swift" = (
-					macos,
-				);
-				"MacViews/MacTrackTable.swift" = (
-					macos,
-				);
-				"Services/Intents/SiriMediaIntentHandler.swift" = (
-					ios,
-				);
-				"Views/Browse/AlbumCollectionView.swift" = (
-					ios,
-				);
-				"Views/Browse/AlbumDetailView.swift" = (
-					ios,
-				);
-				"Views/Browse/AlbumsListView.swift" = (
-					ios,
-				);
-				"Views/Browse/ArtistBestOfView.swift" = (
-					ios,
-				);
-				"Views/Browse/ArtistDetailView.swift" = (
-					ios,
-				);
-				"Views/Browse/ArtistInformationSheet.swift" = (
-					ios,
-				);
-				"Views/Browse/ArtistListView.swift" = (
-					ios,
-				);
-				"Views/Browse/CreatePlaylistSheet.swift" = (
-					ios,
-				);
-				"Views/Browse/DownloadedView.swift" = (
-					ios,
-				);
-				"Views/Browse/EditPlaylistSheet.swift" = (
-					ios,
-				);
-				"Views/Browse/FavoritesView.swift" = (
-					ios,
-				);
-				"Views/Browse/GenreListView.swift" = (
-					ios,
-				);
-				"Views/Browse/OfflineBrowsingEmptyView.swift" = (
-					ios,
-				);
-				"Views/Browse/PlaylistCoverPicker.swift" = (
-					ios,
-				);
-				"Views/Browse/PlaylistDetailView.swift" = (
-					ios,
-				);
-				"Views/Browse/PlaylistListView.swift" = (
-					ios,
-				);
-				"Views/Browse/RecentlyAddedView.swift" = (
-					ios,
-				);
-				"Views/Browse/RecordLabelListView.swift" = (
-					ios,
-				);
-				"Views/Browse/SongsListView.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrAlbumDetailView.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrArtistDetailView.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrCoverImage.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrInteractiveSearchView.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrLibraryView.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrManualImportView.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrQueueDetailSheet.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrQueueView.swift" = (
-					ios,
-				);
-				"Views/Lidarr/LidarrReleaseDetailView.swift" = (
-					ios,
-				);
-				"Views/LocalMusic/LocalMusicBrowseView.swift" = (
-					ios,
-				);
-				"Views/LocalMusic/LocalMusicCollectionView.swift" = (
-					ios,
-				);
-				"Views/LocalMusic/LocalMusicView.swift" = (
-					ios,
-				);
-				"Views/Main/ArtistShelf.swift" = (
-					ios,
-				);
-				"Views/Main/CarouselCollectionViews.swift" = (
-					ios,
-				);
-				"Views/Main/DiscoverView.swift" = (
-					ios,
-				);
-				"Views/Main/FullPlayerView.swift" = (
-					ios,
-				);
-				"Views/Main/HomeListeningSections.swift" = (
-					ios,
-				);
-				"Views/Main/HomeView.swift" = (
-					ios,
-				);
-				"Views/Main/InlineQueueList.swift" = (
-					ios,
-				);
-				"Views/Main/LibraryView.swift" = (
-					ios,
-				);
-				"Views/Main/MainTabView.swift" = (
-					ios,
-				);
-				"Views/Main/MiniPlayerAccessoryView.swift" = (
-					ios,
-				);
-				"Views/Main/OfflineHomeCard.swift" = (
-					ios,
-				);
-				"Views/Main/PinnedShelf.swift" = (
-					ios,
-				);
-				"Views/Main/PlayerContainer.swift" = (
-					ios,
-				);
-				"Views/Main/RootView.swift" = (
-					ios,
-				);
-				"Views/Main/SearchResultsContent.swift" = (
-					ios,
-				);
-				"Views/Main/SearchView.swift" = (
-					ios,
-				);
-				"Views/Main/TrackInformationSheet.swift" = (
-					ios,
-				);
-				"Views/Onboarding/OnboardingCompleteView.swift" = (
-					ios,
-				);
-				"Views/Onboarding/OnboardingView.swift" = (
-					ios,
-				);
-				"Views/Onboarding/OnboardingWelcomeView.swift" = (
-					ios,
-				);
-				"Views/Settings/DiscoverLayoutSettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/HomeLayoutSettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/Integrations/LidarrAddArtistSheet.swift" = (
-					ios,
-				);
-				"Views/Settings/Integrations/LidarrArtistSearchView.swift" = (
-					ios,
-				);
-				"Views/Settings/PlaybackDiagnosticsView.swift" = (
-					ios,
-				);
-				"Views/Settings/Sections/MoodPlaylistSettingsSection.swift" = (
-					ios,
-				);
-				"Views/Settings/Sections/QuickPlaylistsSettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/SettingsView.swift" = (
-					ios,
-				);
-				"Views/Settings/SiriSettingsSection.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedInsightsCarousel.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedPeriodPicker.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedRadio.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedStatHero.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedTopAlbumsSection.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedTopArtistsSection.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedTopTracksSection.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Components/WrappedYearTile.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedClosingSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedDiscoveriesSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedIntroSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedMinutesSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedTopAlbumSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedTopArtistSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedTopGenreSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/Slides/WrappedTopTrackSlide.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/WrappedShareCardView.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/WrappedSlideEntrance.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/WrappedStoryArtwork.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/WrappedStoryAudio.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/WrappedStoryPlayerView.swift" = (
-					ios,
-				);
-				"Views/Wrapped/Story/WrappedStoryProgressBar.swift" = (
-					ios,
-				);
-				"Views/Wrapped/WrappedView.swift" = (
-					ios,
-				);
-				"Views/Wrapped/WrappedYearlyListView.swift" = (
-					ios,
-				);
+				AppIntents/SiriAudioEntities.swift = (ios, );
+				DesignSystem/Components/DocumentImagePicker.swift = (ios, );
+				DesignSystem/Components/ImagePickerController.swift = (ios, );
+				DesignSystem/Components/JustifiedText.swift = (ios, );
+				DesignSystem/Components/MaeksterToolbarItems.swift = (ios, );
+				DesignSystem/Components/PlaylistFeaturedArtistsShelf.swift = (ios, );
+				DesignSystem/Components/QuickPlaylistMenu.swift = (ios, );
+				DesignSystem/Components/SimilarArtistsShelf.swift = (ios, );
+				DesignSystem/Components/SongRow.swift = (ios, );
+				DesignSystem/Components/SongSelectionSheet.swift = (ios, );
+				DesignSystem/Components/SquareCropView.swift = (ios, );
+				DesignSystem/Components/SwipeBackEnabler.swift = (ios, );
+				DesignSystem/Components/SystemShareSheet.swift = (ios, );
+				DesignSystem/Components/SystemVolumeView.swift = (ios, );
+				DesignSystem/Components/TrackSkipSwipeModifier.swift = (ios, );
+				MacViews/MacAppDelegate.swift = (macos, );
+				MacViews/MacCommands.swift = (macos, );
+				MacViews/MacDiscoverView.swift = (macos, );
+				MacViews/MacHomeView.swift = (macos, );
+				MacViews/MacLibraryViews.swift = (macos, );
+				MacViews/MacMainView.swift = (macos, );
+				MacViews/MacMiniPlayer.swift = (macos, );
+				MacViews/MacNowPlayingView.swift = (macos, );
+				MacViews/MacOfflineViews.swift = (macos, );
+				MacViews/MacPages.swift = (macos, );
+				MacViews/MacPlayerBar.swift = (macos, );
+				MacViews/MacPlaylists.swift = (macos, );
+				MacViews/MacQueueView.swift = (macos, );
+				MacViews/MacRootView.swift = (macos, );
+				MacViews/MacSearchView.swift = (macos, );
+				MacViews/MacSettingsView.swift = (macos, );
+				MacViews/MacShelf.swift = (macos, );
+				MacViews/MacSidebarMaterial.swift = (macos, );
+				MacViews/MacSignInView.swift = (macos, );
+				MacViews/MacSongMenu.swift = (macos, );
+				MacViews/MacSongList.swift = (macos, );
+				MacViews/MacSongRows.swift = (macos, );
+				MacViews/MacSpacebarPlayPause.swift = (macos, );
+				MacViews/MacTrackTable.swift = (macos, );
+				Services/Intents/SiriMediaIntentHandler.swift = (ios, );
+				Views/Browse/AlbumCollectionView.swift = (ios, );
+				Views/Browse/AlbumDetailView.swift = (ios, );
+				Views/Browse/AlbumsListView.swift = (ios, );
+				Views/Browse/ArtistBestOfView.swift = (ios, );
+				Views/Browse/ArtistDetailView.swift = (ios, );
+				Views/Browse/ArtistInformationSheet.swift = (ios, );
+				Views/Browse/ArtistListView.swift = (ios, );
+				Views/Browse/CreatePlaylistSheet.swift = (ios, );
+				Views/Browse/DownloadedView.swift = (ios, );
+				Views/Browse/EditPlaylistSheet.swift = (ios, );
+				Views/Browse/FavoritesView.swift = (ios, );
+				Views/Browse/GenreListView.swift = (ios, );
+				Views/Browse/OfflineBrowsingEmptyView.swift = (ios, );
+				Views/Browse/PlaylistCoverPicker.swift = (ios, );
+				Views/Browse/PlaylistDetailView.swift = (ios, );
+				Views/Browse/PlaylistListView.swift = (ios, );
+				Views/Browse/RecentlyAddedView.swift = (ios, );
+				Views/Browse/RecordLabelListView.swift = (ios, );
+				Views/Browse/SongsListView.swift = (ios, );
+				Views/Lidarr/LidarrAlbumDetailView.swift = (ios, );
+				Views/Lidarr/LidarrArtistDetailView.swift = (ios, );
+				Views/Lidarr/LidarrCoverImage.swift = (ios, );
+				Views/Lidarr/LidarrInteractiveSearchView.swift = (ios, );
+				Views/Lidarr/LidarrLibraryView.swift = (ios, );
+				Views/Lidarr/LidarrManualImportView.swift = (ios, );
+				Views/Lidarr/LidarrQueueDetailSheet.swift = (ios, );
+				Views/Lidarr/LidarrQueueView.swift = (ios, );
+				Views/Lidarr/LidarrReleaseDetailView.swift = (ios, );
+				Views/LocalMusic/LocalMusicBrowseView.swift = (ios, );
+				Views/LocalMusic/LocalMusicCollectionView.swift = (ios, );
+				Views/LocalMusic/LocalMusicView.swift = (ios, );
+				Views/Main/ArtistShelf.swift = (ios, );
+				Views/Main/CarouselCollectionViews.swift = (ios, );
+				Views/Main/DiscoverView.swift = (ios, );
+				Views/Main/FullPlayerView.swift = (ios, );
+				Views/Main/HomeListeningSections.swift = (ios, );
+				Views/Main/HomeView.swift = (ios, );
+				Views/Main/InlineQueueList.swift = (ios, );
+				Views/Main/LibraryView.swift = (ios, );
+				Views/Main/MainTabView.swift = (ios, );
+				Views/Main/MiniPlayerAccessoryView.swift = (ios, );
+				Views/Main/OfflineHomeCard.swift = (ios, );
+				Views/Main/PinnedShelf.swift = (ios, );
+				Views/Main/PlayerContainer.swift = (ios, );
+				Views/Main/RootView.swift = (ios, );
+				Views/Main/SearchResultsContent.swift = (ios, );
+				Views/Main/SearchView.swift = (ios, );
+				Views/Main/TrackInformationSheet.swift = (ios, );
+				Views/Onboarding/OnboardingCompleteView.swift = (ios, );
+				Views/Onboarding/OnboardingView.swift = (ios, );
+				Views/Onboarding/OnboardingWelcomeView.swift = (ios, );
+				Views/Settings/DiscoverLayoutSettingsView.swift = (ios, );
+				Views/Settings/HomeLayoutSettingsView.swift = (ios, );
+				Views/Settings/Integrations/LidarrAddArtistSheet.swift = (ios, );
+				Views/Settings/Integrations/LidarrArtistSearchView.swift = (ios, );
+				Views/Settings/PlaybackDiagnosticsView.swift = (ios, );
+				Views/Settings/Sections/MoodPlaylistSettingsSection.swift = (ios, );
+				Views/Settings/Sections/QuickPlaylistsSettingsView.swift = (ios, );
+				Views/Settings/SettingsView.swift = (ios, );
+				Views/Settings/SiriSettingsSection.swift = (ios, );
+				Views/Wrapped/Components/WrappedInsightsCarousel.swift = (ios, );
+				Views/Wrapped/Components/WrappedPeriodPicker.swift = (ios, );
+				Views/Wrapped/Components/WrappedRadio.swift = (ios, );
+				Views/Wrapped/Components/WrappedStatHero.swift = (ios, );
+				Views/Wrapped/Components/WrappedTopAlbumsSection.swift = (ios, );
+				Views/Wrapped/Components/WrappedTopArtistsSection.swift = (ios, );
+				Views/Wrapped/Components/WrappedTopTracksSection.swift = (ios, );
+				Views/Wrapped/Components/WrappedYearTile.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedClosingSlide.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedDiscoveriesSlide.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedIntroSlide.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedMinutesSlide.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedTopAlbumSlide.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedTopArtistSlide.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedTopGenreSlide.swift = (ios, );
+				Views/Wrapped/Story/Slides/WrappedTopTrackSlide.swift = (ios, );
+				Views/Wrapped/Story/WrappedShareCardView.swift = (ios, );
+				Views/Wrapped/Story/WrappedSlideEntrance.swift = (ios, );
+				Views/Wrapped/Story/WrappedStoryArtwork.swift = (ios, );
+				Views/Wrapped/Story/WrappedStoryAudio.swift = (ios, );
+				Views/Wrapped/Story/WrappedStoryPlayerView.swift = (ios, );
+				Views/Wrapped/Story/WrappedStoryProgressBar.swift = (ios, );
+				Views/Wrapped/WrappedView.swift = (ios, );
+				Views/Wrapped/WrappedYearlyListView.swift = (ios, );
 			};
 			target = DBA4A7502F9BBFCB008BC5A9 /* Maekster */;
 		};
