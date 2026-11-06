@@ -442,14 +442,17 @@ struct MacArtistView: View {
     private func hero(_ vm: ArtistDetailViewModel) -> some View {
         let photo = vm.artist?.coverArt
         let fallback = Self.latestRelease(vm)?.coverArt
+        // As tall as a wide banner (about 2.2 : 1), within limits, so a wider window shows more of
+        // the photo instead of zooming into it.
         return Color.clear
-            .frame(height: MacArtistMetrics.heroHeight)
+            .aspectRatio(MacArtistMetrics.heroAspectRatio, contentMode: .fit)
             .frame(maxWidth: .infinity)
+            .frame(minHeight: MacArtistMetrics.heroMinHeight, maxHeight: MacArtistMetrics.heroMaxHeight)
             .background {
-                // The (square) image as wide as the page, cropped to the hero's height a little
-                // below its top, where faces usually are.
+                // The (square) image as wide as the page, cropped to the hero's height around the
+                // upper middle, where faces usually are.
                 GeometryReader { geometry in
-                    let side = max(geometry.size.width, MacArtistMetrics.heroHeight)
+                    let side = max(geometry.size.width, geometry.size.height)
                     Group {
                         if let photo {
                             CoverArtView(id: photo, size: MacArtistMetrics.heroImageSize, tier: .hero,
@@ -463,7 +466,7 @@ struct MacArtistView: View {
                         }
                     }
                     .frame(width: geometry.size.width, height: side)
-                    .offset(y: -(side - MacArtistMetrics.heroHeight) * MacArtistMetrics.heroFocus)
+                    .offset(y: -(side - geometry.size.height) * MacArtistMetrics.heroFocus)
                 }
                 .clipped()
             }
@@ -507,48 +510,60 @@ struct MacArtistView: View {
 
     // MARK: Latest release and top songs
 
+    /// Columns of three songs, for the sideways Top Songs shelf.
+    private struct SongColumn: Identifiable {
+        let id: Int
+        let songs: ArraySlice<DisplayableSong>
+    }
+
+    /// Latest Release, then Top Songs in columns of three that scroll sideways (like the Music app),
+    /// so a narrow window shows fewer columns rather than squeezed rows.
     @ViewBuilder
     private func latestAndTopSongs(_ vm: ArtistDetailViewModel) -> some View {
         let latest = Self.latestRelease(vm)
-        let songs = Array(vm.topSongs.prefix(9))
+        let songs = Array(vm.topSongs.prefix(MacArtistMetrics.topSongsLimit))
+        let columns = stride(from: 0, to: songs.count, by: 3).map {
+            SongColumn(id: $0, songs: songs[$0..<min($0 + 3, songs.count)])
+        }
         if latest != nil || !songs.isEmpty {
-            HStack(alignment: .top, spacing: MaeksterSpacing.xl) {
+            HStack(alignment: .top, spacing: 0) {
                 if let latest {
-                    VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
-                        Text("Latest Release")
-                            .font(.maeksterShelfTitle)
-                        NavigationLink(value: MacRoute.album(id: latest.id)) {
-                            HStack(alignment: .top, spacing: MaeksterSpacing.m) {
-                                CoverArtCard(id: latest.coverArt ?? latest.id, size: MacArtistMetrics.latestCover)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    if let year = latest.year {
-                                        Text(verbatim: String(year))
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Text(latest.name)
-                                        .font(.maeksterCellTitle)
-                                        .lineLimit(3)
-                                    Text("\(latest.songCount) songs")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .frame(width: MacArtistMetrics.latestTextWidth, alignment: .leading)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    latestRelease(latest)
+                        .padding(.leading, MaeksterSpacing.xl)
                 }
-                if !songs.isEmpty {
-                    VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
-                        Text("Top Songs")
-                            .font(.maeksterShelfTitle)
-                        MacSongRows(songs: songs) { index in play(songs, from: index) }
+                // The shelf pads itself by the page margin on both sides.
+                MacShelf(title: Text("Top Songs"), items: columns, cellWidth: MacShelfMetrics.songColumnWidth) { column in
+                    MacSongRows(songs: Array(column.songs)) { index in play(songs, from: column.id + index) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func latestRelease(_ latest: AlbumID3) -> some View {
+        VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+            Text("Latest Release")
+                .font(.maeksterShelfTitle)
+            NavigationLink(value: MacRoute.album(id: latest.id)) {
+                HStack(alignment: .top, spacing: MaeksterSpacing.m) {
+                    CoverArtCard(id: latest.coverArt ?? latest.id, size: MacArtistMetrics.latestCover)
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let year = latest.year {
+                            Text(verbatim: String(year))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(latest.name)
+                            .font(.maeksterCellTitle)
+                            .lineLimit(3)
+                        Text("\(latest.songCount) songs")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(width: MacArtistMetrics.latestTextWidth, alignment: .leading)
                 }
             }
-            .padding(.horizontal, MaeksterSpacing.xl)
+            .buttonStyle(.plain)
         }
     }
 
@@ -654,12 +669,17 @@ private struct MacArtistFavoriteButton: View {
 }
 
 private enum MacArtistMetrics {
-    static let heroHeight: CGFloat = 380
+    /// Width to height of the hero, and the heights it stays between.
+    static let heroAspectRatio: CGFloat = 2.2
+    static let heroMinHeight: CGFloat = 340
+    static let heroMaxHeight: CGFloat = 620
     /// How far down the image the hero's crop sits: 0 is the top, 0.5 the middle.
-    static let heroFocus: CGFloat = 0.2
+    static let heroFocus: CGFloat = 0.3
     /// Pixels asked of the server for the photo: wide windows need a large one.
     static let heroImageSize = 1600
     static let nameSize: CGFloat = 40
     static let latestCover: CGFloat = 140
+    /// Top Songs shown in the shelf: six columns of three.
+    static let topSongsLimit = 18
     static let latestTextWidth: CGFloat = 150
 }
