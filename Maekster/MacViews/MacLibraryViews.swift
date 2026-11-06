@@ -96,9 +96,12 @@ struct MacAlbumGridContent: View {
 
 // MARK: - Artists
 
+/// Artists in two panes, like the Music app: the list on the left (arrow keys move through it), the
+/// chosen artist's page on the right. Pages opened from it (an album, …) push over both.
 struct MacArtistsView: View {
     @Environment(\.appContainer) private var container
     @State private var viewModel: ArtistListViewModel?
+    @SceneStorage("mac.artists.selection") private var selectedID: String?
 
     var body: some View {
         Group {
@@ -108,17 +111,12 @@ struct MacArtistsView: View {
                     errorTitle: "Unable to Load Artists", emptyImage: "music.mic", emptyTitle: "No Artists",
                     retry: vm.load
                 ) {
-                    List {
-                        ForEach(vm.indexes, id: \.name) { index in
-                            Section(index.name) {
-                                ForEach(index.artist, id: \.id) { artist in
-                                    NavigationLink(value: MacRoute.artist(id: artist.id, name: artist.name)) {
-                                        ArtistRow(artist: artist)
-                                    }
-                                    .contextMenu { MacArtistMenu(artistId: artist.id, artistName: artist.name) }
-                                }
-                            }
-                        }
+                    HSplitView {
+                        list(vm)
+                            .frame(minWidth: 220, idealWidth: 260, maxWidth: 380)
+                        detail(vm)
+                            .frame(minWidth: 480, maxWidth: .infinity, maxHeight: .infinity)
+                            .layoutPriority(1)
                     }
                 }
             } else {
@@ -131,7 +129,54 @@ struct MacArtistsView: View {
             let vm = ArtistListViewModel(libraryService: container.libraryService)
             viewModel = vm
             await vm.load()
+            // Open on the last artist shown, or the first one.
+            let all = vm.indexes.flatMap(\.artist)
+            if selectedID == nil || !all.contains(where: { $0.id == selectedID }) {
+                selectedID = all.first?.id
+            }
         }
+    }
+
+    private func list(_ vm: ArtistListViewModel) -> some View {
+        List(selection: $selectedID) {
+            ForEach(vm.indexes, id: \.name) { index in
+                Section(index.name) {
+                    ForEach(index.artist, id: \.id) { artist in
+                        MacArtistListRow(artist: artist)
+                            .tag(artist.id)
+                            .contextMenu { MacArtistMenu(artistId: artist.id, artistName: artist.name) }
+                    }
+                }
+            }
+        }
+        .listStyle(.inset)
+    }
+
+    @ViewBuilder
+    private func detail(_ vm: ArtistListViewModel) -> some View {
+        if let id = selectedID, let artist = vm.indexes.lazy.flatMap(\.artist).first(where: { $0.id == id }) {
+            MacArtistView(artistId: artist.id, artistName: artist.name)
+                // A fresh page per artist, so one artist's content never shows under another's name.
+                .id(artist.id)
+        } else {
+            EmptyStateView(systemImage: "music.mic", title: "No Artists")
+        }
+    }
+}
+
+/// A compact artist row for the two-pane list: a small portrait and the name.
+private struct MacArtistListRow: View {
+    let artist: ArtistID3
+
+    var body: some View {
+        HStack(spacing: MaeksterSpacing.s) {
+            CoverArtView(id: artist.coverArt ?? artist.id, size: 64, placeholderSystemImage: "person.fill")
+                .frame(width: 28, height: 28)
+                .clipShape(Circle())
+            Text(artist.name)
+                .lineLimit(1)
+        }
+        .padding(.vertical, 2)
     }
 }
 

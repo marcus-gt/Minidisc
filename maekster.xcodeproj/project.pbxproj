@@ -58,6 +58,7 @@
 				DesignSystem/Components/SystemVolumeView.swift = (ios, );
 				DesignSystem/Components/TrackSkipSwipeModifier.swift = (ios, );
 				MacViews/MacAppDelegate.swift = (macos, );
+				MacViews/MacArtistHero.swift = (macos, );
 				MacViews/MacCommands.swift = (macos, );
 				MacViews/MacDiscoverView.swift = (macos, );
 				MacViews/MacHomeView.swift = (macos, );
@@ -76,8 +77,8 @@
 				MacViews/MacShelf.swift = (macos, );
 				MacViews/MacSidebarMaterial.swift = (macos, );
 				MacViews/MacSignInView.swift = (macos, );
-				MacViews/MacSongMenu.swift = (macos, );
 				MacViews/MacSongList.swift = (macos, );
+				MacViews/MacSongMenu.swift = (macos, );
 				MacViews/MacSongRows.swift = (macos, );
 				MacViews/MacSpacebarPlayPause.swift = (macos, );
 				MacViews/MacTrackTable.swift = (macos, );
