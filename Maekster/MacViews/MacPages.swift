@@ -1,9 +1,11 @@
+import AppKit
 import SwiftData
 import SwiftSonic
 import SwiftUI
 
-/// Cover, title and Play / Shuffle above an album's or playlist's songs, with room for page-specific
-/// buttons (a heart, a download button, …) after them.
+/// The top of an album or playlist page, like the Music app: a large cover; the title, the
+/// artist (a link) and a details line; the description (three lines, the rest in a popover);
+/// capsule Play / Shuffle buttons and page-specific round buttons (a heart, a download button, …).
 struct MacPageHeader<Accessories: View>: View {
     let coverArtId: String?
     let title: String
@@ -11,14 +13,32 @@ struct MacPageHeader<Accessories: View>: View {
     /// Makes the subtitle a link (the album's artist).
     var onSubtitle: (() -> Void)?
     var details: [String] = []
+    /// The album's description from the server.
+    var notes: String?
     let onPlay: () -> Void
     let onShuffle: () -> Void
     @ViewBuilder var accessories: () -> Accessories
 
+    @State private var showsNotes = false
+
+    init(coverArtId: String?, title: String, subtitle: String? = nil, onSubtitle: (() -> Void)? = nil,
+         details: [String] = [], notes: String? = nil, onPlay: @escaping () -> Void,
+         onShuffle: @escaping () -> Void, @ViewBuilder accessories: @escaping () -> Accessories) {
+        self.coverArtId = coverArtId
+        self.title = title
+        self.subtitle = subtitle
+        self.onSubtitle = onSubtitle
+        self.details = details
+        self.notes = notes
+        self.onPlay = onPlay
+        self.onShuffle = onShuffle
+        self.accessories = accessories
+    }
+
     var body: some View {
-        HStack(alignment: .bottom, spacing: MaeksterSpacing.xl) {
-            CoverArtCard(id: coverArtId ?? "", size: 200, tier: .hero)
-            VStack(alignment: .leading, spacing: MaeksterSpacing.s) {
+        HStack(alignment: .top, spacing: MaeksterSpacing.xl) {
+            CoverArtCard(id: coverArtId ?? "", size: MacPageHeaderMetrics.coverSize, tier: .hero)
+            VStack(alignment: .leading, spacing: MaeksterSpacing.xs) {
                 Text(title)
                     .font(.largeTitle.bold())
                     .lineLimit(2)
@@ -26,8 +46,12 @@ struct MacPageHeader<Accessories: View>: View {
                 if let subtitle {
                     if let onSubtitle {
                         Button(subtitle, action: onSubtitle)
-                            .buttonStyle(.link)
+                            .buttonStyle(.plain)
+                            .foregroundStyle(Color.maeksterAccent)
                             .font(.title2)
+                            .onHover { inside in
+                                if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+                            }
                     } else {
                         Text(subtitle)
                             .font(.title2)
@@ -36,24 +60,62 @@ struct MacPageHeader<Accessories: View>: View {
                 }
                 if !details.isEmpty {
                     Text(details.joined(separator: " · "))
+                        .font(.callout.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
-                HStack(spacing: MaeksterSpacing.m) {
-                    Button("Play", systemImage: "play.fill", action: onPlay)
-                        .buttonStyle(.borderedProminent)
-                        .tint(Color.maeksterAccent)
-                    Button("Shuffle", systemImage: "shuffle", action: onShuffle)
-                        .buttonStyle(.bordered)
-                    accessories()
-                        .buttonStyle(.bordered)
-                        .labelStyle(.iconOnly)
+                if let notes, !notes.isEmpty {
+                    notesView(notes)
+                        .padding(.top, MaeksterSpacing.m)
                 }
+                Spacer(minLength: MaeksterSpacing.m)
+                HStack(spacing: MaeksterSpacing.m) {
+                    Button(action: onPlay) {
+                        Label("Play", systemImage: "play.fill")
+                            .frame(minWidth: MacPageHeaderMetrics.capsuleMinWidth)
+                    }
+                    Button(action: onShuffle) {
+                        Label("Shuffle", systemImage: "shuffle")
+                            .frame(minWidth: MacPageHeaderMetrics.capsuleMinWidth)
+                    }
+                    accessories()
+                        .labelStyle(.iconOnly)
+                        .buttonBorderShape(.circle)
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
                 .controlSize(.large)
-                .padding(.top, MaeksterSpacing.s)
+                .foregroundStyle(Color.maeksterAccent)
+                .fontWeight(.semibold)
             }
+            .frame(minHeight: MacPageHeaderMetrics.coverSize, alignment: .topLeading)
             Spacer(minLength: 0)
         }
-        .padding(MaeksterSpacing.xl)
+        .padding(.horizontal, MaeksterSpacing.xl)
+        .padding(.top, MaeksterSpacing.xl)
+        .padding(.bottom, MaeksterSpacing.l)
+    }
+
+    /// Three lines; More (or a click) shows the rest in a popover.
+    private func notesView(_ notes: String) -> some View {
+        HStack(alignment: .lastTextBaseline, spacing: MaeksterSpacing.xs) {
+            Text(notes)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .lineLimit(3)
+                .frame(maxWidth: MacPageHeaderMetrics.notesWidth, alignment: .leading)
+            Button("More") { showsNotes = true }
+                .buttonStyle(.plain)
+                .font(.callout.weight(.semibold))
+                .popover(isPresented: $showsNotes) {
+                    ScrollView {
+                        Text(notes)
+                            .textSelection(.enabled)
+                            .padding(MaeksterSpacing.l)
+                    }
+                    .frame(width: 420)
+                    .frame(maxHeight: 480)
+                }
+        }
     }
 }
 
@@ -62,6 +124,31 @@ extension MacPageHeader where Accessories == EmptyView {
          onPlay: @escaping () -> Void, onShuffle: @escaping () -> Void) {
         self.init(coverArtId: coverArtId, title: title, subtitle: subtitle, details: details,
                   onPlay: onPlay, onShuffle: onShuffle) { EmptyView() }
+    }
+}
+
+enum MacPageHeaderMetrics {
+    static let coverSize: CGFloat = 240
+    static let capsuleMinWidth: CGFloat = 96
+    static let notesWidth: CGFloat = 620
+}
+
+/// Under an album's songs: the release date, song count and length, and the record label.
+struct MacAlbumFooter: View {
+    let releaseDate: String?
+    let summary: String
+    let recordLabel: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let releaseDate { Text(verbatim: releaseDate) }
+            Text(verbatim: summary)
+            if let recordLabel { Text(verbatim: recordLabel) }
+        }
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, MaeksterSpacing.xl)
+        .padding(.vertical, MaeksterSpacing.l)
     }
 }
 
@@ -80,6 +167,7 @@ struct MacAlbumView: View {
     @Environment(MacNavigator.self) private var navigator
     @State private var viewModel: AlbumDetailViewModel?
     @State private var confirmsRemoval = false
+    @State private var notes: String?
     /// Observed, like the iPhone album page, so the heart follows every star and unstar.
     @Query private var favoriteMatches: [FavoriteRecord]
 
@@ -100,13 +188,17 @@ struct MacAlbumView: View {
                         action: .init(label: "Retry") { Task { await vm.load() } }
                     )
                 } else {
-                    VStack(spacing: 0) {
+                    MacSongList(
+                        songs: vm.songs,
+                        // Only guest artists: the album's own artist is in the header.
+                        showsArtist: { $0.artist != nil && $0.artist != vm.artistName },
+                        groupsByDisc: true,
+                        discTitles: vm.discTitles,
+                        onPlay: { index in play(vm.songs, from: index, source: source(vm)) }
+                    ) {
                         header(vm)
-                        MacTrackTable(
-                            songs: vm.songs, showsAlbum: false, groupsByDisc: true, discTitles: vm.discTitles
-                        ) { index in
-                            play(vm.songs, from: index, source: source(vm))
-                        }
+                    } footer: {
+                        footer(vm)
                     }
                 }
             } else {
@@ -133,16 +225,22 @@ struct MacAlbumView: View {
             viewModel = vm
             await vm.load()
         }
+        .task(id: albumId) {
+            // The description is extra: the page shows without it, offline or on servers without notes.
+            guard container?.serverState.isOnline == true, let library = container?.libraryService else { return }
+            do {
+                notes = try await library.albumNotes(albumID: albumId)?.strippingArtistBioMarkup
+            } catch {
+                notes = nil
+            }
+        }
     }
 
     private func header(_ vm: AlbumDetailViewModel) -> some View {
         var details: [String] = []
-        if let year = vm.year { details.append(String(year)) }
         if let genre = vm.genres.first ?? vm.genre { details.append(genre) }
-        if !vm.songs.isEmpty {
-            details.append(String(localized: "\(vm.songs.count) songs"))
-            details.append(macTotalDuration(vm.songs))
-        }
+        if let year = vm.year { details.append(String(year)) }
+        if let format = Self.format(of: vm.songs) { details.append(format) }
         return MacPageHeader(
             coverArtId: vm.coverArtId,
             title: vm.albumName,
@@ -151,6 +249,7 @@ struct MacAlbumView: View {
                 { navigator.open(.artist(id: artistId, name: vm.artistName ?? "")) }
             },
             details: details,
+            notes: notes,
             onPlay: { play(vm.songs, from: 0, source: source(vm)) },
             onShuffle: { play(vm.songs.shuffled(), from: 0, source: source(vm)) }
         ) {
@@ -196,6 +295,27 @@ struct MacAlbumView: View {
         }
         .disabled(state == .unavailable)
         .help(Text(state.title))
+    }
+
+    private func footer(_ vm: AlbumDetailViewModel) -> some View {
+        MacAlbumFooter(
+            releaseDate: Self.releaseDate(vm.releaseDate),
+            summary: [String(localized: "\(vm.songs.count) songs"), macTotalDuration(vm.songs)].joined(separator: ", "),
+            recordLabel: vm.recordLabels.first
+        )
+    }
+
+    /// The songs' file format when they share one ("FLAC"), like the Music app's "Lossless".
+    private static func format(of songs: [DisplayableSong]) -> String? {
+        let formats = Set(songs.compactMap { $0.audioFormat?.uppercased() })
+        return formats.count == 1 ? formats.first : nil
+    }
+
+    /// A full release date as "4 November 2026"; just a year isn't repeated (the header has it).
+    private static func releaseDate(_ date: ItemDate?) -> String? {
+        guard let year = date?.year, let month = date?.month, let day = date?.day,
+              let value = Calendar.current.date(from: DateComponents(year: year, month: month, day: day)) else { return nil }
+        return value.formatted(date: .long, time: .omitted)
     }
 
     private func source(_ vm: AlbumDetailViewModel) -> QueueSource {

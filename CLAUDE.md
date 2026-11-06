@@ -121,7 +121,7 @@ Maekster/                      app target sources
   MacViews/                    Mac screens (macOS-only): MacRootView (the Mac `RootView`), MacSignInView,
                                MacMainView (sidebar, `MacRoute`s), MacHomeView, MacDiscoverView, MacShelf (cover
                                shelves), library lists, album/artist/genre pages, MacPlaylists,
-                               MacTrackTable + MacSongMenu, MacPlayerBar
+                               MacSongList (album and playlist songs), MacTrackTable (Songs library) + MacSongMenu, MacPlayerBar
   Utilities/                   Logger categories, formatting, HeaderValidator, PlatformImage, haptics
   *.xcstrings, Info.plist, Maekster.entitlements, PrivacyInfo.xcprivacy, AppIntentVocabulary.plist
 MaeksterTests/                 ~110 Swift Testing files (no XCTest)
@@ -318,7 +318,9 @@ PlayerService (actor, ~4.7k lines: queue, shuffle/repeat, auto-extend, smart shu
 - Synchronised folders can't limit a folder to one platform, so **each file** under `Views/` is
   iOS-only and each file under `MacViews/` macOS-only (File inspector → Target Membership → platform,
   stored as `platformFiltersByRelativePath` in the project). A new view file needs that filter.
-  `Scripts/doctor.sh` fails when one is missing. A few shared components that still open iPhone
+  `Scripts/doctor.sh` fails when one is missing. Xcode writes these entries on one line
+  (`MacViews/X.swift = (macos, );`) and reformats the whole list when it saves the project; that's
+  harmless, and doctor accepts both that and the three-line form. A few shared components that still open iPhone
   sheets are iOS-only too, until the Mac needs them.
 - The Mac `RootView` (in `MacViews/`) takes the iOS one's name so `MaeksterApp` needs no `#if`.
   A screen both apps use goes in `SharedViews/` (shared components stay in `DesignSystem/Components/`);

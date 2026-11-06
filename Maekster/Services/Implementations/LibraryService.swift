@@ -15,6 +15,8 @@ actor LibraryService: LibraryServiceProtocol {
     private var cachedClient: SwiftSonicClient?
     private var cachedConnectionVersion: ServerConnection.Version?
     private var artistInfoCache: [String: ArtistInfo] = [:]
+    /// Album notes by album ID; an empty string means the server has none.
+    private var albumNotesCache: [String: String] = [:]
     /// What Instant Mix learned about artist fan-out per connection this session (issue #8).
     private var fanOutMemory: [ServerConnection.Version: InstantMixFanOutMemory] = [:]
 
@@ -54,6 +56,7 @@ actor LibraryService: LibraryServiceProtocol {
         cachedClient = fresh
         cachedConnectionVersion = connection.version
         artistInfoCache = [:]
+        albumNotesCache = [:]
         return fresh
     }
 
@@ -1189,6 +1192,16 @@ actor LibraryService: LibraryServiceProtocol {
             Logger.library.warning("[ARTIST-INFO] FAILED after \(String(format: "%.2f", elapsed), privacy: .public)s artistId=\(artistID, privacy: .public): \(error, privacy: .public)")
             throw error
         }
+    }
+
+    func albumNotes(albumID: String) async throws -> String? {
+        // The client first: a server switch clears the cache there, so no notes leak across servers.
+        let client = try await client()
+        if let cached = albumNotesCache[albumID] { return cached.isEmpty ? nil : cached }
+        let info = try await client.getAlbumInfo2(id: albumID)
+        let notes = info.notes?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        albumNotesCache[albumID] = notes
+        return notes.isEmpty ? nil : notes
     }
 
     func getArtistMBID(forArtistID artistID: String) async throws -> String? {

@@ -219,8 +219,15 @@ unfiltered_views=$(
             (Views/*) platform=ios ;;
             (*) platform=macos ;;
         esac
-        grep -A1 -F "\"$file\" = (" "../$project_file" | grep -Eq "^[[:space:]]*$platform,$" \
-            || printf '%s (%s)\n' "$file" "$platform"
+        # Xcode writes an entry on one line (`path = (ios, );`, quoted when the path needs it);
+        # hand edits often use the three-line form. Accept both.
+        if grep -Fq -e "$file = ($platform, );" -e "\"$file\" = ($platform, );" "../$project_file"; then
+            :
+        elif grep -A1 -F "\"$file\" = (" "../$project_file" | grep -Eq "^[[:space:]]*$platform,$"; then
+            :
+        else
+            printf '%s (%s)\n' "$file" "$platform"
+        fi
     done
 )
 if [ -z "$unfiltered_views" ]; then

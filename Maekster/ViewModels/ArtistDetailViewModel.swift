@@ -287,8 +287,8 @@ final class ArtistDetailViewModel {
     }
 }
 
-private extension String {
-    /// Turns a Last.fm/MusicBrainz biography into plain text: drops HTML tags and the
+extension String {
+    /// Turns a Last.fm/MusicBrainz biography (or album notes) into plain text: drops HTML tags and the
     /// trailing "Read more on Last.fm" link that Subsonic servers pass through verbatim.
     var strippingArtistBioMarkup: String {
         var text = self

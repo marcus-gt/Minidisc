@@ -130,6 +130,15 @@ nonisolated protocol ArtistRecommendationBrowsing: AnyObject, Sendable {
     func topSongs(artist: String, count: Int) async throws -> [DisplayableSong]
 }
 
+nonisolated protocol AlbumInfoBrowsing: AnyObject, Sendable {
+    /// The album's description from the server (Last.fm notes on Navidrome), or nil if it has none.
+    func albumNotes(albumID: String) async throws -> String?
+}
+
+extension AlbumInfoBrowsing {
+    func albumNotes(albumID: String) async throws -> String? { nil }
+}
+
 nonisolated protocol AlbumRecommendationBrowsing: AnyObject, Sendable {
     /// Derives album recommendations from the server's similar-song graph.
     /// Albums by the current artist are excluded because the album screen already presents them in “More by”.
@@ -174,6 +183,7 @@ nonisolated protocol LibraryServiceProtocol:
     MoodTrackSourcing,
     ArtistRecommendationBrowsing,
     AlbumRecommendationBrowsing,
+    AlbumInfoBrowsing,
     PlaybackQueueBuilding,
     PlaybackReporting,
     ArtworkURLResolving
