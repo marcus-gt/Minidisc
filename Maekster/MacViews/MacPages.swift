@@ -1,3 +1,4 @@
+import OSLog
 import AppKit
 import SwiftData
 import SwiftSonic
@@ -449,26 +450,11 @@ struct MacArtistView: View {
             .frame(maxWidth: .infinity)
             .frame(minHeight: MacArtistMetrics.heroMinHeight, maxHeight: MacArtistMetrics.heroMaxHeight)
             .background {
-                // The (square) image as wide as the page, cropped to the hero's height around the
-                // upper middle, where faces usually are.
-                GeometryReader { geometry in
-                    let side = max(geometry.size.width, geometry.size.height)
-                    Group {
-                        if let photo {
-                            CoverArtView(id: photo, size: MacArtistMetrics.heroImageSize, tier: .hero,
-                                         placeholderSystemImage: "person.fill")
-                        } else if let fallback {
-                            CoverArtView(id: fallback, size: 600, tier: .hero)
-                                .blur(radius: 40)
-                                .saturation(1.2)
-                        } else {
-                            Color.secondary.opacity(0.2)
-                        }
-                    }
-                    .frame(width: geometry.size.width, height: side)
-                    .offset(y: -(side - geometry.size.height) * MacArtistMetrics.heroFocus)
-                }
-                .clipped()
+                MacArtistHeroImage(
+                    photoID: photo,
+                    fallbackID: fallback,
+                    albumCoverIDs: Self.albumCoverIDs(vm)
+                )
             }
             .overlay {
                 // Darkens toward the bottom so the name reads, then melts into the page.
@@ -565,6 +551,15 @@ struct MacArtistView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    /// Every cover of the artist's releases (and albums they appear on), newest first, without
+    /// repeats: what the server may fall back to when it has no artist photo.
+    private static func albumCoverIDs(_ vm: ArtistDetailViewModel) -> [String] {
+        let albums = (vm.artist?.album ?? []) + vm.releaseShelves.flatMap(\.albums) + vm.appearsOn
+        var seen = Set<String>()
+        // Capped: each cover is a (cached) thumbnail load.
+        return Array(albums.map { $0.coverArt ?? $0.id }.filter { seen.insert($0).inserted }.prefix(60))
     }
 
     /// The artist's newest album, single or EP by year (then by when it was added).
@@ -673,10 +668,6 @@ private enum MacArtistMetrics {
     static let heroAspectRatio: CGFloat = 2.2
     static let heroMinHeight: CGFloat = 340
     static let heroMaxHeight: CGFloat = 620
-    /// How far down the image the hero's crop sits: 0 is the top, 0.5 the middle.
-    static let heroFocus: CGFloat = 0.3
-    /// Pixels asked of the server for the photo: wide windows need a large one.
-    static let heroImageSize = 1600
     static let nameSize: CGFloat = 40
     static let latestCover: CGFloat = 140
     /// Top Songs shown in the shelf: six columns of three.
