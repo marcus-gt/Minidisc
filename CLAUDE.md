@@ -66,6 +66,9 @@ xcodebuild build -project maekster.xcodeproj -scheme Maekster \
 xcodebuild build -project maekster.xcodeproj -scheme Maekster \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
+# Install the Mac app in /Applications (Release, signed with the Apple Development certificate)
+./Scripts/install-mac.sh
+
 # Unit tests (MaeksterTests, Swift Testing)
 xcodebuild test -project maekster.xcodeproj -scheme MaeksterTests \
   -destination 'platform=iOS Simulator,name=<any iPhone simulator>' \
