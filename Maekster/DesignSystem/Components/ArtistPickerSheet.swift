@@ -107,6 +107,7 @@ struct ArtistPickerSheet: View {
     }
 }
 
+#if DEBUG
 #Preview {
     MaeksterPreview(container: .preview()) {
         ArtistPickerSheet(
@@ -122,3 +123,4 @@ struct ArtistPickerSheet: View {
         )
     }
 }
+#endif
